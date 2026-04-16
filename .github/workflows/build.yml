@@ -24,21 +24,22 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install Capacitor
+        run: |
+          npm install -g @capacitor/cli
+          npm install @capacitor/core @capacitor/android
 
       - name: Prepare web folder
         run: |
           mkdir -p www
           cp index.html www/index.html
 
-      - name: Install Capacitor CLI globally
-        run: npm install -g @capacitor/cli
+      - name: Init Capacitor
+        run: |
+          npx cap init "Smart Loan Advisor" "com.almamar4ev.smartloanadvisor" --web-dir www
 
       - name: Add Android platform
         run: npx cap add android
-        env:
-          CI: true
 
       - name: Sync web app to Android
         run: npx cap sync android
