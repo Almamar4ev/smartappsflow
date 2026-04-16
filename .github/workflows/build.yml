@@ -32,7 +32,7 @@ jobs:
       - name: Prepare web folder
         run: |
           mkdir -p www
-          cp index.html www/index.html
+          cp SmartLoanAdvisor.html www/index.html
 
       - name: Init Capacitor
         run: |
