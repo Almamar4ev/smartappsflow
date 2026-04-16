@@ -1,0 +1,12 @@
+{
+  "appId": "com.almamar4ev.smartloanadvisor",
+  "appName": "Smart Loan Advisor",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#0a0f1e"
+  }
+}
