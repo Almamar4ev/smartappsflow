@@ -36,7 +36,7 @@ jobs:
 
       - name: Init Capacitor
         run: |
-          npx cap init "Smart Loan Advisor" "com.almamar4ev.smartloanadvisor" --web-dir www
+          npx cap init "Smart Loan Advisor" "com.smartapps.smartloanadvisor" --web-dir www
 
       - name: Add Android platform
         run: npx cap add android
