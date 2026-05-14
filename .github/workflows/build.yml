@@ -50,7 +50,8 @@ jobs:
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/smartloan.keystore
-
+      - name: Print SHA-256 fingerprint
+        run: keytool -list -v -keystore android/app/smartloan.keystore -alias ${{ secrets.KEY_ALIAS }} -storepass ${{ secrets.KEYSTORE_PASSWORD }} | grep SHA256
       - name: Build Release AAB
         run: |
           cd android
