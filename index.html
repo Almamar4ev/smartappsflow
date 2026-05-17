@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover"/>
 <title>Smart Loan Advisor | مستشار القروض الذكي</title>
 
 <style>
@@ -16,6 +16,20 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;display:flex;justify-content:center;color:var(--txt);overflow-x:hidden;transition:background .3s,color .3s}
 #app{width:100%;max-width:430px;min-height:100vh;display:flex;flex-direction:column;position:relative}
+
+/* ── SAFE AREA — handles Android/iOS status bar & navigation bar ── */
+/* Top-of-screen headers get pushed below the status bar (clock/battery) */
+.step-header{padding-top:calc(14px + env(safe-area-inset-top,0px))!important}
+.home-top{padding-top:calc(20px + env(safe-area-inset-top,0px))!important}
+#splash{padding-top:calc(40px + env(safe-area-inset-top,0px))!important}
+#settings-screen,#saved-detail,#compare-screen,#results-screen{padding-top:env(safe-area-inset-top,0px);padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+/* Bottom footers/content rise above the navigation bar */
+.btn-footer{padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))!important}
+.step-body{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px))!important}
+#home{padding-bottom:env(safe-area-inset-bottom,0px)}
+.saved-mini-list{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))!important}
+/* Side insets (landscape / notched devices) */
+body{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 
 /* Every screen is full-height, no scroll by default */
 .screen{display:none;flex-direction:column;height:100vh;overflow:hidden;animation:pgIn .28s ease}
