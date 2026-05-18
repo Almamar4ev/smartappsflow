@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<title>Smart Loan Advisor | مستشار القروض الذكي</title>
+<title>Smart Loan Calculator | حاسبة القروض الذكية</title>
 
 <style>
 :root{--acc:#6366f1;--acc2:#8b5cf6;--acc3:#ec4899;--bg:#0a0f1e;--bg2:#1e293b;--bg3:#0f172a;--brd:#334155;--txt:#e2e8f0;--txt2:#c8d8e8;--txt3:#a0b4c8;--lbl:#f0b429;--safe:#10b981;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(99,102,241,0.18)}
@@ -245,8 +245,8 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <div class="screen active" id="splash" style="justify-content:center;align-items:center;padding:30px 24px;gap:10px">
   <div class="glow"></div>
   <div class="splash-icon">🏦</div>
-  <h1 class="splash-title">Smart Loan Advisor</h1>
-  <p class="splash-sub">مستشار القروض الذكي</p>
+  <h1 class="splash-title">Smart Loan Calculator</h1>
+  <p class="splash-sub">حاسبة القروض الذكية</p>
   <p class="splash-hint" style="margin-bottom:6px">Choose your language / اختر لغتك</p>
   <div class="lang-row" style="z-index:1">
     <button class="lang-btn" onclick="chooseLang('ar')">🇸🇦 العربية</button>
@@ -261,18 +261,18 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <div class="screen" id="home" style="height:auto;min-height:100vh">
   <div class="home-top">
     <div class="home-top-row">
-      <span class="home-app-name" id="home-app-name">Smart Loan Advisor</span>
+      <span class="home-app-name" id="home-app-name">Smart Loan Calculator</span>
       <div class="home-actions">
         <button class="icon-btn" onclick="openSettings()">⚙️</button>
         <button class="icon-btn" onclick="toggleLang()" id="home-lang-btn">AR</button>
       </div>
     </div>
-    <p class="home-tagline" id="home-tagline">Your intelligent financial guide</p>
+    <p class="home-tagline" id="home-tagline">Loan calculation & estimation tool</p>
   </div>
   <!-- Hero -->
   <div class="hero-card" onclick="startForm()" style="cursor:pointer">
     <p class="hero-label" id="hero-label">NEW ANALYSIS</p>
-    <p class="hero-title" id="hero-title">Start your loan<br>assessment now</p>
+    <p class="hero-title" id="hero-title">Start your loan<br>calculation now</p>
     <button class="hero-btn" id="hero-btn">Get Started →</button>
   </div>
   <!-- Profile summary card (shows only when profile is saved) -->
@@ -440,8 +440,8 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div id="scenario-replace-banner" style="display:none"></div>
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="basis-card"><p class="card-label" id="lbl-basis">HOW YOUR LOAN IS CALCULATED</p><div id="basis-rows"></div></div>
-    <div class="card"><p class="card-label" id="lbl-rec">RECOMMENDED LOAN</p><p class="card-big" id="rec-loan"></p><p class="card-sub" id="rec-range"></p><p class="card-sub" id="rec-range-hint" style="margin-top:6px;font-size:12px;opacity:.7"></p></div>
-    <div class="card"><p class="card-label" id="lbl-advice">FINANCIAL ADVICE</p><div id="advice-list"></div></div>
+    <div class="card"><p class="card-label" id="lbl-rec">ESTIMATED LOAN</p><p class="card-big" id="rec-loan"></p><p class="card-sub" id="rec-range"></p><p class="card-sub" id="rec-range-hint" style="margin-top:6px;font-size:12px;opacity:.7"></p></div>
+    <div class="card"><p class="card-label" id="lbl-advice">THINGS TO CONSIDER</p><div id="advice-list"></div></div>
     <div class="action-row">
       <button class="save-btn" onclick="saveScenario()" id="btn-save">💾 Save Scenario</button>
       <button class="home-btn" onclick="goHome()" id="btn-go-home">🏠 Home</button>
@@ -662,8 +662,8 @@ function renderThemeGrid(){
 // ── TRANSLATIONS ──────────────────────────────────────────────────────────────
 const T={
   en:{
-    appName:'Smart Loan Advisor',appTagline:'Your intelligent financial guide',
-    heroLabel:'NEW ANALYSIS',heroTitle:'Start your loan\nassessment now',heroBtn:'Get Started →',
+    appName:'Smart Loan Calculator',appTagline:'Loan calculation & estimation tool',
+    heroLabel:'NEW CALCULATION',heroTitle:'Start your loan\ncalculation now',heroBtn:'Get Started →',
     currency:'SAR',months:'mo',years:'yrs',
     s1:'💰 Income Details',s2:'📋 Monthly Expenses',s3:'🏦 Loan Details',s4:'👤 Your Profile',
     step:'Step',of:'of',back:'←',next:'Next →',calculate:'Calculate My Loan →',
@@ -673,10 +673,10 @@ const T={
     lt_car:'🚗 Car',lt_home:'🏠 Home',lt_personal:'💳 Personal',lt_business:'🏢 Business',lt_education:'🎓 Education',lt_other:'📦 Other',
     emp_full:'Full-time Employed',emp_part:'Part-time Employed',emp_self:'Self-Employed',emp_retired:'Retired',emp_none:'Unemployed',
     risk_low:'Low — I prefer safety',risk_medium:'Medium — Balanced',risk_high:'High — Maximise opportunity',
-    results:'Your Financial Report',recommended:'RECOMMENDED LOAN',suggestedRange:'Safe Range',
+    results:'Your Loan Summary',recommended:'ESTIMATED LOAN',suggestedRange:'Calculated Range',
     monthlyInstallment:'Monthly Install.',dtiRatio:'DTI Gross',netDti:'DTI Net',riskLevel:'Risk Level',
     affordabilityScore:'Affordability',totalCost:'Total Cost',totalInterest:'Total Interest',
-    recommendation:'SMART RECOMMENDATION',advice:'FINANCIAL ADVICE',breakdown:'REPAYMENT BREAKDOWN',
+    recommendation:'CALCULATION SUMMARY',advice:'THINGS TO CONSIDER',breakdown:'REPAYMENT BREAKDOWN',
     amortization:'PAYOFF JOURNEY',loanTypes:'LOAN TYPE SUITABILITY',scenarioSim:'SCENARIO SIMULATOR',balance:'REMAINING BALANCE',
     risk_safe:'Safe',risk_moderate:'Moderate',risk_risky:'Risky',
     adv_reduce:'💡 Consider reducing the loan amount by 15–20%',
@@ -703,11 +703,11 @@ const T={
     settings:'⚙️ Settings',themes:'CHOOSE THEME',langSet:'LANGUAGE',
     savedScenarios:'💾 SAVED LOANS',detailTitle:'Loan Details',
     compareBtnHome:'⚖️ Compare',compareTitle:'Compare Loans',
-    features:['📊 Instant loan analysis','🧠 Smart recommendations','📉 Risk assessment','🔄 Scenario simulation'],
+    features:['📊 Instant loan calculation','🧠 Detailed estimates','📉 Risk indicators','🔄 Scenario simulation'],
   },
   ar:{
-    appName:'مستشار القروض الذكي',appTagline:'دليلك المالي الذكي',
-    heroLabel:'تحليل جديد',heroTitle:'ابدأ تقييم قرضك\nالآن',heroBtn:'ابدأ الآن ←',
+    appName:'حاسبة القروض الذكية',appTagline:'أداة حساب وتقدير القروض',
+    heroLabel:'حساب جديد',heroTitle:'ابدأ حساب قرضك\nالآن',heroBtn:'ابدأ الآن ←',
     currency:'ريال',months:'شهر',years:'سنة',
     s1:'💰 تفاصيل الدخل',s2:'📋 المصروفات الشهرية',s3:'🏦 تفاصيل القرض',s4:'👤 ملفك الشخصي',
     step:'الخطوة',of:'من',back:'→',next:'التالي ←',calculate:'احسب قرضي ←',
@@ -717,10 +717,10 @@ const T={
     lt_car:'🚗 سيارة',lt_home:'🏠 عقاري',lt_personal:'💳 شخصي',lt_business:'🏢 تجاري',lt_education:'🎓 تعليمي',lt_other:'📦 أخرى',
     emp_full:'موظف دوام كامل',emp_part:'موظف دوام جزئي',emp_self:'عمل حر',emp_retired:'متقاعد',emp_none:'غير موظف',
     risk_low:'منخفض — أُفضّل الأمان',risk_medium:'متوسط — نهج متوازن',risk_high:'مرتفع — أسعى للفرص',
-    results:'تقريرك المالي',recommended:'القرض الموصى به',suggestedRange:'النطاق الآمن',
+    results:'ملخص قرضك',recommended:'القرض التقديري',suggestedRange:'النطاق المحسوب',
     monthlyInstallment:'القسط الشهري',dtiRatio:'ن.دين/دخل كلي',netDti:'ن.دين/صافي',riskLevel:'مستوى المخاطرة',
     affordabilityScore:'نقاط القدرة',totalCost:'إجمالي التكلفة',totalInterest:'إجمالي الفوائد',
-    recommendation:'التوصية الذكية',advice:'النصائح المالية',breakdown:'تفاصيل السداد',
+    recommendation:'ملخص الحساب',advice:'أمور للاعتبار',breakdown:'تفاصيل السداد',
     amortization:'رحلة السداد',loanTypes:'ملاءمة أنواع القروض',scenarioSim:'محاكاة السيناريوهات',balance:'الرصيد المتبقي',
     risk_safe:'آمن',risk_moderate:'معتدل',risk_risky:'خطر',
     adv_reduce:'💡 فكّر في تخفيض المبلغ بنسبة 15–20%',
@@ -747,10 +747,10 @@ const T={
     settings:'⚙️ الإعدادات',themes:'اختر الثيم',langSet:'اللغة',
     savedScenarios:'💾 القروض المحفوظة',detailTitle:'تفاصيل القرض',
     compareBtnHome:'⚖️ مقارنة',compareTitle:'مقارنة القروض',
-    features:['📊 تحليل فوري للقروض','🧠 توصيات ذكية','📉 تقييم المخاطر','🔄 محاكاة السيناريوهات'],
+    features:['📊 حساب فوري للقروض','🧠 تقديرات تفصيلية','📉 مؤشرات المخاطر','🔄 محاكاة السيناريوهات'],
   },
   es:{
-    appName:'Asesor de Crédito Inteligente',appTagline:'Tu guía financiera inteligente',
+    appName:'Calculadora de Préstamos',appTagline:'Herramienta de cálculo de préstamos',
     heroLabel:'NUEVO ANÁLISIS',heroTitle:'Evalúa tu crédito\nahora mismo',heroBtn:'Comenzar →',
     currency:'USD',months:'mes',years:'años',
     s1:'💰 Ingresos',s2:'📋 Gastos mensuales',s3:'🏦 Detalles del préstamo',s4:'👤 Tu perfil',
@@ -761,10 +761,10 @@ const T={
     lt_car:'🚗 Auto',lt_home:'🏠 Vivienda',lt_personal:'💳 Personal',lt_business:'🏢 Negocio',lt_education:'🎓 Educación',lt_other:'📦 Otro',
     emp_full:'Empleado tiempo completo',emp_part:'Empleado tiempo parcial',emp_self:'Autónomo',emp_retired:'Jubilado',emp_none:'Desempleado',
     risk_low:'Bajo — Prefiero la seguridad',risk_medium:'Medio — Equilibrio riesgo/beneficio',risk_high:'Alto — Maximizar oportunidades',
-    results:'Tu informe financiero',recommended:'PRÉSTAMO RECOMENDADO',suggestedRange:'Rango seguro',
+    results:'Resumen de tu préstamo',recommended:'PRÉSTAMO ESTIMADO',suggestedRange:'Rango calculado',
     monthlyInstallment:'Cuota mensual',dtiRatio:'Ratio deuda/ingreso',netDti:'Ratio neto',riskLevel:'Nivel de riesgo',
     affordabilityScore:'Capacidad de pago',totalCost:'Costo total',totalInterest:'Total intereses',
-    recommendation:'RECOMENDACIÓN',advice:'CONSEJOS FINANCIEROS',breakdown:'DESGLOSE DE PAGOS',
+    recommendation:'RESUMEN DEL CÁLCULO',advice:'ASPECTOS A CONSIDERAR',breakdown:'DESGLOSE DE PAGOS',
     amortization:'RUTA DE PAGO',loanTypes:'IDONEIDAD DEL PRÉSTAMO',scenarioSim:'SIMULADOR',balance:'SALDO PENDIENTE',
     risk_safe:'Seguro',risk_moderate:'Moderado',risk_risky:'Arriesgado',
     adv_reduce:'💡 Considera reducir el monto un 15–20%',adv_down:'💡 Aumenta el enganche para reducir las cuotas',adv_extend:'💡 Amplía el plazo para aligerar la carga mensual',
@@ -779,7 +779,7 @@ const T={
     newInstall:'Nueva cuota',existingLoans:'Cuotas vigentes',dtiGrossLbl:'% Deuda sobre ingreso bruto',dtiNetLbl:'% Deuda sobre ingreso neto',
     addLoan:'➕ Añadir préstamo',mainLoan:'Préstamo principal',loanN:'Préstamo',totalInstall:'Total mensual',totalPctGross:'% del ingreso bruto',totalPctNet:'% del ingreso neto',
     settings:'⚙️ Ajustes',themes:'ELEGIR TEMA',langSet:'IDIOMA',savedScenarios:'💾 PRÉSTAMOS GUARDADOS',detailTitle:'Detalles del préstamo',
-    compareBtnHome:'⚖️ Comparar',compareTitle:'Comparar préstamos',features:['📊 Análisis instantáneo','🧠 Recomendaciones inteligentes','📉 Evaluación de riesgos','🔄 Simulación de escenarios'],
+    compareBtnHome:'⚖️ Comparar',compareTitle:'Comparar préstamos',features:['📊 Cálculo instantáneo','🧠 Estimaciones detalladas','📉 Indicadores de riesgo','🔄 Simulación de escenarios'],
   },
 };
 const t=()=>{const base=T[lang]||T['en'];return{...base,currency:getCurrencySymbol()||base.currency};};
