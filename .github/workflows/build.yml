@@ -46,9 +46,9 @@ jobs:
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 3/' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 4/' android/app/build.gradle
 
-      - name: Enable edge-to-edge for safe-area support
+      - name: Disable edge-to-edge (system manages status & nav bars)
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main/java -name "MainActivity.java")
           cat > "$MAIN_ACTIVITY" <<'EOF'
@@ -62,11 +62,11 @@ jobs:
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-                  WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+                  WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
               }
           }
           EOF
-          echo "MainActivity.java updated for edge-to-edge"
+          echo "MainActivity.java set to system-managed bars"
 
       - name: Sync web app to Android
         run: npx cap sync android
