@@ -46,53 +46,33 @@ jobs:
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode 1/versionCode 6/' android/app/build.gradle
+          sed -i 's/versionCode .*/versionCode 7/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "2.0"/' android/app/build.gradle
 
-      - name: Disable edge-to-edge (system manages status & nav bars)
-        run: |
-          MAIN_ACTIVITY=$(find android/app/src/main/java -name "MainActivity.java")
-          cat > "$MAIN_ACTIVITY" <<'EOF'
-          package com.smartapps.smartloanadvisor;
-
-          import android.os.Bundle;
-          import androidx.core.view.WindowCompat;
-          import com.getcapacitor.BridgeActivity;
-
-          public class MainActivity extends BridgeActivity {
-              @Override
-              public void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
-              }
-          }
-          EOF
-          echo "MainActivity.java set to system-managed bars"
-
-      - name: Sync web app to Android
-        run: npx cap sync android
-
-      - name: Make gradlew executable
-        run: chmod +x android/gradlew
-
-      - name: Decode Keystore
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/smartloan.keystore
+      - name: Copy web assets
+        run: npx cap copy android
 
       - name: Print SHA-256 fingerprint
-        run: keytool -list -v -keystore android/app/smartloan.keystore -alias ${{ secrets.KEY_ALIAS }} -storepass ${{ secrets.KEYSTORE_PASSWORD }} | grep SHA256
+        run: |
+          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep SHA-256 || echo "Debug keystore not found"
 
-      - name: Build Release AAB
+      - name: Build AAB
         run: |
           cd android
-          ./gradlew bundleRelease --no-daemon \
-            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/smartloan.keystore \
-            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+          chmod +x ./gradlew
+          ./gradlew bundleRelease
 
-      - name: Upload AAB artifact
+      - name: Sign AAB
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: SmartLoanCalculator-release
-          path: android/app/build/outputs/bundle/release/app-release.aab
-          retention-days: 30
+          path: android/app/build/outputs/bundle/release/*.aab
