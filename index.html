@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
 <title>Smart Loan Calculator | حاسبة القروض الذكية</title>
 
 <style>
@@ -13,12 +13,24 @@
 .theme-cyan{--acc:#0891b2;--acc2:#06b6d4;--acc3:#22d3ee;--bg:#021018;--bg2:#0a2030;--bg3:#010d14;--brd:#0e3a52;--txt2:#b0d8e8;--txt3:#88bcd4;--lbl:#fbbf24;--glow:rgba(8,145,178,0.18)}
 .theme-light{--acc:#4f46e5;--acc2:#7c3aed;--acc3:#db2777;--bg:#f1f5f9;--bg2:#ffffff;--bg3:#e2e8f0;--brd:#cbd5e1;--txt:#1e293b;--txt2:#2d4060;--txt3:#4a6080;--lbl:#4f46e5;--safe:#059669;--mod:#d97706;--risk:#dc2626;--glow:rgba(79,70,229,0.14)}
 
+/* ═══════════════════════════════════════════════════
+   MASTER MOBILE TEMPLATE — safe-area + keyboard safe defaults
+   Reusable baseline for all apps. Handles notches, gesture
+   bars, status bar overlap, and keyboard resize.
+   ═══════════════════════════════════════════════════ */
+:root{
+  --safe-top:env(safe-area-inset-top, 0px);
+  --safe-bottom:env(safe-area-inset-bottom, 0px);
+  --safe-left:env(safe-area-inset-left, 0px);
+  --safe-right:env(safe-area-inset-right, 0px);
+}
+
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;display:flex;justify-content:center;color:var(--txt);overflow-x:hidden;transition:background .3s,color .3s}
-#app{width:100%;max-width:430px;min-height:100vh;display:flex;flex-direction:column;position:relative}
+body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100vh;min-height:100dvh;display:flex;justify-content:center;color:var(--txt);overflow-x:hidden;transition:background .3s,color .3s}
+#app{width:100%;max-width:430px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;position:relative}
 
 /* Every screen is full-height, no scroll by default */
-.screen{display:none;flex-direction:column;height:100vh;overflow:hidden;animation:pgIn .28s ease}
+.screen{display:none;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;animation:pgIn .28s ease}
 .screen.active{display:flex}
 @keyframes pgIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
 [dir="rtl"] @keyframes pgIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
@@ -37,11 +49,22 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 
 /* ── HOME ── */
 #home{flex-direction:column;overflow-y:auto}
-.home-top{position:relative;padding:20px 20px 0;flex-shrink:0}
+.home-top{position:relative;padding:calc(20px + var(--safe-top)) 20px 0;flex-shrink:0}
 .home-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .home-app-name{font-size:17px;font-weight:800;color:var(--txt)}
-.home-actions{display:flex;gap:8px}
-.icon-btn{padding:7px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--brd);color:var(--txt2);font-size:14px;cursor:pointer}
+.home-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{padding:7px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--brd);color:var(--txt2);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
+.icon-btn .ic{width:18px;height:18px;display:block;flex-shrink:0}
+.icon-btn .ic-chev{width:14px;height:14px;display:block;opacity:.7}
+.icon-btn-sq{padding:9px;justify-content:center}
+.icon-btn:active{border-color:var(--acc);color:var(--acc)}
+.lang-dd{position:relative}
+.lang-dd-menu{position:absolute;top:calc(100% + 6px);inset-inline-end:0;min-width:160px;background:var(--bg2);border:1px solid var(--brd);border-radius:13px;box-shadow:0 10px 30px rgba(0,0,0,.22);padding:6px;display:none;z-index:80}
+.lang-dd-menu.open{display:block}
+.lang-dd-menu button{display:flex;align-items:center;gap:11px;width:100%;padding:11px 12px;border:none;background:transparent;color:var(--txt);font-size:15px;font-weight:600;cursor:pointer;border-radius:9px;text-align:start}
+.lang-dd-menu button>span:first-child{font-size:17px}
+.lang-dd-menu button:active{background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.lang-dd-menu button.active{background:color-mix(in srgb,var(--acc) 13%,transparent);color:var(--acc)}
 .home-tagline{font-size:13px;color:var(--txt3);margin-bottom:16px}
 /* Hero CTA */
 .hero-card{margin:0 20px 16px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:20px;padding:20px;position:relative;overflow:hidden}
@@ -52,7 +75,7 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .hero-btn{display:inline-block;background:#fff;color:var(--acc);font-size:14px;font-weight:800;padding:10px 20px;border-radius:12px;border:none;cursor:pointer}
 /* Saved mini list on home */
 .home-section-title{font-size:13px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;padding:0 20px;margin-bottom:10px}
-.saved-mini-list{padding:0 20px;display:flex;flex-direction:column;gap:10px;padding-bottom:24px}
+.saved-mini-list{padding:0 20px;display:flex;flex-direction:column;gap:10px;padding-bottom:calc(24px + var(--safe-bottom))}
 .saved-mini-card{background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:13px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .2s}
 .saved-mini-card:active{border-color:var(--acc)}
 .saved-mini-left{flex:1}
@@ -78,10 +101,11 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
   height:100vh;
   height:100dvh; /* dynamic viewport — accounts for mobile browser chrome */
   max-height:100vh;
+  max-height:100dvh;
   overflow:hidden;
   background:var(--bg);
 }
-.step-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px 0;flex-shrink:0}
+.step-header{display:flex;align-items:center;justify-content:space-between;padding:calc(14px + var(--safe-top)) 20px 0;flex-shrink:0}
 .back-btn{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;color:var(--txt2);font-size:26px;font-weight:800;padding:8px 18px;cursor:pointer;line-height:1}
 .step-indicator{color:var(--txt2);font-size:15px;font-weight:600}
 .lang-toggle{padding:7px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--brd);color:var(--txt2);font-size:13px;font-weight:700;cursor:pointer}
@@ -98,7 +122,9 @@ label.lbl{display:block;color:var(--lbl);font-size:13px;font-weight:700;margin-b
 .inp:focus{border-color:var(--acc)}
 .inp.has-prefix{padding-inline-start:48px}
 .chip-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.chip{padding:13px 8px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--brd);color:var(--txt2);font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;width:100%}
+.chip{padding:13px 10px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--brd);color:var(--txt2);font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;width:100%;display:flex;align-items:center;justify-content:center;gap:9px}
+.chip .lt-ic{flex-shrink:0;opacity:.85}
+.chip.active .lt-ic{opacity:1}
 .chip.active{background:color-mix(in srgb,var(--acc) 15%,transparent);border-color:var(--acc);color:var(--acc)}
 input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0 2px}
 .range-labels{display:flex;justify-content:space-between;color:var(--txt3);font-size:11px;margin-bottom:8px}
@@ -120,7 +146,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .risk-btn.high.active{background:#ef444415;border-color:#ef4444;color:#ef4444;font-weight:700}
 /* btn-footer: always at bottom, solid color, never obscured */
 .btn-footer{
-  padding:10px 20px 16px;
+  padding:10px 20px calc(16px + var(--safe-bottom));
   flex-shrink:0;
   background:var(--bg);
   border-top:1px solid var(--brd);
@@ -129,17 +155,19 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .primary-btn:active{opacity:.88}
 
 /* ── RESULTS ── */
-#results-screen{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh}
-.results-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 0;flex-shrink:0}
+#results-screen{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh;min-height:100dvh}
+.results-header{display:flex;align-items:center;justify-content:space-between;padding:calc(16px + var(--safe-top)) 20px 0;flex-shrink:0}
 .results-title{color:var(--txt);font-size:19px;font-weight:800}
 .risk-banner{display:flex;align-items:center;gap:10px;margin:14px 20px 0;padding:13px 16px;border-radius:14px;border:1.5px solid}
 .risk-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .risk-banner-text{font-size:15px;font-weight:700;flex:1}
+.risk-info-btn{width:24px;height:24px;flex-shrink:0;border-radius:50%;background:transparent;border:1.5px solid currentColor;color:var(--txt3);font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;opacity:.7;transition:opacity .2s}
+.risk-info-btn:active{opacity:1}
 .tab-row{display:flex;gap:6px;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none}
 .tab-row::-webkit-scrollbar{display:none}
-.tab-btn{padding:8px 12px;border-radius:9px;background:var(--bg2);border:1.5px solid var(--brd);color:var(--txt2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.tab-btn{display:inline-flex;align-items:center;padding:8px 12px;border-radius:9px;background:var(--bg2);border:1.5px solid var(--brd);color:var(--txt2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
 .tab-btn.active{background:color-mix(in srgb,var(--acc) 12%,transparent);border-color:var(--acc);color:var(--acc)}
-.tab-content{padding:12px 20px 90px 20px;display:none;flex-direction:column;gap:13px}
+.tab-content{padding:12px 20px calc(90px + var(--safe-bottom)) 20px;display:none;flex-direction:column;gap:13px}
 .tab-content.active{display:flex}
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .kpi-card{background:var(--bg2);border-radius:14px;padding:14px 12px;border-top:3px solid}
@@ -171,6 +199,15 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .manual-wrap{margin-top:7px}
 .manual-inp{width:100%;padding:11px 13px;background:var(--bg3);border:1.5px solid var(--acc);border-radius:10px;color:var(--txt);font-size:15px;outline:none;appearance:none;-webkit-appearance:none}
 .manual-sel{padding:11px 9px;background:var(--bg3);border:1.5px solid var(--acc);border-radius:10px;color:var(--txt);font-size:14px;outline:none;cursor:pointer;min-width:85px}
+/* سهم موحّد للقوائم المنسدلة (تبقى native — تفتح منتقي النظام) */
+.period-unit,.manual-sel,.app-sel{
+  appearance:none;-webkit-appearance:none;font-family:inherit;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23889' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;background-size:13px;padding-inline-end:30px;
+}
+#app[dir="rtl"] .period-unit,#app[dir="rtl"] .manual-sel,#app[dir="rtl"] .app-sel{
+  background-position:left 10px center;
+}
 .loan-card{background:var(--bg2);border-radius:13px;padding:14px 15px;border:1px solid var(--brd);margin-bottom:10px;position:relative}
 .loan-card-title{font-weight:700;font-size:15px;color:var(--txt);margin-bottom:10px}
 .remove-btn{position:absolute;top:12px;inset-inline-end:12px;background:none;border:none;color:var(--txt3);font-size:18px;cursor:pointer}
@@ -220,22 +257,45 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .empty-state{text-align:center;color:var(--txt2);font-size:15px;padding:24px 0;line-height:1.7}
 .clear-btn{padding:11px;border-radius:10px;background:var(--bg2);border:1px solid #ef444450;color:#ef4444;font-size:14px;font-weight:700;cursor:pointer;width:100%}
 /* SETTINGS */
-#settings-screen{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh}
+#settings-screen{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh;min-height:100dvh}
 .pdf-btn{width:100%;padding:13px;border-radius:14px;background:color-mix(in srgb,#10b981 14%,transparent);border:1.5px solid #10b98170;color:#10b981;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:inherit;transition:all .2s}
 .pdf-btn:active{opacity:.8;transform:scale(.98)}
-.settings-hdr{display:flex;align-items:center;gap:12px;padding:18px 20px 0}
+.settings-hdr{display:flex;align-items:center;gap:12px;padding:calc(18px + var(--safe-top)) 20px 0}
 .settings-title{font-size:20px;font-weight:800;color:var(--txt)}
 .settings-body{padding:16px 20px;display:flex;flex-direction:column;gap:22px}
 .theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.set-section{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:15px}
+.set-section-hd{display:flex;align-items:center;gap:9px;margin-bottom:13px;color:var(--lbl)}
+.set-section-hd .ic{width:18px;height:18px;flex-shrink:0}
+.theme-light .set-section{background:#fff}
+.currency-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cur-btn{position:relative;border-radius:13px;padding:11px 6px 9px;border:1.5px solid var(--brd);background:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .18s}
+.theme-light .cur-btn{background:#f6f7fb}
+.cur-btn.active{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,transparent)}
+.cur-flag{font-size:22px;line-height:1}
+.cur-code{font-size:11px;font-weight:800;color:var(--txt2);letter-spacing:.3px}
+.cur-sym{font-size:13px;font-weight:700;color:var(--txt)}
+.cur-btn.active .cur-code,.cur-btn.active .cur-sym{color:var(--acc)}
+.lang-rows{display:flex;flex-direction:column;gap:9px}
+.lang-row{display:flex;align-items:center;gap:12px;width:100%;padding:13px 15px;border-radius:13px;border:1.5px solid var(--brd);background:var(--bg);color:var(--txt);font-size:15px;font-weight:700;cursor:pointer;transition:all .18s}
+.theme-light .lang-row{background:#f6f7fb}
+.lang-row .lang-flag{font-size:20px}
+.lang-row .lang-name{flex:1;text-align:start}
+.lang-row.active{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,transparent);color:var(--acc)}
+.set-check{width:20px;height:20px;color:var(--acc);flex-shrink:0;opacity:0;transition:opacity .15s}
+.active>.set-check,.lang-row.active .set-check,.cur-btn.active .set-check{opacity:1}
+.cur-btn .set-check{position:absolute;top:5px;inset-inline-end:5px;width:16px;height:16px}
+.theme-btn .set-check{position:absolute;top:6px;inset-inline-end:6px;width:17px;height:17px}
+.theme-btn{position:relative}
 .theme-btn{border-radius:13px;padding:13px 8px;border:2px solid var(--brd);background:var(--bg2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s}
 .theme-btn.active{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent)}
 .theme-swatch{width:30px;height:30px;border-radius:50%;border:3px solid rgba(255,255,255,.12)}
 .theme-name{font-size:11px;font-weight:700;color:var(--txt2)}
 /* SAVED DETAIL */
-#saved-detail{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh}
-.detail-header{display:flex;align-items:center;gap:12px;padding:16px 20px 0}
+#saved-detail{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh;min-height:100dvh}
+.detail-header{display:flex;align-items:center;gap:12px;padding:calc(16px + var(--safe-top)) 20px 0}
 .detail-title{font-size:17px;font-weight:800;color:var(--txt)}
-.detail-body{padding:14px 20px;display:flex;flex-direction:column;gap:12px;padding-bottom:30px}
+.detail-body{padding:14px 20px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(30px + var(--safe-bottom))}
 </style>
 </head>
 <body>
@@ -263,8 +323,21 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="home-top-row">
       <span class="home-app-name" id="home-app-name">Smart Loan Calculator</span>
       <div class="home-actions">
-        <button class="icon-btn" onclick="openSettings()">⚙️</button>
-        <button class="icon-btn" onclick="toggleLang()" id="home-lang-btn">AR</button>
+        <div class="lang-dd" id="lang-dd">
+          <button class="icon-btn lang-dd-btn" onclick="toggleLangMenu(event)" id="home-lang-btn" aria-label="Language">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+            <span id="home-lang-code">EN</span>
+            <svg class="ic-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="lang-dd-menu" id="lang-dd-menu">
+            <button onclick="pickLang('ar')" data-l="ar"><span>🇸🇦</span><span>العربية</span></button>
+            <button onclick="pickLang('en')" data-l="en"><span>🇺🇸</span><span>English</span></button>
+            <button onclick="pickLang('es')" data-l="es"><span>🇪🇸</span><span>Español</span></button>
+          </div>
+        </div>
+        <button class="icon-btn icon-btn-sq" onclick="openSettings()" aria-label="Settings">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
     </div>
     <p class="home-tagline" id="home-tagline">Loan calculation & estimation tool</p>
@@ -279,19 +352,19 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   <div id="home-profile-card" style="display:none;margin:0 20px 14px">
     <div style="background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:14px 16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <span style="font-size:13px;font-weight:800;color:var(--txt)" id="home-profile-title">👤 Financial Profile</span>
-        <button onclick="editProfile()" style="padding:5px 12px;border-radius:8px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:12px;font-weight:700;cursor:pointer" id="home-edit-profile-btn">✏️ Edit</button>
+        <span style="font-size:13px;font-weight:800;color:var(--txt)" id="home-profile-title">Financial Profile</span>
+        <button onclick="editProfile()" style="padding:5px 12px;border-radius:8px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:12px;font-weight:700;cursor:pointer" id="home-edit-profile-btn">Edit</button>
       </div>
       <div id="home-profile-rows" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
     </div>
   </div>
   <!-- Saved loans on home -->
   <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;margin-bottom:10px">
-    <p class="home-section-title" id="home-saved-title" style="margin-bottom:0;padding:0">💾 SAVED LOANS</p>
-    <button id="home-compare-btn" onclick="openCompare()" style="display:none;padding:7px 14px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;cursor:pointer">⚖️ Compare</button>
+    <p class="home-section-title" id="home-saved-title" style="margin-bottom:0;padding:0">SAVED LOANS</p>
+    <button id="home-compare-btn" onclick="openCompare()" style="display:none;padding:7px 14px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;cursor:pointer">Compare</button>
   </div>
   <div class="saved-mini-list" id="home-saved-list">
-    <div class="no-saved-home" id="home-no-saved">No saved loans yet.<br>Calculate a loan and tap 💾 Save.</div>
+    <div class="no-saved-home" id="home-no-saved">No saved loans yet.<br>Calculate a loan and tap Save.</div>
   </div>
 </div>
 
@@ -304,7 +377,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   </div>
   <div class="step-progress"><div class="step-progress-fill" style="width:25%"></div></div>
   <div class="step-body">
-    <h2 class="step-title" id="s1-title">💰 Income Details</h2>
+    <h2 class="step-title" id="s1-title">Income Details</h2>
     <div class="field-wrap">
       <label class="lbl" id="lbl-salary">MONTHLY SALARY</label>
       <div class="input-wrap"><span class="input-prefix" id="pfx1">SAR</span><input class="inp has-prefix" id="inp-salary" type="number" inputmode="numeric" placeholder="e.g. 5000" oninput="updateForm('salary',this.value)"></div>
@@ -326,7 +399,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   </div>
   <div class="step-progress"><div class="step-progress-fill" style="width:50%"></div></div>
   <div class="step-body">
-    <h2 class="step-title" id="s2-title">📋 Monthly Expenses</h2>
+    <h2 class="step-title" id="s2-title">Monthly Expenses</h2>
     <div class="field-wrap">
       <label class="lbl" id="lbl-exp">FIXED EXPENSES</label>
       <div class="input-wrap"><span class="input-prefix" id="pfx3">SAR</span><input class="inp has-prefix" id="inp-expenses" type="number" inputmode="numeric" placeholder="e.g. 1500" oninput="updateForm('expenses',this.value)"></div>
@@ -338,7 +411,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="field-wrap">
       <label class="lbl" id="lbl-exist">EXISTING LOAN PAYMENTS</label>
       <div class="input-wrap"><span class="input-prefix" id="pfx5">SAR</span><input class="inp has-prefix" id="inp-existing" type="number" inputmode="numeric" placeholder="0" value="0" readonly style="opacity:.7;cursor:not-allowed;background:var(--bg3)"></div>
-      <p style="font-size:11px;color:var(--txt3);margin-top:5px" id="lbl-exist-hint">🔒 يُحسب تلقائياً من القروض النشطة — لا يمكن تعديله يدوياً</p>
+      <p style="font-size:11px;color:var(--txt3);margin-top:5px" id="lbl-exist-hint">يُحسب تلقائياً من القروض النشطة — لا يمكن تعديله يدوياً</p>
     </div>
   </div>
   <div class="btn-footer"><button class="primary-btn" id="s2-next" onclick="goStep(3)">Next →</button></div>
@@ -353,7 +426,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   </div>
   <div class="step-progress"><div class="step-progress-fill" style="width:75%"></div></div>
   <div class="step-body">
-    <h2 class="step-title" id="s3-title">🏦 Loan Details</h2>
+    <h2 class="step-title" id="s3-title">Loan Details</h2>
     <div class="field-wrap">
       <label class="lbl" id="lbl-ltype">LOAN TYPE</label>
       <div class="chip-grid" id="loan-type-chips"></div>
@@ -389,11 +462,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="field-wrap">
       <label class="lbl" id="lbl-start-date">LOAN START DATE</label>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <select id="inp-start-month" onchange="updateStartDate()"
-          style="background:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding:12px 14px;color:var(--txt);font-size:15px;font-weight:600;outline:none;font-family:inherit">
+        <select id="inp-start-month" onchange="updateStartDate()" class="app-sel"
+          style="background-color:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding-block:12px;padding-inline:14px 30px;color:var(--txt);font-size:15px;font-weight:600;outline:none;font-family:inherit">
         </select>
-        <select id="inp-start-year" onchange="updateStartDate()"
-          style="background:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding:12px 14px;color:var(--txt);font-size:15px;font-weight:600;outline:none;font-family:inherit">
+        <select id="inp-start-year" onchange="updateStartDate()" class="app-sel"
+          style="background-color:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding-block:12px;padding-inline:14px 30px;color:var(--txt);font-size:15px;font-weight:600;outline:none;font-family:inherit">
         </select>
       </div>
       <p style="font-size:11px;color:var(--txt3);margin-top:6px" id="lbl-start-hint">Default is current month — change if loan already started or will start later</p>
@@ -411,7 +484,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   </div>
   <div class="step-progress"><div class="step-progress-fill" style="width:100%"></div></div>
   <div class="step-body">
-    <h2 class="step-title" id="s4-title">👤 Your Profile</h2>
+    <h2 class="step-title" id="s4-title">Your Profile</h2>
     <div class="field-wrap"><label class="lbl" id="lbl-emp">EMPLOYMENT STATUS</label><div id="emp-options"></div></div>
     <div class="field-wrap"><label class="lbl" id="lbl-risk">RISK TOLERANCE</label><div class="risk-col" id="risk-options"></div></div>
   </div>
@@ -425,13 +498,13 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <span class="results-title" id="res-title">Your Report</span>
     <button class="lang-toggle" onclick="toggleLang()">EN/AR</button>
   </div>
-  <div class="risk-banner" id="risk-banner"><div class="risk-dot" id="risk-dot"></div><span class="risk-banner-text" id="risk-banner-text"></span><span style="color:var(--txt3);font-size:12px" id="risk-score-txt"></span></div>
+  <div class="risk-banner" id="risk-banner"><div class="risk-dot" id="risk-dot"></div><span class="risk-banner-text" id="risk-banner-text"></span><span style="color:var(--txt3);font-size:12px" id="risk-score-txt"></span><button class="risk-info-btn" id="risk-info-btn" onclick="showRiskInfo()" aria-label="Risk info">?</button></div>
   <div class="tab-row">
-    <button class="tab-btn active" onclick="switchTab('report',this)" id="tab-report">📋 Report</button>
-    <button class="tab-btn" onclick="switchTab('charts',this)" id="tab-charts">📊 Charts</button>
-    <button class="tab-btn" onclick="switchTab('schedule',this)" id="tab-schedule">📅 Schedule</button>
-    <button class="tab-btn" onclick="switchTab('simulate',this)" id="tab-simulate">🔄 Simulate</button>
-    <button class="tab-btn" onclick="switchTab('restructure',this)" id="tab-restructure">🔁 Reschedule</button>
+    <button class="tab-btn active" onclick="switchTab('report',this)" id="tab-report">Report</button>
+    <button class="tab-btn" onclick="switchTab('charts',this)" id="tab-charts">Charts</button>
+    <button class="tab-btn" onclick="switchTab('schedule',this)" id="tab-schedule">Schedule</button>
+    <button class="tab-btn" onclick="switchTab('simulate',this)" id="tab-simulate">Simulate</button>
+    <button class="tab-btn" onclick="switchTab('restructure',this)" id="tab-restructure">Reschedule</button>
 
   </div>
   <!-- REPORT -->
@@ -443,11 +516,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="card"><p class="card-label" id="lbl-rec">ESTIMATED LOAN</p><p class="card-big" id="rec-loan"></p><p class="card-sub" id="rec-range"></p><p class="card-sub" id="rec-range-hint" style="margin-top:6px;font-size:12px;opacity:.7"></p></div>
     <div class="card"><p class="card-label" id="lbl-advice">THINGS TO CONSIDER</p><div id="advice-list"></div></div>
     <div class="action-row">
-      <button class="save-btn" onclick="saveScenario()" id="btn-save">💾 Save Scenario</button>
-      <button class="home-btn" onclick="goHome()" id="btn-go-home">🏠 Home</button>
+      <button class="save-btn" onclick="saveScenario()" id="btn-save">Save Scenario</button>
+      <button class="home-btn" onclick="goHome()" id="btn-go-home">Home</button>
     </div>
-    <button class="pdf-btn" onclick="exportPDF()" id="btn-pdf">📄 Export PDF</button>
-    <button class="restart-btn" onclick="restart()" id="btn-restart">↺ Start Over</button>
+    <button class="pdf-btn" onclick="exportPDF()" id="btn-pdf">Export PDF</button>
+    <button class="restart-btn" onclick="restart()" id="btn-restart">Start Over</button>
   </div>
   <!-- CHARTS -->
   <div class="tab-content" id="tc-charts">
@@ -475,16 +548,16 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   <div class="tab-content" id="tc-simulate">
     <div class="card">
       <p class="card-label" id="lbl-sim">SCENARIO SIMULATOR</p>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt">✏️</button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simUpdate()"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="number" id="manual-inp-amt" inputmode="numeric" oninput="applyManual('amt')"></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per">✏️</button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simUpdate()"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" id="opt-years">Years</option></select></div></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate">✏️</button></div><input type="range" min="0.1" max="30" step="0.01" value="8.5" id="sim-range-rate" oninput="simUpdate()"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt"></button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simUpdate()"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="number" id="manual-inp-amt" inputmode="numeric" oninput="applyManual('amt')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simUpdate()"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" id="opt-years">Years</option></select></div></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0.1" max="30" step="0.01" value="8.5" id="sim-range-rate" oninput="simUpdate()"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
     </div>
     <div class="kpi-grid" id="sim-kpi"></div>
   </div>
   <!-- RESTRUCTURE -->
   <div class="tab-content" id="tc-restructure">
     <div class="adv-card" style="border-color:#1e3a5f;background:linear-gradient(135deg,#0c1f3a,#0a1628)">
-      <p style="font-size:13px;color:#94b8d4;line-height:1.7" id="rst-info-text">💡 ...</p>
+      <p style="font-size:13px;color:#94b8d4;line-height:1.7" id="rst-info-text">...</p>
     </div>
     <div class="card">
       <p class="card-label" id="lbl-rst-details">RESTRUCTURING DETAILS</p>
@@ -504,11 +577,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg3);border-radius:12px;padding:4px;margin-bottom:12px">
         <button id="rst-tab-rate" onclick="switchRstTab('rate')"
           style="padding:9px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--acc);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.4);transition:all .2s">
-          📉 <span id="rst-tab-rate-lbl">Change Rate</span>
+          <span id="rst-tab-rate-lbl">Change Rate</span>
         </button>
         <button id="rst-tab-pay" onclick="switchRstTab('pay')"
           style="padding:9px;border-radius:9px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;background:transparent;color:var(--txt3);transition:all .2s">
-          💳 <span id="rst-tab-pay-lbl">Change Payment</span>
+          <span id="rst-tab-pay-lbl">Change Payment</span>
         </button>
       </div>
       <div id="rst-section-rate">
@@ -526,7 +599,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
         <p style="font-size:11px;color:var(--txt3);text-align:center" id="rst-pay-hint">Same rate — duration changes automatically</p>
       </div>
       <div style="background:#1a0a00;border:1px solid #92400e;border-radius:10px;padding:10px 12px;font-size:12px;color:#fbbf24;margin-top:12px;line-height:1.6;display:flex;gap:8px">
-        <span>⚠️</span><span id="rst-warning">Balance is calculated after the specified payment — restructuring starts the following month.</span>
+        <span></span><span id="rst-warning">Balance is calculated after the specified payment — restructuring starts the following month.</span>
       </div>
     </div>
     <div class="card" id="rst-result-card" style="display:none">
@@ -540,7 +613,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       </div>
       <button id="rst-save-btn" onclick="saveRefinanceAsScenario()"
         style="width:100%;padding:13px;border-radius:14px;border:none;background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:none">
-        <span id="rst-save-lbl">💾 Save as Comparison Scenario</span>
+        <span id="rst-save-lbl">Save as Comparison Scenario</span>
       </button>
     </div>
   </div>
@@ -561,23 +634,29 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <div class="screen" id="settings-screen">
   <div class="settings-hdr">
     <button class="back-btn" onclick="settingsBack()" id="settings-back-btn">←</button>
-    <span class="settings-title" id="settings-title">⚙️ Settings</span>
+    <span class="settings-title" id="settings-title">Settings</span>
   </div>
-  <div class="settings-body" style="overflow-y:auto;padding-bottom:30px">
-    <div><p class="card-label" style="margin-bottom:12px" id="lbl-themes">CHOOSE THEME</p><div class="theme-grid" id="theme-grid"></div></div>
-    <div>
-      <p class="card-label" style="margin-bottom:12px" id="lbl-currency-set">CURRENCY</p>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px" id="currency-grid"></div>
+  <div class="settings-body" style="overflow-y:auto;padding-bottom:calc(30px + env(safe-area-inset-bottom, 0px))">
+    <div class="set-section">
+      <div class="set-section-hd">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1.3"/><circle cx="17.5" cy="10.5" r="1.3"/><circle cx="8.5" cy="7.5" r="1.3"/><circle cx="6.5" cy="12.5" r="1.3"/><path d="M12 2a10 10 0 1 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1 .8-1.7 1.8-1.7H16a6 6 0 0 0 6-6c0-4.4-4.5-7.8-10-7.8z"/></svg>
+        <span class="card-label" id="lbl-themes" style="margin:0">CHOOSE THEME</span>
+      </div>
+      <div class="theme-grid" id="theme-grid"></div>
     </div>
-    <div>
-      <p class="card-label" style="margin-bottom:12px" id="lbl-lang-set">LANGUAGE</p>
-      <div style="display:flex;gap:10px">
-        <button class="lang-btn" style="flex:1;padding:12px;font-size:15px" onclick="chooseLangFromSettings('ar')">🇸🇦 العربية</button>
-        <button class="lang-btn" style="flex:1;padding:12px;font-size:15px" onclick="chooseLangFromSettings('en')">🇺🇸 English</button>
+    <div class="set-section">
+      <div class="set-section-hd">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2 0 0 0-2.5-1.5c-1.4 0-2.5.8-2.5 2s1.1 1.7 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2 0 0 1 9.5 16"/><path d="M12 6v1.5M12 16.5V18"/></svg>
+        <span class="card-label" id="lbl-currency-set" style="margin:0">CURRENCY</span>
       </div>
-      <div style="margin-top:10px">
-        <button class="lang-btn" style="width:100%;padding:12px;font-size:15px" onclick="chooseLangFromSettings('es')">🇪🇸 Español</button>
+      <div class="currency-grid" id="currency-grid"></div>
+    </div>
+    <div class="set-section">
+      <div class="set-section-hd">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+        <span class="card-label" id="lbl-lang-set" style="margin:0">LANGUAGE</span>
       </div>
+      <div class="lang-rows" id="lang-rows"></div>
     </div>
   </div>
 </div>
@@ -586,7 +665,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <div class="screen" id="compare-screen" style="height:auto;min-height:100vh;overflow-y:auto">
   <div style="display:flex;align-items:center;gap:12px;padding:18px 20px 0;flex-shrink:0">
     <button class="back-btn" onclick="goHome()" id="compare-back">←</button>
-    <span style="font-size:19px;font-weight:800;color:var(--txt)" id="compare-title">⚖️ Compare Loans</span>
+    <span style="font-size:19px;font-weight:800;color:var(--txt)" id="compare-title">Compare Loans</span>
   </div>
   <div id="compare-body" style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;padding-bottom:30px"></div>
 </div>
@@ -596,10 +675,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 let lang='en',results=null,saved=[],extraLoans=[],settingsPrev='home',currentTheme='default';
 let currency=''; // set on first launch by user
 let isPremium=false; // false=free, true=premium
+let _lastSaveClick=0; // debounce حماية من الضغط المزدوج على زر الحفظ
 
 // ── عملات الخليج + إسبانيا ─────────────────────────────────────────────────
 const CURRENCIES=[
-  {id:'NONE', symbol:'',    nameAr:'بدون عملة',     nameEn:'No currency',    nameEs:'Sin moneda',     flag:'🔢'},
+  {id:'NONE', symbol:'',    nameAr:'بدون عملة',     nameEn:'No currency',    nameEs:'Sin moneda',     flag:''},
   {id:'USD',  symbol:'$',   nameAr:'دولار أمريكي',  nameEn:'US Dollar',      nameEs:'Dólar USD',      flag:'🇺🇸'},
   {id:'EUR',  symbol:'€',   nameAr:'يورو',           nameEn:'Euro',           nameEs:'Euro',           flag:'🇪🇺'},
   {id:'SAR',  symbol:'ر.س', nameAr:'ريال سعودي',    nameEn:'Saudi Riyal',    nameEs:'Riyal saudí',    flag:'🇸🇦'},
@@ -651,9 +731,26 @@ function getThemeName(th){
   if(lang==='es') return th.nameEs;
   return th.name;
 }
+// ── أيقونات أنواع القروض (SVG خطية احترافية بدل الإيموجي) ──────────────────────
+const LT_PATHS={
+  car:'<path d="M3 13l2-5a3 3 0 0 1 2.8-2h8.4A3 3 0 0 1 19 8l2 5"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7" cy="15" r="1"/><circle cx="17" cy="15" r="1"/>',
+  home:'<path d="M4 11l8-7 8 7"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/><path d="M10 20v-5h4v5"/>',
+  personal:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/><path d="M7 15h4"/>',
+  business:'<rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M9 7h.01M12 7h.01M15 7h.01M9 11h.01M12 11h.01M15 11h.01M9 15h.01M15 15h.01"/><path d="M11 21v-3h2v3"/>',
+  education:'<path d="M2 9l10-4 10 4-10 4z"/><path d="M6 11v4.5c0 1 3 2.5 6 2.5s6-1.5 6-2.5V11"/><path d="M22 9v5"/>',
+  other:'<path d="M3 8l9-4 9 4-9 4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/>'
+};
+function ltIcon(type,size){
+  const s=size||20;
+  const p=LT_PATHS[type]||LT_PATHS.other;
+  return `<svg class="lt-ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+}
+// أيقونة التقويم (بدل الإيموجي في تبويب الجدول)
+const CAL_ICON='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-inline-end:5px;flex-shrink:0"><rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>';
 function renderThemeGrid(){
   document.getElementById('theme-grid').innerHTML=THEMES.map(th=>
     `<button class="theme-btn${currentTheme===th.id?' active':''}" onclick="applyTheme('${th.id}')">
+      <svg class="set-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
       <div class="theme-swatch" style="background:${th.swatch};${th.swatch==='#111111'?'border:2px solid #444':''}"></div>
       <span class="theme-name">${getThemeName(th)}</span>
     </button>`).join('');
@@ -665,12 +762,12 @@ const T={
     appName:'Smart Loan Calculator',appTagline:'Loan calculation & estimation tool',
     heroLabel:'NEW CALCULATION',heroTitle:'Start your loan\ncalculation now',heroBtn:'Get Started →',
     currency:'SAR',months:'mo',years:'yrs',
-    s1:'💰 Income Details',s2:'📋 Monthly Expenses',s3:'🏦 Loan Details',s4:'👤 Your Profile',
+    s1:'Income Details',s2:'Monthly Expenses',s3:'Loan Details',s4:'Your Profile',
     step:'Step',of:'of',back:'←',next:'Next →',calculate:'Calculate My Loan →',
     q_salary:'MONTHLY SALARY',q_income:'ADDITIONAL INCOME',q_expenses:'FIXED EXPENSES',
     q_variable:'VARIABLE EXPENSES',q_existing:'EXISTING LOAN PAYMENTS',q_loanType:'LOAN TYPE',
     q_amount:'LOAN AMOUNT',q_period:'REPAYMENT PERIOD',q_employment:'EMPLOYMENT STATUS',q_risk:'RISK TOLERANCE',
-    lt_car:'🚗 Car',lt_home:'🏠 Home',lt_personal:'💳 Personal',lt_business:'🏢 Business',lt_education:'🎓 Education',lt_other:'📦 Other',
+    lt_car:'Car',lt_home:'Home',lt_personal:'Personal',lt_business:'Business',lt_education:'Education',lt_other:'Other',
     emp_full:'Full-time Employed',emp_part:'Part-time Employed',emp_self:'Self-Employed',emp_retired:'Retired',emp_none:'Unemployed',
     risk_low:'Low — I prefer safety',risk_medium:'Medium — Balanced',risk_high:'High — Maximise opportunity',
     results:'Your Loan Summary',recommended:'ESTIMATED LOAN',suggestedRange:'Calculated Range',
@@ -679,42 +776,45 @@ const T={
     recommendation:'CALCULATION SUMMARY',advice:'THINGS TO CONSIDER',breakdown:'REPAYMENT BREAKDOWN',
     amortization:'PAYOFF JOURNEY',loanTypes:'LOAN TYPE SUITABILITY',scenarioSim:'SCENARIO SIMULATOR',balance:'REMAINING BALANCE',
     risk_safe:'Safe',risk_moderate:'Moderate',risk_risky:'Risky',
-    adv_reduce:'💡 Consider reducing the loan amount by 15–20%',
-    adv_down:'💡 Increase your down payment to lower monthly costs',
-    adv_extend:'💡 Extend the repayment period to ease monthly burden',
-    adv_avoid:'⛔ Avoid this loan — financial risk is too high',
-    adv_great:'✅ This loan fits your financial profile comfortably',
-    adv_moderate:'⚠️ This loan is feasible but monitor your budget closely',
-    rec_safe:'✅ This loan is suitable for your income',rec_mod:'⚡ Feasible with careful budgeting',rec_moderate:'⚡ Feasible with careful budgeting',rec_risky:'⚠️ This loan may put financial pressure on your budget',
-    saveScenario:'💾 Save Loan',goHome:'🏠 Home',restart:'↺ Start Over',
-    profileTitle:'👤 Financial Profile',editProfile:'✏️ Edit',
+    adv_reduce:'Consider reducing the loan amount by 15–20%',
+    adv_down:'Increase your down payment to lower monthly costs',
+    adv_extend:'Extend the repayment period to ease monthly burden',
+    adv_avoid:'Avoid this loan — financial risk is too high',
+    adv_great:'This loan fits your financial profile comfortably',
+    adv_moderate:'This loan is feasible but monitor your budget closely',
+    rec_safe:'This loan is suitable for your income',rec_mod:'Feasible with careful budgeting',rec_moderate:'Feasible with careful budgeting',rec_risky:'This loan may put financial pressure on your budget',
+    saveScenario:'Save Loan',goHome:'Home',restart:'Start Over',
+    profileTitle:'Financial Profile',editProfile:'Edit',
     profileIncome:'Income',profileExpenses:'Expenses',profileExisting:'Existing Loans',
     newLoanBtn:'+ New Loan',
-    noSavedHome:'No saved loans yet.\nCalculate a loan and tap 💾 Save.',
-    noSaved:'No saved loans yet.',clearAll:'🗑 Clear All',
-    tab_report:'📋 Report',tab_charts:'📊 Charts',tab_simulate:'🔄 Simulate',tab_restructure:'🔁 Refinance',tab_loans:'➕ Loans',tab_saved:'💾 Saved',
+    noSavedHome:'No saved loans yet.\nCalculate a loan and tap Save.',
+    noSaved:'No saved loans yet.',clearAll:'Clear All',
+    tab_report:'Report',tab_charts:'Charts',tab_simulate:'Simulate',tab_restructure:'Refinance',tab_loans:'Loans',tab_saved:'Saved',
     principal:'Principal',interest:'Interest',month:'Month',sim_amt:'AMOUNT',sim_per:'PERIOD',sim_rate:'RATE',
     basisTitle:'HOW YOUR LOAN IS CALCULATED',
     grossIncome:'Total Gross Income',netIncome:'Net (after expenses)',
     newInstall:'New Loan Installment',existingLoans:'Existing Loan Payments',
     dtiGrossLbl:'DTI % of Gross Income',dtiNetLbl:'DTI % of Net Income',
-    addLoan:'➕ Add Another Loan',mainLoan:'Main Loan',loanN:'Loan',
+    addLoan:'Add Another Loan',mainLoan:'Main Loan',loanN:'Loan',
     totalInstall:'Total Monthly Payments',totalPctGross:'% of Gross Income',totalPctNet:'% of Net Income',
-    settings:'⚙️ Settings',themes:'CHOOSE THEME',langSet:'LANGUAGE',
-    savedScenarios:'💾 SAVED LOANS',detailTitle:'Loan Details',
-    compareBtnHome:'⚖️ Compare',compareTitle:'Compare Loans',
-    features:['📊 Instant loan calculation','🧠 Detailed estimates','📉 Risk indicators','🔄 Scenario simulation'],
+    settings:'Settings',themes:'CHOOSE THEME',langSet:'LANGUAGE',
+    savedScenarios:'SAVED LOANS',detailTitle:'Loan Details',
+    compareBtnHome:'Compare',compareTitle:'Compare Loans',
+    features:['Instant loan calculation','Detailed estimates','Risk indicators','Scenario simulation'],
+    riskInfoTitle:'How is Risk Level calculated?',
+    riskInfoBody:'Risk Level is based on your DTI (Debt-to-Income) ratio — the share of your income that goes to loan payments.\n\nSafe: payments under 35% of gross income.\n\nModerate: payments between 35% and 50%.\n\nRisky: payments above 50%.\n\nA lower ratio means more breathing room in your budget.',
+    riskInfoClose:'Got it',
   },
   ar:{
     appName:'حاسبة القروض الذكية',appTagline:'أداة حساب وتقدير القروض',
     heroLabel:'حساب جديد',heroTitle:'ابدأ حساب قرضك\nالآن',heroBtn:'ابدأ الآن ←',
     currency:'ريال',months:'شهر',years:'سنة',
-    s1:'💰 تفاصيل الدخل',s2:'📋 المصروفات الشهرية',s3:'🏦 تفاصيل القرض',s4:'👤 ملفك الشخصي',
+    s1:'تفاصيل الدخل',s2:'المصروفات الشهرية',s3:'تفاصيل القرض',s4:'ملفك الشخصي',
     step:'الخطوة',of:'من',back:'→',next:'التالي ←',calculate:'احسب قرضي ←',
     q_salary:'الراتب الشهري',q_income:'الدخل الإضافي',q_expenses:'المصروفات الثابتة',
     q_variable:'المصروفات المتغيرة',q_existing:'أقساط قائمة',q_loanType:'نوع القرض',
     q_amount:'مبلغ القرض',q_period:'مدة السداد',q_employment:'الحالة الوظيفية',q_risk:'مستوى المخاطر',
-    lt_car:'🚗 سيارة',lt_home:'🏠 عقاري',lt_personal:'💳 شخصي',lt_business:'🏢 تجاري',lt_education:'🎓 تعليمي',lt_other:'📦 أخرى',
+    lt_car:'سيارة',lt_home:'عقاري',lt_personal:'شخصي',lt_business:'تجاري',lt_education:'تعليمي',lt_other:'أخرى',
     emp_full:'موظف دوام كامل',emp_part:'موظف دوام جزئي',emp_self:'عمل حر',emp_retired:'متقاعد',emp_none:'غير موظف',
     risk_low:'منخفض — أُفضّل الأمان',risk_medium:'متوسط — نهج متوازن',risk_high:'مرتفع — أسعى للفرص',
     results:'ملخص قرضك',recommended:'القرض التقديري',suggestedRange:'النطاق المحسوب',
@@ -723,42 +823,45 @@ const T={
     recommendation:'ملخص الحساب',advice:'أمور للاعتبار',breakdown:'تفاصيل السداد',
     amortization:'رحلة السداد',loanTypes:'ملاءمة أنواع القروض',scenarioSim:'محاكاة السيناريوهات',balance:'الرصيد المتبقي',
     risk_safe:'آمن',risk_moderate:'معتدل',risk_risky:'خطر',
-    adv_reduce:'💡 فكّر في تخفيض المبلغ بنسبة 15–20%',
-    adv_down:'💡 زيادة الدفعة الأولى لتقليل الأقساط',
-    adv_extend:'💡 مدّد فترة السداد لتخفيف العبء',
-    adv_avoid:'⛔ تجنب هذا القرض — المخاطر مرتفعة جداً',
-    adv_great:'✅ هذا القرض يتناسب مع ملفك المالي',
-    adv_moderate:'⚠️ هذا القرض ممكن لكن راقب ميزانيتك',
-    rec_safe:'✅ هذا القرض مناسب لدخلك',rec_mod:'⚡ ممكن مع إدارة دقيقة للميزانية',rec_moderate:'⚡ ممكن مع إدارة دقيقة للميزانية',rec_risky:'⚠️ هذا القرض قد يُشكّل ضغطاً مالياً',
-    saveScenario:'💾 حفظ القرض',goHome:'🏠 الرئيسية',restart:'↺ البداية من جديد',
-    profileTitle:'👤 ملفك المالي',editProfile:'✏️ تعديل',
+    adv_reduce:'فكّر في تخفيض المبلغ بنسبة 15–20%',
+    adv_down:'زيادة الدفعة الأولى لتقليل الأقساط',
+    adv_extend:'مدّد فترة السداد لتخفيف العبء',
+    adv_avoid:'تجنب هذا القرض — المخاطر مرتفعة جداً',
+    adv_great:'هذا القرض يتناسب مع ملفك المالي',
+    adv_moderate:'هذا القرض ممكن لكن راقب ميزانيتك',
+    rec_safe:'هذا القرض مناسب لدخلك',rec_mod:'ممكن مع إدارة دقيقة للميزانية',rec_moderate:'ممكن مع إدارة دقيقة للميزانية',rec_risky:'هذا القرض قد يُشكّل ضغطاً مالياً',
+    saveScenario:'حفظ القرض',goHome:'الرئيسية',restart:'البداية من جديد',
+    profileTitle:'ملفك المالي',editProfile:'تعديل',
     profileIncome:'الدخل',profileExpenses:'المصروفات',profileExisting:'أقساط قائمة',
     newLoanBtn:'+ قرض جديد',
-    noSavedHome:'لا توجد قروض محفوظة.\nاحسب قرضاً واضغط 💾 حفظ.',
-    noSaved:'لا توجد قروض محفوظة.',clearAll:'🗑 مسح الكل',
-    tab_report:'📋 التقرير',tab_charts:'📊 الرسوم',tab_simulate:'🔄 محاكاة',tab_restructure:'🔁 إعادة الجدولة',tab_loans:'➕ قروض',tab_saved:'💾 محفوظ',
+    noSavedHome:'لا توجد قروض محفوظة.\nاحسب قرضاً واضغط حفظ.',
+    noSaved:'لا توجد قروض محفوظة.',clearAll:'مسح الكل',
+    tab_report:'التقرير',tab_charts:'الرسوم',tab_simulate:'محاكاة',tab_restructure:'إعادة الجدولة',tab_loans:'قروض',tab_saved:'محفوظ',
     principal:'الأصل',interest:'الفائدة',month:'شهر',sim_amt:'المبلغ',sim_per:'المدة',sim_rate:'الفائدة',
     basisTitle:'كيف يُحسب قرضك؟',
     grossIncome:'إجمالي الدخل الكلي',netIncome:'الصافي (بعد المصروفات)',
     newInstall:'قسط القرض الجديد',existingLoans:'الأقساط القائمة',
     dtiGrossLbl:'نسبة الدين من الدخل الكلي',dtiNetLbl:'نسبة الدين من الصافي',
-    addLoan:'➕ إضافة قرض آخر',mainLoan:'القرض الرئيسي',loanN:'قرض',
+    addLoan:'إضافة قرض آخر',mainLoan:'القرض الرئيسي',loanN:'قرض',
     totalInstall:'إجمالي الأقساط الشهرية',totalPctGross:'% من الدخل الكلي',totalPctNet:'% من الصافي',
-    settings:'⚙️ الإعدادات',themes:'اختر الثيم',langSet:'اللغة',
-    savedScenarios:'💾 القروض المحفوظة',detailTitle:'تفاصيل القرض',
-    compareBtnHome:'⚖️ مقارنة',compareTitle:'مقارنة القروض',
-    features:['📊 حساب فوري للقروض','🧠 تقديرات تفصيلية','📉 مؤشرات المخاطر','🔄 محاكاة السيناريوهات'],
+    settings:'الإعدادات',themes:'اختر الثيم',langSet:'اللغة',
+    savedScenarios:'القروض المحفوظة',detailTitle:'تفاصيل القرض',
+    compareBtnHome:'مقارنة',compareTitle:'مقارنة القروض',
+    features:['حساب فوري للقروض','تقديرات تفصيلية','مؤشرات المخاطر','محاكاة السيناريوهات'],
+    riskInfoTitle:'كيف يُحسب مستوى المخاطرة؟',
+    riskInfoBody:'يعتمد مستوى المخاطرة على نسبة الدين إلى الدخل (DTI) — أي نسبة دخلك التي تذهب لأقساط القروض.\n\nآمن: الأقساط أقل من 35% من الدخل الإجمالي.\n\nمتوسط: الأقساط بين 35% و50%.\n\nمرتفع: الأقساط أعلى من 50%.\n\nكلما انخفضت النسبة، زادت المرونة في ميزانيتك.',
+    riskInfoClose:'حسناً',
   },
   es:{
     appName:'Calculadora de Préstamos',appTagline:'Herramienta de cálculo de préstamos',
     heroLabel:'NUEVO ANÁLISIS',heroTitle:'Evalúa tu crédito\nahora mismo',heroBtn:'Comenzar →',
     currency:'USD',months:'mes',years:'años',
-    s1:'💰 Ingresos',s2:'📋 Gastos mensuales',s3:'🏦 Detalles del préstamo',s4:'👤 Tu perfil',
+    s1:'Ingresos',s2:'Gastos mensuales',s3:'Detalles del préstamo',s4:'Tu perfil',
     step:'Paso',of:'de',back:'←',next:'Siguiente →',calculate:'Calcular mi préstamo →',
     q_salary:'SALARIO MENSUAL',q_income:'INGRESOS ADICIONALES',q_expenses:'GASTOS FIJOS',
     q_variable:'GASTOS VARIABLES',q_existing:'CUOTAS ACTUALES',q_loanType:'TIPO DE PRÉSTAMO',
     q_amount:'MONTO DEL PRÉSTAMO',q_period:'PLAZO DE PAGO',q_employment:'SITUACIÓN LABORAL',q_risk:'TOLERANCIA AL RIESGO',
-    lt_car:'🚗 Auto',lt_home:'🏠 Vivienda',lt_personal:'💳 Personal',lt_business:'🏢 Negocio',lt_education:'🎓 Educación',lt_other:'📦 Otro',
+    lt_car:'Auto',lt_home:'Vivienda',lt_personal:'Personal',lt_business:'Negocio',lt_education:'Educación',lt_other:'Otro',
     emp_full:'Empleado tiempo completo',emp_part:'Empleado tiempo parcial',emp_self:'Autónomo',emp_retired:'Jubilado',emp_none:'Desempleado',
     risk_low:'Bajo — Prefiero la seguridad',risk_medium:'Medio — Equilibrio riesgo/beneficio',risk_high:'Alto — Maximizar oportunidades',
     results:'Resumen de tu préstamo',recommended:'PRÉSTAMO ESTIMADO',suggestedRange:'Rango calculado',
@@ -767,19 +870,22 @@ const T={
     recommendation:'RESUMEN DEL CÁLCULO',advice:'ASPECTOS A CONSIDERAR',breakdown:'DESGLOSE DE PAGOS',
     amortization:'RUTA DE PAGO',loanTypes:'IDONEIDAD DEL PRÉSTAMO',scenarioSim:'SIMULADOR',balance:'SALDO PENDIENTE',
     risk_safe:'Seguro',risk_moderate:'Moderado',risk_risky:'Arriesgado',
-    adv_reduce:'💡 Considera reducir el monto un 15–20%',adv_down:'💡 Aumenta el enganche para reducir las cuotas',adv_extend:'💡 Amplía el plazo para aligerar la carga mensual',
-    adv_avoid:'⛔ Evita este préstamo — el riesgo financiero es muy alto',adv_great:'✅ Este préstamo se adapta perfectamente a tu perfil',adv_moderate:'⚠️ Es viable, pero controla tu presupuesto de cerca',
-    rec_safe:'✅ Este préstamo es adecuado para tus ingresos',rec_mod:'⚡ Viable con una gestión cuidadosa',rec_moderate:'⚡ Viable con una gestión cuidadosa',rec_risky:'⚠️ Este préstamo puede presionar tu economía',
-    saveScenario:'💾 Guardar',goHome:'🏠 Inicio',restart:'↺ Reiniciar',
-    profileTitle:'👤 Perfil financiero',editProfile:'✏️ Editar',profileIncome:'Ingresos',profileExpenses:'Gastos',profileExisting:'Cuotas actuales',newLoanBtn:'+ Nuevo préstamo',
-    noSavedHome:'Aún no tienes préstamos guardados.\nCalcula uno y pulsa 💾 Guardar.',noSaved:'Sin préstamos guardados.',clearAll:'🗑 Borrar todo',
-    tab_report:'📋 Informe',tab_charts:'📊 Gráficos',tab_simulate:'🔄 Simular',tab_restructure:'🔁 Refinanciar',tab_loans:'➕ Préstamos',tab_saved:'💾 Guardados',
+    adv_reduce:'Considera reducir el monto un 15–20%',adv_down:'Aumenta el enganche para reducir las cuotas',adv_extend:'Amplía el plazo para aligerar la carga mensual',
+    adv_avoid:'Evita este préstamo — el riesgo financiero es muy alto',adv_great:'Este préstamo se adapta perfectamente a tu perfil',adv_moderate:'Es viable, pero controla tu presupuesto de cerca',
+    rec_safe:'Este préstamo es adecuado para tus ingresos',rec_mod:'Viable con una gestión cuidadosa',rec_moderate:'Viable con una gestión cuidadosa',rec_risky:'Este préstamo puede presionar tu economía',
+    saveScenario:'Guardar',goHome:'Inicio',restart:'Reiniciar',
+    profileTitle:'Perfil financiero',editProfile:'Editar',profileIncome:'Ingresos',profileExpenses:'Gastos',profileExisting:'Cuotas actuales',newLoanBtn:'+ Nuevo préstamo',
+    noSavedHome:'Aún no tienes préstamos guardados.\nCalcula uno y pulsa Guardar.',noSaved:'Sin préstamos guardados.',clearAll:'Borrar todo',
+    tab_report:'Informe',tab_charts:'Gráficos',tab_simulate:'Simular',tab_restructure:'Refinanciar',tab_loans:'Préstamos',tab_saved:'Guardados',
     principal:'Capital',interest:'Intereses',month:'Mes',sim_amt:'MONTO',sim_per:'PLAZO',sim_rate:'TASA',
     basisTitle:'CÓMO SE CALCULA TU PRÉSTAMO',grossIncome:'Ingresos brutos totales',netIncome:'Neto (tras gastos)',
     newInstall:'Nueva cuota',existingLoans:'Cuotas vigentes',dtiGrossLbl:'% Deuda sobre ingreso bruto',dtiNetLbl:'% Deuda sobre ingreso neto',
-    addLoan:'➕ Añadir préstamo',mainLoan:'Préstamo principal',loanN:'Préstamo',totalInstall:'Total mensual',totalPctGross:'% del ingreso bruto',totalPctNet:'% del ingreso neto',
-    settings:'⚙️ Ajustes',themes:'ELEGIR TEMA',langSet:'IDIOMA',savedScenarios:'💾 PRÉSTAMOS GUARDADOS',detailTitle:'Detalles del préstamo',
-    compareBtnHome:'⚖️ Comparar',compareTitle:'Comparar préstamos',features:['📊 Cálculo instantáneo','🧠 Estimaciones detalladas','📉 Indicadores de riesgo','🔄 Simulación de escenarios'],
+    addLoan:'Añadir préstamo',mainLoan:'Préstamo principal',loanN:'Préstamo',totalInstall:'Total mensual',totalPctGross:'% del ingreso bruto',totalPctNet:'% del ingreso neto',
+    settings:'Ajustes',themes:'ELEGIR TEMA',langSet:'IDIOMA',savedScenarios:'PRÉSTAMOS GUARDADOS',detailTitle:'Detalles del préstamo',
+    compareBtnHome:'Comparar',compareTitle:'Comparar préstamos',features:['Cálculo instantáneo','Estimaciones detalladas','Indicadores de riesgo','Simulación de escenarios'],
+    riskInfoTitle:'¿Cómo se calcula el nivel de riesgo?',
+    riskInfoBody:'El nivel de riesgo se basa en tu ratio deuda-ingreso (DTI) — la parte de tus ingresos que se destina a pagos de préstamos.\n\nSeguro: pagos por debajo del 35% del ingreso bruto.\n\nModerado: pagos entre el 35% y el 50%.\n\nAlto: pagos por encima del 50%.\n\nUn ratio más bajo significa más margen en tu presupuesto.',
+    riskInfoClose:'Entendido',
   },
 };
 const t=()=>{const base=T[lang]||T['en'];return{...base,currency:getCurrencySymbol()||base.currency};};
@@ -840,7 +946,7 @@ function showCurrencyPicker(){
   const hint=isAr?'يمكنك تغييرها لاحقاً من الإعدادات':isEs?'Puedes cambiarla en ajustes':'You can change it later in Settings';
   document.getElementById('splash').innerHTML=`
     <div class="glow"></div>
-    <div style="font-size:42px;z-index:1">💱</div>
+    <div style="font-size:42px;z-index:1"></div>
     <h2 class="splash-title" style="font-size:24px;z-index:1">${title}</h2>
     <p class="splash-hint" style="z-index:1;margin-bottom:8px">${hint}</p>
     <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:320px;z-index:1">
@@ -861,11 +967,23 @@ function setCurrency(id){
 function renderCurrencyGrid(){
   const grid=document.getElementById('currency-grid');
   if(!grid) return;
-  grid.innerHTML=CURRENCIES.map(c=>`
-    <button class="theme-btn${currency===c.id?' active':''}" onclick="setCurrencyFromSettings('${c.id}')">
-      <span style="font-size:22px">${c.flag}</span>
-      <span class="theme-name" style="font-size:12px">${c.symbol}</span>
-    </button>`).join('');
+  const check='<svg class="set-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  grid.innerHTML=CURRENCIES.map(c=>{
+    const isNone=c.id==='NONE';
+    const flag=isNone?'<span class="cur-flag" style="opacity:.45">∅</span>':`<span class="cur-flag">${c.flag}</span>`;
+    const code=isNone?(lang==='ar'?'بدون':lang==='es'?'Sin':'None'):c.id;
+    const sym=isNone?'<span class="cur-sym">&nbsp;</span>':`<span class="cur-sym">${c.symbol}</span>`;
+    return `<button class="cur-btn${currency===c.id?' active':''}" onclick="setCurrencyFromSettings('${c.id}')">
+      ${check}${flag}<span class="cur-code">${code}</span>${sym}</button>`;
+  }).join('');
+}
+function renderLangRows(){
+  const box=document.getElementById('lang-rows');
+  if(!box) return;
+  const check='<svg class="set-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
+  const L=[{id:'ar',flag:'🇸🇦',name:'العربية'},{id:'en',flag:'🇺🇸',name:'English'},{id:'es',flag:'🇪🇸',name:'Español'}];
+  box.innerHTML=L.map(l=>`<button class="lang-row${lang===l.id?' active':''}" onclick="chooseLangFromSettings('${l.id}')">
+    <span class="lang-flag">${l.flag}</span><span class="lang-name">${l.name}</span>${check}</button>`).join('');
 }
 function setCurrencyFromSettings(id){
   currency=id;
@@ -875,6 +993,22 @@ function setCurrencyFromSettings(id){
   renderHome();
 }
 function toggleLang(){const cycle={en:'ar',ar:'es',es:'en'};lang=cycle[lang]||'en';applyDir();rerenderAll();}
+function toggleLangMenu(e){
+  if(e){e.stopPropagation();}
+  document.getElementById('lang-dd-menu').classList.toggle('open');
+}
+function closeLangMenu(){
+  const m=document.getElementById('lang-dd-menu');
+  if(m) m.classList.remove('open');
+}
+function pickLang(l){
+  closeLangMenu();
+  chooseLang(l);
+}
+document.addEventListener('click',function(ev){
+  const dd=document.getElementById('lang-dd');
+  if(dd && !dd.contains(ev.target)) closeLangMenu();
+});
 function applyDir(){document.getElementById('app').dir=lang==='ar'?'rtl':'ltr';}
 function rerenderAll(){
   const a=document.querySelector('.screen.active')?.id;
@@ -889,11 +1023,16 @@ function rerenderAll(){
   const tabMap={
     'tab-report':tc.tab_report,
     'tab-charts':tc.tab_charts,
-    'tab-schedule':lang==='ar'?'📅 الجدول':lang==='es'?'📅 Tabla':'📅 Schedule',
+    'tab-schedule':lang==='ar'?'الجدول':lang==='es'?'Tabla':'Schedule',
     'tab-simulate':tc.tab_simulate,
     'tab-restructure':tc.tab_restructure,
   };
-  Object.entries(tabMap).forEach(([id,lbl])=>{const el=document.getElementById(id);if(el)el.textContent=lbl;});
+  Object.entries(tabMap).forEach(([id,lbl])=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    if(id==='tab-schedule') el.innerHTML=CAL_ICON+'<span>'+lbl+'</span>';
+    else el.textContent=lbl;
+  });
   const ts=document.getElementById('tab-saved');
   if(ts) ts.textContent=tc.tab_saved+(saved.length?' ('+saved.length+')':'');
 }
@@ -981,16 +1120,18 @@ function renderHome(){
   const tc=t();
   document.getElementById('home-app-name').textContent=tc.appName;
   document.getElementById('home-tagline').textContent=tc.appTagline;
-  document.getElementById('home-lang-btn').textContent=lang==='en'?'AR':lang==='ar'?'ES':'EN';
+  const langCode=document.getElementById('home-lang-code');
+  if(langCode) langCode.textContent=lang.toUpperCase();
+  document.querySelectorAll('#lang-dd-menu button').forEach(b=>b.classList.toggle('active',b.dataset.l===lang));
   document.getElementById('home-saved-title').textContent=tc.savedScenarios;
   const cmpBtn=document.getElementById('home-compare-btn');
   cmpBtn.textContent=tc.compareBtnHome;
   cmpBtn.style.display=saved.length>=2?'block':'none';
 
   // Hero card — change text if profile already saved
-  document.getElementById('hero-label').textContent=profileSaved?(lang==='ar'?'قرض جديد':'NEW LOAN'):tc.heroLabel;
+  document.getElementById('hero-label').textContent=profileSaved?(lang==='ar'?'قرض جديد':lang==='es'?'NUEVO PRÉSTAMO':'NEW LOAN'):tc.heroLabel;
   document.getElementById('hero-title').textContent=profileSaved?
-    (lang==='ar'?'احسب قرضاً جديداً\nبملفك المالي الحالي':'Calculate a new loan\nwith your saved profile'):
+    (lang==='ar'?'احسب قرضاً جديداً\nبملفك المالي الحالي':lang==='es'?'Calcula un préstamo nuevo\ncon tu perfil guardado':'Calculate a new loan\nwith your saved profile'):
     tc.heroTitle;
   document.getElementById('hero-btn').textContent=profileSaved?tc.newLoanBtn:tc.heroBtn;
 
@@ -1050,7 +1191,7 @@ function renderHome(){
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${remColor}"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--lbl);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">💚 ${remLabel}</div>
+            <div style="font-size:11px;font-weight:700;color:var(--lbl);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${remLabel}</div>
             <div style="font-size:24px;font-weight:900;color:${remColor}">${fmtAmt(rem)}</div>
             <div style="font-size:11px;color:var(--txt3);margin-top:3px">${remDesc}</div>
           </div>
@@ -1114,9 +1255,9 @@ function renderHomeSaved(){
       return`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:#6366f140">
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
-            <div class="saved-mini-name">${displayName}</div>
+            <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
             <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]}</div>
-            <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#6366f120;color:#818cf8;border:1px solid #6366f140;margin-top:4px">✅ ${isAr?'نشط':isEs?'Activo':'Active'}</span>
+            <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#6366f120;color:#818cf8;border:1px solid #6366f140;margin-top:4px">${isAr?'نشط':isEs?'Activo':'Active'}</span>
           </div>
           <div class="saved-mini-right">
             <div class="saved-mini-amt">${fmtAmt(s.results.monthly)}</div>
@@ -1127,15 +1268,15 @@ function renderHomeSaved(){
         <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
           <button onclick="event.stopPropagation();openSavedDetail(${i})"
             style="flex:1;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid var(--acc)50;color:var(--acc);font-size:12px;font-weight:700;cursor:pointer">
-            📋 ${isAr?'التفاصيل':isEs?'Detalles':'Details'}
+            ${isAr?'التفاصيل':isEs?'Detalles':'Details'}
           </button>
           <button onclick="event.stopPropagation();editSavedLoan(${i})"
             style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,#f59e0b 10%,transparent);border:1px solid #f59e0b50;color:#f59e0b;font-size:12px;font-weight:700;cursor:pointer">
-            ✏️
+            ${isAr?'تعديل':isEs?'Editar':'Edit'}
           </button>
           <button onclick="event.stopPropagation();confirmDeleteLoan(${i},'${displayName.replace(/'/g,"\\'")}')"
             style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,#ef4444 12%,transparent);border:1px solid #ef444450;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">
-            🗑
+            ${isAr?'حذف':isEs?'Eliminar':'Delete'}
           </button>
         </div>
       </div>`;
@@ -1154,9 +1295,9 @@ function renderHomeSaved(){
       return`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:#f59e0b30;opacity:.9">
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
-            <div class="saved-mini-name">${displayName}</div>
+            <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
             <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]}</div>
-            <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#f59e0b15;color:#f59e0b;border:1px solid #f59e0b30;margin-top:4px">🔄 ${isAr?'سيناريو مقارنة':isEs?'Escenario':'Comparison'}</span>
+            <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#f59e0b15;color:#f59e0b;border:1px solid #f59e0b30;margin-top:4px">${isAr?'سيناريو مقارنة':isEs?'Escenario':'Comparison'}</span>
           </div>
           <div class="saved-mini-right">
             <div class="saved-mini-amt" style="color:#f59e0b">${fmtAmt(s.results.monthly)}</div>
@@ -1167,11 +1308,11 @@ function renderHomeSaved(){
         <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
           <button onclick="event.stopPropagation();confirmActivate(${i})"
             style="flex:1;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,#10b981 12%,transparent);border:1px solid #10b98150;color:#10b981;font-size:12px;font-weight:700;cursor:pointer">
-            ⚡ ${isAr?'تفعيل هذا السيناريو':isEs?'Activar':'Activate Scenario'}
+            ${isAr?'تفعيل هذا السيناريو':isEs?'Activar':'Activate Scenario'}
           </button>
           <button onclick="event.stopPropagation();confirmDeleteLoan(${i},'${displayName.replace(/'/g,"\\'")}')"
             style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,#ef4444 12%,transparent);border:1px solid #ef444450;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">
-            🗑
+            ${isAr?'حذف':isEs?'Eliminar':'Delete'}
           </button>
         </div>
       </div>`;
@@ -1237,13 +1378,13 @@ function renderStepLabels(){
   document.getElementById('lbl-var').textContent=tc.q_variable;
   document.getElementById('lbl-exist').textContent=tc.q_existing;
   const existHint=document.getElementById('lbl-exist-hint');
-  if(existHint) existHint.textContent=lang==='ar'?'🔒 يُحسب تلقائياً من القروض النشطة — لا يمكن تعديله يدوياً':
-    lang==='es'?'🔒 Se calcula automaticamente de los prestamos activos — no editable':
-    '🔒 Auto-calculated from active loans — cannot be edited manually';
+  if(existHint) existHint.textContent=lang==='ar'?'يُحسب تلقائياً من القروض النشطة — لا يمكن تعديله يدوياً':
+    lang==='es'?'Se calcula automaticamente de los prestamos activos — no editable':
+    'Auto-calculated from active loans — cannot be edited manually';
   document.getElementById('lbl-ltype').textContent=tc.q_loanType;
   document.getElementById('lbl-amount').textContent=tc.q_amount;
-  document.getElementById('lbl-period').textContent=lang==='ar'?'مدة السداد':'REPAYMENT PERIOD';
-  document.getElementById('lbl-rate').textContent=lang==='ar'?'معدل الفائدة السنوي':'ANNUAL INTEREST RATE';
+  document.getElementById('lbl-period').textContent=lang==='ar'?'مدة السداد':lang==='es'?'PERÍODO DE PAGO':'REPAYMENT PERIOD';
+  document.getElementById('lbl-rate').textContent=lang==='ar'?'معدل الفائدة السنوي':lang==='es'?'TASA DE INTERÉS ANUAL':'ANNUAL INTEREST RATE';
   document.getElementById('lbl-emp').textContent=tc.q_employment;
   document.getElementById('lbl-risk').textContent=tc.q_risk;
   ['pfx1','pfx2','pfx3','pfx4','pfx5','pfx6'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=tc.currency;});
@@ -1252,8 +1393,8 @@ function renderStepLabels(){
   document.getElementById('s3-next').textContent=tc.next;
   document.getElementById('s4-calc').textContent=tc.calculate;
   // period unit options
-  document.getElementById('form-opt-months').textContent=lang==='ar'?'شهر':'Months';
-  document.getElementById('form-opt-years').textContent=lang==='ar'?'سنة':'Years';
+  document.getElementById('form-opt-months').textContent=lang==='ar'?'شهر':lang==='es'?'Meses':'Months';
+  document.getElementById('form-opt-years').textContent=lang==='ar'?'سنة':lang==='es'?'Años':'Years';
   // sync period/rate display
   const rp=document.getElementById('range-period');if(rp)rp.value=form.period;
   const pu=document.getElementById('form-per-unit');const unit=pu?pu.value:'months';
@@ -1270,7 +1411,7 @@ function renderStep3Dynamic(){
       const totalInc=(+profile.salary||0)+(+profile.income||0);
       s3title.innerHTML=`${tc.s3}
         <div style="margin-top:10px;padding:10px 12px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1.5px solid color-mix(in srgb,var(--acc) 30%,transparent);border-radius:12px;font-size:13px;font-weight:500;color:var(--txt2);display:flex;justify-content:space-between;align-items:center">
-          <span>👤 ${isAr?'ملفك المالي محفوظ':'Profile saved'} · ${fmtAmt(totalInc)}</span>
+          <span>${isAr?'ملفك المالي محفوظ':lang==='es'?'Perfil guardado':'Profile saved'} · ${fmtAmt(totalInc)}</span>
           <button onclick="editProfile()" style="background:none;border:none;color:var(--acc);font-size:12px;font-weight:700;cursor:pointer">${tc.editProfile}</button>
         </div>`;
     } else {
@@ -1278,7 +1419,7 @@ function renderStep3Dynamic(){
     }
   }
   document.getElementById('loan-type-chips').innerHTML=['car','home','personal','business','education','other'].map(lt=>
-    `<button class="chip${form.loanType===lt?' active':''}" onclick="selectLoanType('${lt}')">${tc['lt_'+lt]}</button>`).join('');
+    `<button class="chip${form.loanType===lt?' active':''}" onclick="selectLoanType('${lt}')">${ltIcon(lt,20)}<span>${tc['lt_'+lt]}</span></button>`).join('');
 
   // تحديث labels تاريخ البداية
   const lbl=document.getElementById('lbl-start-date');
@@ -1405,7 +1546,10 @@ function renderResults(){
   document.getElementById('risk-score-txt').textContent=tc.dtiRatio+': '+r.dtiGross.toFixed(2)+'%';
   ['report','charts','schedule','simulate','restructure'].forEach(tb=>{
     const el=document.getElementById('tab-'+tb);
-    if(el)el.textContent={'report':tc.tab_report,'charts':tc.tab_charts,'schedule':lang==='ar'?'📅 الجدول':lang==='es'?'📅 Tabla':'📅 Schedule','simulate':tc.tab_simulate,'restructure':tc.tab_restructure}[tb];
+    if(!el) return;
+    const lbl={'report':tc.tab_report,'charts':tc.tab_charts,'schedule':lang==='ar'?'الجدول':lang==='es'?'Tabla':'Schedule','simulate':tc.tab_simulate,'restructure':tc.tab_restructure}[tb];
+    if(tb==='schedule') el.innerHTML=CAL_ICON+'<span>'+lbl+'</span>';
+    else el.textContent=lbl;
   });
   const monthlyColor=currentTheme==='light'?'#1a2332':'#ffffff';
   // remaining: إذا محسوب مسبقاً نستخدمه، وإلا نحسبه
@@ -1427,15 +1571,15 @@ function renderResults(){
   const months=+form.period||36;
   const endDate=getStartDate();
   endDate.setMonth(endDate.getMonth()+months);
-  const endStr=endDate.toLocaleDateString(lang==='ar'?'ar-u-ca-gregory':'en-US',{year:'numeric',month:'long'});
+  const endStr=endDate.toLocaleDateString(lang==='ar'?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long'});
   document.getElementById('basis-rows').innerHTML=`
-    <div class="basis-row"><span class="basis-lbl">💰 ${tc.grossIncome}</span><span class="basis-val">${fmtAmt(r.grossIncome)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">🧾 ${lang==='ar'?'المصروفات':'Expenses'}</span><span class="basis-val" style="color:#ef4444">${fmtAmt(r.expenses+r.variable)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">📊 ${tc.netIncome}</span><span class="basis-val" style="color:#10b981;font-weight:800">${fmtAmt(r.netIncome)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">📋 ${tc.newInstall}</span><span class="basis-val">${fmtAmt(r.monthly)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">🔁 ${tc.existingLoans}</span><span class="basis-val">${fmtAmt(r.existing)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">📅 ${lang==='ar'?'مدة السداد':'Repayment Period'}</span><span class="basis-val">${months} ${tc.months}</span></div>
-    <div class="basis-row"><span class="basis-lbl">🏁 ${lang==='ar'?'تاريخ الانتهاء المتوقع':'Expected End Date'}</span><span class="basis-val" style="color:#f59e0b;font-weight:800">${endStr}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.grossIncome}</span><span class="basis-val">${fmtAmt(r.grossIncome)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'المصروفات':lang==='es'?'Gastos':'Expenses'}</span><span class="basis-val" style="color:#ef4444">${fmtAmt(r.expenses+r.variable)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.netIncome}</span><span class="basis-val" style="color:#10b981;font-weight:800">${fmtAmt(r.netIncome)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.newInstall}</span><span class="basis-val">${fmtAmt(r.monthly)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.existingLoans}</span><span class="basis-val">${fmtAmt(r.existing)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${CAL_ICON}${lang==='ar'?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period'}</span><span class="basis-val">${months} ${tc.months}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'تاريخ الانتهاء المتوقع':lang==='es'?'Fecha de fin prevista':'Expected End Date'}</span><span class="basis-val" style="color:#f59e0b;font-weight:800">${endStr}</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl}</span><span class="basis-hi" style="color:${color}">${r.dtiGross.toFixed(2)}%</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.dtiNetLbl}</span><span class="basis-hi" style="color:${color}">${r.dtiNet.toFixed(2)}%</span></div>`;
   document.getElementById('lbl-rec').textContent=tc.recommended;
@@ -1444,10 +1588,10 @@ function renderResults(){
   // Safe range explanation
   const hint=document.getElementById('rec-range-hint');
   if(hint) hint.textContent=lang==='ar'
-    ?'💡 يُحسب بناءً على 35% من صافي دخلك كحد أقصى للقسط الشهري'
+    ?'يُحسب بناءً على 35% من صافي دخلك كحد أقصى للقسط الشهري'
     :lang==='es'
-    ?'💡 Calculado con máximo 35% de tu ingreso neto como cuota mensual'
-    :'💡 Based on 35% of your net income as the maximum monthly payment';
+    ?'Calculado con máximo 35% de tu ingreso neto como cuota mensual'
+    :'Based on 35% of your net income as the maximum monthly payment';
   document.getElementById('lbl-advice').textContent=tc.advice;
   // Merge smart rec as first item in advice
   const smartRec=tc['rec_'+r.riskLevel];
@@ -1462,7 +1606,9 @@ function renderResults(){
   const pdfBtn=document.getElementById('btn-pdf');
   if(pdfBtn){
     const pdfLabel=lang==='ar'?'تصدير PDF':lang==='es'?'Exportar PDF':'Export PDF';
-    pdfBtn.textContent=isPremium?`📄 ${pdfLabel}`:`✨ ${pdfLabel}`;
+    pdfBtn.textContent=pdfLabel;
+    // PDF ميزة مدفوعة قادمة — يُخفى الزر للمستخدم المجاني، ويظهر تلقائياً عند تفعيل Premium
+    pdfBtn.style.display = isPremium ? 'block' : 'none';
   }
   document.getElementById('lbl-breakdown').textContent=tc.breakdown;
   const ldEl=document.getElementById('lbl-income-dist');
@@ -1485,26 +1631,26 @@ function renderResults(){
       const saving=Math.round(rep.loanMonthly-r.monthly);
       const savingColor=saving>0?'#10b981':saving<0?'#ef4444':'#f59e0b';
       const savingText=saving>0
-        ?(isAr?`توفير ${fmtAmt(saving)} شهرياً 💚`:`Save ${fmtAmt(saving)}/mo 💚`)
+        ?(isAr?`توفير ${fmtAmt(saving)} شهرياً`:`Save ${fmtAmt(saving)}/mo`)
         :saving<0
-        ?(isAr?`زيادة ${fmtAmt(-saving)} شهرياً ⚠️`:`+${fmtAmt(-saving)}/mo ⚠️`)
-        :(isAr?'نفس القسط':'Same payment');
+        ?(isAr?`زيادة ${fmtAmt(-saving)} شهرياً`:`+${fmtAmt(-saving)}/mo`)
+        :(isAr?'نفس القسط':lang==='es'?'Misma cuota':'Same payment');
       scenarioBanner.style.display='block';
       scenarioBanner.innerHTML=`
         <div style="background:var(--bg2);border-radius:14px;border:1.5px solid #f59e0b40;overflow:hidden;margin-bottom:4px">
           <div style="background:linear-gradient(90deg,#f59e0b22,transparent);padding:10px 14px;border-bottom:1px solid #f59e0b30;display:flex;align-items:center;gap:8px">
-            <span style="font-size:14px">🔄</span>
-            <span style="font-size:13px;font-weight:800;color:#f59e0b">${isAr?'سيناريو — يستبدل قرضاً نشطاً':'Scenario — Replaces Active Loan'}</span>
+            <span style="font-size:14px"></span>
+            <span style="font-size:13px;font-weight:800;color:#f59e0b">${isAr?'سيناريو — يستبدل قرضاً نشطاً':lang==='es'?'Escenario — Reemplaza préstamo activo':'Scenario — Replaces Active Loan'}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:12px 14px;gap:8px">
             <div style="text-align:center">
-              <div style="font-size:10px;color:var(--txt3);font-weight:700;margin-bottom:3px;text-transform:uppercase">${isAr?'الحالي':'Current'}</div>
+              <div style="font-size:10px;color:var(--txt3);font-weight:700;margin-bottom:3px;text-transform:uppercase">${isAr?'الحالي':lang==='es'?'Actual':'Current'}</div>
               <div style="font-size:12px;font-weight:700;color:var(--txt2)">${repName}</div>
               <div style="font-size:18px;font-weight:900;color:#ef4444">${fmtAmt(rep.loanMonthly)}</div>
             </div>
             <div style="text-align:center;color:var(--acc);font-size:26px;font-weight:900">→</div>
             <div style="text-align:center">
-              <div style="font-size:10px;color:var(--txt3);font-weight:700;margin-bottom:3px;text-transform:uppercase">${isAr?'السيناريو':'Scenario'}</div>
+              <div style="font-size:10px;color:var(--txt3);font-weight:700;margin-bottom:3px;text-transform:uppercase">${isAr?'السيناريو':lang==='es'?'Escenario':'Scenario'}</div>
               <div style="font-size:12px;font-weight:700;color:var(--txt2)">${repName}</div>
               <div style="font-size:18px;font-weight:900;color:#10b981">${fmtAmt(r.monthly)}</div>
             </div>
@@ -1560,7 +1706,7 @@ function drawCharts(){
       <div class="donut-legend">
         <div class="donut-legend-item"><div class="donut-legend-dot" style="background:#6366f1"></div><div><div>${tc.principal}</div><div class="donut-legend-val">${fmtAmt(principal)}</div></div></div>
         <div class="donut-legend-item"><div class="donut-legend-dot" style="background:#ec4899"></div><div><div>${tc.interest}</div><div class="donut-legend-val">${fmtAmt(interest)}</div></div></div>
-        <div class="donut-legend-item"><div class="donut-legend-dot" style="background:#475569"></div><div><div>${isAr?'الإجمالي':'Total'}</div><div class="donut-legend-val">${fmtAmt(total)}</div></div></div>
+        <div class="donut-legend-item"><div class="donut-legend-dot" style="background:#475569"></div><div><div>${isAr?'الإجمالي':lang==='es'?'Total':'Total'}</div><div class="donut-legend-val">${fmtAmt(total)}</div></div></div>
       </div>
     </div>`;
 
@@ -1592,7 +1738,7 @@ function drawCharts(){
       <div style="width:8px;height:8px;border-radius:50%;background:${dot};margin-bottom:5px"></div>
       <div style="font-size:10px;color:${txtSub};font-weight:600;margin-bottom:3px">${lbl}</div>
       <div style="font-size:16px;font-weight:900;color:${valColor}">${fmtAmt(val)}</div>
-      <div style="font-size:10px;font-weight:700;color:${valColor};opacity:.75;margin-top:2px">${pct}% ${isAr?'من دخلك':'of income'}</div>
+      <div style="font-size:10px;font-weight:700;color:${valColor};opacity:.75;margin-top:2px">${pct}% ${isAr?'من دخلك':lang==='es'?'de ingresos':'of income'}</div>
     </div>`;
 
   const hasOther = otherLoansAmt > 0;
@@ -1654,7 +1800,7 @@ function drawCharts(){
       </div>
       <!-- ملاحظة: المتبقي يطابق رقم التقرير -->
       <div style="margin-top:11px;padding:9px 12px;background:${isLight?'#f8fafc':'#0f172a'};border-radius:10px;border:1px solid ${isLight?'#e2e8f0':'#334155'};font-size:11px;color:${txtSub};line-height:1.6;display:flex;gap:7px;align-items:flex-start">
-        <span>💡</span>
+        <span></span>
         <span>${isAr
           ?'المتبقي يحسب بعد <strong style="color:'+txtMain+'">جميع</strong> الأقساط والمصروفات — يطابق رقم التقرير'
           :isEs
@@ -1753,9 +1899,9 @@ function calcRestructure(){
     isEs?'El saldo se calcula despues del pago — la reestructuracion comienza el mes siguiente.':
     'Balance is calculated after the specified payment — restructuring starts the following month.';
   document.getElementById('rst-info-text').innerHTML=isAr?
-    '💡 البنك لا يبدأ من الصفر — يحسب <strong style="color:#38bdf8">الرصيد المتبقي بعد آخر قسط دفعته</strong> ويعيد جدولته كقرض جديد.':
-    isEs?'💡 El banco calcula el <strong style="color:#38bdf8">saldo pendiente tras el ultimo pago</strong> y lo refinancia como prestamo nuevo.':
-    '💡 The bank calculates the <strong style="color:#38bdf8">remaining balance after your last payment</strong> and refinances it as a new loan.';
+    'البنك لا يبدأ من الصفر — يحسب <strong style="color:#38bdf8">الرصيد المتبقي بعد آخر قسط دفعته</strong> ويعيد جدولته كقرض جديد.':
+    isEs?'El banco calcula el <strong style="color:#38bdf8">saldo pendiente tras el ultimo pago</strong> y lo refinancia como prestamo nuevo.':
+    'The bank calculates the <strong style="color:#38bdf8">remaining balance after your last payment</strong> and refinances it as a new loan.';
 
   const oldRemInterest=Math.max(0,origPmt*remN-balance);
   let newPmt,newMonths,newRemInterest,saving,monthsSaved;
@@ -1789,7 +1935,7 @@ function calcRestructure(){
   rows+=rstRow(isAr?'المدة المتبقية قبل':isEs?'Plazo antes':'Months left before', remN+' '+moLbl, '#60a5fa');
   rows+=rstRow(isAr?'المدة المتبقية بعد':isEs?'Plazo despues':'Months left after',
     newMonths<9999?(newMonths+' '+moLbl+(monthsSaved>0?' — '+(isAr?'أبكر بـ ':isEs?'antes ':'sooner by ')+monthsSaved+' '+moLbl:monthsSaved<0?' — '+(isAr?'أطول بـ ':isEs?'mas ':'longer by ')+(-monthsSaved)+' '+moLbl:'')):
-    (isAr?'القسط لا يكفي ⚠️':isEs?'Cuota insuficiente':'Payment too low ⚠️'),
+    (isAr?'القسط لا يكفي':isEs?'Cuota insuficiente':'Payment too low'),
     monthsSaved>0?'#4ade80':monthsSaved<0?'#f87171':'var(--txt)');
   rows+=rstRow(isAr?'فوائد متبقية قبل':isEs?'Intereses antes':'Remaining interest before', fmtV(oldRemInterest), '#f87171');
   rows+=rstRow(isAr?'فوائد متبقية بعد':isEs?'Intereses despues':'Remaining interest after', newMonths<9999?fmtV(newRemInterest):'—', '#4ade80');
@@ -1805,8 +1951,8 @@ function calcRestructure(){
   savDesc.style.color=isGood?'#86efac':'#fca5a5';
   savDesc.textContent=newMonths>=9999?
     (isAr?'القسط لا يغطي الفائدة — زد المبلغ':isEs?'La cuota no cubre los intereses':'Payment does not cover interest — increase amount'):
-    isGood?(isAr?'توفير في إجمالي الفائدة المتبقية ✅':isEs?'de ahorro en intereses ✅':'saved in remaining interest ✅'):
-    (isAr?'زيادة في الفائدة المتبقية ⚠️':isEs?'mas en intereses':'more in remaining interest ⚠️');
+    isGood?(isAr?'توفير في إجمالي الفائدة المتبقية':isEs?'de ahorro en intereses':'saved in remaining interest'):
+    (isAr?'زيادة في الفائدة المتبقية':isEs?'mas en intereses':'more in remaining interest');
 
   document.getElementById('rst-result-card').style.display='block';
 
@@ -1815,7 +1961,7 @@ function calcRestructure(){
   const saveLbl=document.getElementById('rst-save-lbl');
   if(saveBtn){
     saveBtn.style.display=newMonths<9999?'block':'none';
-    if(saveLbl) saveLbl.textContent=isAr?'💾 حفظ كسيناريو مقارنة':isEs?'💾 Guardar como escenario':'💾 Save as Comparison Scenario';
+    if(saveLbl) saveLbl.textContent=isAr?'حفظ كسيناريو مقارنة':isEs?'Guardar como escenario':'Save as Comparison Scenario';
   }
 
   // store refinance data for saving
@@ -1861,9 +2007,9 @@ function saveRefinanceAsScenario(){
   // رسالة نجاح
   const btn=document.getElementById('rst-save-btn');
   if(btn){
-    btn.textContent='✅ '+(isAr?'تم الحفظ!':isEs?'Guardado!':'Saved!');
+    btn.textContent=''+(isAr?'تم الحفظ!':isEs?'Guardado!':'Saved!');
     btn.style.background='#10b981';
-    setTimeout(()=>{btn.textContent='💾 '+(isAr?'حفظ كسيناريو مقارنة':isEs?'Guardar como escenario':'Save as Comparison Scenario');btn.style.background='';},2500);
+    setTimeout(()=>{btn.textContent=''+(isAr?'حفظ كسيناريو مقارنة':isEs?'Guardar como escenario':'Save as Comparison Scenario');btn.style.background='';},2500);
   }
 }
 
@@ -1961,13 +2107,13 @@ function renderSchedule(){
     const rowBg=(!isCur&&i%2===0)?`style="background:color-mix(in srgb,var(--acc) 3%,transparent)"`:'';
     html+=`<div class="sched-row ${rowCls}" ${rowBg} id="srow-${idx}"
       ${isCur?`onclick="this.classList.toggle('tip-open')" style="position:relative;cursor:pointer"`:'style="position:relative"'}>
-      ${isCur?`<span class="pin-blink" style="position:absolute;inset-inline-start:2px;top:50%;transform:translateY(-50%);font-size:11px">📍</span>`:''}
+      ${isCur?`<span class="pin-blink" style="position:absolute;inset-inline-start:2px;top:50%;transform:translateY(-50%);font-size:11px"></span>`:''}
       <div class="sched-cell num" style="${isPast?'':''}padding-inline-start:${isCur?'16px':'4px'}">${i}</div>
       <div class="sched-cell right">${fmt(Math.round(monthly))}</div>
       <div class="sched-cell right principal">${fmt(Math.round(pp))}</div>
       <div class="sched-cell right interest">${fmt(Math.round(ip))}</div>
       <div class="sched-cell right balance">${fmt(Math.round(balance))}</div>
-      ${isCur?`<div class="sched-current-tooltip">📍 ${dateStr} · ${isAr?'الشهر':isEs?'Mes':'Month'} ${i}/${months} · ${pctDone}% ${isAr?'مكتمل':isEs?'completado':'done'}</div>`:''}
+      ${isCur?`<div class="sched-current-tooltip">${dateStr} · ${isAr?'الشهر':isEs?'Mes':'Month'} ${i}/${months} · ${pctDone}% ${isAr?'مكتمل':isEs?'completado':'done'}</div>`:''}
     </div>`;
   }
 
@@ -1997,8 +2143,8 @@ function simUpdate(){
   document.getElementById('sim-amt-val').textContent=fmtAmt(amt);
   document.getElementById('sim-per-val').textContent=per+' '+tc.months;
   document.getElementById('sim-rate-val').textContent=rate.toFixed(2)+'%';
-  const om=document.getElementById('opt-months');if(om)om.textContent=lang==='ar'?'شهر':'Months';
-  const oy=document.getElementById('opt-years');if(oy)oy.textContent=lang==='ar'?'سنة':'Years';
+  const om=document.getElementById('opt-months');if(om)om.textContent=lang==='ar'?'شهر':lang==='es'?'Meses':'Months';
+  const oy=document.getElementById('opt-years');if(oy)oy.textContent=lang==='ar'?'سنة':lang==='es'?'Años':'Years';
   const c=calcLoan(amt,rate/100,per);
   document.getElementById('sim-kpi').innerHTML=[
     {label:tc.monthlyInstallment,val:fmtAmt(c.monthly),col:'var(--acc)'},
@@ -2015,20 +2161,20 @@ function updateExtraLoan(i,k,v){extraLoans[i][k]=v;renderMultiLoans();}
 function renderMultiLoans(){
   const tc=t(),r=results;if(!r)return;const cur=tc.currency;
   const mainCard=`<div class="loan-card" style="border-color:var(--acc)">
-    <p class="loan-card-title">🏦 ${tc.mainLoan} — ${T[lang]['lt_'+form.loanType]}</p>
+    <p class="loan-card-title">${tc.mainLoan} — ${T[lang]['lt_'+form.loanType]}</p>
     <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--acc);font-size:14px;font-weight:800">${fmtAmt(r.monthly)}</span></div>
-    <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'المبلغ':'Amount'}</span><span class="saved-val">${fmtAmt(+form.amount||0)}</span></div>
-    <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'الفائدة':'Rate'}</span><span class="saved-val">${parseFloat(form.rate||8.5).toFixed(2)}%</span></div>
+    <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'المبلغ':lang==='es'?'Monto':'Amount'}</span><span class="saved-val">${fmtAmt(+form.amount||0)}</span></div>
+    <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'الفائدة':lang==='es'?'Tasa':'Rate'}</span><span class="saved-val">${parseFloat(form.rate||8.5).toFixed(2)}%</span></div>
   </div>`;
   const extraCards=extraLoans.map((el,i)=>{
     const c=el.amount&&el.period?calcLoan(+el.amount,(+el.rate||8.5)/100,+el.period):{monthly:0};
     return`<div class="loan-card">
-      <button class="remove-btn" onclick="removeExtraLoan(${i})">✕</button>
+      <button class="remove-btn" onclick="removeExtraLoan(${i})"></button>
       <p class="loan-card-title">${tc.loanN} ${i+2}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div><label class="lbl" style="font-size:9px">${lang==='ar'?'المبلغ':'Amount'}</label><input class="inp" type="number" inputmode="numeric" placeholder="50000" value="${el.amount}" oninput="updateExtraLoan(${i},'amount',this.value)" style="padding:9px;font-size:14px"></div>
-        <div><label class="lbl" style="font-size:9px">${lang==='ar'?'الفائدة%':'Rate %'}</label><input class="inp" type="number" inputmode="decimal" step="0.01" placeholder="8.5" value="${el.rate}" oninput="updateExtraLoan(${i},'rate',this.value)" style="padding:9px;font-size:14px"></div>
-        <div><label class="lbl" style="font-size:9px">${lang==='ar'?'المدة شهر':'Period mo'}</label><input class="inp" type="number" inputmode="numeric" placeholder="36" value="${el.period}" oninput="updateExtraLoan(${i},'period',this.value)" style="padding:9px;font-size:14px"></div>
+        <div><label class="lbl" style="font-size:9px">${lang==='ar'?'المبلغ':lang==='es'?'Monto':'Amount'}</label><input class="inp" type="number" inputmode="numeric" placeholder="50000" value="${el.amount}" oninput="updateExtraLoan(${i},'amount',this.value)" style="padding:9px;font-size:14px"></div>
+        <div><label class="lbl" style="font-size:9px">${lang==='ar'?'الفائدة%':lang==='es'?'Tasa %':'Rate %'}</label><input class="inp" type="number" inputmode="decimal" step="0.01" placeholder="8.5" value="${el.rate}" oninput="updateExtraLoan(${i},'rate',this.value)" style="padding:9px;font-size:14px"></div>
+        <div><label class="lbl" style="font-size:9px">${lang==='ar'?'المدة شهر':lang==='es'?'Período m':'Period mo'}</label><input class="inp" type="number" inputmode="numeric" placeholder="36" value="${el.period}" oninput="updateExtraLoan(${i},'period',this.value)" style="padding:9px;font-size:14px"></div>
         <div style="display:flex;flex-direction:column;justify-content:flex-end"><p class="kpi-label">${tc.monthlyInstallment}</p><p style="color:var(--acc);font-weight:800;font-size:15px">${fmtAmt(c.monthly)}</p></div>
       </div>
     </div>`;
@@ -2037,7 +2183,7 @@ function renderMultiLoans(){
   const pG=(totalMonthly/r.grossIncome)*100,pN=r.netIncome>0?(totalMonthly/r.netIncome)*100:100;
   const tc2=pG<35?'#10b981':pG<50?'#f59e0b':'#ef4444';
   const totalCard=extraLoans.length?`<div class="total-block">
-    <p class="card-label">${lang==='ar'?'ملخص كل القروض':'All Loans Summary'}</p>
+    <p class="card-label">${lang==='ar'?'ملخص كل القروض':lang==='es'?'Resumen de préstamos':'All Loans Summary'}</p>
     <div class="total-row"><span class="total-lbl">${tc.totalInstall}</span><span class="total-val" style="color:${tc2};font-size:17px">${fmtAmt(totalMonthly)}</span></div>
     <div class="total-row"><span class="total-lbl">${tc.totalPctGross}</span><span class="total-val" style="color:${tc2}">${pG.toFixed(2)}%</span></div>
     <div class="total-row"><span class="total-lbl">${tc.totalPctNet}</span><span class="total-val" style="color:${tc2}">${pN.toFixed(2)}%</span></div>
@@ -2054,10 +2200,38 @@ function calcTotalExistingFromSaved(){
   return saved.reduce((sum,s)=>sum+Math.round(s.results.monthly),0);
 }
 
+function isDuplicateActiveLoan(){
+  // قرض مكرر = نفس النوع + نفس المبلغ + نفس المدة + نفس النسبة، ضمن القروض النشطة
+  return saved.some((s,i)=>
+    s.type!=='scenario' && i!==_editingLoanIdx &&
+    (s.loanType||s.form?.loanType)===form.loanType &&
+    +( s.loanAmount||s.form?.amount||0 )===+form.amount &&
+    String(s.form?.period||'')===String(form.period||'') &&
+    String(s.form?.rate||'')===String(form.rate||'')
+  );
+}
+
 function saveScenario(){
-  if(!canSave()) return;
+  // ── طبقة 1: debounce — تجاهل أي نقرة ثانية خلال 1.5 ثانية (الضغط المزدوج اللحظي)
+  const _now=Date.now();
+  if(_now-_lastSaveClick<1500) return;
+  _lastSaveClick=_now;
+
   const tc=t();
   const isAr=lang==='ar', isEs=lang==='es';
+
+  // ── طبقة 2: كشف التكرار — لو في قرض نشط مطابق تماماً، لا تحفظ نسخة ثانية
+  if(_editingLoanIdx===null && isDuplicateActiveLoan()){
+    const btn0=document.getElementById('btn-save');
+    if(btn0){
+      btn0.textContent=isAr?'محفوظ مسبقاً ✓':isEs?'Ya guardado ✓':'Already saved ✓';
+      btn0.style.background='#10b981';
+      setTimeout(()=>{btn0.textContent=tc.saveScenario;btn0.style.background='';},2200);
+    }
+    return;
+  }
+
+  if(!canSave()) return;
 
   // إذا كان تعديلاً على قرض موجود — أظهر رسالة توضيحية
   if(_editingLoanIdx!==null){
@@ -2099,7 +2273,7 @@ function saveScenario(){
   if(cmpBtn)cmpBtn.style.display=saved.length>=2?'block':'none';
   // tab-saved removed
   const btn=document.getElementById('btn-save');
-  btn.textContent='✅ '+(lang==='ar'?'تم الحفظ!':lang==='es'?'Guardado!':'Saved!');
+  btn.textContent=''+(lang==='ar'?'تم الحفظ!':lang==='es'?'Guardado!':'Saved!');
   btn.style.background='#10b981';
   setTimeout(()=>{btn.textContent=tc.saveScenario;btn.style.background='';},2500);
 }
@@ -2165,9 +2339,9 @@ function renderSavedTab(){
       <div class="saved-row"><span class="saved-lbl">${tc.riskLevel}</span><span class="saved-val" style="color:${color}">${tc['risk_'+s.results.riskLevel]}</span></div>
       <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--brd);padding-top:10px">
         <button onclick="openSavedDetail(${i})" style="flex:1;padding:9px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;cursor:pointer">
-          ${lang==='ar'?'📋 عرض التفاصيل':'📋 View Details'}
+          ${lang==='ar'?'عرض التفاصيل':lang==='es'?'Ver detalles':'View Details'}
         </button>
-        <button onclick="confirmDeleteSavedFromTab(${i})" style="padding:9px 14px;border-radius:10px;background:color-mix(in srgb,#ef4444 12%,transparent);border:1.5px solid #ef444460;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer">🗑</button>
+        <button onclick="confirmDeleteSavedFromTab(${i})" style="padding:9px 14px;border-radius:10px;background:color-mix(in srgb,#ef4444 12%,transparent);border:1.5px solid #ef444460;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer"></button>
       </div>
     </div>`;
   }).join('');
@@ -2264,7 +2438,7 @@ function openSavedDetail(i){
 
   if(btnSave) btnSave.style.display='none';
   if(btnRestart) btnRestart.style.display='none';
-  if(btnPdf) btnPdf.textContent=isPremium?`📄 ${isAr?'تصدير PDF':'Export PDF'}`:`✨ ${isAr?'تصدير PDF':'Export PDF'}`;
+  if(btnPdf) btnPdf.textContent=isAr?'تصدير PDF':lang==='es'?'Exportar PDF':'Export PDF';
 
   // زر الرجوع
   if(btnHome){
@@ -2307,6 +2481,7 @@ function renderSettings(){
   document.getElementById('settings-back-btn').textContent=lang==='ar'?'→':'←';
   renderThemeGrid();
   renderCurrencyGrid();
+  renderLangRows();
 }
 
 // ── COMPARE ───────────────────────────────────────────────────────────────────
@@ -2322,12 +2497,12 @@ function renderCompare(){
   if(!isPremium && saved.filter(s=>s.type!=='scenario').length>FREE_CMP_LIMIT){
     document.getElementById('compare-body').innerHTML=`
       <div style="text-align:center;padding:32px 16px">
-        <div style="font-size:40px;margin-bottom:12px">✨</div>
+        <div style="font-size:40px;margin-bottom:12px"></div>
         <p style="font-size:16px;font-weight:800;color:var(--txt);margin-bottom:8px">
-          ${isAr?'مقارنة أكثر من قرضين':'Compare More Than 2 Loans'}
+          ${isAr?'مقارنة أكثر من قرضين':lang==='es'?'Compara más de 2 préstamos':'Compare More Than 2 Loans'}
         </p>
         <p style="font-size:13px;color:var(--txt2)">
-          ${isAr?'هذه الميزة قيد التطوير وستتوفر قريباً':'This feature is in development and will be available soon'}
+          ${isAr?'هذه الميزة قيد التطوير وستتوفر قريباً':lang==='es'?'Esta función está en desarrollo y estará disponible pronto':'This feature is in development and will be available soon'}
         </p>
       </div>`;
     return;
@@ -2367,7 +2542,7 @@ function renderCompare(){
     const isSc=s.type==='scenario';
     const repL=isSc ? saved.find((x,j)=>x.type!=='scenario'&&x.loanType===s.loanType&&x!==s) : null;
     const repLabel=repL
-      ? `<div style="font-size:10px;color:#f59e0b;font-weight:700;margin-top:3px">🔄 ${isAr?'يستبدل':'Replaces'} ${T[lang]['lt_'+repL.loanType]||''}</div>`
+      ? `<div style="font-size:10px;color:#f59e0b;font-weight:700;margin-top:3px">${isAr?'يستبدل':lang==='es'?'Reemplaza':'Replaces'} ${T[lang]['lt_'+repL.loanType]||''}</div>`
       : '';
     return `<th style="text-align:center;color:var(--acc);padding:12px 8px;font-size:14px;font-weight:800;border-bottom:2px solid var(--brd)">
       ${savedLoanDisplayName(s).split('—')[0].trim()}
@@ -2383,7 +2558,7 @@ function renderCompare(){
     <table style="width:100%;border-collapse:collapse">
       <thead>
         <tr style="background:var(--bg3)">
-          <th style="text-align:start;color:var(--lbl);padding:12px 14px;font-size:15px;font-weight:800;border-bottom:2px solid var(--brd)">${isAr?'البند':'Field'}</th>
+          <th style="text-align:start;color:var(--lbl);padding:12px 14px;font-size:15px;font-weight:800;border-bottom:2px solid var(--brd)">${isAr?'البند':lang==='es'?'Campo':'Field'}</th>
           ${headerCells}
         </tr>
       </thead>
@@ -2412,7 +2587,7 @@ function renderCompare(){
   const bestIdx=saved.slice(0,4).reduce((bi,s,i,arr)=>s.results.monthly<arr[bi].results.monthly?i:bi,0);
   const winner=saved[bestIdx];
   html+=`<div class="card" style="border-inline-start:4px solid #10b981">
-    <p class="card-label" style="color:#10b981">${lang==='ar'?'🏆 الأفضل بأقل قسط شهري':'🏆 Best by Lowest Monthly Payment'}</p>
+    <p class="card-label" style="color:#10b981">${lang==='ar'?'الأفضل بأقل قسط شهري':lang==='es'?'Mejor por cuota mensual más baja':'Best by Lowest Monthly Payment'}</p>
     <p style="font-size:19px;font-weight:800;color:var(--txt)">${savedLoanDisplayName(winner)}</p>
     <p style="font-size:16px;color:var(--txt2);margin-top:5px;font-weight:600">${fmtAmt(winner.results.monthly)} / ${tc.months}</p>
   </div>`;
@@ -2433,32 +2608,32 @@ function renderCompare(){
     const loanName=T[lang]['lt_'+sc.loanType]||sc.loanType;
     const clr=monthlySaving>=0?'#10b981':'#f59e0b';
     html+=`<div class="card" style="border:1.5px solid ${clr}40;background:${clr}08">
-      <p class="card-label" style="color:${clr};margin-bottom:10px">🔄 ${isAr?'ماذا لو فعّلت سيناريو '+loanName+'؟':'What if you activate the '+loanName+' scenario?'}</p>
+      <p class="card-label" style="color:${clr};margin-bottom:10px">${isAr?'ماذا لو فعّلت سيناريو '+loanName+'؟':lang==='es'?'¿Y si activas el escenario '+loanName+'?':'What if you activate the '+loanName+' scenario?'}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--lbl);font-weight:700;margin-bottom:4px;text-transform:uppercase">${isAr?'القسط الحالي':'Current Payment'}</div>
+          <div style="font-size:10px;color:var(--lbl);font-weight:700;margin-bottom:4px;text-transform:uppercase">${isAr?'القسط الحالي':lang==='es'?'Cuota actual':'Current Payment'}</div>
           <div style="font-size:16px;font-weight:800;color:#f59e0b">${fmtAmt(origLoan.loanMonthly)}</div>
         </div>
         <div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--lbl);font-weight:700;margin-bottom:4px;text-transform:uppercase">${isAr?'بعد السيناريو':'After Scenario'}</div>
+          <div style="font-size:10px;color:var(--lbl);font-weight:700;margin-bottom:4px;text-transform:uppercase">${isAr?'بعد السيناريو':lang==='es'?'Tras el escenario':'After Scenario'}</div>
           <div style="font-size:16px;font-weight:800;color:#6366f1">${fmtAmt(sc.loanMonthly)}</div>
         </div>
         <div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--lbl);font-weight:700;margin-bottom:4px;text-transform:uppercase">${isAr?'يتبقى الآن':'Remaining Now'}</div>
+          <div style="font-size:10px;color:var(--lbl);font-weight:700;margin-bottom:4px;text-transform:uppercase">${isAr?'يتبقى الآن':lang==='es'?'Queda ahora':'Remaining Now'}</div>
           <div style="font-size:16px;font-weight:800;color:var(--txt2)">${fmtAmt(remBefore)}</div>
         </div>
         <div style="background:var(--bg3);border-radius:10px;padding:10px;text-align:center">
-          <div style="font-size:10px;color:var(--lbl);font-weight:700;margin-bottom:4px;text-transform:uppercase">${isAr?'يتبقى بعده':'Remaining After'}</div>
+          <div style="font-size:10px;color:var(--lbl);font-weight:700;margin-bottom:4px;text-transform:uppercase">${isAr?'يتبقى بعده':lang==='es'?'Queda después':'Remaining After'}</div>
           <div style="font-size:16px;font-weight:800;color:${clr}">${fmtAmt(remAfter)}</div>
         </div>
       </div>
       <div style="background:${clr}15;border-radius:10px;padding:10px;text-align:center;border:1px solid ${clr}40">
         <div style="font-size:13px;font-weight:800;color:${clr}">
           ${monthlySaving>0
-            ?(isAr?'✅ توفير '+fmtAmt(monthlySaving)+' شهرياً · '+fmtAmt(remDiff)+' إضافي يتبقى لك':'✅ Save '+fmtAmt(monthlySaving)+'/mo · '+fmtAmt(remDiff)+' more remaining')
+            ?(isAr?'توفير '+fmtAmt(monthlySaving)+' شهرياً · '+fmtAmt(remDiff)+' إضافي يتبقى لك':lang==='es'?'Ahorra '+fmtAmt(monthlySaving)+'/mes · '+fmtAmt(remDiff)+' más disponible':'Save '+fmtAmt(monthlySaving)+'/mo · '+fmtAmt(remDiff)+' more remaining')
             :monthlySaving===0
-            ?(isAr?'➡️ نفس القسط الشهري':'➡️ Same monthly payment')
-            :(isAr?'⚠️ زيادة '+fmtAmt(-monthlySaving)+' شهرياً':'⚠️ +'+fmtAmt(-monthlySaving)+'/mo extra cost')}
+            ?(isAr?'نفس القسط الشهري':lang==='es'?'Misma cuota mensual':'Same monthly payment')
+            :(isAr?'زيادة '+fmtAmt(-monthlySaving)+' شهرياً':'+'+fmtAmt(-monthlySaving)+'/mo extra cost')}
         </div>
       </div>
     </div>`;
@@ -2477,38 +2652,64 @@ function showUpgradeDialog(featureAr, featureEn, subtitleAr, subtitleEn){
   // النصوص الرسمية الاحترافية (خيار أ)
   // لإرجاع وضع Premium لاحقاً: راجع PREMIUM_RESTORE_GUIDE.md
   // ══════════════════════════════════════════════════════════════════
-  const isAr=lang==='ar';
-  const title = isAr?featureAr:featureEn;
+  const isAr=lang==='ar', isEs=lang==='es';
+  // ضبط اتجاه النافذة حسب اللغة (النافذة خارج #app فلا ترث RTL تلقائياً)
+  const ovEl=document.getElementById('premium-overlay');
+  ovEl.dir = isAr?'rtl':'ltr';
+  // ترجمة عنوان الميزة للإسبانية (المستدعون يمرّرون عربي/إنجليزي فقط)
+  const esTitleMap={
+    'PDF Export':'Exportar PDF',
+    'Unlimited Saves':'Guardado ilimitado',
+    'Advanced Compare':'Comparación avanzada',
+    'Compare More Than 2 Loans':'Comparar más de 2 préstamos',
+    'Loan Restructuring':'Reestructuración'
+  };
+  const title = isAr?featureAr:isEs?(esTitleMap[featureEn]||featureEn):featureEn;
   const sub = isAr
     ?'هذه الميزة قيد التطوير وستتوفر قريباً'
+    :isEs
+    ?'Esta función está en desarrollo y estará disponible pronto'
     :'This feature is in development and will be available soon';
 
-  // عنوان ووصف (✨ بدل 🔒)
+  // عنوان ووصف
   const titleEl=document.getElementById('prem-title');
-  titleEl.innerHTML='<span style="display:inline-block;unicode-bidi:plaintext">✨</span> '+title;
+  titleEl.textContent=title;
   document.getElementById('prem-sub').textContent=sub;
+
+  // أيقونات SVG لكل ميزة
+  const ic={
+    pdf:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/>',
+    save:'<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+    compare:'<path d="M5 21V10M12 21V4M19 21v-8"/>',
+    refi:'<path d="M21 12a9 9 0 1 1-2.6-6.3"/><path d="M21 3v5h-5"/>'
+  };
+  const iconSvg=k=>`<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic[k]}</svg>`;
 
   // قائمة الميزات القادمة
   const features=isAr?[
-    ['📄','تصدير PDF','احفظ تقريرك المالي باحترافية'],
-    ['💾','حفظ غير محدود','احفظ أكثر من قرضين'],
-    ['⚖️','مقارنة متقدمة','قارن حتى 4 قروض معاً'],
-    ['🔄','إعادة الجدولة','غيّر الفائدة أو القسط واحسب توفيرك'],
+    ['pdf','تصدير PDF','احفظ تقريرك المالي باحترافية'],
+    ['save','حفظ غير محدود','احفظ أكثر من قرضين'],
+    ['compare','مقارنة متقدمة','قارن حتى 4 قروض معاً'],
+    ['refi','إعادة الجدولة','غيّر الفائدة أو القسط واحسب توفيرك'],
+  ]:isEs?[
+    ['pdf','Exportar PDF','Guarda tu informe financiero completo'],
+    ['save','Guardado ilimitado','Guarda más de 2 préstamos'],
+    ['compare','Comparación avanzada','Compara hasta 4 préstamos'],
+    ['refi','Reestructuración','Cambia la tasa o cuota y calcula tu ahorro'],
   ]:[
-    ['📄','PDF Export','Save your full financial report'],
-    ['💾','Unlimited Saves','Save more than 2 loans'],
-    ['⚖️','Advanced Compare','Compare up to 4 loans'],
-    ['🔄','Loan Restructuring','Change rate or payment & calculate savings'],
+    ['pdf','PDF Export','Save your full financial report'],
+    ['save','Unlimited Saves','Save more than 2 loans'],
+    ['compare','Advanced Compare','Compare up to 4 loans'],
+    ['refi','Loan Restructuring','Change rate or payment & calculate savings'],
   ];
-  // علامة 🔜 بدل ✓ الخضراء
   document.getElementById('prem-features').innerHTML=features.map(([icon,name,desc],i,arr)=>`
     <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;${i<arr.length-1?'border-bottom:1px solid var(--brd)':''}">
-      <span style="font-size:18px;width:26px;text-align:center">${icon}</span>
-      <div style="flex:1">
+      <span style="width:26px;display:inline-flex;align-items:center;justify-content:center;color:#a78bfa;flex-shrink:0">${iconSvg(icon)}</span>
+      <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700;color:var(--txt)">${name}</div>
         <div style="font-size:11px;color:var(--txt2);margin-top:2px">${desc}</div>
       </div>
-      <span style="font-size:11px;font-weight:700;color:#a78bfa;background:rgba(167,139,250,.12);padding:3px 8px;border-radius:8px">${isAr?'قريباً':'Soon'}</span>
+      <span style="font-size:11px;font-weight:700;color:#a78bfa;background:rgba(167,139,250,.12);padding:3px 8px;border-radius:8px;flex-shrink:0">${isAr?'قريباً':lang==='es'?'Pronto':'Soon'}</span>
     </div>`).join('');
 
   // إخفاء شريط السعر كاملاً
@@ -2516,7 +2717,7 @@ function showUpgradeDialog(featureAr, featureEn, subtitleAr, subtitleEn){
   if(priceBox) priceBox.style.display='none';
 
   // زر واحد محايد فقط
-  document.getElementById('prem-upgrade-btn').textContent=isAr?'✓ حسناً، فهمت':'✓ Got it';
+  document.getElementById('prem-upgrade-btn').textContent=isAr?'حسناً، فهمت':lang==='es'?'Entendido':'Got it';
   // إخفاء زر "ليس الآن"
   const closeBtn=document.getElementById('prem-close-btn');
   if(closeBtn) closeBtn.style.display='none';
@@ -2529,6 +2730,24 @@ function showUpgradeDialog(featureAr, featureEn, subtitleAr, subtitleEn){
 
 function hidePremiumSheet(e){
   const ov=document.getElementById('premium-overlay');
+  if(!e||e.target===ov){
+    ov.style.display='none';
+  }
+}
+
+function showRiskInfo(){
+  const tc=t();
+  const ov=document.getElementById('risk-info-overlay');
+  ov.dir = lang==='ar'?'rtl':'ltr';
+  document.getElementById('risk-info-title').textContent=tc.riskInfoTitle;
+  document.getElementById('risk-info-body').textContent=tc.riskInfoBody;
+  document.getElementById('risk-info-close').textContent=tc.riskInfoClose;
+  ov.style.display='flex';
+  ov.style.alignItems='flex-end';
+}
+
+function hideRiskInfo(e){
+  const ov=document.getElementById('risk-info-overlay');
   if(!e||e.target===ov){
     ov.style.display='none';
   }
@@ -2584,7 +2803,7 @@ function exportPDF(){
     if(yr!==prevYear){
       prevYear=yr;
       allRows+=`<tr style="background:#eef2ff"><td colspan="5" style="font-weight:800;color:#4338ca;padding:6px 8px;font-size:11px;text-transform:uppercase">
-        ${isAr?'السنة':'Year'} ${yr}</td></tr>`;
+        ${isAr?'السنة':lang==='es'?'Año':'Year'} ${yr}</td></tr>`;
     }
     allRows+=`<tr class="tbl-num">
       <td>${i}</td>
@@ -2596,7 +2815,7 @@ function exportPDF(){
   }
   // Summary totals row
   allRows+=`<tr style="background:#f0fdf4;font-weight:800">
-    <td colspan="2" style="color:#111;font-size:12px">${isAr?'الإجمالي':'Total'}</td>
+    <td colspan="2" style="color:#111;font-size:12px">${isAr?'الإجمالي':lang==='es'?'Total':'Total'}</td>
     <td style="color:#6366f1">${fmtAmt(+form.amount)}</td>
     <td style="color:#ec4899">${fmtAmt(totalIntPaid)}</td>
     <td></td>
@@ -2604,12 +2823,12 @@ function exportPDF(){
 
   const rows=[
     [tc.grossIncome,                          fmtAmt(r.grossIncome),         '#111'],
-    [isAr?'المصروفات':'Expenses',             fmtAmt(r.expenses+r.variable), '#ef4444'],
+    [isAr?'المصروفات':lang==='es'?'Gastos':'Expenses',             fmtAmt(r.expenses+r.variable), '#ef4444'],
     [tc.netIncome,                            fmtAmt(r.netIncome),           '#10b981'],
     [tc.newInstall,                           fmtAmt(r.monthly),             '#111'],
     [tc.existingLoans,                        fmtAmt(r.existing),            '#111'],
-    [isAr?'مدة السداد':'Repayment Period',    months+' '+tc.months,          '#111'],
-    [isAr?'تاريخ الانتهاء':'End Date',        endStr,                        '#f59e0b'],
+    [isAr?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period',    months+' '+tc.months,          '#111'],
+    [isAr?'تاريخ الانتهاء':lang==='es'?'Fecha de fin':'End Date',        endStr,                        '#f59e0b'],
     [tc.dtiGrossLbl,                          r.dtiGross.toFixed(2)+'%',     color],
     [tc.dtiNetLbl,                            r.dtiNet.toFixed(2)+'%',       color],
   ].map(([l,v,c])=>`
@@ -2628,7 +2847,7 @@ function exportPDF(){
   </button>`;
 
   const fullPage=`<!DOCTYPE html>
-<html lang="${isAr?'ar':'en'}" dir="${dir}">
+<html lang="${isAr?'ar':lang==='es'?'es':'en'}" dir="${dir}">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -2659,12 +2878,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
 </head>
 <body>
   <button class="print-btn" onclick="window.print()">
-    🖨️ ${isAr?'طباعة / حفظ كـ PDF':'Print / Save as PDF'}
+    ${isAr?'طباعة / حفظ كـ PDF':lang==='es'?'Imprimir / Guardar como PDF':'Print / Save as PDF'}
   </button>
 
   <div class="header">
     <div>
-      <h1>🏦 ${tc.appName}</h1>
+      <h1>${tc.appName}</h1>
       <div style="font-size:11px;color:#6b7280;margin-top:3px">${new Date().toLocaleDateString(isAr?'ar-u-ca-gregory':'en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
       <span class="loan-tag">${loanTypeName} · ${fmtAmt(+form.amount)}</span>
     </div>
@@ -2705,14 +2924,14 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
   </div>
 
   <div class="section">
-    <div class="section-title">${isAr?'جدول الأقساط الكامل':'Full Amortization Schedule'} (${months} ${tc.months})</div>
+    <div class="section-title">${isAr?'جدول الأقساط الكامل':lang==='es'?'Tabla de amortización completa':'Full Amortization Schedule'} (${months} ${tc.months})</div>
     <table>
       <tr class="tbl-head">
-        <td>${isAr?'شهر':'Mo'}</td>
-        <td>${isAr?'القسط':'Install.'}</td>
+        <td>${isAr?'شهر':lang==='es'?'Mes':'Mo'}</td>
+        <td>${isAr?'القسط':lang==='es'?'Cuota':'Install.'}</td>
         <td>${tc.principal}</td>
         <td>${tc.interest}</td>
-        <td>${isAr?'الرصيد':'Balance'}</td>
+        <td>${isAr?'الرصيد':lang==='es'?'Saldo':'Balance'}</td>
       </tr>
       ${allRows}
     </table>
@@ -2729,7 +2948,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;
-    a.download=(isAr?'تقرير-القرض':'loan-report')+'.html';
+    a.download=(isAr?'تقرير-القرض':lang==='es'?'informe-prestamo':'loan-report')+'.html';
     a.click();
     setTimeout(()=>URL.revokeObjectURL(url),2000);
   }
@@ -2809,10 +3028,23 @@ function initApp(){
 window.addEventListener('DOMContentLoaded', initApp);
 </script>
 <!-- ══ PREMIUM UPGRADE SHEET ══ -->
+<div id="risk-info-overlay" onclick="hideRiskInfo(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
+  <div onclick="event.stopPropagation()" style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(36px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--brd);max-height:90vh;overflow-y:auto">
+    <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
+    <div style="width:60px;height:60px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#fff">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.4-3 7.4-7 8.5-4-1.1-7-4.1-7-8.5V6z"/><path d="M9 12l2 2 4-4.5"/></svg>
+    </div>
+    <p id="risk-info-title" style="text-align:center;font-size:19px;font-weight:900;color:var(--txt);margin-bottom:14px"></p>
+    <p id="risk-info-body" style="font-size:14px;color:var(--txt2);margin-bottom:20px;line-height:1.7;white-space:pre-line"></p>
+    <button onclick="hideRiskInfo()" id="risk-info-close" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit"></button>
+  </div>
+</div>
 <div id="premium-overlay" onclick="hidePremiumSheet(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
   <div onclick="event.stopPropagation()" style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px 36px;border-top:1px solid var(--brd);max-height:90vh;overflow-y:auto">
     <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
-    <div id="prem-big-icon" style="width:60px;height:60px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px">✨</div>
+    <div id="prem-big-icon" style="width:60px;height:60px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="M12 2l1.7 5.6L19 9.3l-5.3 1.7L12 16l-1.7-5L5 9.3l5.3-1.7z"/><path d="M18.5 13.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" opacity=".85"/></svg>
+    </div>
     <p id="prem-title" style="text-align:center;font-size:19px;font-weight:900;color:var(--txt);margin-bottom:6px"></p>
     <p id="prem-sub" style="text-align:center;font-size:13px;color:var(--txt2);margin-bottom:20px;line-height:1.6"></p>
     <div id="prem-features" style="background:var(--bg3);border-radius:14px;border:1px solid var(--brd);margin-bottom:18px;overflow:hidden"></div>
@@ -2821,7 +3053,7 @@ window.addEventListener('DOMContentLoaded', initApp);
       <div style="font-size:30px;font-weight:900;color:#fff">&nbsp;</div>
       <div id="prem-price-note" style="font-size:11px;color:#c4b5fd;margin-top:3px"></div>
     </div>
-    <button onclick="hidePremiumSheet()" id="prem-upgrade-btn" style="width:100%;padding:15px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px">⚡</button>
+    <button onclick="hidePremiumSheet()" id="prem-upgrade-btn" style="width:100%;padding:15px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px"></button>
     <button onclick="hidePremiumSheet()" id="prem-close-btn" style="width:100%;padding:12px;background:transparent;color:var(--txt2);border:1.5px solid var(--brd);border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit"></button>
   </div>
 </div>
