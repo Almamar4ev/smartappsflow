@@ -27,7 +27,7 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install -g @capacitor/cli
-          npm install @capacitor/core @capacitor/android @capacitor/splash-screen
+          npm install @capacitor/core @capacitor/android @capacitor/splash-screen@^6.0.0
 
       - name: Prepare web folder
         run: |
