@@ -308,12 +308,10 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   <h1 class="splash-title">Smart Loan Calculator</h1>
   <p class="splash-sub">حاسبة القروض الذكية</p>
   <p class="splash-hint" style="margin-bottom:6px">Choose your language / اختر لغتك</p>
-  <div class="lang-row" style="z-index:1">
-    <button class="lang-btn" onclick="chooseLang('ar')">🇸🇦 العربية</button>
-    <button class="lang-btn" onclick="chooseLang('en')">🇺🇸 English</button>
-  </div>
-  <div style="z-index:1">
-    <button class="lang-btn" onclick="chooseLang('es')" style="padding:13px 36px">🇪🇸 Español</button>
+  <div class="lang-row" style="flex-direction:column;width:100%;max-width:300px;z-index:1">
+    <button class="lang-btn" style="width:100%" onclick="chooseLang('ar')">🇸🇦 العربية</button>
+    <button class="lang-btn" style="width:100%" onclick="chooseLang('en')">🇺🇸 English</button>
+    <button class="lang-btn" style="width:100%" onclick="chooseLang('es')">🇪🇸 Español</button>
   </div>
 </div>
 
