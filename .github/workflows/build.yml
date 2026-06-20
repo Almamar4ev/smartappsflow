@@ -27,7 +27,7 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install -g @capacitor/cli
-          npm install @capacitor/core @capacitor/android
+          npm install @capacitor/core @capacitor/android @capacitor/splash-screen
 
       - name: Prepare web folder
         run: |
@@ -37,17 +37,44 @@ jobs:
       - name: Init Capacitor
         run: |
           npx cap init "Smart Loan Calculator" "com.smartapps.smartloanadvisor" --web-dir www
+          cat > capacitor.config.json <<'CFGEOF'
+          {
+            "appId": "com.smartapps.smartloanadvisor",
+            "appName": "Smart Loan Calculator",
+            "webDir": "www",
+            "bundledWebRuntime": false,
+            "plugins": {
+              "SplashScreen": {
+                "launchShowDuration": 1200,
+                "launchAutoHide": true,
+                "backgroundColor": "#3A2A8C",
+                "androidScaleType": "CENTER_CROP",
+                "showSpinner": false
+              }
+            }
+          }
+          CFGEOF
 
       - name: Add Android platform
         run: npx cap add android
+
+      - name: Add splash screen assets
+        run: |
+          for d in drawable drawable-port-mdpi drawable-port-hdpi drawable-port-xhdpi drawable-port-xxhdpi drawable-port-xxxhdpi; do
+            mkdir -p "android/app/src/main/res/$d"
+            if [ -f "splash/$d/splash.png" ]; then
+              cp "splash/$d/splash.png" "android/app/src/main/res/$d/splash.png"
+            fi
+          done
+          echo "Splash assets copied"
 
       - name: Update target SDK and version code
         run: |
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode .*/versionCode 22/' android/app/build.gradle
-          sed -i 's/versionName .*/versionName "2.2"/' android/app/build.gradle
+          sed -i 's/versionCode .*/versionCode 23/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "2.3"/' android/app/build.gradle
 
       - name: Enable edge-to-edge for safe-area support
         run: |
