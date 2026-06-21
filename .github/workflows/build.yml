@@ -28,6 +28,7 @@ jobs:
         run: |
           npm install -g @capacitor/cli
           npm install @capacitor/core @capacitor/android @capacitor/splash-screen@^6.0.0
+          npm install -D @capacitor/assets
 
       - name: Prepare web folder
         run: |
@@ -45,11 +46,13 @@ jobs:
             "bundledWebRuntime": false,
             "plugins": {
               "SplashScreen": {
-                "launchShowDuration": 1200,
+                "launchShowDuration": 1500,
                 "launchAutoHide": true,
                 "backgroundColor": "#3A2A8C",
                 "androidScaleType": "CENTER_CROP",
-                "showSpinner": false
+                "showSpinner": false,
+                "splashFullScreen": true,
+                "splashImmersive": true
               }
             }
           }
@@ -58,23 +61,28 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
-      - name: Add splash screen assets
+      - name: Generate app icons and splash screens
         run: |
-          for d in drawable drawable-port-mdpi drawable-port-hdpi drawable-port-xhdpi drawable-port-xxhdpi drawable-port-xxxhdpi; do
-            mkdir -p "android/app/src/main/res/$d"
-            if [ -f "splash/$d/splash.png" ]; then
-              cp "splash/$d/splash.png" "android/app/src/main/res/$d/splash.png"
-            fi
-          done
-          echo "Splash assets copied"
+          mkdir -p assets
+          cp icon-foreground.png assets/icon-foreground.png
+          cp icon-background.png assets/icon-background.png
+          cp icon-only.png assets/icon-only.png
+          cp splash-source.png assets/splash.png
+          cp splash-source.png assets/splash-dark.png
+          npx @capacitor/assets generate \
+            --android \
+            --iconBackgroundColor '#1D1736' \
+            --iconBackgroundColorDark '#1D1736' \
+            --splashBackgroundColor '#3A2A8C' \
+            --splashBackgroundColorDark '#3A2A8C'
 
       - name: Update target SDK and version code
         run: |
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode .*/versionCode 23/' android/app/build.gradle
-          sed -i 's/versionName .*/versionName "2.3"/' android/app/build.gradle
+          sed -i 's/versionCode .*/versionCode 24/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "2.4"/' android/app/build.gradle
 
       - name: Enable edge-to-edge for safe-area support
         run: |
@@ -118,9 +126,21 @@ jobs:
             -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
             -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
 
+      - name: Build Debug APK for testing
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
       - name: Upload AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SmartLoanCalculator-release
+          name: SmartLoanCalculator-release-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      - name: Upload Debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartLoanCalculator-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 30
