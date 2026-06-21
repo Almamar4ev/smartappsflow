@@ -6,12 +6,10 @@
 <title>Smart Loan Calculator | حاسبة القروض الذكية</title>
 
 <style>
-:root{--acc:#6366f1;--acc2:#8b5cf6;--acc3:#ec4899;--bg:#0a0f1e;--bg2:#1e293b;--bg3:#0f172a;--brd:#334155;--txt:#e2e8f0;--txt2:#c8d8e8;--txt3:#a0b4c8;--lbl:#f0b429;--safe:#10b981;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(99,102,241,0.18)}
-.theme-emerald{--acc:#059669;--acc2:#10b981;--acc3:#34d399;--bg:#061612;--bg2:#0d2620;--bg3:#041310;--brd:#1a4d3a;--txt2:#c0ddd0;--txt3:#9ac4b4;--lbl:#fbbf24;--glow:rgba(5,150,105,0.18)}
-.theme-ocean{--acc:#0369a1;--acc2:#0284c7;--acc3:#38bdf8;--bg:#020c18;--bg2:#0a1e30;--bg3:#010a12;--brd:#0c3050;--txt2:#a8cce0;--txt3:#7aaec8;--lbl:#fbbf24;--glow:rgba(3,105,161,0.22)}
-.theme-black{--acc:#a855f7;--acc2:#9333ea;--acc3:#c084fc;--bg:#000000;--bg2:#111111;--bg3:#0a0a0a;--brd:#222222;--txt2:#d0d0d0;--txt3:#a0a0a0;--lbl:#f0b429;--glow:rgba(168,85,247,0.20)}
-.theme-cyan{--acc:#0891b2;--acc2:#06b6d4;--acc3:#22d3ee;--bg:#021018;--bg2:#0a2030;--bg3:#010d14;--brd:#0e3a52;--txt2:#b0d8e8;--txt3:#88bcd4;--lbl:#fbbf24;--glow:rgba(8,145,178,0.18)}
-.theme-light{--acc:#4f46e5;--acc2:#7c3aed;--acc3:#db2777;--bg:#f1f5f9;--bg2:#ffffff;--bg3:#e2e8f0;--brd:#cbd5e1;--txt:#1e293b;--txt2:#2d4060;--txt3:#4a6080;--lbl:#4f46e5;--safe:#059669;--mod:#d97706;--risk:#dc2626;--glow:rgba(79,70,229,0.14)}
+:root{--acc:#6366f1;--acc2:#8b5cf6;--acc3:#ec4899;--bg:#0a0f1e;--bg2:#1e293b;--bg3:#0f172a;--brd:#334155;--txt:#e2e8f0;--txt2:#c8d8e8;--txt3:#a0b4c8;--lbl:#f0b429;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(99,102,241,0.18)}
+.theme-emerald{--acc:#1f9d57;--acc2:#178048;--acc3:#34b96e;--bg:#f1f7f3;--bg2:#ffffff;--bg3:#e6f0ea;--brd:#cadccf;--txt:#16352a;--txt2:#33604c;--txt3:#5f8070;--lbl:#178048;--safe:#15a64a;--mod:#e08a00;--risk:#e0263a;--glow:rgba(31,157,87,0.10)}
+.theme-black{--acc:#3b82f6;--acc2:#2563eb;--acc3:#60a5fa;--bg:#000000;--bg2:#0e0e10;--bg3:#08080a;--brd:#26262b;--txt:#f5f5f7;--txt2:#c8c8cd;--txt3:#8e8e93;--lbl:#60a5fa;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(59,130,246,0.18)}
+.theme-light{--acc:#4f46e5;--acc2:#7c3aed;--acc3:#db2777;--bg:#f1f5f9;--bg2:#ffffff;--bg3:#e2e8f0;--brd:#cbd5e1;--txt:#1e293b;--txt2:#2d4060;--txt3:#4a6080;--lbl:#4f46e5;--safe:#15a64a;--mod:#e08a00;--risk:#e0263a;--glow:rgba(79,70,229,0.14)}
 
 /* ═══════════════════════════════════════════════════
    MASTER MOBILE TEMPLATE — safe-area + keyboard safe defaults
@@ -38,14 +36,15 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .glow{position:absolute;top:12%;left:50%;transform:translateX(-50%);width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,var(--glow) 0%,transparent 70%);pointer-events:none;z-index:0}
 
 /* ── SPLASH ── */
-#splash{align-items:center;justify-content:center;padding:40px 24px;gap:14px;position:relative}
-.splash-icon{font-size:58px;z-index:1;filter:drop-shadow(0 0 18px var(--acc))}
-.splash-title{font-size:32px;font-weight:900;text-align:center;line-height:1.2;z-index:1;letter-spacing:-1px}
-.splash-sub{font-size:17px;color:var(--txt2);text-align:center;z-index:1}
-.splash-hint{font-size:13px;color:var(--txt3);text-align:center;margin-top:10px;z-index:1}
-.lang-row{display:flex;gap:14px;margin-top:8px;z-index:1}
-.lang-btn{padding:13px 26px;border-radius:14px;border:2px solid var(--brd);background:var(--bg2);color:var(--txt);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
-.lang-btn:active{border-color:var(--acc)}
+#splash .glow{display:none}
+#splash{align-items:center;justify-content:center;padding:40px 24px;gap:14px;position:relative;background:linear-gradient(160deg,#6E5BE6 0%,#4F3FC0 45%,#3A2A8C 100%)!important}
+.splash-icon{font-size:62px;z-index:1;filter:drop-shadow(0 0 22px rgba(255,255,255,.35))}
+.splash-title{font-size:32px;font-weight:900;text-align:center;line-height:1.2;z-index:1;letter-spacing:-1px;color:#ffffff}
+.splash-sub{font-size:18px;color:rgba(255,255,255,.92);text-align:center;z-index:1;font-weight:600}
+.splash-hint{font-size:13px;color:rgba(255,255,255,.78);text-align:center;margin-top:10px;z-index:1}
+.splash-lang-wrap{display:flex;flex-direction:column;gap:13px;width:100%;max-width:300px;margin-top:10px;z-index:1}
+.splash-lang-btn{width:100%;padding:16px 26px;border-radius:14px;border:1.5px solid rgba(255,255,255,.40);background:rgba(255,255,255,.14);color:#ffffff;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.splash-lang-btn:active{background:rgba(255,255,255,.28);border-color:#ffffff}
 
 /* ── HOME ── */
 #home{flex-direction:column;overflow-y:auto}
@@ -82,7 +81,7 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .saved-mini-name{font-size:15px;font-weight:700;color:var(--txt);margin-bottom:4px}
 .saved-mini-sub{font-size:13px;color:var(--txt2)}
 .saved-mini-right{text-align:end;flex-shrink:0}
-.saved-mini-amt{font-size:16px;font-weight:800;color:var(--acc)}
+.saved-mini-amt{font-size:16px;font-weight:800;color:var(--txt)}
 .saved-mini-risk{font-size:12px;font-weight:700;margin-top:2px}
 .saved-mini-arrow{font-size:26px;font-weight:800;color:var(--acc);margin-inline-start:10px}
 .no-saved-home{margin:0 20px 20px;background:var(--bg2);border:1px dashed var(--brd);border-radius:14px;padding:20px;text-align:center;color:var(--txt2);font-size:14px;line-height:1.6}
@@ -94,6 +93,12 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .theme-light .btn-footer{background:var(--bg)}
 .theme-light .step-title,.theme-light .home-app-name{color:var(--txt)}
 .theme-light label.lbl,.theme-light .step-indicator,.theme-light .home-tagline,.theme-light .home-section-title{color:var(--txt2)}
+.theme-emerald{background:var(--bg)!important}
+.theme-emerald .step-screen,.theme-emerald #home,.theme-emerald #results-screen,
+.theme-emerald #settings-screen,.theme-emerald #saved-detail,.theme-emerald #compare-screen{background:var(--bg)}
+.theme-emerald .btn-footer{background:var(--bg)}
+.theme-emerald .step-title,.theme-emerald .home-app-name{color:var(--txt)}
+.theme-emerald label.lbl,.theme-emerald .step-indicator,.theme-emerald .home-tagline,.theme-emerald .home-section-title{color:var(--txt2)}
 
 /* ── STEP SCREENS ── */
 .step-screen{
@@ -141,9 +146,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .option-btn.active{background:color-mix(in srgb,var(--acc) 12%,transparent);border-color:var(--acc);color:var(--acc);font-weight:700}
 .risk-col{display:flex;flex-direction:column;gap:9px}
 .risk-btn{padding:13px 15px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--brd);color:var(--txt2);font-size:16px;cursor:pointer;text-align:start;transition:all .2s;width:100%}
-.risk-btn.low.active{background:#10b98115;border-color:#10b981;color:#10b981;font-weight:700}
+.risk-btn.low.active{background:var(--safe)15;border-color:var(--safe);color:var(--safe);font-weight:700}
 .risk-btn.medium.active{background:#f59e0b15;border-color:#f59e0b;color:#f59e0b;font-weight:700}
-.risk-btn.high.active{background:#ef444415;border-color:#ef4444;color:#ef4444;font-weight:700}
+.risk-btn.high.active{background:var(--risk)15;border-color:var(--risk);color:var(--risk);font-weight:700}
 /* btn-footer: always at bottom, solid color, never obscured */
 .btn-footer{
   padding:10px 20px calc(16px + var(--safe-bottom));
@@ -161,7 +166,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .risk-banner{display:flex;align-items:center;gap:10px;margin:14px 20px 0;padding:13px 16px;border-radius:14px;border:1.5px solid}
 .risk-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .risk-banner-text{font-size:15px;font-weight:700;flex:1}
-.risk-info-btn{width:24px;height:24px;flex-shrink:0;border-radius:50%;background:transparent;border:1.5px solid currentColor;color:var(--txt3);font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;opacity:.7;transition:opacity .2s}
+.risk-info-btn{width:24px;height:24px;flex-shrink:0;border-radius:50%;background:transparent;border:1.5px solid currentColor;color:var(--txt2);font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;opacity:.9;transition:opacity .2s}
 .risk-info-btn:active{opacity:1}
 .tab-row{display:flex;gap:6px;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none}
 .tab-row::-webkit-scrollbar{display:none}
@@ -193,7 +198,8 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .basis-hi{font-size:16px;font-weight:800}
 .sim-field{margin-bottom:18px}
 .sim-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.sim-val{color:var(--acc);font-weight:700;font-size:14px}
+.sim-label-row .lbl{color:var(--txt);font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.sim-val{color:var(--txt);font-weight:800;font-size:15px}
 .edit-btn{background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid color-mix(in srgb,var(--acc) 35%,transparent);border-radius:7px;color:var(--acc);font-size:12px;padding:4px 9px;cursor:pointer;transition:all .2s}
 .edit-btn.active{border-color:var(--acc)}
 .manual-wrap{margin-top:7px}
@@ -226,9 +232,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .donut-wrap{display:flex;align-items:center;gap:20px;padding:8px 0}
 .donut-svg{flex-shrink:0}
 .donut-legend{display:flex;flex-direction:column;gap:8px;flex:1}
-.donut-legend-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt)}
+.donut-legend-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--txt2)}
 .donut-legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.donut-legend-val{font-weight:700;font-size:12px;color:var(--txt2)}
+.donut-legend-val{font-weight:700;font-size:12px;color:var(--txt)}
 .bar-chart{display:flex;align-items:flex-end;gap:3px;height:140px;padding:0 2px}
 .bar-group{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;height:100%;justify-content:flex-end}
 .bar-seg{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .4s ease}
@@ -246,7 +252,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .sched-cell.right{text-align:end}
 .sched-cell.principal{color:#6366f1;font-weight:600}
 .sched-cell.interest{color:#ec4899;font-weight:600}
-.sched-cell.balance{color:#10b981;font-weight:700}
+.sched-cell.balance{color:var(--safe);font-weight:700}
 /* year divider */
 .sched-year{grid-column:1/-1;background:color-mix(in srgb,var(--acc) 10%,transparent);padding:5px 12px;font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase;letter-spacing:.5px}
 .saved-card{background:var(--bg2);border-radius:13px;padding:14px 16px;border:1px solid var(--brd)}
@@ -255,10 +261,10 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .saved-lbl{color:var(--txt2);font-size:14px;font-weight:600}
 .saved-val{color:var(--txt);font-size:14px;font-weight:700}
 .empty-state{text-align:center;color:var(--txt2);font-size:15px;padding:24px 0;line-height:1.7}
-.clear-btn{padding:11px;border-radius:10px;background:var(--bg2);border:1px solid #ef444450;color:#ef4444;font-size:14px;font-weight:700;cursor:pointer;width:100%}
+.clear-btn{padding:11px;border-radius:10px;background:var(--bg2);border:1px solid var(--risk)50;color:var(--risk);font-size:14px;font-weight:700;cursor:pointer;width:100%}
 /* SETTINGS */
 #settings-screen{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh;min-height:100dvh}
-.pdf-btn{width:100%;padding:13px;border-radius:14px;background:color-mix(in srgb,#10b981 14%,transparent);border:1.5px solid #10b98170;color:#10b981;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:inherit;transition:all .2s}
+.pdf-btn{width:100%;padding:13px;border-radius:14px;background:color-mix(in srgb,var(--safe) 14%,transparent);border:1.5px solid var(--safe)70;color:var(--safe);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:inherit;transition:all .2s}
 .pdf-btn:active{opacity:.8;transform:scale(.98)}
 .settings-hdr{display:flex;align-items:center;gap:12px;padding:calc(18px + var(--safe-top)) 20px 0}
 .settings-title{font-size:20px;font-weight:800;color:var(--txt)}
@@ -308,10 +314,10 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   <h1 class="splash-title">Smart Loan Calculator</h1>
   <p class="splash-sub">حاسبة القروض الذكية</p>
   <p class="splash-hint" style="margin-bottom:6px">Choose your language / اختر لغتك</p>
-  <div class="lang-row" style="flex-direction:column;width:100%;max-width:300px;z-index:1">
-    <button class="lang-btn" style="width:100%" onclick="chooseLang('ar')">🇸🇦 العربية</button>
-    <button class="lang-btn" style="width:100%" onclick="chooseLang('en')">🇺🇸 English</button>
-    <button class="lang-btn" style="width:100%" onclick="chooseLang('es')">🇪🇸 Español</button>
+  <div class="splash-lang-wrap">
+    <button class="splash-lang-btn" onclick="chooseLang('ar')">🇸🇦 العربية</button>
+    <button class="splash-lang-btn" onclick="chooseLang('en')">🇺🇸 English</button>
+    <button class="splash-lang-btn" onclick="chooseLang('es')">🇪🇸 Español</button>
   </div>
 </div>
 
@@ -378,11 +384,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <h2 class="step-title" id="s1-title">Income Details</h2>
     <div class="field-wrap">
       <label class="lbl" id="lbl-salary">MONTHLY SALARY</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx1">SAR</span><input class="inp has-prefix" id="inp-salary" type="number" inputmode="numeric" placeholder="e.g. 5000" oninput="updateForm('salary',this.value)"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx1">SAR</span><input class="inp has-prefix" id="inp-salary" type="text" inputmode="numeric" placeholder="e.g. 5000" oninput="fmtAmountInput(this,'salary')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-income">ADDITIONAL INCOME</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx2">SAR</span><input class="inp has-prefix" id="inp-income" type="number" inputmode="numeric" placeholder="0" value="0" oninput="updateForm('income',this.value)"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx2">SAR</span><input class="inp has-prefix" id="inp-income" type="text" inputmode="numeric" placeholder="0" value="0" oninput="fmtAmountInput(this,'income')"></div>
     </div>
   </div>
   <div class="btn-footer"><button class="primary-btn" id="s1-next" onclick="goStep(2)">Next →</button></div>
@@ -400,11 +406,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <h2 class="step-title" id="s2-title">Monthly Expenses</h2>
     <div class="field-wrap">
       <label class="lbl" id="lbl-exp">FIXED EXPENSES</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx3">SAR</span><input class="inp has-prefix" id="inp-expenses" type="number" inputmode="numeric" placeholder="e.g. 1500" oninput="updateForm('expenses',this.value)"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx3">SAR</span><input class="inp has-prefix" id="inp-expenses" type="text" inputmode="numeric" placeholder="e.g. 1500" oninput="fmtAmountInput(this,'expenses')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-var">VARIABLE EXPENSES</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx4">SAR</span><input class="inp has-prefix" id="inp-variable" type="number" inputmode="numeric" placeholder="e.g. 800" oninput="updateForm('variable',this.value)"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx4">SAR</span><input class="inp has-prefix" id="inp-variable" type="text" inputmode="numeric" placeholder="e.g. 800" oninput="fmtAmountInput(this,'variable')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-exist">EXISTING LOAN PAYMENTS</label>
@@ -431,13 +437,13 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-amount">LOAN AMOUNT</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx6">SAR</span><input class="inp has-prefix" id="inp-amount" type="number" inputmode="numeric" placeholder="e.g. 50000" oninput="updateForm('amount',this.value)"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx6">SAR</span><input class="inp has-prefix" id="inp-amount" type="text" inputmode="numeric" placeholder="e.g. 50,000" oninput="fmtAmountInput(this,'amount')"></div>
     </div>
     <!-- PERIOD: compact -->
     <div class="field-wrap">
       <label class="lbl" id="lbl-period">REPAYMENT PERIOD</label>
       <input type="range" min="1" max="360" step="1" value="36" id="range-period" oninput="updatePeriodSlider(this.value)">
-      <div class="range-labels"><span>1</span><span>360</span></div>
+      <div class="range-labels"><span>1</span><span id="period-max-lbl">360</span></div>
       <div class="period-row">
         <input class="period-num" type="number" id="form-inp-per" value="36" min="1" inputmode="numeric" oninput="updatePeriodInput(this.value)">
         <select class="period-unit" id="form-per-unit" onchange="updatePeriodUnit()">
@@ -449,10 +455,10 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <!-- RATE: compact -->
     <div class="field-wrap">
       <label class="lbl" id="lbl-rate">ANNUAL INTEREST RATE</label>
-      <input type="range" min="0.1" max="30" step="0.01" value="8.5" id="range-rate" oninput="updateRateSlider(this.value)">
-      <div class="range-labels"><span>0.1%</span><span>30%</span></div>
+      <input type="range" min="0.1" max="40" step="0.01" value="8.5" id="range-rate" oninput="updateRateSlider(this.value)">
+      <div class="range-labels"><span>0.1%</span><span>40%</span></div>
       <div class="rate-row">
-        <input class="rate-num" type="number" id="form-inp-rate" value="8.5" min="0.1" max="30" step="0.01" inputmode="decimal" oninput="updateRateInput(this.value)">
+        <input class="rate-num" type="number" id="form-inp-rate" value="8.5" min="0.1" max="40" step="0.01" inputmode="decimal" oninput="updateRateInput(this.value)">
         <span class="rate-pct-badge">%</span>
       </div>
     </div>
@@ -496,7 +502,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <span class="results-title" id="res-title">Your Report</span>
     <button class="lang-toggle" onclick="toggleLang()">EN/AR</button>
   </div>
-  <div class="risk-banner" id="risk-banner"><div class="risk-dot" id="risk-dot"></div><span class="risk-banner-text" id="risk-banner-text"></span><span style="color:var(--txt3);font-size:12px" id="risk-score-txt"></span><button class="risk-info-btn" id="risk-info-btn" onclick="showRiskInfo()" aria-label="Risk info">?</button></div>
+  <div class="risk-banner" id="risk-banner"><div class="risk-dot" id="risk-dot"></div><span class="risk-banner-text" id="risk-banner-text"></span><span style="color:var(--txt2);font-size:12px" id="risk-score-txt"></span><button class="risk-info-btn" id="risk-info-btn" onclick="showRiskInfo()" aria-label="Risk info">?</button></div>
   <div class="tab-row">
     <button class="tab-btn active" onclick="switchTab('report',this)" id="tab-report">Report</button>
     <button class="tab-btn" onclick="switchTab('charts',this)" id="tab-charts">Charts</button>
@@ -538,7 +544,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
         <span style="font-size:11px;font-weight:700;color:var(--txt3);text-align:end" id="sh-install">Install.</span>
         <span style="font-size:11px;font-weight:700;color:#6366f1;text-align:end" id="sh-principal">Principal</span>
         <span style="font-size:11px;font-weight:700;color:#ec4899;text-align:end" id="sh-interest">Interest</span>
-        <span style="font-size:11px;font-weight:700;color:#10b981;text-align:end" id="sh-balance">Balance</span>
+        <span style="font-size:11px;font-weight:700;color:var(--safe);text-align:end" id="sh-balance">Balance</span>
       </div>
       <div id="sched-rows" style="max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
     </div>
@@ -548,7 +554,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <p class="card-label" id="lbl-sim">SCENARIO SIMULATOR</p>
       <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt"></button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simUpdate()"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="number" id="manual-inp-amt" inputmode="numeric" oninput="applyManual('amt')"></div></div>
       <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simUpdate()"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" id="opt-years">Years</option></select></div></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0.1" max="30" step="0.01" value="8.5" id="sim-range-rate" oninput="simUpdate()"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0.1" max="40" step="0.01" value="8.5" id="sim-range-rate" oninput="simUpdate()"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
     </div>
     <div class="kpi-grid" id="sim-kpi"></div>
   </div>
@@ -584,7 +590,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       </div>
       <div id="rst-section-rate">
         <p class="lbl" style="margin-bottom:6px;text-align:center" id="lbl-rst-new-rate">New Rate (%)</p>
-        <input type="number" id="rst-new-rate" value="4" min="0.1" max="30" step="0.1"
+        <input type="number" id="rst-new-rate" value="4" min="0.1" max="40" step="0.1"
           inputmode="decimal" oninput="calcRestructure()"
           style="width:100%;background:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding:12px;color:var(--txt);font-size:18px;font-weight:700;text-align:center;outline:none;font-family:inherit;margin-bottom:6px"/>
         <p style="font-size:11px;color:var(--txt3);text-align:center" id="rst-rate-hint">Same duration — payment changes automatically</p>
@@ -606,7 +612,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
         <div id="rst-rows"></div>
       </div>
       <div id="rst-saving-box" style="border-radius:14px;padding:14px;text-align:center;border:1.5px solid #166534;background:linear-gradient(135deg,#0c2a1a,#071a0e);margin-bottom:12px">
-        <div style="font-size:26px;font-weight:900;color:#4ade80" id="rst-saving-amt">—</div>
+        <div style="font-size:26px;font-weight:900;color:var(--safe)" id="rst-saving-amt">—</div>
         <div style="font-size:12px;color:#86efac;margin-top:3px" id="rst-saving-desc">—</div>
       </div>
       <button id="rst-save-btn" onclick="saveRefinanceAsScenario()"
@@ -670,7 +676,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 
 </div><!-- #app -->
 <script>
-let lang='en',results=null,saved=[],extraLoans=[],settingsPrev='home',currentTheme='default';
+let lang='en',results=null,saved=[],extraLoans=[],settingsPrev='home',currentTheme='light';
 let currency=''; // set on first launch by user
 let isPremium=false; // false=free, true=premium
 let _lastSaveClick=0; // debounce حماية من الضغط المزدوج على زر الحفظ
@@ -717,10 +723,8 @@ let form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Da
 // ── THEMES ────────────────────────────────────────────────────────────────────
 const THEMES=[
   {id:'default', name:'Indigo',  nameAr:'نيلي',  nameFr:'Indigo',   nameUr:'نیلی',   nameTr:'İndigo',   nameEs:'Índigo',  nameZh:'靛蓝',  nameHi:'नील',   nameIt:'Indaco', nameDe:'Indigo',  nameRu:'Индиго', nameJa:'インディゴ',nameKo:'인디고', namePt:'Índigo', swatch:'#6366f1'},
-  {id:'emerald', name:'Emerald', nameAr:'زمردي', nameFr:'Émeraude', nameUr:'زمرد',   nameTr:'Zümrüt',   nameEs:'Esmeralda',nameZh:'翡翠', nameHi:'पन्ना', nameIt:'Smeraldo',nameDe:'Smaragd', nameRu:'Изумруд',nameJa:'エメラルド',nameKo:'에메랄드',namePt:'Esmeralda',swatch:'#059669'},
-  {id:'ocean',   name:'Ocean',   nameAr:'محيطي', nameFr:'Océan',    nameUr:'سمندری', nameTr:'Okyanus',  nameEs:'Océano',  nameZh:'海洋',  nameHi:'समुद्री',nameIt:'Oceano', nameDe:'Ozean',   nameRu:'Океан',  nameJa:'オーシャン',nameKo:'오션',   namePt:'Oceano', swatch:'#0369a1'},
-  {id:'black',   name:'Black',   nameAr:'أسود',  nameFr:'Noir',     nameUr:'سیاہ',   nameTr:'Siyah',    nameEs:'Negro',   nameZh:'黑色',  nameHi:'काला',  nameIt:'Nero',   nameDe:'Schwarz', nameRu:'Чёрный', nameJa:'ブラック', nameKo:'블랙',   namePt:'Preto',  swatch:'#111111'},
-  {id:'cyan',    name:'Cyan',    nameAr:'سماوي', nameFr:'Cyan',     nameUr:'فیروزی', nameTr:'Camgöbeği',nameEs:'Cian',    nameZh:'青色',  nameHi:'नीलाभ', nameIt:'Ciano',  nameDe:'Cyan',    nameRu:'Циан',   nameJa:'シアン',   nameKo:'시안',   namePt:'Ciano',  swatch:'#0891b2'},
+  {id:'emerald', name:'Emerald', nameAr:'زمردي', nameFr:'Émeraude', nameUr:'زمرد',   nameTr:'Zümrüt',   nameEs:'Esmeralda',nameZh:'翡翠', nameHi:'पन्ना', nameIt:'Smeraldo',nameDe:'Smaragd', nameRu:'Изумруд',nameJa:'エメラルド',nameKo:'에메랄드',namePt:'Esmeralda',swatch:'var(--safe)'},
+  {id:'black',   name:'Black',   nameAr:'أسود',  nameFr:'Noir',     nameUr:'سیاہ',   nameTr:'Siyah',    nameEs:'Negro',   nameZh:'黑色',  nameHi:'काला',  nameIt:'Nero',   nameDe:'Schwarz', nameRu:'Чёрный', nameJa:'ブラック', nameKo:'블랙',   namePt:'Preto',  swatch:'#000000'},
   {id:'light',   name:'Light',   nameAr:'فاتح',  nameFr:'Clair',    nameUr:'روشن',   nameTr:'Açık',     nameEs:'Claro',   nameZh:'浅色',  nameHi:'हल्का', nameIt:'Chiaro', nameDe:'Hell',    nameRu:'Светлый',nameJa:'ライト',   nameKo:'라이트', namePt:'Claro',  swatch:'#ffffff'},
 ];
 function applyTheme(id){currentTheme=id;document.getElementById('app').className=id==='default'?'':'theme-'+id;renderThemeGrid();persistState();}
@@ -800,7 +804,7 @@ const T={
     compareBtnHome:'Compare',compareTitle:'Compare Loans',
     features:['Instant loan calculation','Detailed estimates','Risk indicators','Scenario simulation'],
     riskInfoTitle:'How is Risk Level calculated?',
-    riskInfoBody:'Risk Level is based on your DTI (Debt-to-Income) ratio — the share of your income that goes to loan payments.\n\nSafe: payments under 35% of gross income.\n\nModerate: payments between 35% and 50%.\n\nRisky: payments above 50%.\n\nA lower ratio means more breathing room in your budget.',
+    riskInfoBody:'Risk Level is based on your DTI (Debt-to-Income) ratio — the share of your income that goes to loan payments.\n\n\u{1F7E2} Safe (green): payments under 35% of gross income.\n\n\u{1F7E0} Moderate (orange): payments between 35% and 50%.\n\n\u{1F534} Risky (red): payments above 50%.\n\nThe DTI percentages in your report are colored by these levels. A lower ratio means more breathing room in your budget.',
     riskInfoClose:'Got it',
   },
   ar:{
@@ -847,7 +851,7 @@ const T={
     compareBtnHome:'مقارنة',compareTitle:'مقارنة القروض',
     features:['حساب فوري للقروض','تقديرات تفصيلية','مؤشرات المخاطر','محاكاة السيناريوهات'],
     riskInfoTitle:'كيف يُحسب مستوى المخاطرة؟',
-    riskInfoBody:'يعتمد مستوى المخاطرة على نسبة الدين إلى الدخل (DTI) — أي نسبة دخلك التي تذهب لأقساط القروض.\n\nآمن: الأقساط أقل من 35% من الدخل الإجمالي.\n\nمتوسط: الأقساط بين 35% و50%.\n\nمرتفع: الأقساط أعلى من 50%.\n\nكلما انخفضت النسبة، زادت المرونة في ميزانيتك.',
+    riskInfoBody:'يعتمد مستوى المخاطرة على نسبة الدين إلى الدخل (DTI) — أي نسبة دخلك التي تذهب لأقساط القروض.\n\n\u{1F7E2} آمن (أخضر): الأقساط أقل من 35% من الدخل الإجمالي.\n\n\u{1F7E0} متوسط (برتقالي): الأقساط بين 35% و50%.\n\n\u{1F534} مرتفع (أحمر): الأقساط أعلى من 50%.\n\nنسب DTI في تقريرك ملوّنة حسب هذه المستويات. كلما انخفضت النسبة، زادت المرونة في ميزانيتك.',
     riskInfoClose:'حسناً',
   },
   es:{
@@ -882,7 +886,7 @@ const T={
     settings:'Ajustes',themes:'ELEGIR TEMA',langSet:'IDIOMA',savedScenarios:'PRÉSTAMOS GUARDADOS',detailTitle:'Detalles del préstamo',
     compareBtnHome:'Comparar',compareTitle:'Comparar préstamos',features:['Cálculo instantáneo','Estimaciones detalladas','Indicadores de riesgo','Simulación de escenarios'],
     riskInfoTitle:'¿Cómo se calcula el nivel de riesgo?',
-    riskInfoBody:'El nivel de riesgo se basa en tu ratio deuda-ingreso (DTI) — la parte de tus ingresos que se destina a pagos de préstamos.\n\nSeguro: pagos por debajo del 35% del ingreso bruto.\n\nModerado: pagos entre el 35% y el 50%.\n\nAlto: pagos por encima del 50%.\n\nUn ratio más bajo significa más margen en tu presupuesto.',
+    riskInfoBody:'El nivel de riesgo se basa en tu ratio deuda-ingreso (DTI) — la parte de tus ingresos que se destina a pagos de préstamos.\n\n\u{1F7E2} Seguro (verde): pagos por debajo del 35% del ingreso bruto.\n\n\u{1F7E0} Moderado (naranja): pagos entre el 35% y el 50%.\n\n\u{1F534} Alto (rojo): pagos por encima del 50%.\n\nLos porcentajes DTI en tu informe están coloreados según estos niveles. Un ratio más bajo significa más margen en tu presupuesto.',
     riskInfoClose:'Entendido',
   },
 };
@@ -918,7 +922,7 @@ function amortize(amount,annualRate,months){
   return sched;
 }
 function fmt(n){return Number(n).toLocaleString('en-US')}
-function rc(rl){return rl==='safe'?'#10b981':rl==='moderate'?'#f59e0b':'#ef4444'}
+function rc(rl){return rl==='safe'?'var(--safe)':rl==='moderate'?'#f59e0b':'var(--risk)'}
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function showScreen(id){
@@ -1036,7 +1040,12 @@ function rerenderAll(){
 }
 function openSettings(){settingsPrev=document.querySelector('.screen.active')?.id||'home';showScreen('settings-screen');renderSettings();}
 function settingsBack(){showScreen(settingsPrev||'home');}
-function goHome(){showScreen('home');renderHome();}
+function goHome(){
+  showScreen('home');
+  // إعادة رسم كاملة وموثوقة لكل مكوّنات الرئيسية (الملف المالي + المتبقي + المحفوظات)
+  renderHome();renderHomeSaved();renderSavedTab();
+  requestAnimationFrame(()=>{renderHome();renderHomeSaved();});
+}
 function startForm(){
   _editingLoanIdx=null;
   // Reset only loan fields, keep profile
@@ -1068,9 +1077,9 @@ function editProfile(){
   const s2next=document.getElementById('s2-next');
   if(s2next){
     s2next.onclick=()=>{
-      profile.expenses=document.getElementById('inp-expenses')?.value||profile.expenses;
-      profile.variable=document.getElementById('inp-variable')?.value||profile.variable;
-      profile.existing=document.getElementById('inp-existing')?.value||profile.existing;
+      const ev=document.getElementById('inp-expenses');if(ev)profile.expenses=cleanNum(ev.value)||profile.expenses||'';
+      const vv=document.getElementById('inp-variable');if(vv)profile.variable=cleanNum(vv.value)||profile.variable||'';
+      const xv=document.getElementById('inp-existing');if(xv)profile.existing=cleanNum(xv.value)||profile.existing||'';
       profileSaved=true;persistState();
       renderHome();
       goHome();
@@ -1079,25 +1088,26 @@ function editProfile(){
 }
 function syncProfileToInputs(){
   // Sync saved profile values into the input fields
-  const s=document.getElementById('inp-salary');if(s)s.value=profile.salary||'';
-  const inc=document.getElementById('inp-income');if(inc)inc.value=profile.income||'0';
-  const exp=document.getElementById('inp-expenses');if(exp)exp.value=profile.expenses||'';
-  const vr=document.getElementById('inp-variable');if(vr)vr.value=profile.variable||'';
+  const fmt=v=>{const c=cleanNum(v);return c===''?'':Number(c).toLocaleString('en-US');};
+  const s=document.getElementById('inp-salary');if(s)s.value=fmt(profile.salary);
+  const inc=document.getElementById('inp-income');if(inc)inc.value=profile.income?fmt(profile.income):'0';
+  const exp=document.getElementById('inp-expenses');if(exp)exp.value=fmt(profile.expenses);
+  const vr=document.getElementById('inp-variable');if(vr)vr.value=fmt(profile.variable);
   // الأقساط القائمة: تُحسب دائماً من القروض النشطة الفعلية (ليس من profile.existing)
   const realExisting=saved.filter(x=>x.type!=='scenario').reduce((sum,x)=>sum+x.loanMonthly,0);
   profile.existing=String(realExisting);
-  const ex=document.getElementById('inp-existing');if(ex)ex.value=realExisting;
+  const ex=document.getElementById('inp-existing');if(ex)ex.value=Number(realExisting).toLocaleString('en-US');
 }
 function goStep(n){
   // Save profile data when leaving steps 1 or 2
   if(n===2||n===3){
-    profile.salary=document.getElementById('inp-salary')?.value||profile.salary;
-    profile.income=document.getElementById('inp-income')?.value||profile.income;
+    const sv=document.getElementById('inp-salary');if(sv)profile.salary=cleanNum(sv.value)||profile.salary||'';
+    const iv=document.getElementById('inp-income');if(iv)profile.income=cleanNum(iv.value);
   }
   if(n===3){
-    profile.expenses=document.getElementById('inp-expenses')?.value||profile.expenses;
-    profile.variable=document.getElementById('inp-variable')?.value||profile.variable;
-    profile.existing=document.getElementById('inp-existing')?.value||profile.existing;
+    const ev=document.getElementById('inp-expenses');if(ev)profile.expenses=cleanNum(ev.value)||profile.expenses||'';
+    const vv=document.getElementById('inp-variable');if(vv)profile.variable=cleanNum(vv.value)||profile.variable||'';
+    const xv=document.getElementById('inp-existing');if(xv)profile.existing=cleanNum(xv.value)||profile.existing||'';
     profileSaved=true;persistState();
     renderHome(); // refresh home profile card in background
   }
@@ -1151,8 +1161,8 @@ function renderHome(){
       const existLbl=lang==='ar'?'أقساط قائمة':lang==='es'?'Cuotas actuales':'Existing Payments';
       profileRows.innerHTML=[
         {lbl:tc.profileIncome,  val:fmtAmt(totalInc),  c:'var(--txt)'},
-        {lbl:tc.profileExpenses,val:fmtAmt(totalExp),  c:'#ef4444'},
-        {lbl:netLbl,            val:fmtAmt(netInc),    c:'#10b981'},
+        {lbl:tc.profileExpenses,val:fmtAmt(totalExp),  c:'var(--risk)'},
+        {lbl:netLbl,            val:fmtAmt(netInc),    c:'var(--safe)'},
         {lbl:existLbl,          val:fmtAmt(existingPmt),c:'var(--txt)'},
       ].map(r=>`
         <div style="background:var(--bg3);border-radius:10px;padding:9px 11px">
@@ -1178,7 +1188,7 @@ function renderHome(){
     const totalLoans=saved.filter(s=>s.type!=='scenario').reduce((s,l)=>s+l.loanMonthly,0);
     const rem=Math.max(0,totalInc-totalExp-totalLoans);
     const remPct=totalInc>0?parseFloat(((rem/totalInc)*100).toFixed(2)):0;
-    const remColor=remPct>30?'#10b981':remPct>15?'#f59e0b':'#ef4444';
+    const remColor=remPct>30?'var(--safe)':remPct>15?'#f59e0b':'var(--risk)';
     const remLabel=lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder';
     const remDesc=lang==='ar'?`${remPct}% من دخلك متاح بعد كل الأقساط والمصروفات`:
                   lang==='es'?`${remPct}% de tus ingresos disponibles`:
@@ -1190,11 +1200,11 @@ function renderHome(){
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--lbl);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${remLabel}</div>
-            <div style="font-size:24px;font-weight:900;color:${remColor}">${fmtAmt(rem)}</div>
+            <div style="font-size:24px;font-weight:900;color:var(--txt)">${fmtAmt(rem)}</div>
             <div style="font-size:11px;color:var(--txt3);margin-top:3px">${remDesc}</div>
           </div>
           <div style="width:52px;height:52px;border-radius:50%;border:3px solid ${remColor}40;display:flex;align-items:center;justify-content:center;background:${remColor}15;flex-shrink:0">
-            <span style="font-size:16px;font-weight:900;color:${remColor}">${remPct}%</span>
+            <span style="font-size:16px;font-weight:900;color:var(--txt)">${remPct}%</span>
           </div>
         </div>
       </div>`;
@@ -1255,7 +1265,7 @@ function renderHomeSaved(){
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
             <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]}</div>
-            <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#6366f120;color:#818cf8;border:1px solid #6366f140;margin-top:4px">${isAr?'نشط':isEs?'Activo':'Active'}</span>
+            <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--safe) 16%,transparent);color:var(--safe);border:1px solid color-mix(in srgb,var(--safe) 40%,transparent);margin-top:4px">${isAr?'نشط':isEs?'Activo':'Active'}</span>
           </div>
           <div class="saved-mini-right">
             <div class="saved-mini-amt">${fmtAmt(s.results.monthly)}</div>
@@ -1273,7 +1283,7 @@ function renderHomeSaved(){
             ${isAr?'تعديل':isEs?'Editar':'Edit'}
           </button>
           <button onclick="event.stopPropagation();confirmDeleteLoan(${i},'${displayName.replace(/'/g,"\\'")}')"
-            style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,#ef4444 12%,transparent);border:1px solid #ef444450;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">
+            style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid var(--risk)50;color:var(--risk);font-size:12px;font-weight:700;cursor:pointer">
             ${isAr?'حذف':isEs?'Eliminar':'Delete'}
           </button>
         </div>
@@ -1305,11 +1315,11 @@ function renderHomeSaved(){
         </div>
         <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
           <button onclick="event.stopPropagation();confirmActivate(${i})"
-            style="flex:1;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,#10b981 12%,transparent);border:1px solid #10b98150;color:#10b981;font-size:12px;font-weight:700;cursor:pointer">
+            style="flex:1;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--safe) 12%,transparent);border:1px solid var(--safe)50;color:var(--safe);font-size:12px;font-weight:700;cursor:pointer">
             ${isAr?'تفعيل هذا السيناريو':isEs?'Activar':'Activate Scenario'}
           </button>
           <button onclick="event.stopPropagation();confirmDeleteLoan(${i},'${displayName.replace(/'/g,"\\'")}')"
-            style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,#ef4444 12%,transparent);border:1px solid #ef444450;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer">
+            style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid var(--risk)50;color:var(--risk);font-size:12px;font-weight:700;cursor:pointer">
             ${isAr?'حذف':isEs?'Eliminar':'Delete'}
           </button>
         </div>
@@ -1427,6 +1437,24 @@ function renderStep3Dynamic(){
     isEs?'Por defecto es el mes actual — cambia si el préstamo ya empezó o empezará después':
     'Default is current month — change if loan already started or will start later';
 
+  // تعبئة حقل المبلغ بالقيمة المنسّقة بالفاصلة الألفية (مهم عند التعديل أو العودة)
+  const amtEl=document.getElementById('inp-amount');
+  if(amtEl){
+    const cleanAmt=String(form.amount||'').replace(/[^0-9]/g,'');
+    amtEl.value=cleanAmt===''?'':Number(cleanAmt).toLocaleString('en-US');
+  }
+  // تعبئة النسبة والمدة لتطابق النموذج
+  const rateEl=document.getElementById('form-inp-rate');
+  if(rateEl)rateEl.value=parseFloat(form.rate||8.5);
+  const rngRate=document.getElementById('range-rate');
+  if(rngRate)rngRate.value=parseFloat(form.rate||8.5);
+  const perEl=document.getElementById('form-inp-per');
+  const perUnit=document.getElementById('form-per-unit');
+  const unit=perUnit?perUnit.value:'months';
+  if(perEl)perEl.value=unit==='years'?parseFloat((form.period/12).toFixed(2)):(form.period||36);
+  const rngPer=document.getElementById('range-period');
+  if(rngPer)rngPer.value=unit==='years'?Math.round((form.period||36)/12):(form.period||36);
+
   renderStartDatePicker();
 }
 
@@ -1485,24 +1513,49 @@ function updateForm(k,v){
   if(PROFILE_KEYS.includes(k)) profile[k]=v;
   else form[k]=v;
 }
+// تنسيق المبلغ بفاصلة ألفية حيّة أثناء الكتابة مع تخزين الرقم النظيف
+// تنظيف نص رقمي من الفواصل وأي رموز (للحقول المنسّقة بفاصلة ألفية)
+function cleanNum(v){return String(v==null?'':v).replace(/[^0-9.]/g,'');}
+function fmtAmountInput(el,key){
+  // أزل كل ما عدا الأرقام
+  let digits=el.value.replace(/[^0-9]/g,'');
+  // احفظ القيمة النظيفة في النموذج
+  updateForm(key,digits);
+  // اعرضها بفاصلة ألفية
+  el.value=digits===''?'':Number(digits).toLocaleString('en-US');
+}
 function updatePeriodSlider(v){
-  form.period=+v;
   const pu=document.getElementById('form-per-unit');const unit=pu?pu.value:'months';
+  // قيمة السلايدر تُفسَّر حسب الوحدة: سنوات => اضرب 12 للتخزين بالشهور
+  form.period=unit==='years'?Math.min(360,Math.max(1,Math.round(+v*12))):Math.min(360,Math.max(1,+v));
   const inp=document.getElementById('form-inp-per');
-  if(inp)inp.value=unit==='years'?parseFloat((+v/12).toFixed(2)):+v;
+  if(inp)inp.value=+v;
 }
 function updatePeriodInput(v){
-  if(!v||isNaN(v))return;
+  if(v===''||isNaN(v))return;
   const unit=document.getElementById('form-per-unit').value;
   let m=unit==='years'?Math.round(+v*12):Math.round(+v);
   m=Math.min(360,Math.max(1,m));form.period=m;
-  document.getElementById('range-period').value=m;
+  // حدّث السلايدر بقيمته المعروضة (بالوحدة الحالية)
+  const rp=document.getElementById('range-period');
+  if(rp)rp.value=unit==='years'?parseFloat((m/12).toFixed(2)):m;
 }
 function updatePeriodUnit(){
   const unit=document.getElementById('form-per-unit').value;
   const inp=document.getElementById('form-inp-per');
-  if(unit==='years'){inp.value=parseFloat((form.period/12).toFixed(2));inp.step='0.5';}
-  else{inp.value=form.period;inp.step='1';}
+  const rp=document.getElementById('range-period');
+  const lblMax=document.getElementById('period-max-lbl');
+  if(unit==='years'){
+    // السلايدر من 1 إلى 30 سنة
+    if(rp){rp.min='1';rp.max='30';rp.step='1';rp.value=Math.max(1,Math.round(form.period/12));}
+    if(lblMax)lblMax.textContent='30';
+    inp.value=parseFloat((form.period/12).toFixed(2));inp.step='0.5';
+  }else{
+    // السلايدر من 1 إلى 360 شهر
+    if(rp){rp.min='1';rp.max='360';rp.step='1';rp.value=form.period;}
+    if(lblMax)lblMax.textContent='360';
+    inp.value=form.period;inp.step='1';
+  }
 }
 function updateRateSlider(v){
   form.rate=parseFloat(+v);
@@ -1510,20 +1563,25 @@ function updateRateSlider(v){
 }
 function updateRateInput(v){
   if(!v||isNaN(v))return;
-  let r=Math.min(30,Math.max(0.1,+v));form.rate=r;
+  let r=Math.min(40,Math.max(0.1,+v));form.rate=r;
   document.getElementById('range-rate').value=r;
 }
 function selectLoanType(lt){
   form.loanType=lt;
-  const dr=parseFloat((RATES[lt]*100).toFixed(2));
-  form.rate=dr;
-  const rr=document.getElementById('range-rate');if(rr)rr.value=dr;
-  const fi=document.getElementById('form-inp-rate');if(fi)fi.value=dr;
-  document.querySelectorAll('#loan-type-chips .chip').forEach(c=>c.classList.remove('active'));
-  event.target.classList.add('active');
+  // النسبة مستقلة تماماً — لا تتغير عند تبديل نوع القرض (المستخدم يحددها يدوياً)
+  const chips=document.querySelectorAll('#loan-type-chips .chip');
+  chips.forEach(c=>c.classList.remove('active'));
+  // تظليل موثوق: عبر currentTarget إن وُجد، وإلا عبر ترتيب النوع
+  if(typeof event!=='undefined' && event && event.currentTarget){
+    event.currentTarget.classList.add('active');
+  } else {
+    const order=['car','home','personal','business','education','other'];
+    const idx=order.indexOf(lt);
+    if(idx>-1 && chips[idx]) chips[idx].classList.add('active');
+  }
 }
-function selectEmp(e){profile.employment=e;document.querySelectorAll('#emp-options .option-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');}
-function selectRisk(r){profile.risk=r;document.querySelectorAll('#risk-options .risk-btn').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');}
+function selectEmp(e){profile.employment=e;document.querySelectorAll('#emp-options .option-btn').forEach(b=>b.classList.remove('active'));if(event&&event.currentTarget)event.currentTarget.classList.add('active');}
+function selectRisk(r){profile.risk=r;document.querySelectorAll('#risk-options .risk-btn').forEach(b=>b.classList.remove('active'));if(event&&event.currentTarget)event.currentTarget.classList.add('active');}
 
 // ── CALCULATE ─────────────────────────────────────────────────────────────────
 function calculate(){
@@ -1531,15 +1589,18 @@ function calculate(){
   renderResults();showScreen('results-screen');
 }
 
+// لون DTI الذكي: أخضر آمن (<35%)، برتقالي متوسط (35-50%)، أحمر خطر (>50%)
+function dtiColor(pct){return pct<35?'var(--safe)':pct<=50?'var(--mod)':'var(--risk)';}
 // ── RESULTS ───────────────────────────────────────────────────────────────────
 function renderResults(){
   const tc=t(),r=results,color=rc(r.riskLevel);
   document.getElementById('res-title').textContent=tc.results;
   document.getElementById('res-back').textContent=lang==='ar'?'→':'←';
   const banner=document.getElementById('risk-banner');
-  banner.style.borderColor=color;banner.style.background=color+'18';
+  banner.style.borderColor=color;banner.style.background='var(--bg2)';
   document.getElementById('risk-dot').style.background=color;
-  document.getElementById('risk-banner-text').style.color=color;
+  // النص محايد (أبيض/أسود) للتناسق؛ النقطة والحدود الملوّنة تكفي للدلالة
+  document.getElementById('risk-banner-text').style.color='var(--txt)';
   document.getElementById('risk-banner-text').textContent=tc.riskLevel+': '+tc['risk_'+r.riskLevel];
   document.getElementById('risk-score-txt').textContent=tc.dtiRatio+': '+r.dtiGross.toFixed(2)+'%';
   ['report','charts','schedule','simulate','restructure'].forEach(tb=>{
@@ -1549,7 +1610,7 @@ function renderResults(){
     if(tb==='schedule') el.innerHTML=CAL_ICON+'<span>'+lbl+'</span>';
     else el.textContent=lbl;
   });
-  const monthlyColor=currentTheme==='light'?'#1a2332':'#ffffff';
+  const monthlyColor='var(--txt)';
   // remaining: إذا محسوب مسبقاً نستخدمه، وإلا نحسبه
   const remaining=r.remaining!==undefined
     ? r.remaining
@@ -1557,13 +1618,14 @@ function renderResults(){
   // نسبة المتبقي موحدة: remaining/grossIncome بفاصلتين
   const remainingPct=r.grossIncome>0?Math.round((remaining/r.grossIncome)*10000)/100:0;
   const remainingLabel=lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder';
-  const remainingColor=remaining>0?'#10b981':'#ef4444';
+  const remainingColor=remaining>0?'var(--safe)':'var(--risk)';
+  // القيم بيضاء (احترافية)؛ الحافة العلوية الملوّنة تكفي للتمييز. الدلالة (أحمر للفائدة، أخضر/أحمر للمتبقي) تبقى على القيمة
   document.getElementById('kpi-grid').innerHTML=[
-    {label:tc.monthlyInstallment, val:fmtAmt(r.monthly),  c:monthlyColor},
-    {label:tc.totalCost,          val:fmtAmt(r.total),    c:'#22d3ee'},
-    {label:tc.totalInterest,      val:fmtAmt(r.interest), c:'#ef4444'},
-    {label:remainingLabel,        val:fmtAmt(remaining),  c:remainingColor},
-  ].map(k=>`<div class="kpi-card" style="border-top-color:${k.c}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.c}">${k.val}</p></div>`).join('');
+    {label:tc.monthlyInstallment, val:fmtAmt(r.monthly),  edge:'var(--acc)',  vc:'var(--txt)'},
+    {label:tc.totalCost,          val:fmtAmt(r.total),    edge:'var(--acc2)', vc:'var(--txt)'},
+    {label:tc.totalInterest,      val:fmtAmt(r.interest), edge:'var(--risk)', vc:'var(--txt)'},
+    {label:remainingLabel,        val:fmtAmt(remaining),  edge:remainingColor, vc:'var(--txt)'},
+  ].map(k=>`<div class="kpi-card" style="border-top-color:${k.edge}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.vc}">${k.val}</p></div>`).join('');
   document.getElementById('lbl-basis').textContent=tc.basisTitle;
   // calculate expected end date
   const months=+form.period||36;
@@ -1572,14 +1634,14 @@ function renderResults(){
   const endStr=endDate.toLocaleDateString(lang==='ar'?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long'});
   document.getElementById('basis-rows').innerHTML=`
     <div class="basis-row"><span class="basis-lbl">${tc.grossIncome}</span><span class="basis-val">${fmtAmt(r.grossIncome)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'المصروفات':lang==='es'?'Gastos':'Expenses'}</span><span class="basis-val" style="color:#ef4444">${fmtAmt(r.expenses+r.variable)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${tc.netIncome}</span><span class="basis-val" style="color:#10b981;font-weight:800">${fmtAmt(r.netIncome)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'المصروفات':lang==='es'?'Gastos':'Expenses'}</span><span class="basis-val" style="color:var(--risk)">${fmtAmt(r.expenses+r.variable)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.netIncome}</span><span class="basis-val" style="color:var(--safe);font-weight:800">${fmtAmt(r.netIncome)}</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.newInstall}</span><span class="basis-val">${fmtAmt(r.monthly)}</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.existingLoans}</span><span class="basis-val">${fmtAmt(r.existing)}</span></div>
     <div class="basis-row"><span class="basis-lbl">${CAL_ICON}${lang==='ar'?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period'}</span><span class="basis-val">${months} ${tc.months}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'تاريخ الانتهاء المتوقع':lang==='es'?'Fecha de fin prevista':'Expected End Date'}</span><span class="basis-val" style="color:#f59e0b;font-weight:800">${endStr}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl}</span><span class="basis-hi" style="color:${color}">${r.dtiGross.toFixed(2)}%</span></div>
-    <div class="basis-row"><span class="basis-lbl">${tc.dtiNetLbl}</span><span class="basis-hi" style="color:${color}">${r.dtiNet.toFixed(2)}%</span></div>`;
+    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'تاريخ الانتهاء المتوقع':lang==='es'?'Fecha de fin prevista':'Expected End Date'}</span><span class="basis-val" style="color:var(--txt);font-weight:800">${endStr}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl}</span><span class="basis-hi" style="color:${dtiColor(r.dtiGross)}">${r.dtiGross.toFixed(2)}%</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.dtiNetLbl}</span><span class="basis-hi" style="color:${dtiColor(r.dtiNet)}">${r.dtiNet.toFixed(2)}%</span></div>`;
   document.getElementById('lbl-rec').textContent=tc.recommended;
   document.getElementById('rec-loan').textContent=T[lang]['lt_'+form.loanType];
   document.getElementById('rec-range').textContent=tc.suggestedRange+': '+fmtAmt(r.safeMax*0.8)+' – '+fmtAmt(r.safeMax);
@@ -1627,7 +1689,7 @@ function renderResults(){
       const rep=r._replacedLoan;
       const repName=T[lang]['lt_'+rep.loanType]||rep.loanType;
       const saving=Math.round(rep.loanMonthly-r.monthly);
-      const savingColor=saving>0?'#10b981':saving<0?'#ef4444':'#f59e0b';
+      const savingColor=saving>0?'var(--safe)':saving<0?'var(--risk)':'#f59e0b';
       const savingText=saving>0
         ?(isAr?`توفير ${fmtAmt(saving)} شهرياً`:`Save ${fmtAmt(saving)}/mo`)
         :saving<0
@@ -1644,13 +1706,13 @@ function renderResults(){
             <div style="text-align:center">
               <div style="font-size:10px;color:var(--txt3);font-weight:700;margin-bottom:3px;text-transform:uppercase">${isAr?'الحالي':lang==='es'?'Actual':'Current'}</div>
               <div style="font-size:12px;font-weight:700;color:var(--txt2)">${repName}</div>
-              <div style="font-size:18px;font-weight:900;color:#ef4444">${fmtAmt(rep.loanMonthly)}</div>
+              <div style="font-size:18px;font-weight:900;color:var(--risk)">${fmtAmt(rep.loanMonthly)}</div>
             </div>
             <div style="text-align:center;color:var(--acc);font-size:26px;font-weight:900">→</div>
             <div style="text-align:center">
               <div style="font-size:10px;color:var(--txt3);font-weight:700;margin-bottom:3px;text-transform:uppercase">${isAr?'السيناريو':lang==='es'?'Escenario':'Scenario'}</div>
               <div style="font-size:12px;font-weight:700;color:var(--txt2)">${repName}</div>
-              <div style="font-size:18px;font-weight:900;color:#10b981">${fmtAmt(r.monthly)}</div>
+              <div style="font-size:18px;font-weight:900;color:var(--safe)">${fmtAmt(r.monthly)}</div>
             </div>
           </div>
           <div style="text-align:center;padding:8px 14px 12px">
@@ -1679,9 +1741,10 @@ function drawCharts(){
   const interest=Math.round(r.interest)||0;
   const principal=Math.round((r.total||0)-interest)||Math.round(+form.amount)||0;
   const total=principal+interest||1;
-  const isLight=currentTheme==='light';
-  const txtMain=isLight?'#1a2332':'#e2e8f0';
-  const txtSub=isLight?'#4a5568':'#94a3b8';
+  const isLight=(currentTheme==='light'||currentTheme==='emerald');
+  // استخدم متغيرات الثيم مباشرة (تتكيّف مع الأسود/الأخضر/الفاتح تلقائياً)
+  const txtMain='var(--txt)';
+  const txtSub='var(--txt3)';
   const isAr=lang==='ar', isEs=lang==='es';
 
   // ── DONUT: أصل القرض vs الفوائد ───────────────────────────────────────────
@@ -1731,12 +1794,13 @@ function drawCharts(){
   const segStyle=(pct,grad,minW=6)=>
     `width:${Math.max(pct,minW)}%;background:${grad};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;position:relative;overflow:hidden`;
 
+  // القيمة الرقمية بيضاء/داكنة محايدة (احترافية)؛ النقطة الملوّنة + النسبة الملوّنة تكفيان للتمييز
   const miniCard=(dot,lbl,val,pct,bg,border,valColor)=>`
     <div style="background:${bg};border-radius:12px;padding:11px 12px;border:1px solid ${border}">
       <div style="width:8px;height:8px;border-radius:50%;background:${dot};margin-bottom:5px"></div>
       <div style="font-size:10px;color:${txtSub};font-weight:600;margin-bottom:3px">${lbl}</div>
-      <div style="font-size:16px;font-weight:900;color:${valColor}">${fmtAmt(val)}</div>
-      <div style="font-size:10px;font-weight:700;color:${valColor};opacity:.75;margin-top:2px">${pct}% ${isAr?'من دخلك':lang==='es'?'de ingresos':'of income'}</div>
+      <div style="font-size:16px;font-weight:900;color:${txtMain}">${fmtAmt(val)}</div>
+      <div style="font-size:10px;font-weight:700;color:${dot};opacity:.85;margin-top:2px">${pct}% ${isAr?'من دخلك':lang==='es'?'de ingresos':'of income'}</div>
     </div>`;
 
   const hasOther = otherLoansAmt > 0;
@@ -1751,7 +1815,7 @@ function drawCharts(){
         </div>
         <div style="text-align:end">
           <div style="font-size:11px;color:${txtSub};font-weight:600;margin-bottom:2px">${isAr?'يتبقى لك':isEs?'Te queda':'Remaining'}</div>
-          <div style="font-size:20px;font-weight:900;color:#10b981">${fmtAmt(remAmt)}</div>
+          <div style="font-size:20px;font-weight:900;color:var(--txt)">${fmtAmt(remAmt)}</div>
         </div>
       </div>
       <!-- الشريط الرئيسي -->
@@ -1760,7 +1824,7 @@ function drawCharts(){
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${expPct>8?expPct+'%':''}</span>
         </div>
-        <div style="${segStyle(loanPct,'linear-gradient(135deg,#ef4444,#f87171)')}">
+        <div style="${segStyle(loanPct,'linear-gradient(135deg,var(--risk),var(--risk))')}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${loanPct>8?loanPct+'%':''}</span>
         </div>
@@ -1768,7 +1832,7 @@ function drawCharts(){
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${otherPct>6?otherPct+'%':''}</span>
         </div>`:''}
-        <div style="${segStyle(remPct,'linear-gradient(135deg,#10b981,#34d399)')}">
+        <div style="${segStyle(remPct,'linear-gradient(135deg,var(--safe),var(--safe))')}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${remPct>5?remPct+'%':''}</span>
         </div>
@@ -1778,26 +1842,26 @@ function drawCharts(){
         ${miniCard('#f59e0b',
           isAr?'المصروفات':isEs?'Gastos':'Expenses',
           expAmt,expPctExact,
-          isLight?'#fffbeb':'#1a1005',
-          isLight?'#fde68a40':'#4d320520','#f59e0b')}
-        ${miniCard('#ef4444',
+          isLight?'#fffbeb':'var(--bg3)',
+          isLight?'#fde68a40':'var(--brd)','#f59e0b')}
+        ${miniCard('var(--risk)',
           isAr?'قسط هذا القرض':isEs?'Esta cuota':'This Loan',
           loanAmt,loanPctExact,
-          isLight?'#fef2f2':'#1a0505',
-          isLight?'#fecaca40':'#4d0a0a20','#ef4444')}
+          isLight?'#fef2f2':'var(--bg3)',
+          isLight?'#fecaca40':'var(--brd)','var(--risk)')}
         ${hasOther?miniCard('#818cf8',
           isAr?'أقساط أخرى قائمة':isEs?'Otras cuotas':'Other Loans',
           otherLoansAmt,otherPctExact,
-          isLight?'#eef2ff':'#1a1a2e',
-          isLight?'#c7d2fe40':'#3730a320','#818cf8'):''}
-        ${miniCard('#10b981',
+          isLight?'#eef2ff':'var(--bg3)',
+          isLight?'#c7d2fe40':'var(--brd)','#818cf8'):''}
+        ${miniCard('var(--safe)',
           isAr?'يتبقى لك شهرياً':isEs?'Te queda':'Remaining',
           remAmt,remPctExact,
-          isLight?'#ecfdf5':'#04160e',
-          isLight?'#a7f3d040':'#0a3d2220','#10b981')}
+          isLight?'#ecfdf5':'var(--bg3)',
+          isLight?'#a7f3d040':'var(--brd)','var(--safe)')}
       </div>
       <!-- ملاحظة: المتبقي يطابق رقم التقرير -->
-      <div style="margin-top:11px;padding:9px 12px;background:${isLight?'#f8fafc':'#0f172a'};border-radius:10px;border:1px solid ${isLight?'#e2e8f0':'#334155'};font-size:11px;color:${txtSub};line-height:1.6;display:flex;gap:7px;align-items:flex-start">
+      <div style="margin-top:11px;padding:9px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--brd);font-size:11px;color:${txtSub};line-height:1.6;display:flex;gap:7px;align-items:flex-start">
         <span></span>
         <span>${isAr
           ?'المتبقي يحسب بعد <strong style="color:'+txtMain+'">جميع</strong> الأقساط والمصروفات — يطابق رقم التقرير'
@@ -1929,14 +1993,14 @@ function calcRestructure(){
 
   let rows='';
   rows+=rstRow(isAr?'القسط قبل':isEs?'Cuota antes':'Payment before', fmtV(origPmt)+' '+moBefore, '#f59e0b');
-  rows+=rstRow(isAr?'القسط بعد':isEs?'Cuota despues':'Payment after', newMonths<9999?fmtV(newPmt)+' '+moBefore:'—', '#4ade80');
+  rows+=rstRow(isAr?'القسط بعد':isEs?'Cuota despues':'Payment after', newMonths<9999?fmtV(newPmt)+' '+moBefore:'—', 'var(--safe)');
   rows+=rstRow(isAr?'المدة المتبقية قبل':isEs?'Plazo antes':'Months left before', remN+' '+moLbl, '#60a5fa');
   rows+=rstRow(isAr?'المدة المتبقية بعد':isEs?'Plazo despues':'Months left after',
     newMonths<9999?(newMonths+' '+moLbl+(monthsSaved>0?' — '+(isAr?'أبكر بـ ':isEs?'antes ':'sooner by ')+monthsSaved+' '+moLbl:monthsSaved<0?' — '+(isAr?'أطول بـ ':isEs?'mas ':'longer by ')+(-monthsSaved)+' '+moLbl:'')):
     (isAr?'القسط لا يكفي':isEs?'Cuota insuficiente':'Payment too low'),
-    monthsSaved>0?'#4ade80':monthsSaved<0?'#f87171':'var(--txt)');
-  rows+=rstRow(isAr?'فوائد متبقية قبل':isEs?'Intereses antes':'Remaining interest before', fmtV(oldRemInterest), '#f87171');
-  rows+=rstRow(isAr?'فوائد متبقية بعد':isEs?'Intereses despues':'Remaining interest after', newMonths<9999?fmtV(newRemInterest):'—', '#4ade80');
+    monthsSaved>0?'var(--safe)':monthsSaved<0?'var(--risk)':'var(--txt)');
+  rows+=rstRow(isAr?'فوائد متبقية قبل':isEs?'Intereses antes':'Remaining interest before', fmtV(oldRemInterest), 'var(--risk)');
+  rows+=rstRow(isAr?'فوائد متبقية بعد':isEs?'Intereses despues':'Remaining interest after', newMonths<9999?fmtV(newRemInterest):'—', 'var(--safe)');
   document.getElementById('rst-rows').innerHTML=rows;
 
   const savingBox=document.getElementById('rst-saving-box');
@@ -1944,7 +2008,7 @@ function calcRestructure(){
   const savDesc=document.getElementById('rst-saving-desc');
   savingBox.style.background=isGood?'linear-gradient(135deg,#0c2a1a,#071a0e)':'linear-gradient(135deg,#1a0505,#120303)';
   savingBox.style.borderColor=isGood?'#166534':'#7f1d1d';
-  savAmt.style.color=isGood?'#4ade80':'#f87171';
+  savAmt.style.color=isGood?'var(--safe)':'var(--risk)';
   savAmt.textContent=newMonths<9999?fmtV(Math.abs(saving)):'—';
   savDesc.style.color=isGood?'#86efac':'#fca5a5';
   savDesc.textContent=newMonths>=9999?
@@ -2006,7 +2070,7 @@ function saveRefinanceAsScenario(){
   const btn=document.getElementById('rst-save-btn');
   if(btn){
     btn.textContent=''+(isAr?'تم الحفظ!':isEs?'Guardado!':'Saved!');
-    btn.style.background='#10b981';
+    btn.style.background='var(--safe)';
     setTimeout(()=>{btn.textContent=''+(isAr?'حفظ كسيناريو مقارنة':isEs?'Guardar como escenario':'Save as Comparison Scenario');btn.style.background='';},2500);
   }
 }
@@ -2050,23 +2114,23 @@ function renderSchedule(){
     st.textContent=`
       .sched-row.past{opacity:.95}
       .sched-row.sched-current{
-        background:linear-gradient(90deg,color-mix(in srgb,#10b981 16%,transparent),color-mix(in srgb,#10b981 4%,transparent))!important;
-        border-inline-end:4px solid #10b981;
-        box-shadow:inset 0 0 0 1px color-mix(in srgb,#10b981 20%,transparent);
+        background:linear-gradient(90deg,color-mix(in srgb,var(--safe) 16%,transparent),color-mix(in srgb,var(--safe) 4%,transparent))!important;
+        border-inline-end:4px solid var(--safe);
+        box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--safe) 20%,transparent);
         opacity:1!important;
       }
-      .sched-row.sched-current .sched-cell{color:#10b981!important;font-weight:800!important}
+      .sched-row.sched-current .sched-cell{color:var(--safe)!important;font-weight:800!important}
       .sched-current-tooltip{
         display:none;position:absolute;
         top:calc(100% + 4px);inset-inline-end:8px;
-        background:#10b981;color:#fff;border-radius:10px;
+        background:var(--safe);color:#fff;border-radius:10px;
         padding:7px 12px;font-size:12px;font-weight:700;
         z-index:20;white-space:nowrap;
-        box-shadow:0 4px 16px #10b98150;pointer-events:none;
+        box-shadow:0 4px 16px var(--safe)50;pointer-events:none;
       }
       .sched-current-tooltip::before{
         content:'';position:absolute;top:-5px;inset-inline-end:14px;
-        width:10px;height:10px;background:#10b981;
+        width:10px;height:10px;background:var(--safe);
         transform:rotate(45deg);border-radius:2px;
       }
       .sched-row.sched-current.tip-open .sched-current-tooltip{display:block}
@@ -2121,7 +2185,7 @@ function renderSchedule(){
     <div class="sched-cell right" style="color:var(--acc);font-weight:800">${fmt(Math.round(totalPaid))}</div>
     <div class="sched-cell right principal">${fmt(Math.round(amount))}</div>
     <div class="sched-cell right interest">${fmt(Math.round(totalInterestPaid))}</div>
-    <div class="sched-cell right balance" style="color:#10b981">0</div>
+    <div class="sched-cell right balance" style="color:var(--safe)">0</div>
   </div>`;
 
   document.getElementById('sched-rows').innerHTML=html;
@@ -2135,7 +2199,7 @@ function renderSchedule(){
 
 // ── SIMULATE ──────────────────────────────────────────────────────────────────
 function toggleManual(field){const wrap=document.getElementById('manual-'+field);const btn=document.getElementById('edit-btn-'+field);const inp=document.getElementById('manual-inp-'+field);const hidden=wrap.style.display==='none';wrap.style.display=hidden?'block':'none';btn.classList.toggle('active',hidden);if(hidden&&inp){const sl=document.getElementById('sim-range-'+field);if(field==='per'){const u=document.getElementById('per-unit').value;inp.value=u==='years'?Math.round(+sl.value/12):sl.value;}else inp.value=sl.value;inp.focus();}}
-function applyManual(field){const inp=document.getElementById('manual-inp-'+field);let val=+inp.value;if(!val||isNaN(val))return;const sl=document.getElementById('sim-range-'+field);if(field==='per'){const u=document.getElementById('per-unit').value;if(u==='years')val=Math.round(val*12);val=Math.min(360,Math.max(1,val));sl.value=val;}else if(field==='rate'){val=Math.min(30,Math.max(0.1,val));sl.value=val;}else if(field==='amt'){val=Math.min(500000,Math.max(1000,val));sl.value=val;}simUpdate();}
+function applyManual(field){const inp=document.getElementById('manual-inp-'+field);let val=+inp.value;if(!val||isNaN(val))return;const sl=document.getElementById('sim-range-'+field);if(field==='per'){const u=document.getElementById('per-unit').value;if(u==='years')val=Math.round(val*12);val=Math.min(360,Math.max(1,val));sl.value=val;}else if(field==='rate'){val=Math.min(40,Math.max(0.1,val));sl.value=val;}else if(field==='amt'){val=Math.min(500000,Math.max(1000,val));sl.value=val;}simUpdate();}
 function simUpdate(){
   const tc=t(),amt=+document.getElementById('sim-range-amt').value,per=+document.getElementById('sim-range-per').value,rate=+document.getElementById('sim-range-rate').value;
   document.getElementById('sim-amt-val').textContent=fmtAmt(amt);
@@ -2145,11 +2209,11 @@ function simUpdate(){
   const oy=document.getElementById('opt-years');if(oy)oy.textContent=lang==='ar'?'سنة':lang==='es'?'Años':'Years';
   const c=calcLoan(amt,rate/100,per);
   document.getElementById('sim-kpi').innerHTML=[
-    {label:tc.monthlyInstallment,val:fmtAmt(c.monthly),col:'var(--acc)'},
-    {label:tc.totalCost,val:fmtAmt(c.total),col:'var(--acc2)'},
-    {label:tc.totalInterest,val:fmtAmt(c.interest),col:'var(--acc3)'},
-    {label:tc.sim_rate,val:rate.toFixed(2)+'%',col:'#10b981'},
-  ].map(k=>`<div class="kpi-card" style="border-top-color:${k.col}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.col}">${k.val}</p></div>`).join('');
+    {label:tc.monthlyInstallment,val:fmtAmt(c.monthly),edge:'var(--acc)',vc:'var(--txt)'},
+    {label:tc.totalCost,val:fmtAmt(c.total),edge:'var(--acc2)',vc:'var(--txt)'},
+    {label:tc.totalInterest,val:fmtAmt(c.interest),edge:'var(--risk)',vc:'var(--txt)'},
+    {label:tc.sim_rate,val:rate.toFixed(2)+'%',edge:'var(--safe)',vc:'var(--txt)'},
+  ].map(k=>`<div class="kpi-card" style="border-top-color:${k.edge}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.vc}">${k.val}</p></div>`).join('');
 }
 
 // ── MULTI-LOANS ───────────────────────────────────────────────────────────────
@@ -2160,7 +2224,7 @@ function renderMultiLoans(){
   const tc=t(),r=results;if(!r)return;const cur=tc.currency;
   const mainCard=`<div class="loan-card" style="border-color:var(--acc)">
     <p class="loan-card-title">${tc.mainLoan} — ${T[lang]['lt_'+form.loanType]}</p>
-    <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--acc);font-size:14px;font-weight:800">${fmtAmt(r.monthly)}</span></div>
+    <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:14px;font-weight:800">${fmtAmt(r.monthly)}</span></div>
     <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'المبلغ':lang==='es'?'Monto':'Amount'}</span><span class="saved-val">${fmtAmt(+form.amount||0)}</span></div>
     <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'الفائدة':lang==='es'?'Tasa':'Rate'}</span><span class="saved-val">${parseFloat(form.rate||8.5).toFixed(2)}%</span></div>
   </div>`;
@@ -2179,13 +2243,13 @@ function renderMultiLoans(){
   }).join('');
   const totalMonthly=r.monthly+extraLoans.reduce((s,el)=>s+(el.amount&&el.period?calcLoan(+el.amount,(+el.rate||8.5)/100,+el.period).monthly:0),0);
   const pG=(totalMonthly/r.grossIncome)*100,pN=r.netIncome>0?(totalMonthly/r.netIncome)*100:100;
-  const tc2=pG<35?'#10b981':pG<50?'#f59e0b':'#ef4444';
+  const tc2=pG<35?'var(--safe)':pG<50?'#f59e0b':'var(--risk)';
   const totalCard=extraLoans.length?`<div class="total-block">
     <p class="card-label">${lang==='ar'?'ملخص كل القروض':lang==='es'?'Resumen de préstamos':'All Loans Summary'}</p>
     <div class="total-row"><span class="total-lbl">${tc.totalInstall}</span><span class="total-val" style="color:${tc2};font-size:17px">${fmtAmt(totalMonthly)}</span></div>
     <div class="total-row"><span class="total-lbl">${tc.totalPctGross}</span><span class="total-val" style="color:${tc2}">${pG.toFixed(2)}%</span></div>
     <div class="total-row"><span class="total-lbl">${tc.totalPctNet}</span><span class="total-val" style="color:${tc2}">${pN.toFixed(2)}%</span></div>
-    <div class="pct-bar-track"><div class="pct-bar-fill" style="width:${Math.min(100,pG)}%;background:linear-gradient(90deg,${pG<35?'#10b981,#10b981':pG<50?'#f59e0b,#f59e0b':'#f59e0b,#ef4444'})"></div></div>
+    <div class="pct-bar-track"><div class="pct-bar-fill" style="width:${Math.min(100,pG)}%;background:linear-gradient(90deg,${pG<35?'var(--safe),var(--safe)':pG<50?'#f59e0b,#f59e0b':'#f59e0b,var(--risk)'})"></div></div>
     <div class="range-labels"><span>0%</span><span style="color:var(--mod)">35%</span><span style="color:var(--risk)">50%+</span></div>
   </div>`:'';
   const _ll=document.getElementById('loans-list');if(_ll)_ll.innerHTML=mainCard+extraCards;
@@ -2223,7 +2287,7 @@ function saveScenario(){
     const btn0=document.getElementById('btn-save');
     if(btn0){
       btn0.textContent=isAr?'محفوظ مسبقاً ✓':isEs?'Ya guardado ✓':'Already saved ✓';
-      btn0.style.background='#10b981';
+      btn0.style.background='var(--safe)';
       setTimeout(()=>{btn0.textContent=tc.saveScenario;btn0.style.background='';},2200);
     }
     return;
@@ -2272,8 +2336,10 @@ function saveScenario(){
   // tab-saved removed
   const btn=document.getElementById('btn-save');
   btn.textContent=''+(lang==='ar'?'تم الحفظ!':lang==='es'?'Guardado!':'Saved!');
-  btn.style.background='#10b981';
+  btn.style.background='var(--safe)';
   setTimeout(()=>{btn.textContent=tc.saveScenario;btn.style.background='';},2500);
+  // انتقال تلقائي للرئيسية بعد لحظة قصيرة لرؤية الملف المالي المحدّث فوراً
+  setTimeout(()=>{goHome();},700);
 }
 
 function saveRefinanceScenario(origIdx,newLoanData){
@@ -2331,15 +2397,15 @@ function renderSavedTab(){
         <p class="saved-name" style="margin:0">${displayName}</p>
         <span style="color:var(--txt2);font-size:12px">${s.time||''}</span>
       </div>
-      <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:#ffffff;font-size:15px">${fmtAmt(s.results.monthly)}</span></div>
-      <div class="saved-row"><span class="saved-lbl">${tc.totalInterest}</span><span class="saved-val" style="color:#ef4444">${fmtAmt(s.results.interest)}</span></div>
+      <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:15px">${fmtAmt(s.results.monthly)}</span></div>
+      <div class="saved-row"><span class="saved-lbl">${tc.totalInterest}</span><span class="saved-val" style="color:var(--risk)">${fmtAmt(s.results.interest)}</span></div>
       <div class="saved-row"><span class="saved-lbl">${tc.dtiRatio}</span><span class="saved-val" style="color:${color}">${s.results.dtiGross.toFixed(2)}%</span></div>
       <div class="saved-row"><span class="saved-lbl">${tc.riskLevel}</span><span class="saved-val" style="color:${color}">${tc['risk_'+s.results.riskLevel]}</span></div>
       <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--brd);padding-top:10px">
         <button onclick="openSavedDetail(${i})" style="flex:1;padding:9px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;cursor:pointer">
           ${lang==='ar'?'عرض التفاصيل':lang==='es'?'Ver detalles':'View Details'}
         </button>
-        <button onclick="confirmDeleteSavedFromTab(${i})" style="padding:9px 14px;border-radius:10px;background:color-mix(in srgb,#ef4444 12%,transparent);border:1.5px solid #ef444460;color:#ef4444;font-size:13px;font-weight:700;cursor:pointer"></button>
+        <button onclick="confirmDeleteSavedFromTab(${i})" style="padding:9px 14px;border-radius:10px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1.5px solid var(--risk)60;color:var(--risk);font-size:13px;font-weight:700;cursor:pointer"></button>
       </div>
     </div>`;
   }).join('');
@@ -2572,7 +2638,7 @@ function renderCompare(){
       <td style="color:var(--txt);padding:12px 14px;border-bottom:1px solid var(--brd);font-size:15px;font-weight:700">${f.label}</td>
       ${vals.map((v)=>{
         const isBest=v===bestVal;
-        return`<td style="text-align:center;padding:12px 8px;border-bottom:1px solid var(--brd);font-weight:${isBest?'900':'600'};color:${isBest?'#10b981':'var(--txt)'};font-size:15px">${f.fmt(v)}${isBest?' ✓':''}</td>`;
+        return`<td style="text-align:center;padding:12px 8px;border-bottom:1px solid var(--brd);font-weight:${isBest?'900':'600'};color:${isBest?'var(--safe)':'var(--txt)'};font-size:15px">${f.fmt(v)}${isBest?' ✓':''}</td>`;
       }).join('')}
     </tr>`;
   });
@@ -2584,8 +2650,8 @@ function renderCompare(){
   html+=`</tbody></table></div>`;
   const bestIdx=saved.slice(0,4).reduce((bi,s,i,arr)=>s.results.monthly<arr[bi].results.monthly?i:bi,0);
   const winner=saved[bestIdx];
-  html+=`<div class="card" style="border-inline-start:4px solid #10b981">
-    <p class="card-label" style="color:#10b981">${lang==='ar'?'الأفضل بأقل قسط شهري':lang==='es'?'Mejor por cuota mensual más baja':'Best by Lowest Monthly Payment'}</p>
+  html+=`<div class="card" style="border-inline-start:4px solid var(--safe)">
+    <p class="card-label" style="color:var(--safe)">${lang==='ar'?'الأفضل بأقل قسط شهري':lang==='es'?'Mejor por cuota mensual más baja':'Best by Lowest Monthly Payment'}</p>
     <p style="font-size:19px;font-weight:800;color:var(--txt)">${savedLoanDisplayName(winner)}</p>
     <p style="font-size:16px;color:var(--txt2);margin-top:5px;font-weight:600">${fmtAmt(winner.results.monthly)} / ${tc.months}</p>
   </div>`;
@@ -2604,7 +2670,7 @@ function renderCompare(){
     const remAfter=calcRemaining(sc,scIdx);
     const remDiff=remAfter-remBefore;
     const loanName=T[lang]['lt_'+sc.loanType]||sc.loanType;
-    const clr=monthlySaving>=0?'#10b981':'#f59e0b';
+    const clr=monthlySaving>=0?'var(--safe)':'#f59e0b';
     html+=`<div class="card" style="border:1.5px solid ${clr}40;background:${clr}08">
       <p class="card-label" style="color:${clr};margin-bottom:10px">${isAr?'ماذا لو فعّلت سيناريو '+loanName+'؟':lang==='es'?'¿Y si activas el escenario '+loanName+'?':'What if you activate the '+loanName+' scenario?'}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
@@ -2702,12 +2768,12 @@ function showUpgradeDialog(featureAr, featureEn, subtitleAr, subtitleEn){
   ];
   document.getElementById('prem-features').innerHTML=features.map(([icon,name,desc],i,arr)=>`
     <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;${i<arr.length-1?'border-bottom:1px solid var(--brd)':''}">
-      <span style="width:26px;display:inline-flex;align-items:center;justify-content:center;color:#a78bfa;flex-shrink:0">${iconSvg(icon)}</span>
+      <span style="width:26px;display:inline-flex;align-items:center;justify-content:center;color:var(--acc);flex-shrink:0">${iconSvg(icon)}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:700;color:var(--txt)">${name}</div>
         <div style="font-size:11px;color:var(--txt2);margin-top:2px">${desc}</div>
       </div>
-      <span style="font-size:11px;font-weight:700;color:#a78bfa;background:rgba(167,139,250,.12);padding:3px 8px;border-radius:8px;flex-shrink:0">${isAr?'قريباً':lang==='es'?'Pronto':'Soon'}</span>
+      <span style="font-size:11px;font-weight:700;color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent);padding:3px 8px;border-radius:8px;flex-shrink:0">${isAr?'قريباً':lang==='es'?'Pronto':'Soon'}</span>
     </div>`).join('');
 
   // إخفاء شريط السعر كاملاً
@@ -2808,7 +2874,7 @@ function exportPDF(){
       <td>${fmtAmt(monthly)}</td>
       <td style="color:#6366f1">${fmtAmt(principal)}</td>
       <td style="color:#ec4899">${fmtAmt(ip)}</td>
-      <td style="color:#10b981">${fmtAmt(balance)}</td>
+      <td style="color:var(--safe)">${fmtAmt(balance)}</td>
     </tr>`;
   }
   // Summary totals row
@@ -2821,8 +2887,8 @@ function exportPDF(){
 
   const rows=[
     [tc.grossIncome,                          fmtAmt(r.grossIncome),         '#111'],
-    [isAr?'المصروفات':lang==='es'?'Gastos':'Expenses',             fmtAmt(r.expenses+r.variable), '#ef4444'],
-    [tc.netIncome,                            fmtAmt(r.netIncome),           '#10b981'],
+    [isAr?'المصروفات':lang==='es'?'Gastos':'Expenses',             fmtAmt(r.expenses+r.variable), 'var(--risk)'],
+    [tc.netIncome,                            fmtAmt(r.netIncome),           'var(--safe)'],
     [tc.newInstall,                           fmtAmt(r.monthly),             '#111'],
     [tc.existingLoans,                        fmtAmt(r.existing),            '#111'],
     [isAr?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period',    months+' '+tc.months,          '#111'],
@@ -2897,9 +2963,9 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
       <div class="kpi-label">${tc.totalCost}</div>
       <div class="kpi-val" style="color:#0891b2">${fmtAmt(r.total)}</div>
     </div>
-    <div class="kpi-card" style="border-top-color:#ef4444">
+    <div class="kpi-card" style="border-top-color:var(--risk)">
       <div class="kpi-label">${tc.totalInterest}</div>
-      <div class="kpi-val" style="color:#ef4444">${fmtAmt(r.interest)}</div>
+      <div class="kpi-val" style="color:var(--risk)">${fmtAmt(r.interest)}</div>
     </div>
   </div>
 
@@ -3040,7 +3106,7 @@ window.addEventListener('DOMContentLoaded', initApp);
 <div id="premium-overlay" onclick="hidePremiumSheet(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
   <div onclick="event.stopPropagation()" style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px 36px;border-top:1px solid var(--brd);max-height:90vh;overflow-y:auto">
     <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
-    <div id="prem-big-icon" style="width:60px;height:60px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+    <div id="prem-big-icon" style="width:60px;height:60px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
       <svg width="30" height="30" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="M12 2l1.7 5.6L19 9.3l-5.3 1.7L12 16l-1.7-5L5 9.3l5.3-1.7z"/><path d="M18.5 13.5l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z" opacity=".85"/></svg>
     </div>
     <p id="prem-title" style="text-align:center;font-size:19px;font-weight:900;color:var(--txt);margin-bottom:6px"></p>
@@ -3051,7 +3117,7 @@ window.addEventListener('DOMContentLoaded', initApp);
       <div style="font-size:30px;font-weight:900;color:#fff">&nbsp;</div>
       <div id="prem-price-note" style="font-size:11px;color:#c4b5fd;margin-top:3px"></div>
     </div>
-    <button onclick="hidePremiumSheet()" id="prem-upgrade-btn" style="width:100%;padding:15px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px"></button>
+    <button onclick="hidePremiumSheet()" id="prem-upgrade-btn" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px"></button>
     <button onclick="hidePremiumSheet()" id="prem-close-btn" style="width:100%;padding:12px;background:transparent;color:var(--txt2);border:1.5px solid var(--brd);border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit"></button>
   </div>
 </div>
