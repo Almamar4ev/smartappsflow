@@ -8,7 +8,7 @@
 <style>
 :root{--acc:#6366f1;--acc2:#8b5cf6;--acc3:#ec4899;--bg:#0a0f1e;--bg2:#1e293b;--bg3:#0f172a;--brd:#334155;--txt:#e2e8f0;--txt2:#c8d8e8;--txt3:#a0b4c8;--lbl:#f0b429;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(99,102,241,0.18)}
 .theme-emerald{--acc:#1f9d57;--acc2:#178048;--acc3:#34b96e;--bg:#f1f7f3;--bg2:#ffffff;--bg3:#e6f0ea;--brd:#cadccf;--txt:#16352a;--txt2:#33604c;--txt3:#5f8070;--lbl:#178048;--safe:#15a64a;--mod:#e08a00;--risk:#e0263a;--glow:rgba(31,157,87,0.10)}
-.theme-black{--acc:#3b82f6;--acc2:#2563eb;--acc3:#60a5fa;--bg:#000000;--bg2:#0e0e10;--bg3:#08080a;--brd:#26262b;--txt:#f5f5f7;--txt2:#c8c8cd;--txt3:#8e8e93;--lbl:#60a5fa;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(59,130,246,0.18)}
+.theme-black{--acc:#3b82f6;--acc2:#2563eb;--acc3:#60a5fa;--bg:#0a0a0c;--bg2:#15151a;--bg3:#0e0e12;--brd:#2a2a31;--txt:#f5f5f7;--txt2:#c8c8cd;--txt3:#8e8e93;--lbl:#60a5fa;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(59,130,246,0.18)}
 .theme-light{--acc:#4f46e5;--acc2:#7c3aed;--acc3:#db2777;--bg:#f1f5f9;--bg2:#ffffff;--bg3:#e2e8f0;--brd:#cbd5e1;--txt:#1e293b;--txt2:#2d4060;--txt3:#4a6080;--lbl:#4f46e5;--safe:#15a64a;--mod:#e08a00;--risk:#e0263a;--glow:rgba(79,70,229,0.14)}
 
 /* ═══════════════════════════════════════════════════
@@ -37,14 +37,29 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 
 /* ── SPLASH ── */
 #splash .glow{display:none}
-#splash{align-items:center;justify-content:center;padding:40px 24px;gap:14px;position:relative;background:linear-gradient(160deg,#6E5BE6 0%,#4F3FC0 45%,#3A2A8C 100%)!important}
-.splash-icon{font-size:62px;z-index:1;filter:drop-shadow(0 0 22px rgba(255,255,255,.35))}
-.splash-title{font-size:32px;font-weight:900;text-align:center;line-height:1.2;z-index:1;letter-spacing:-1px;color:#ffffff}
-.splash-sub{font-size:18px;color:rgba(255,255,255,.92);text-align:center;z-index:1;font-weight:600}
-.splash-hint{font-size:13px;color:rgba(255,255,255,.78);text-align:center;margin-top:10px;z-index:1}
-.splash-lang-wrap{display:flex;flex-direction:column;gap:13px;width:100%;max-width:300px;margin-top:10px;z-index:1}
-.splash-lang-btn{width:100%;padding:16px 26px;border-radius:14px;border:1.5px solid rgba(255,255,255,.40);background:rgba(255,255,255,.14);color:#ffffff;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.splash-lang-btn:active{background:rgba(255,255,255,.28);border-color:#ffffff}
+/* ══ ONBOARDING — fixed dark-navy brand identity (independent of theme) ══ */
+#splash{align-items:stretch;justify-content:flex-start;gap:0;position:relative;color:#f2f4fb;
+  padding:calc(env(safe-area-inset-top,0px) + 22px) 20px calc(env(safe-area-inset-bottom,0px) + 20px)!important;
+  background:
+    radial-gradient(120% 70% at 50% -8%, rgba(124,92,246,0.40), transparent 60%),
+    radial-gradient(90% 60% at 100% 0%, rgba(99,102,241,0.26), transparent 55%),
+    linear-gradient(180deg,#161145 0%,#0a0f1e 62%)!important}
+.ob-head{text-align:center;margin-bottom:22px;flex-shrink:0}
+.ob-dots{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+.ob-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.22)}
+.ob-dots i.act{width:20px;border-radius:3px;background:#6366f1}
+.ob-glyph{width:60px;height:60px;border-radius:18px;margin:0 auto 15px;background:linear-gradient(140deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;box-shadow:0 12px 32px rgba(99,102,241,.45)}
+.ob-title{font-size:25px;font-weight:800;line-height:1.25;color:#fff}
+.ob-sub{font-size:13.5px;color:rgba(226,232,240,.62);margin-top:8px;line-height:1.5;font-weight:500}
+.ob-list{display:flex;flex-direction:column;gap:10px;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;min-height:0;scrollbar-width:none}
+.ob-list::-webkit-scrollbar{display:none}
+.ob-row{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);border-radius:15px;padding:14px 16px;cursor:pointer;transition:background .18s,border-color .18s,transform .12s;color:#f2f4fb}
+.ob-row:active{transform:scale(.985);background:rgba(255,255,255,.085)}
+.ob-flag{width:30px;height:22px;border-radius:5px;flex-shrink:0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.45);display:block}
+.ob-none{width:30px;height:22px;border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);border:1px dashed rgba(255,255,255,.25);color:rgba(226,232,240,.6);font-size:14px}
+.ob-name{flex:1;min-width:0;font-size:15.5px;font-weight:600;text-align:start}
+.ob-native{font-size:12px;color:rgba(226,232,240,.5);font-weight:500;margin-top:1px}
+.ob-sym{font-size:14px;font-weight:800;color:#c8caff;background:rgba(99,102,241,.16);border:1px solid rgba(99,102,241,.28);padding:5px 11px;border-radius:9px;min-width:42px;text-align:center;flex-shrink:0}
 
 /* ── HOME ── */
 #home{flex-direction:column;overflow-y:auto}
@@ -308,16 +323,23 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <div id="app">
 
 <!-- ══ SPLASH ══ -->
-<div class="screen active" id="splash" style="justify-content:center;align-items:center;padding:30px 24px;gap:10px">
-  <div class="glow"></div>
-  <div class="splash-icon">🏦</div>
-  <h1 class="splash-title">Smart Loan Calculator</h1>
-  <p class="splash-sub">حاسبة القروض الذكية</p>
-  <p class="splash-hint" style="margin-bottom:6px">Choose your language / اختر لغتك</p>
-  <div class="splash-lang-wrap">
-    <button class="splash-lang-btn" onclick="chooseLang('ar')">🇸🇦 العربية</button>
-    <button class="splash-lang-btn" onclick="chooseLang('en')">🇺🇸 English</button>
-    <button class="splash-lang-btn" onclick="chooseLang('es')">🇪🇸 Español</button>
+<div class="screen active" id="splash">
+  <div class="ob-head">
+    <div class="ob-dots"><i class="act"></i><i></i></div>
+    <div class="ob-glyph"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/></svg></div>
+    <h1 class="ob-title">Choose your language</h1>
+    <p class="ob-sub">اختر لغتك المفضّلة للمتابعة</p>
+  </div>
+  <div class="ob-list">
+    <button class="ob-row" onclick="chooseLang('en')">
+      <svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#fff"/><g fill="#b22234"><rect width="30" height="3.1" y="0"/><rect width="30" height="3.1" y="3.15"/><rect width="30" height="3.1" y="6.3"/><rect width="30" height="3.1" y="12.6"/><rect width="30" height="3.1" y="18.9"/></g><rect width="13" height="12" fill="#3c3b6e"/></svg>
+      <div class="ob-name">English<div class="ob-native">English</div></div></button>
+    <button class="ob-row" onclick="chooseLang('es')">
+      <svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#c60b1e"/><rect y="5.5" width="30" height="11" fill="#ffc400"/></svg>
+      <div class="ob-name">Español<div class="ob-native">Spanish</div></div></button>
+    <button class="ob-row" onclick="chooseLang('ar')">
+      <svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#157f3b"/><rect x="5" y="13" width="20" height="2" rx="1" fill="#fff"/><rect x="7" y="7.5" width="16" height="3" rx="1.4" fill="#fff"/></svg>
+      <div class="ob-name">العربية<div class="ob-native">Arabic</div></div></button>
   </div>
 </div>
 
@@ -334,9 +356,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
             <svg class="ic-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="lang-dd-menu" id="lang-dd-menu">
-            <button onclick="pickLang('ar')" data-l="ar"><span>🇸🇦</span><span>العربية</span></button>
             <button onclick="pickLang('en')" data-l="en"><span>🇺🇸</span><span>English</span></button>
             <button onclick="pickLang('es')" data-l="es"><span>🇪🇸</span><span>Español</span></button>
+            <button onclick="pickLang('ar')" data-l="ar"><span>🇸🇦</span><span>العربية</span></button>
           </div>
         </div>
         <button class="icon-btn icon-btn-sq" onclick="openSettings()" aria-label="Settings">
@@ -455,10 +477,10 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <!-- RATE: compact -->
     <div class="field-wrap">
       <label class="lbl" id="lbl-rate">ANNUAL INTEREST RATE</label>
-      <input type="range" min="0.1" max="40" step="0.01" value="8.5" id="range-rate" oninput="updateRateSlider(this.value)">
-      <div class="range-labels"><span>0.1%</span><span>40%</span></div>
+      <input type="range" min="0" max="40" step="0.01" value="8.5" id="range-rate" oninput="updateRateSlider(this.value)">
+      <div class="range-labels"><span>0%</span><span>40%</span></div>
       <div class="rate-row">
-        <input class="rate-num" type="number" id="form-inp-rate" value="8.5" min="0.1" max="40" step="0.01" inputmode="decimal" oninput="updateRateInput(this.value)">
+        <input class="rate-num" type="number" id="form-inp-rate" value="8.5" min="0" max="40" step="0.01" inputmode="decimal" oninput="updateRateInput(this.value)">
         <span class="rate-pct-badge">%</span>
       </div>
     </div>
@@ -554,7 +576,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <p class="card-label" id="lbl-sim">SCENARIO SIMULATOR</p>
       <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt"></button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simUpdate()"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="number" id="manual-inp-amt" inputmode="numeric" oninput="applyManual('amt')"></div></div>
       <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simUpdate()"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" id="opt-years">Years</option></select></div></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0.1" max="40" step="0.01" value="8.5" id="sim-range-rate" oninput="simUpdate()"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0" max="40" step="0.01" value="8.5" id="sim-range-rate" oninput="simUpdate()"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
     </div>
     <div class="kpi-grid" id="sim-kpi"></div>
   </div>
@@ -590,7 +612,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       </div>
       <div id="rst-section-rate">
         <p class="lbl" style="margin-bottom:6px;text-align:center" id="lbl-rst-new-rate">New Rate (%)</p>
-        <input type="number" id="rst-new-rate" value="4" min="0.1" max="40" step="0.1"
+        <input type="number" id="rst-new-rate" value="4" min="0" max="40" step="0.1"
           inputmode="decimal" oninput="calcRestructure()"
           style="width:100%;background:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding:12px;color:var(--txt);font-size:18px;font-weight:700;text-align:center;outline:none;font-family:inherit;margin-bottom:6px"/>
         <p style="font-size:11px;color:var(--txt3);text-align:center" id="rst-rate-hint">Same duration — payment changes automatically</p>
@@ -693,6 +715,20 @@ const CURRENCIES=[
   {id:'BHD',  symbol:'د.ب', nameAr:'دينار بحريني',  nameEn:'Bahraini Dinar', nameEs:'Dinar bareiní',  flag:'🇧🇭'},
   {id:'QAR',  symbol:'ر.ق', nameAr:'ريال قطري',     nameEn:'Qatari Riyal',   nameEs:'Riyal catarí',   flag:'🇶🇦'},
 ];
+// ── crisp SVG flags (replace inconsistent emoji rendering on Android) ─────────
+const FLAGS={
+  us:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#fff"/><g fill="#b22234"><rect width="30" height="3.1" y="0"/><rect width="30" height="3.1" y="3.15"/><rect width="30" height="3.1" y="6.3"/><rect width="30" height="3.1" y="12.6"/><rect width="30" height="3.1" y="18.9"/></g><rect width="13" height="12" fill="#3c3b6e"/></svg>`,
+  eu:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#0a3b96"/><g fill="#ffd617"><circle cx="15" cy="5" r="1"/><circle cx="20" cy="6.5" r="1"/><circle cx="22" cy="11" r="1"/><circle cx="20" cy="15.5" r="1"/><circle cx="15" cy="17" r="1"/><circle cx="10" cy="15.5" r="1"/><circle cx="8" cy="11" r="1"/><circle cx="10" cy="6.5" r="1"/></g></svg>`,
+  es:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#c60b1e"/><rect y="5.5" width="30" height="11" fill="#ffc400"/></svg>`,
+  sa:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#157f3b"/><rect x="5" y="13" width="20" height="2" rx="1" fill="#fff"/><rect x="7" y="7.5" width="16" height="3" rx="1.4" fill="#fff"/></svg>`,
+  om:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="7.3" y="0" fill="#fff"/><rect width="30" height="7.3" y="7.3" fill="#db161b"/><rect width="30" height="7.4" y="14.6" fill="#157f3b"/><rect width="9" height="22" fill="#db161b"/></svg>`,
+  ae:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="7.3" y="0" fill="#157f3b"/><rect width="30" height="7.3" y="7.3" fill="#fff"/><rect width="30" height="7.4" y="14.6" fill="#111"/><rect width="8" height="22" fill="#db161b"/></svg>`,
+  kw:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="7.3" y="0" fill="#157f3b"/><rect width="30" height="7.3" y="7.3" fill="#fff"/><rect width="30" height="7.4" y="14.6" fill="#db161b"/><path d="M0 0 L8 7.3 L8 14.6 L0 22 Z" fill="#111"/></svg>`,
+  bh:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#db161b"/><path d="M0 0 H9 L13 2.7 L9 5.5 L13 8.2 L9 11 L13 13.7 L9 16.5 L13 19.2 L9 22 H0 Z" fill="#fff"/></svg>`,
+  qa:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#8a1538"/><path d="M0 0 H9 L13 2.7 L9 5.5 L13 8.2 L9 11 L13 13.7 L9 16.5 L13 19.2 L9 22 H0 Z" fill="#fff"/></svg>`
+};
+const CUR_FLAG={USD:'us',EUR:'eu',SAR:'sa',OMR:'om',AED:'ae',KWD:'kw',BHD:'bh',QAR:'qa'};
+function flagSvg(key){return FLAGS[key]||'';}
 function getCurrencySymbol(){
   return CURRENCIES.find(c=>c.id===currency)?.symbol||'';
 }
@@ -722,12 +758,12 @@ let form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Da
 
 // ── THEMES ────────────────────────────────────────────────────────────────────
 const THEMES=[
-  {id:'default', name:'Indigo',  nameAr:'نيلي',  nameFr:'Indigo',   nameUr:'نیلی',   nameTr:'İndigo',   nameEs:'Índigo',  nameZh:'靛蓝',  nameHi:'नील',   nameIt:'Indaco', nameDe:'Indigo',  nameRu:'Индиго', nameJa:'インディゴ',nameKo:'인디고', namePt:'Índigo', swatch:'#6366f1'},
-  {id:'emerald', name:'Emerald', nameAr:'زمردي', nameFr:'Émeraude', nameUr:'زمرد',   nameTr:'Zümrüt',   nameEs:'Esmeralda',nameZh:'翡翠', nameHi:'पन्ना', nameIt:'Smeraldo',nameDe:'Smaragd', nameRu:'Изумруд',nameJa:'エメラルド',nameKo:'에메랄드',namePt:'Esmeralda',swatch:'var(--safe)'},
-  {id:'black',   name:'Black',   nameAr:'أسود',  nameFr:'Noir',     nameUr:'سیاہ',   nameTr:'Siyah',    nameEs:'Negro',   nameZh:'黑色',  nameHi:'काला',  nameIt:'Nero',   nameDe:'Schwarz', nameRu:'Чёрный', nameJa:'ブラック', nameKo:'블랙',   namePt:'Preto',  swatch:'#000000'},
-  {id:'light',   name:'Light',   nameAr:'فاتح',  nameFr:'Clair',    nameUr:'روشن',   nameTr:'Açık',     nameEs:'Claro',   nameZh:'浅色',  nameHi:'हल्का', nameIt:'Chiaro', nameDe:'Hell',    nameRu:'Светлый',nameJa:'ライト',   nameKo:'라이트', namePt:'Claro',  swatch:'#ffffff'},
+  {id:'light',   name:'Light',  nameAr:'فاتح',  nameFr:'Clair',    nameUr:'روشن',   nameTr:'Açık',     nameEs:'Claro',   nameZh:'浅色',  nameHi:'हल्का', nameIt:'Chiaro', nameDe:'Hell',    nameRu:'Светлый',nameJa:'ライト',   nameKo:'라이트', namePt:'Claro',  swatch:'#ffffff'},
+  {id:'black',   name:'Dark',   nameAr:'داكن',  nameFr:'Sombre',   nameUr:'گہرا',   nameTr:'Koyu',     nameEs:'Oscuro',  nameZh:'深色',  nameHi:'गहरा',  nameIt:'Scuro',  nameDe:'Dunkel',  nameRu:'Тёмный', nameJa:'ダーク',   nameKo:'다크',   namePt:'Escuro', swatch:'#0a0a0c'},
+  {id:'default', name:'Indigo', nameAr:'نيلي',  nameFr:'Indigo',   nameUr:'نیلی',   nameTr:'İndigo',   nameEs:'Índigo',  nameZh:'靛蓝',  nameHi:'नील',   nameIt:'Indaco', nameDe:'Indigo',  nameRu:'Индиго', nameJa:'インディゴ',nameKo:'인디고', namePt:'Índigo', swatch:'#6366f1'},
+  {id:'emerald', name:'Green',  nameAr:'أخضر',  nameFr:'Vert',     nameUr:'سبز',    nameTr:'Yeşil',    nameEs:'Verde',   nameZh:'绿色',  nameHi:'हरा',   nameIt:'Verde',  nameDe:'Grün',    nameRu:'Зелёный',nameJa:'グリーン', nameKo:'그린',   namePt:'Verde',  swatch:'var(--safe)'},
 ];
-function applyTheme(id){currentTheme=id;document.getElementById('app').className=id==='default'?'':'theme-'+id;renderThemeGrid();persistState();}
+function applyTheme(id){currentTheme=id;var _cls=id==='default'?'':'theme-'+id;document.getElementById('app').className=_cls;document.body.className=_cls;renderThemeGrid();persistState();}
 function getThemeName(th){
   if(lang==='ar') return th.nameAr;
   if(lang==='es') return th.nameEs;
@@ -894,7 +930,9 @@ const t=()=>{const base=T[lang]||T['en'];return{...base,currency:getCurrencySymb
 const RATES={car:0.045,home:0.035,personal:0.085,business:0.065,education:0.04,other:0.07};
 
 function calcLoan(amount,annualRate,months){
-  const r=annualRate/12;if(r===0||months<=0)return{monthly:0,total:0,interest:0};
+  if(months<=0)return{monthly:0,total:0,interest:0};
+  const r=annualRate/12;
+  if(r===0){const m=amount/months;return{monthly:m,total:amount,interest:0};}
   const monthly=(amount*r*Math.pow(1+r,months))/(Math.pow(1+r,months)-1);
   return{monthly,total:monthly*months,interest:monthly*months-amount};
 }
@@ -904,7 +942,8 @@ function analyse(){
   const amount=+form.amount||10000,period=+form.period||36;
   const grossIncome=Math.max(salary+income,1);
   const netIncome=Math.max(0,grossIncome-expenses-variable);
-  const rate=Math.max(0.001,(+form.rate||8.5)/100);
+  const ratePct=(form.rate===''||form.rate==null||isNaN(+form.rate))?8.5:+form.rate;
+  const rate=Math.max(0,ratePct/100);
   const{monthly,total,interest}=calcLoan(amount,rate,period);
   const dtiGross=((monthly+existing)/grossIncome)*100;
   const dtiNet=netIncome>0?((monthly+existing)/netIncome)*100:100;
@@ -921,6 +960,7 @@ function amortize(amount,annualRate,months){
   for(let i=1;i<=Math.min(months,48);i++){const ip=balance*r;const pp=monthly-ip;balance-=pp;sched.push({m:i,p:Math.round(pp),i:Math.round(ip),b:Math.max(0,Math.round(balance))});}
   return sched;
 }
+function safeRate(v){return (v===''||v==null||isNaN(+v))?8.5:+v;}
 function fmt(n){return Number(n).toLocaleString('en-US')}
 function rc(rl){return rl==='safe'?'var(--safe)':rl==='moderate'?'#f59e0b':'var(--risk)'}
 
@@ -946,19 +986,23 @@ function showCurrencyPicker(){
   const isEs=lang==='es';
   const title=isAr?'اختر عملتك':isEs?'Elige tu moneda':'Choose your currency';
   const hint=isAr?'يمكنك تغييرها لاحقاً من الإعدادات':isEs?'Puedes cambiarla en ajustes':'You can change it later in Settings';
+  const noneLbl=isAr?'بدون عملة':isEs?'Sin moneda':'No currency';
   document.getElementById('splash').innerHTML=`
-    <div class="glow"></div>
-    <div style="font-size:42px;z-index:1"></div>
-    <h2 class="splash-title" style="font-size:24px;z-index:1">${title}</h2>
-    <p class="splash-hint" style="z-index:1;margin-bottom:8px">${hint}</p>
-    <div style="display:flex;flex-direction:column;gap:9px;width:100%;max-width:320px;z-index:1">
-      ${CURRENCIES.map(c=>`
-        <button class="lang-btn" style="display:flex;align-items:center;gap:12px;padding:13px 16px;font-size:15px;text-align:start"
-          onclick="setCurrency('${c.id}')">
-          <span style="font-size:22px">${c.flag}</span>
-          <span style="flex:1">${getCurrencyName(c)}</span>
-          <span style="color:var(--acc);font-weight:800;font-size:16px">${c.symbol}</span>
-        </button>`).join('')}
+    <div class="ob-head">
+      <div class="ob-dots"><i></i><i class="act"></i></div>
+      <div class="ob-glyph"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <h2 class="ob-title">${title}</h2>
+      <p class="ob-sub">${hint}</p>
+    </div>
+    <div class="ob-list">
+      ${CURRENCIES.map(c=>{
+        const isNone=c.id==='NONE';
+        const flag=isNone?'<span class="ob-none">⊘</span>':flagSvg(CUR_FLAG[c.id]);
+        const name=isNone?noneLbl:getCurrencyName(c);
+        const sym=isNone?'':`<span class="ob-sym">${c.symbol}</span>`;
+        return `<button class="ob-row" onclick="setCurrency('${c.id}')">
+          ${flag}<span class="ob-name">${name}</span>${sym}</button>`;
+      }).join('')}
     </div>`;
 }
 function setCurrency(id){
@@ -983,7 +1027,7 @@ function renderLangRows(){
   const box=document.getElementById('lang-rows');
   if(!box) return;
   const check='<svg class="set-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-  const L=[{id:'ar',flag:'🇸🇦',name:'العربية'},{id:'en',flag:'🇺🇸',name:'English'},{id:'es',flag:'🇪🇸',name:'Español'}];
+  const L=[{id:'en',flag:'🇺🇸',name:'English'},{id:'es',flag:'🇪🇸',name:'Español'},{id:'ar',flag:'🇸🇦',name:'العربية'}];
   box.innerHTML=L.map(l=>`<button class="lang-row${lang===l.id?' active':''}" onclick="chooseLangFromSettings('${l.id}')">
     <span class="lang-flag">${l.flag}</span><span class="lang-name">${l.name}</span>${check}</button>`).join('');
 }
@@ -1264,7 +1308,7 @@ function renderHomeSaved(){
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
-            <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]}</div>
+            <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
             <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--safe) 16%,transparent);color:var(--safe);border:1px solid color-mix(in srgb,var(--safe) 40%,transparent);margin-top:4px">${isAr?'نشط':isEs?'Activo':'Active'}</span>
           </div>
           <div class="saved-mini-right">
@@ -1304,7 +1348,7 @@ function renderHomeSaved(){
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
-            <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]}</div>
+            <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
             <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#f59e0b15;color:#f59e0b;border:1px solid #f59e0b30;margin-top:4px">${isAr?'سيناريو مقارنة':isEs?'Escenario':'Comparison'}</span>
           </div>
           <div class="saved-mini-right">
@@ -1340,7 +1384,7 @@ function editSavedLoan(i){
     loanType:s.form.loanType||s.loanType||'personal',
     amount:String(s.loanAmount||s.form.amount||''),
     period:String(s.form.period||'36'),
-    rate:String(s.form.rate||'8.5'),
+    rate:String(safeRate(s.form.rate)),
     startMonth:s.form.startMonth??new Date().getMonth(),
     startYear:s.form.startYear??new Date().getFullYear()
   };
@@ -1407,8 +1451,8 @@ function renderStepLabels(){
   const rp=document.getElementById('range-period');if(rp)rp.value=form.period;
   const pu=document.getElementById('form-per-unit');const unit=pu?pu.value:'months';
   const fip=document.getElementById('form-inp-per');if(fip)fip.value=unit==='years'?parseFloat((form.period/12).toFixed(2)):form.period;
-  const rr=document.getElementById('range-rate');if(rr)rr.value=form.rate||8.5;
-  const fir=document.getElementById('form-inp-rate');if(fir)fir.value=parseFloat(form.rate||8.5);
+  const rr=document.getElementById('range-rate');if(rr)rr.value=safeRate(form.rate);
+  const fir=document.getElementById('form-inp-rate');if(fir)fir.value=safeRate(form.rate);
 }
 function renderStep3Dynamic(){
   const tc=t();
@@ -1445,9 +1489,9 @@ function renderStep3Dynamic(){
   }
   // تعبئة النسبة والمدة لتطابق النموذج
   const rateEl=document.getElementById('form-inp-rate');
-  if(rateEl)rateEl.value=parseFloat(form.rate||8.5);
+  if(rateEl)rateEl.value=safeRate(form.rate);
   const rngRate=document.getElementById('range-rate');
-  if(rngRate)rngRate.value=parseFloat(form.rate||8.5);
+  if(rngRate)rngRate.value=safeRate(form.rate);
   const perEl=document.getElementById('form-inp-per');
   const perUnit=document.getElementById('form-per-unit');
   const unit=perUnit?perUnit.value:'months';
@@ -1563,7 +1607,7 @@ function updateRateSlider(v){
 }
 function updateRateInput(v){
   if(!v||isNaN(v))return;
-  let r=Math.min(40,Math.max(0.1,+v));form.rate=r;
+  let r=Math.min(40,Math.max(0,+v));form.rate=r;
   document.getElementById('range-rate').value=r;
 }
 function selectLoanType(lt){
@@ -1638,6 +1682,7 @@ function renderResults(){
     <div class="basis-row"><span class="basis-lbl">${tc.netIncome}</span><span class="basis-val" style="color:var(--safe);font-weight:800">${fmtAmt(r.netIncome)}</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.newInstall}</span><span class="basis-val">${fmtAmt(r.monthly)}</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.existingLoans}</span><span class="basis-val">${fmtAmt(r.existing)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'معدل الفائدة السنوي':lang==='es'?'Tasa de interés anual':'Annual Interest Rate'}</span><span class="basis-val" style="color:var(--acc);font-weight:800">${safeRate(form.rate)}%</span></div>
     <div class="basis-row"><span class="basis-lbl">${CAL_ICON}${lang==='ar'?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period'}</span><span class="basis-val">${months} ${tc.months}</span></div>
     <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'تاريخ الانتهاء المتوقع':lang==='es'?'Fecha de fin prevista':'Expected End Date'}</span><span class="basis-val" style="color:var(--txt);font-weight:800">${endStr}</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl}</span><span class="basis-hi" style="color:${dtiColor(r.dtiGross)}">${r.dtiGross.toFixed(2)}%</span></div>
@@ -1680,7 +1725,7 @@ function renderResults(){
   const _bal=document.getElementById('btn-add-loan');if(_bal)_bal.textContent=tc.addLoan;
   document.getElementById('sim-range-amt').value=form.amount||50000;
   document.getElementById('sim-range-per').value=form.period||36;
-  document.getElementById('sim-range-rate').value=+(form.rate||8.5);
+  document.getElementById('sim-range-rate').value=safeRate(form.rate);
   // ── بطاقة السيناريو: يستبدل القرض الأصلي ──────────────────────────────────
   const scenarioBanner=document.getElementById('scenario-replace-banner');
   if(scenarioBanner){
@@ -1939,7 +1984,7 @@ function calcRestructure(){
   const totalN=+form.period||36;
   const paidN=Math.min(totalN-1,Math.max(1,+document.getElementById('rst-month-input').value||60));
   const remN=totalN-paidN;
-  const origRate=+form.rate||8.5;
+  const origRate=safeRate(form.rate);
   const origAmt=+form.amount||0;
   const origPmt=r.monthly;
 
@@ -2040,7 +2085,7 @@ function saveRefinanceAsScenario(){
   const newForm={...form,
     rate:String(d.newRate),
     period:String(d.newMonths),
-    amount:String(Math.round(calcRstBalance(+form.amount,+form.rate||8.5,+form.period,d.paidN)))
+    amount:String(Math.round(calcRstBalance(+form.amount,safeRate(form.rate),+form.period,d.paidN)))
   };
   const newResults=analyse(newForm);
 
@@ -2226,10 +2271,10 @@ function renderMultiLoans(){
     <p class="loan-card-title">${tc.mainLoan} — ${T[lang]['lt_'+form.loanType]}</p>
     <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:14px;font-weight:800">${fmtAmt(r.monthly)}</span></div>
     <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'المبلغ':lang==='es'?'Monto':'Amount'}</span><span class="saved-val">${fmtAmt(+form.amount||0)}</span></div>
-    <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'الفائدة':lang==='es'?'Tasa':'Rate'}</span><span class="saved-val">${parseFloat(form.rate||8.5).toFixed(2)}%</span></div>
+    <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'الفائدة':lang==='es'?'Tasa':'Rate'}</span><span class="saved-val">${safeRate(form.rate).toFixed(2)}%</span></div>
   </div>`;
   const extraCards=extraLoans.map((el,i)=>{
-    const c=el.amount&&el.period?calcLoan(+el.amount,(+el.rate||8.5)/100,+el.period):{monthly:0};
+    const c=el.amount&&el.period?calcLoan(+el.amount,safeRate(el.rate)/100,+el.period):{monthly:0};
     return`<div class="loan-card">
       <button class="remove-btn" onclick="removeExtraLoan(${i})"></button>
       <p class="loan-card-title">${tc.loanN} ${i+2}</p>
@@ -2241,7 +2286,7 @@ function renderMultiLoans(){
       </div>
     </div>`;
   }).join('');
-  const totalMonthly=r.monthly+extraLoans.reduce((s,el)=>s+(el.amount&&el.period?calcLoan(+el.amount,(+el.rate||8.5)/100,+el.period).monthly:0),0);
+  const totalMonthly=r.monthly+extraLoans.reduce((s,el)=>s+(el.amount&&el.period?calcLoan(+el.amount,safeRate(el.rate)/100,+el.period).monthly:0),0);
   const pG=(totalMonthly/r.grossIncome)*100,pN=r.netIncome>0?(totalMonthly/r.netIncome)*100:100;
   const tc2=pG<35?'var(--safe)':pG<50?'#f59e0b':'var(--risk)';
   const totalCard=extraLoans.length?`<div class="total-block">
@@ -2476,7 +2521,7 @@ function openSavedDetail(i){
     loanType:s.form.loanType||'personal',
     amount:s.form.amount||String(s.loanAmount)||'0',
     period:s.form.period||'36',
-    rate:s.form.rate||'8.5',
+    rate:String(safeRate(s.form.rate)),
     startMonth:s.form.startMonth??new Date().getMonth(),
     startYear:s.form.startYear??new Date().getFullYear()
   };
@@ -3112,10 +3157,10 @@ window.addEventListener('DOMContentLoaded', initApp);
     <p id="prem-title" style="text-align:center;font-size:19px;font-weight:900;color:var(--txt);margin-bottom:6px"></p>
     <p id="prem-sub" style="text-align:center;font-size:13px;color:var(--txt2);margin-bottom:20px;line-height:1.6"></p>
     <div id="prem-features" style="background:var(--bg3);border-radius:14px;border:1px solid var(--brd);margin-bottom:18px;overflow:hidden"></div>
-    <div id="prem-price-box" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:14px;padding:14px;text-align:center;margin-bottom:14px">
-      <div id="prem-price-label" style="font-size:11px;color:#c4b5fd;font-weight:600;margin-bottom:4px"></div>
+    <div id="prem-price-box" style="background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:14px;padding:14px;text-align:center;margin-bottom:14px">
+      <div id="prem-price-label" style="font-size:11px;color:rgba(255,255,255,.82);font-weight:600;margin-bottom:4px"></div>
       <div style="font-size:30px;font-weight:900;color:#fff">&nbsp;</div>
-      <div id="prem-price-note" style="font-size:11px;color:#c4b5fd;margin-top:3px"></div>
+      <div id="prem-price-note" style="font-size:11px;color:rgba(255,255,255,.82);margin-top:3px"></div>
     </div>
     <button onclick="hidePremiumSheet()" id="prem-upgrade-btn" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px"></button>
     <button onclick="hidePremiumSheet()" id="prem-close-btn" style="width:100%;padding:12px;background:transparent;color:var(--txt2);border:1.5px solid var(--brd);border-radius:14px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit"></button>
