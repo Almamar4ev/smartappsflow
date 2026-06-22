@@ -81,8 +81,8 @@ jobs:
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode .*/versionCode 24/' android/app/build.gradle
-          sed -i 's/versionName .*/versionName "2.4"/' android/app/build.gradle
+          sed -i 's/versionCode .*/versionCode 25/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "2.5"/' android/app/build.gradle
 
       - name: Enable edge-to-edge for safe-area support
         run: |
