@@ -98,7 +98,7 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .hero-btn{display:inline-block;background:#fff;color:var(--acc);font-size:14px;font-weight:800;padding:10px 20px;border-radius:12px;border:none;cursor:pointer}
 /* Saved mini list on home */
 .home-section-title{font-size:13px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;padding:0 20px;margin-bottom:10px}
-.saved-mini-list{padding:0 20px;display:flex;flex-direction:column;gap:10px;padding-bottom:calc(24px + var(--safe-bottom))}
+.saved-mini-list{padding:0 20px;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
 .saved-mini-card{background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:13px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .2s}
 .saved-mini-card:active{border-color:var(--acc)}
 .saved-mini-left{flex:1}
@@ -353,7 +353,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 </div>
 
 <!-- ══ HOME ══ -->
-<div class="screen" id="home" style="height:auto;min-height:100vh">
+<div class="screen" id="home" style="height:auto;min-height:100vh;padding-bottom:calc(20px + var(--safe-bottom))">
   <div class="home-top">
     <div class="home-top-row">
       <span class="home-app-name" id="home-app-name">Smart Loan Calculator</span>
@@ -3138,7 +3138,23 @@ function dismissBackupBanner(){
   localStorage.setItem('sla_backup_banner_dismissed','1');
 }
 
-function exportBackup(){
+function showToast(msg){
+  try{
+    let t=document.getElementById('app-toast');
+    if(!t){
+      t=document.createElement('div');
+      t.id='app-toast';
+      t.style.cssText='position:fixed;left:50%;bottom:calc(30px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(10px);z-index:10000;max-width:88%;background:var(--bg2);color:var(--txt);border:1px solid var(--brd);border-radius:12px;padding:12px 18px;font-size:14px;font-weight:700;text-align:center;line-height:1.4;box-shadow:0 8px 28px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;font-family:inherit';
+      document.body.appendChild(t);
+    }
+    t.textContent=msg;
+    requestAnimationFrame(function(){ t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; });
+    clearTimeout(window._toastTimer);
+    window._toastTimer=setTimeout(function(){ t.style.opacity='0'; t.style.transform='translateX(-50%) translateY(10px)'; }, 2600);
+  }catch(e){}
+}
+
+async function exportBackup(){
   try{
     const state={
       lang, currency, currentTheme,
@@ -3148,13 +3164,33 @@ function exportBackup(){
       _backup_date: new Date().toISOString(),
       _app:'SmartLoanCalculator'
     };
-    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    const json=JSON.stringify(state,null,2);
+    const dateStr=new Date().toISOString().slice(0,10);
+    const filename=`SmartLoan_backup_${dateStr}.json`;
+    const okMsg=lang==='ar'?'✅ تم تصدير البيانات':lang==='es'?'✅ Datos exportados':'✅ Backup exported';
+
+    // 1) Share the file (works inside Android WebView and on iPhone) → save to Drive/Files/iCloud/send
+    try{
+      const file=new File([json],filename,{type:'application/json'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:'Smart Loan backup'});
+        return; // shared (or user picked a destination)
+      }
+    }catch(shareErr){
+      if(shareErr && shareErr.name==='AbortError') return; // user cancelled — stop, no error
+      // any other share error → fall through to download
+    }
+
+    // 2) Fallback: classic download (desktop browsers)
+    const blob=new Blob([json],{type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
-    const dateStr=new Date().toISOString().slice(0,10);
-    a.href=url; a.download=`SmartLoan_backup_${dateStr}.json`; a.click();
-    URL.revokeObjectURL(url);
-    showToast(lang==='ar'?'✅ تم تصدير البيانات بنجاح':lang==='es'?'✅ Datos exportados':'✅ Backup exported successfully');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    showToast(okMsg);
   }catch(e){
     showToast(lang==='ar'?'❌ فشل التصدير':lang==='es'?'❌ Error al exportar':'❌ Export failed');
   }
