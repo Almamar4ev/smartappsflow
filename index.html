@@ -3154,7 +3154,8 @@ function showToast(msg){
   }catch(e){}
 }
 
-async function exportBackup(){
+let _pendingBackup=null;
+function exportBackup(){
   try{
     const state={
       lang, currency, currentTheme,
@@ -3167,28 +3168,60 @@ async function exportBackup(){
     const json=JSON.stringify(state,null,2);
     const dateStr=new Date().toISOString().slice(0,10);
     const filename=`SmartLoan_backup_${dateStr}.json`;
-    const okMsg=lang==='ar'?'✅ تم تصدير البيانات':lang==='es'?'✅ Datos exportados':'✅ Backup exported';
-
-    // 1) Share the file (works inside Android WebView and on iPhone) → save to Drive/Files/iCloud/send
+    const bytes=new Blob([json]).size;
+    const sizeStr=bytes<1024?bytes+' B':(bytes/1024).toFixed(1)+' KB';
+    _pendingBackup={json, filename, sizeStr};
+    const isAr=lang==='ar', isEs=lang==='es';
+    const n=saved.length;
+    document.getElementById('export-sheet-title').textContent=isAr?'نسخة احتياطية':isEs?'Copia de seguridad':'Backup file';
+    document.getElementById('export-file-name').textContent=filename;
+    const loansLbl=isAr?(n+' '+(n===1?'قرض':'قروض')):isEs?(n+' '+(n===1?'préstamo':'préstamos')):(n+' '+(n===1?'loan':'loans'));
+    document.getElementById('export-file-meta').textContent=sizeStr+' · '+loansLbl;
+    document.getElementById('export-share-btn').textContent=isAr?'مشاركة وحفظ':isEs?'Compartir y guardar':'Share & Save';
+    document.getElementById('export-close-btn').textContent=isAr?'إغلاق':isEs?'Cerrar':'Close';
+    document.getElementById('export-sheet').style.display='flex';
+  }catch(e){
+    showToast(lang==='ar'?'❌ فشل التصدير':lang==='es'?'❌ Error al exportar':'❌ Export failed');
+  }
+}
+function hideExportSheet(ev){
+  if(ev && ev.target!==ev.currentTarget) return;
+  const s=document.getElementById('export-sheet'); if(s) s.style.display='none';
+}
+async function doExportShare(){
+  if(!_pendingBackup) return;
+  const {json, filename, sizeStr}=_pendingBackup;
+  const okMsg=(lang==='ar'?'✅ تم الحفظ':lang==='es'?'✅ Guardado':'✅ Saved')+' · '+sizeStr;
+  hideExportSheet();
+  try{
+    const Cap=window.Capacitor;
+    // 1) Native app → write a real file and open the native share/save sheet
+    if(Cap && Cap.isNativePlatform && Cap.isNativePlatform() && Cap.Plugins && Cap.Plugins.Filesystem && Cap.Plugins.Share){
+      const {Filesystem, Share}=Cap.Plugins;
+      try{
+        await Filesystem.writeFile({path:filename, data:json, directory:'CACHE', encoding:'utf8'});
+        const {uri}=await Filesystem.getUri({path:filename, directory:'CACHE'});
+        await Share.share({title:'Smart Loan backup', files:[uri],
+          dialogTitle:(lang==='ar'?'احفظ أو شارك النسخة':lang==='es'?'Guardar o compartir':'Save or share your backup')});
+        showToast(okMsg);
+      }catch(err){ /* user dismissed the share sheet — file already saved in app storage */ }
+      return;
+    }
+    // 2) Web / PWA (iPhone Safari, desktop) → share file, else download
     try{
       const file=new File([json],filename,{type:'application/json'});
       if(navigator.canShare && navigator.canShare({files:[file]})){
         await navigator.share({files:[file], title:'Smart Loan backup'});
-        return; // shared (or user picked a destination)
+        return;
       }
     }catch(shareErr){
-      if(shareErr && shareErr.name==='AbortError') return; // user cancelled — stop, no error
-      // any other share error → fall through to download
+      if(shareErr && shareErr.name==='AbortError') return;
     }
-
-    // 2) Fallback: classic download (desktop browsers)
     const blob=new Blob([json],{type:'application/json'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url; a.download=filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),4000);
     showToast(okMsg);
   }catch(e){
@@ -3338,6 +3371,27 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
 }
 </script>
 <!-- ══ PREMIUM UPGRADE SHEET ══ -->
+<!-- Export sheet — shows the backup file + size before sharing/saving -->
+<div id="export-sheet" onclick="hideExportSheet(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
+  <div onclick="event.stopPropagation()" style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(28px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--brd)">
+    <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
+    <p id="export-sheet-title" style="text-align:center;font-size:18px;font-weight:900;color:var(--txt);margin-bottom:16px">Backup file</p>
+    <div style="display:flex;align-items:center;gap:13px;background:var(--bg3);border:1px solid var(--brd);border-radius:14px;padding:14px;margin-bottom:18px">
+      <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div id="export-file-name" style="font-size:13px;font-weight:800;color:var(--txt);word-break:break-all;line-height:1.3">SmartLoan_backup.json</div>
+        <div id="export-file-meta" style="font-size:12px;color:var(--txt2);margin-top:3px">— KB</div>
+      </div>
+    </div>
+    <button onclick="doExportShare()" id="export-share-btn" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      <span>Share &amp; Save</span>
+    </button>
+    <button onclick="hideExportSheet()" id="export-close-btn" style="width:100%;padding:13px;background:none;color:var(--txt2);border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px">Close</button>
+  </div>
+</div>
 <!-- iOS Add-to-Home-Screen hint (shown only on iPhone Safari, not when already installed) -->
 <div id="ios-install-bar" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:9998;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px))">
   <div style="width:100%;max-width:430px;background:var(--bg2);border:1.5px solid var(--brd);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 34px rgba(0,0,0,.32)">
