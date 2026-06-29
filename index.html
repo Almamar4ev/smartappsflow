@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
 <title>Smart Loan Calculator | حاسبة القروض الذكية</title>
 
+<!-- PWA / Add to Home Screen (web + iPhone) -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#3A2A8C"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Smart Loan"/>
+<link rel="apple-touch-icon" href="icon-only.png"/>
+
 <style>
 :root{--acc:#6366f1;--acc2:#8b5cf6;--acc3:#ec4899;--bg:#0a0f1e;--bg2:#1e293b;--bg3:#0f172a;--brd:#334155;--txt:#e2e8f0;--txt2:#c8d8e8;--txt3:#a0b4c8;--lbl:#f0b429;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(99,102,241,0.18)}
 .theme-emerald{--acc:#1f9d57;--acc2:#178048;--acc3:#34b96e;--bg:#f1f7f3;--bg2:#ffffff;--bg3:#e6f0ea;--brd:#cadccf;--txt:#16352a;--txt2:#33604c;--txt3:#5f8070;--lbl:#178048;--safe:#15a64a;--mod:#e08a00;--risk:#e0263a;--glow:rgba(31,157,87,0.10)}
@@ -392,6 +401,17 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   <div class="saved-mini-list" id="home-saved-list">
     <div class="no-saved-home" id="home-no-saved">No saved loans yet.<br>Calculate a loan and tap Save.</div>
   </div>
+  <!-- Backup banner — shown once after first save, dismissed forever -->
+  <div id="backup-banner" style="display:none;margin:12px 16px 0;background:color-mix(in srgb,var(--acc) 8%,transparent);border:1.5px solid color-mix(in srgb,var(--acc) 30%,transparent);border-radius:14px;padding:11px 14px;align-items:center;gap:10px">
+    <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div id="backup-banner-title" style="font-size:13px;font-weight:800;color:var(--txt)">Back up your loans</div>
+      <div id="backup-banner-sub" style="font-size:11px;color:var(--txt2);margin-top:1px">Settings → Data Backup</div>
+    </div>
+    <button onclick="dismissBackupBanner()" style="font-size:17px;color:var(--txt3);background:none;border:none;cursor:pointer;padding:4px;line-height:1;flex-shrink:0">✕</button>
+  </div>
 </div>
 
 <!-- ══ STEP 1 ══ -->
@@ -679,10 +699,21 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
     <div class="set-section">
       <div class="set-section-hd">
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
-        <span class="card-label" id="lbl-lang-set" style="margin:0">LANGUAGE</span>
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span class="card-label" id="lbl-backup-set" style="margin:0">DATA BACKUP</span>
       </div>
-      <div class="lang-rows" id="lang-rows"></div>
+      <p id="lbl-backup-hint" style="font-size:12.5px;color:var(--txt2);margin:0 0 12px;line-height:1.5">Export your data to keep a copy, or import a previous backup.</p>
+      <div style="display:flex;gap:10px">
+        <button onclick="exportBackup()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 10px;border-radius:13px;border:1.5px solid var(--brd);background:var(--bg2);color:var(--txt);font:inherit;font-size:14px;font-weight:700;cursor:pointer">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span id="lbl-export-btn">Export</span>
+        </button>
+        <button onclick="document.getElementById('import-file-input').click()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 10px;border-radius:13px;border:1.5px solid var(--brd);background:var(--bg2);color:var(--txt);font:inherit;font-size:14px;font-weight:700;cursor:pointer">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span id="lbl-import-btn">Import</span>
+        </button>
+      </div>
+      <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importBackup(this)">
     </div>
   </div>
 </div>
@@ -1371,9 +1402,8 @@ function renderHomeSaved(){
     }).join('');
   }
   listEl.innerHTML=html;
-}
-
-let _editingLoanIdx=null; // null = قرض جديد، رقم = تعديل قرض محفوظ
+  showBackupBannerIfNeeded();
+} // null = قرض جديد، رقم = تعديل قرض محفوظ
 
 function editSavedLoan(i){
   const s=saved[i]; if(!s) return;
@@ -2582,12 +2612,27 @@ function openSavedDetail(i){
 function chooseLangFromSettings(l){lang=l;applyDir();persistState();rerenderAll();settingsBack();}
 function renderSettings(){
   const tc=t();
+  const isAr=lang==='ar', isEs=lang==='es';
   document.getElementById('settings-title').textContent=tc.settings;
   document.getElementById('lbl-themes').textContent=tc.themes;
-  document.getElementById('lbl-lang-set').textContent=tc.langSet;
+  const langSetEl=document.getElementById('lbl-lang-set');
+  if(langSetEl) langSetEl.textContent=tc.langSet;
   const currLbl=document.getElementById('lbl-currency-set');
-  if(currLbl) currLbl.textContent=lang==='ar'?'العملة':lang==='es'?'MONEDA':'CURRENCY';
-  document.getElementById('settings-back-btn').textContent=lang==='ar'?'→':'←';
+  if(currLbl) currLbl.textContent=isAr?'العملة':isEs?'MONEDA':'CURRENCY';
+  document.getElementById('settings-back-btn').textContent=isAr?'→':'←';
+  // backup labels
+  const bkSet=document.getElementById('lbl-backup-set');
+  const bkHint=document.getElementById('lbl-backup-hint');
+  const bkExp=document.getElementById('lbl-export-btn');
+  const bkImp=document.getElementById('lbl-import-btn');
+  if(bkSet) bkSet.textContent=isAr?'النسخ الاحتياطي':isEs?'COPIA DE SEGURIDAD':'DATA BACKUP';
+  if(bkHint) bkHint.textContent=isAr
+    ?'صدّر بياناتك لحفظ نسخة منها، أو استورد نسخة احتياطية سابقة.'
+    :isEs
+    ?'Exporta tus datos para guardar una copia, o importa una copia anterior.'
+    :'Export your data to keep a copy, or import a previous backup.';
+  if(bkExp) bkExp.textContent=isAr?'تصدير':isEs?'Exportar':'Export';
+  if(bkImp) bkImp.textContent=isAr?'استيراد':isEs?'Importar':'Import';
   renderThemeGrid();
   renderCurrencyGrid();
   renderLangRows();
@@ -3071,6 +3116,87 @@ function restart(){
   renderHome();showScreen('home');
 }
 
+// ── BACKUP BANNER ─────────────────────────────────────────────────────────────
+function showBackupBannerIfNeeded(){
+  if(localStorage.getItem('sla_backup_banner_dismissed')==='1') return;
+  if(!saved.length) return;
+  const el=document.getElementById('backup-banner');
+  if(!el) return;
+  const isAr=lang==='ar', isEs=lang==='es';
+  document.getElementById('backup-banner-title').textContent=
+    isAr?'احفظ نسخة من بياناتك':isEs?'Haz una copia de seguridad':'Back up your loans';
+  document.getElementById('backup-banner-sub').textContent=
+    isAr?'الإعدادات ← النسخ الاحتياطي':isEs?'Ajustes → Copia de seguridad':'Settings → Data Backup';
+  el.style.display='flex';
+}
+function dismissBackupBanner(){
+  const el=document.getElementById('backup-banner');
+  if(!el) return;
+  el.style.transition='opacity .25s,max-height .3s,margin .3s,padding .3s';
+  el.style.opacity='0';el.style.maxHeight='0';el.style.margin='0 16px';el.style.padding='0 14px';
+  setTimeout(()=>{el.style.display='none';},300);
+  localStorage.setItem('sla_backup_banner_dismissed','1');
+}
+
+function exportBackup(){
+  try{
+    const state={
+      lang, currency, currentTheme,
+      profile, profileSaved,
+      saved, form,
+      _backup_version:1,
+      _backup_date: new Date().toISOString(),
+      _app:'SmartLoanCalculator'
+    };
+    const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const dateStr=new Date().toISOString().slice(0,10);
+    a.href=url; a.download=`SmartLoan_backup_${dateStr}.json`; a.click();
+    URL.revokeObjectURL(url);
+    showToast(lang==='ar'?'✅ تم تصدير البيانات بنجاح':lang==='es'?'✅ Datos exportados':'✅ Backup exported successfully');
+  }catch(e){
+    showToast(lang==='ar'?'❌ فشل التصدير':lang==='es'?'❌ Error al exportar':'❌ Export failed');
+  }
+}
+
+function importBackup(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const s=JSON.parse(e.target.result);
+      if(s._app!=='SmartLoanCalculator') throw new Error('wrong app');
+      const ok=confirm(
+        lang==='ar'
+          ? 'هل تريد استعادة البيانات؟ سيتم استبدال البيانات الحالية.'
+          : lang==='es'
+          ? '¿Restaurar datos? Esto reemplazará los datos actuales.'
+          : 'Restore this backup? Current data will be replaced.'
+      );
+      if(!ok){ input.value=''; return; }
+      if(s.lang)         lang=s.lang;
+      if(s.currency)     currency=s.currency;
+      if(s.currentTheme) currentTheme=s.currentTheme;
+      if(s.profile)      profile={...profile,...s.profile};
+      if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
+      if(Array.isArray(s.saved)) saved=s.saved;
+      if(s.form)         form={...form,...s.form};
+      persistState();
+      applyTheme(currentTheme);
+      applyDir();
+      rerenderAll();
+      showScreen('home');
+      renderHome();
+      showToast(lang==='ar'?'✅ تمت الاستعادة بنجاح':lang==='es'?'✅ Datos restaurados':'✅ Backup restored successfully');
+    }catch(err){
+      showToast(lang==='ar'?'❌ الملف غير صالح':lang==='es'?'❌ Archivo inválido':'❌ Invalid backup file');
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
 // ── PERSISTENCE — localStorage ────────────────────────────────────────────────
 const STORAGE_KEY='sla_v1';
 
@@ -3135,8 +3261,61 @@ function initApp(){
 
 // استدعاء init عند تحميل الصفحة
 window.addEventListener('DOMContentLoaded', initApp);
+window.addEventListener('load', function(){ setTimeout(showIosInstallIfNeeded, 1800); });
+
+// ── iOS "Add to Home Screen" hint (Apple users, web only) ────────────────────
+function _isIOS(){
+  return /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+}
+function _isStandalone(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    navigator.standalone===true;
+}
+function showIosInstallIfNeeded(){
+  if(window.Capacitor) return;                 // not inside the Android app
+  if(!_isIOS()) return;                         // iPhone/iPad only
+  if(_isStandalone()) return;                   // already installed → skip
+  if(localStorage.getItem('sla_ios_install_dismissed')==='1') return;
+  const bar=document.getElementById('ios-install-bar');
+  if(!bar) return;
+  const isAr=lang==='ar', isEs=lang==='es';
+  document.getElementById('ios-install-title').textContent=
+    isAr?'ثبّت التطبيق على شاشتك':isEs?'Instala la app':'Install this app';
+  document.getElementById('ios-install-sub').textContent=
+    isAr?'اضغط زر المشاركة ثم «إضافة إلى الشاشة الرئيسية»'
+        :isEs?'Toca Compartir y luego «Añadir a inicio»'
+        :'Tap Share then “Add to Home Screen”';
+  bar.style.display='flex';
+}
+function dismissIosInstall(){
+  const bar=document.getElementById('ios-install-bar');
+  if(bar) bar.style.display='none';
+  localStorage.setItem('sla_ios_install_dismissed','1');
+}
+
+// ── PWA service worker — web only (skipped inside the Android app) ──
+if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('service-worker.js').catch(function(){});
+  });
+}
 </script>
 <!-- ══ PREMIUM UPGRADE SHEET ══ -->
+<!-- iOS Add-to-Home-Screen hint (shown only on iPhone Safari, not when already installed) -->
+<div id="ios-install-bar" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:9998;justify-content:center;padding:0 12px calc(12px + env(safe-area-inset-bottom,0px))">
+  <div style="width:100%;max-width:430px;background:var(--bg2);border:1.5px solid var(--brd);border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 34px rgba(0,0,0,.32)">
+    <div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><polyline points="8 8 12 4 16 8"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div id="ios-install-title" style="font-size:13.5px;font-weight:800;color:var(--txt);line-height:1.3">Install this app</div>
+      <div id="ios-install-sub" style="font-size:11.5px;color:var(--txt2);margin-top:2px;line-height:1.4">Tap Share then “Add to Home Screen”</div>
+    </div>
+    <button onclick="dismissIosInstall()" style="font-size:18px;color:var(--txt3);background:none;border:none;cursor:pointer;padding:4px 6px;line-height:1;flex-shrink:0">✕</button>
+  </div>
+</div>
+
 <div id="risk-info-overlay" onclick="hideRiskInfo(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
   <div onclick="event.stopPropagation()" style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(36px + env(safe-area-inset-bottom, 0px));border-top:1px solid var(--brd);max-height:90vh;overflow-y:auto">
     <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
