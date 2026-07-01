@@ -1,0 +1,33 @@
+{
+  "name": "Smart Loan Calculator",
+  "short_name": "Smart Loan",
+  "description": "Calculate loan payments, compare loans, and see the real cost of borrowing.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#3A2A8C",
+  "theme_color": "#3A2A8C",
+  "lang": "en",
+  "dir": "auto",
+  "icons": [
+    {
+      "src": "icon-only.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-only.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-only.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
