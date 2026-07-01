@@ -3357,7 +3357,7 @@ function showIosInstallIfNeeded(){
   const s1=document.getElementById('ios-step-1');
   if(s1) s1.childNodes[0].nodeValue=(isAr?'اضغط رمز المشاركة ':isEs?'Toca el ícono Compartir ':'Tap the Share icon ');
   document.getElementById('ios-step-1b').textContent=
-    isAr?'في شريط Safari بالأسفل':isEs?'en la barra de Safari':'in the Safari bar below';
+    isAr?'بالأسفل (أو من قائمة ⋯)':isEs?'de Safari (o desde ⋯)':'below (or from the ⋯ menu)';
   document.getElementById('ios-step-2').textContent=
     isAr?'اختر «إضافة إلى الشاشة الرئيسية»':isEs?'Elige «Añadir a inicio»':'Choose “Add to Home Screen”';
   document.getElementById('ios-step-3').textContent=
