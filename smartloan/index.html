@@ -3355,11 +3355,10 @@ function showIosInstallIfNeeded(){
     isAr?'كيف تضيف التطبيق إلى شاشتك':isEs?'Cómo instalar esta app':'How to install this app';
   // step 1 has inline icon → set only the leading text node + trailing label
   const s1=document.getElementById('ios-step-1');
-  if(s1) s1.childNodes[0].nodeValue=(isAr?'اضغط رمز المشاركة ':isEs?'Toca el ícono Compartir ':'Tap the Share icon ');
-  document.getElementById('ios-step-1b').textContent=
-    isAr?'بالأسفل (أو من قائمة ⋯)':isEs?'de Safari (o desde ⋯)':'below (or from the ⋯ menu)';
+  if(s1) s1.childNodes[0].nodeValue=(isAr?'اضغط (⋯) ثم رمز المشاركة ':isEs?'Toca (⋯) y luego Compartir ':'Tap (⋯) then the Share icon ');
+  document.getElementById('ios-step-1b').textContent='';
   document.getElementById('ios-step-2').textContent=
-    isAr?'اختر «إضافة إلى الشاشة الرئيسية»':isEs?'Elige «Añadir a inicio»':'Choose “Add to Home Screen”';
+    isAr?'«عرض المزيد» ← «إضافة إلى الشاشة الرئيسية»':isEs?'«Más» → «Añadir a inicio»':'"Show More" → "Add to Home Screen"';
   document.getElementById('ios-step-3').textContent=
     isAr?'اضغط «إضافة» — تم!':isEs?'Toca «Añadir» — ¡listo!':'Tap “Add” — done!';
   bar.style.display='flex';
