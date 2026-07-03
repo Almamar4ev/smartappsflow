@@ -1,0 +1,2154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>سجل صيانة السيارات</title>
+<meta name="theme-color" content="#e8a020">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="سجل الصيانة">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+  :root, [data-theme="dark"] {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e222e;
+    --border: #2a2f3e;
+    --accent: #e8a020;
+    --accent-text: #000;
+    --accent2: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f97316;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --modal-bg: rgba(0,0,0,0.7);
+    --input-bg: #1e222e;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  [data-theme="light"] {
+    --bg: #f1f4f9;
+    --surface: #ffffff;
+    --surface2: #f7f9fc;
+    --border: #dde3ec;
+    --accent: #d68910;
+    --accent-text: #fff;
+    --accent2: #2563eb;
+    --green: #16a34a;
+    --red: #dc2626;
+    --orange: #ea580c;
+    --text: #1a2230;
+    --text-muted: #7a8699;
+    --text-dim: #50607a;
+    --modal-bg: rgba(20,30,50,0.45);
+    --input-bg: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  /* ─── Header ─── */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .app-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .app-title .icon {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .app-title h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .app-title span {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  /* ─── Nav Tabs ─── */
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-tabs::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  .tab-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+    font-weight: 700;
+  }
+
+  /* ─── Pages ─── */
+  .page { display: none; padding: 20px; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* ─── Section Title ─── */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── Car Cards ─── */
+  .car-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .car-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .car-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .car-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232,160,32,0.2); }
+
+  .car-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+
+  .car-card .car-icon { font-size: 32px; margin-bottom: 8px; }
+  .car-card .car-name { font-size: 16px; font-weight: 700; }
+  .car-card .car-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .car-card .car-stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat-item { flex: 1; }
+  .stat-item .stat-val { font-size: 15px; font-weight: 700; color: var(--accent); }
+  .stat-item .stat-lbl { font-size: 11px; color: var(--text-muted); }
+
+  /* ─── Add Car ─── */
+  .add-car-btn {
+    background: transparent;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+  }
+
+  .add-car-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── Forms ─── */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; color: var(--text-dim); margin-bottom: 6px; display: block; }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+    direction: rtl;
+  }
+
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 70px; }
+
+  select option { background: var(--input-bg); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ─── Buttons ─── */
+  .btn {
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary { background: var(--accent); color: var(--accent-text); }
+  .btn-primary:hover { background: #f5b340; }
+  .btn-secondary { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--text-dim); }
+  .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .btn-danger:hover { background: rgba(239,68,68,0.25); }
+  .btn-blue { background: var(--accent2); color: #fff; }
+  .btn-blue:hover { background: #2563eb; }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* ─── Log entries ─── */
+  .log-entry {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+
+  .log-entry:hover { border-color: var(--text-muted); }
+
+  .log-type-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .badge-routine { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-repair { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-inspection { background: rgba(59,130,246,0.15); color: var(--accent2); }
+  .badge-accident { background: rgba(249,115,22,0.15); color: var(--orange); }
+  .badge-other { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+
+  .log-main { flex: 1; min-width: 0; }
+  .log-title { font-size: 14px; font-weight: 600; }
+  .log-meta { font-size: 12px; color: var(--text-muted); margin-top: 3px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .log-meta span { display: flex; align-items: center; gap: 4px; }
+  .log-notes { font-size: 12px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
+
+  .log-cost {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .log-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .icon-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+  }
+
+  .icon-btn:hover { border-color: var(--text-dim); color: var(--text); }
+  .icon-btn.delete:hover { border-color: var(--red); color: var(--red); }
+
+  /* ─── Stats row ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-card .val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-card .lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ─── Filter bar ─── */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-bar select, .filter-bar input {
+    width: auto;
+    flex: 1;
+    min-width: 130px;
+  }
+
+  /* ─── Modal ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--modal-bg);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── Empty state ─── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ─── Timeline ─── */
+  .timeline { position: relative; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    right: 8px;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+
+  /* ─── Toast ─── */
+  .toast {
+    position: fixed;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--green);
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 999;
+    transition: transform 0.3s;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ─── Delete confirm ─── */
+  .delete-bar {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  @media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+    .car-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-header">
+  <div class="app-title">
+    <div class="icon">🔧</div>
+    <div>
+      <h1>سجل الصيانة</h1>
+      <span>تتبع كل صيانة وعطل لسياراتك</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" style="font-size:18px;padding:8px 10px" title="تبديل الثيم">🌙</button>
+    <button class="btn btn-primary" onclick="openAddLog()" id="addLogBtn" style="display:none">+ سجل جديد</button>
+  </div>
+</div>
+
+<!-- Nav -->
+<div class="nav-tabs">
+  <button class="tab-btn active" data-page="home" onclick="showPage('home')">🏠 الرئيسية</button>
+  <button class="tab-btn" data-page="logs" onclick="showPage('logs')" id="logsTab">📋 السجلات</button>
+  <button class="tab-btn" data-page="stats" onclick="showPage('stats')">📊 الإحصائيات</button>
+  <button class="tab-btn" data-page="settings" onclick="showPage('settings')">⚙️ الإعدادات</button>
+</div>
+
+<!-- PAGE: Home -->
+<div class="page active" id="page-home">
+  <div id="reminderBanner"></div>
+  <button class="btn btn-primary" onclick="openAddLog()" style="width:100%;justify-content:center;margin-bottom:16px">+ سجل صيانة جديد</button>
+  <div class="section-title">سياراتي</div>
+  <div class="car-grid" id="carGrid"></div>
+  <button class="add-car-btn" onclick="openAddCar()">+ إضافة سيارة</button>
+
+  <div id="quickLog" style="display:none; margin-top:20px;">
+    <div class="section-title">آخر سجلات — <span id="selectedCarName"></span></div>
+    <div id="quickLogList"></div>
+    <button class="btn btn-secondary" onclick="showPage('logs')" style="margin-top:8px">عرض كل السجلات</button>
+  </div>
+</div>
+
+<!-- PAGE: Logs -->
+<div class="page" id="page-logs">
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn btn-blue" onclick="openShare()" style="flex:1;justify-content:center">📤 مشاركة السجل</button>
+  </div>
+  <div style="position:relative;margin-bottom:12px">
+    <input type="text" id="searchBox" placeholder="🔍 ابحث في السجلات (عملية، ورشة، ملاحظة...)" oninput="renderLogs()" style="width:100%">
+    <button id="searchClear" onclick="clearSearch()" style="display:none;position:absolute;left:8px;top:50%;transform:translateY(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:24px;height:24px;cursor:pointer;color:var(--text-muted);font-size:13px">×</button>
+  </div>
+  <div class="filter-bar">
+    <select id="filterCar" onchange="renderLogs()">
+      <option value="">كل السيارات</option>
+    </select>
+    <select id="filterType" onchange="renderLogs()">
+      <option value="">كل الأنواع</option>
+      <option value="routine">صيانة دورية</option>
+      <option value="repair">تصليح</option>
+      <option value="inspection">فحص</option>
+      <option value="accident">حادث</option>
+      <option value="other">أخرى</option>
+    </select>
+    <select id="filterSort" onchange="renderLogs()">
+      <option value="date-desc">الأحدث أولاً</option>
+      <option value="date-asc">الأقدم أولاً</option>
+      <option value="cost-desc">الأغلى أولاً</option>
+    </select>
+  </div>
+  <div id="logsList"></div>
+</div>
+
+<!-- PAGE: Stats -->
+<div class="page" id="page-stats">
+  <div class="section-title">ملخص كل السيارات</div>
+  <div class="stats-row" id="globalStats"></div>
+  <div id="perCarStats"></div>
+</div>
+
+<!-- PAGE: Settings -->
+<div class="page" id="page-settings">
+  <div id="installSection">
+    <div class="section-title">تثبيت التطبيق</div>
+    <div class="card">
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px;line-height:1.7">📱 ثبّت التطبيق على شاشتك الرئيسية ليعمل كتطبيق مستقل بملء الشاشة، ويفتح أسرع.</p>
+      <button class="btn btn-primary" onclick="installApp()" style="width:100%;justify-content:center">⬇️ تثبيت على الشاشة الرئيسية</button>
+    </div>
+  </div>
+  <div class="section-title">مساحة التخزين</div>
+  <div class="card">
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.7">
+      📦 هذا القياس يخص <b>بيانات هذا التطبيق فقط</b> داخل متصفحك (السجلات + الصور)، وليس مساحة هاتفك كاملة.
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+      <span style="font-size:13px;color:var(--text-dim)" id="storageLabel">جارٍ الحساب...</span>
+      <span style="font-size:18px;font-weight:800;color:var(--accent)" id="storagePercent">—</span>
+    </div>
+    <div style="background:var(--surface2);border-radius:20px;height:14px;overflow:hidden;border:1px solid var(--border)">
+      <div id="storageBar" style="height:100%;width:0%;background:var(--green);transition:width .4s,background .4s;border-radius:20px"></div>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:10px" id="storageDetail">
+      الصور تُحفظ في قاعدة بيانات IndexedDB ذات سعة كبيرة، وبيانات السجلات في تخزين خفيف منفصل.
+    </p>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.7">
+      💡 الرقم الكلي هو <b>السقف الأقصى</b> الذي يمنحه المتصفح لهذا التطبيق، وهو متغيّر — لو امتلأ هاتفك أو امتلأت تطبيقات أخرى في المتصفح، قد يُخفّض المتصفح هذا السقف تلقائياً.
+    </p>
+  </div>
+
+  <div class="section-title" style="margin-top:20px">السيارات المسجلة</div>
+  <div id="carManage"></div>
+
+  <div class="section-title" style="margin-top:20px">النسخ الاحتياطي</div>
+  <div class="card">
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-blue" onclick="exportData()">📤 تصدير JSON</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 استيراد JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+    </div>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:12px;">التصدير يحفظ جميع السيارات والسجلات والصور في ملف JSON واحد</p>
+  </div>
+
+  <div class="section-title" style="margin-top:20px">خطر</div>
+  <div class="card">
+    <button class="btn btn-danger" onclick="confirmClearAll()">🗑️ حذف كل البيانات</button>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:10px;">هذا الإجراء لا يمكن التراجع عنه</p>
+  </div>
+</div>
+
+<!-- Modal: Add Car -->
+<div class="modal-overlay hidden" id="modalCar">
+  <div class="modal">
+    <div class="modal-title">🚗 <span id="carModalTitle">إضافة سيارة</span></div>
+    <div class="form-group">
+      <label class="form-label">اسم / لقب السيارة *</label>
+      <input type="text" id="carName" placeholder="مثال: كامري العائلة">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">الماركة</label>
+        <input type="text" id="carMake" placeholder="Toyota">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الموديل</label>
+        <input type="text" id="carModel" placeholder="Camry">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">سنة الصنع</label>
+        <input type="number" id="carYear" placeholder="2020">
+      </div>
+      <div class="form-group">
+        <label class="form-label">لون السيارة</label>
+        <input type="text" id="carColor" placeholder="أبيض">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">رقم اللوحة</label>
+      <input type="text" id="carPlate" placeholder="ع م ا 1234">
+    </div>
+    <div class="form-group">
+      <label class="form-label">رمز (إيموجي)</label>
+      <input type="text" id="carEmoji" placeholder="🚗" maxlength="4">
+    </div>
+    <div class="form-group">
+      <label class="form-label">صورة السيارة (اختياري)</label>
+      <input type="file" id="carPhotoInput" accept="image/*" style="display:none" onchange="handleCarPhoto(this)">
+      <div id="carPhotoArea">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('carPhotoInput').click()" style="width:100%">📷 إضافة صورة السيارة</button>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:6px">التجديدات والتنبيهات (اختياري)</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7">
+      أدخل تواريخ انتهاء المستندات، وسيُنبّهك التطبيق عند فتحه قبل الموعد بالمدة التي تحددها.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">انتهاء التأمين</label>
+        <input type="date" id="carInsurance">
+      </div>
+      <div class="form-group">
+        <label class="form-label">انتهاء الفحص (الاستمارة)</label>
+        <input type="date" id="carInspection">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">نبّهني قبل الموعد بـ</label>
+      <select id="carReminderDays">
+        <option value="7">أسبوع</option>
+        <option value="14">أسبوعين</option>
+        <option value="30" selected>شهر</option>
+        <option value="60">شهرين</option>
+        <option value="0">بدون تنبيه</option>
+      </select>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveCar()">حفظ</button>
+      <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Log -->
+<div class="modal-overlay hidden" id="modalLog">
+  <div class="modal">
+    <div class="modal-title">🔧 <span id="logModalTitle">إضافة سجل صيانة</span></div>
+    <div class="form-group">
+      <label class="form-label">السيارة *</label>
+      <select id="logCar"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">نوع العملية *</label>
+      <select id="logType">
+        <option value="routine">🔄 صيانة دورية</option>
+        <option value="repair">🔨 تصليح / إصلاح</option>
+        <option value="inspection">🔍 فحص</option>
+        <option value="accident">⚠️ حادث / ضرر</option>
+        <option value="other">📝 أخرى</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">عمليات الصيانة (اختر واحدة أو أكثر) *</label>
+      <div id="selectedOps" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <input type="text" id="customOpInput" placeholder="أضف عملية بكتابتها هنا..." style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomOp();}">
+        <button type="button" class="btn btn-blue" onclick="addCustomOp()" style="padding:10px 16px">+</button>
+      </div>
+      <select id="opPicker" onchange="addOpFromPicker()">
+        <option value="">-- اختر من القائمة لإضافتها --</option>
+        <optgroup label="صيانة دورية">
+          <option>تغيير زيت المحرك والفلتر</option>
+          <option>تغيير فلتر الهواء</option>
+          <option>تغيير فلتر الوقود</option>
+          <option>تغيير سائل الفرامل</option>
+          <option>تغيير سائل التبريد</option>
+          <option>تغيير سائل ناقل الحركة</option>
+          <option>تشحيم عام</option>
+        </optgroup>
+        <optgroup label="إطارات وعجلات">
+          <option>تغيير إطار / إطارات</option>
+          <option>ترصيص (ضبط زوايا العجلات)</option>
+          <option>موازنة العجلات</option>
+          <option>تدوير الإطارات</option>
+        </optgroup>
+        <optgroup label="فرامل">
+          <option>تغيير فحمات الفرامل الأمامية</option>
+          <option>تغيير فحمات الفرامل الخلفية</option>
+          <option>تغيير ديسك (قرص) الفرامل</option>
+          <option>ضبط فرامل اليد (الهاند بريك)</option>
+        </optgroup>
+        <optgroup label="المحرك والكهرباء">
+          <option>تغيير البلكات (إشعال)</option>
+          <option>تغيير السير (تايمنج)</option>
+          <option>تغيير حزام المروحة</option>
+          <option>تغيير البطارية</option>
+          <option>تغيير المولد (دينامو)</option>
+          <option>تغيير سلف</option>
+          <option>تغيير مضخة الماء</option>
+          <option>تغيير ثرموستات</option>
+        </optgroup>
+        <optgroup label="تكييف وجسم">
+          <option>صيانة مكيف</option>
+          <option>شحن غاز مكيف</option>
+          <option>تلميع وحماية الجسم</option>
+          <option>تغيير شمعات الزجاج</option>
+          <option>إصلاح الزجاج الأمامي</option>
+        </optgroup>
+        <optgroup label="فحص وتشخيص">
+          <option>فحص شامل</option>
+          <option>فحص ما قبل السفر</option>
+          <option>تشخيص كمبيوتر</option>
+          <option>إصلاح عطل كهربائي</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">التاريخ *</label>
+        <input type="date" id="logDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">عداد الكيلومترات</label>
+        <input type="number" id="logKm" placeholder="85000">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">التكلفة (ر.ع)</label>
+        <div style="display:flex;gap:6px">
+          <input type="number" id="logCost" placeholder="0.000" step="0.001" style="flex:1">
+          <button type="button" class="btn btn-secondary" onclick="openCalc()" style="padding:10px 14px" title="حاسبة جمع المبالغ">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">اسم الورشة / المكان</label>
+        <input type="text" id="logWorkshop" placeholder="ورشة المعلم سالم">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">ملاحظات إضافية</label>
+      <textarea id="logNotes" placeholder="أي تفاصيل إضافية..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">صور (موقع المحل / فاتورة / قطعة الغيار)</label>
+      <input type="file" id="logImageInput" accept="image/*" multiple style="display:none" onchange="handleImages(this)">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('logImageInput').click()" style="width:100%">📷 إضافة صور (تُضغط تلقائياً)</button>
+      <div id="imagePreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+    </div>
+    <input type="hidden" id="editLogId">
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveLog()">حفظ السجل</button>
+      <button class="btn btn-secondary" onclick="closeModals()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Share / Export -->
+<div class="modal-overlay hidden" id="modalShare">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">📤 مشاركة السجل</div>
+    <div class="form-group">
+      <label class="form-label">السيارة</label>
+      <select id="shareCar">
+        <option value="">كل السيارات</option>
+      </select>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">اختر صيغة الملف. يشمل كل السجلات والتكاليف والتفاصيل.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-primary" onclick="exportFormat('pdf')" style="justify-content:center">📄 PDF</button>
+      <button class="btn btn-blue" onclick="exportFormat('html')" style="justify-content:center">🌐 HTML</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModals()" style="width:100%;justify-content:center">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Calculator -->
+<div class="modal-overlay hidden" id="modalCalc">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">🧮 حاسبة جمع المبالغ</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">أضف مبالغ الصيانة المتعددة (زيت + قطع + أجرة...) وستُجمع تلقائياً</p>
+    <div id="calcItems"></div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <input type="number" id="calcInput" placeholder="مبلغ" step="0.001" style="flex:1" onkeydown="if(event.key==='Enter')addCalcItem()">
+      <button class="btn btn-blue" onclick="addCalcItem()" style="padding:10px 16px">+</button>
+    </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);margin-bottom:0">
+      <span style="font-weight:600">المجموع</span>
+      <span id="calcTotal" style="font-size:20px;font-weight:800;color:var(--accent)">0.000</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="applyCalc()">استخدام المجموع</button>
+      <button class="btn btn-secondary" onclick="clearCalc()">مسح</button>
+      <button class="btn btn-secondary" onclick="closeCalc()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Image viewer -->
+<div class="modal-overlay hidden" id="modalImgView" onclick="closeModals()" style="align-items:center">
+  <img id="imgViewFull" style="max-width:100%;max-height:90dvh;border-radius:8px" alt="">
+</div>
+
+<!-- Modal: iOS install instructions -->
+<div class="modal-overlay hidden" id="modalIOS">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">📱 التثبيت على آيفون / آيباد</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.8">لإضافة التطبيق إلى شاشتك الرئيسية على أجهزة Apple، اتبع هذه الخطوات في متصفح <b>Safari</b>:</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="background:var(--accent);color:var(--accent-text);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">١</span>
+        <div style="font-size:14px;line-height:1.7">اضغط زر <b>المشاركة</b> <span style="font-size:18px">􀈂</span> (المربع مع السهم للأعلى) في أسفل الشاشة.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="background:var(--accent);color:var(--accent-text);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">٢</span>
+        <div style="font-size:14px;line-height:1.7">مرّر للأسفل واختر <b>«إضافة إلى الشاشة الرئيسية»</b> (Add to Home Screen) ➕</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="background:var(--accent);color:var(--accent-text);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">٣</span>
+        <div style="font-size:14px;line-height:1.7">اضغط <b>«إضافة»</b> في الأعلى — وسيظهر التطبيق على شاشتك الرئيسية.</div>
+      </div>
+    </div>
+    <div style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:8px;padding:10px 12px;margin-top:16px;font-size:12px;color:var(--orange);line-height:1.7">
+      💡 مهم: على آيفون، خذ نسخة احتياطية (تصدير JSON) بين فترة وأخرى، لأن النظام قد يمسح بيانات المواقع غير المستخدمة لفترة طويلة.
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModals()" style="width:100%;justify-content:center">فهمت</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Android manual install instructions (fallback) -->
+<div class="modal-overlay hidden" id="modalAndroid">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">📱 التثبيت على أندرويد</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.8">لإضافة التطبيق إلى شاشتك الرئيسية في متصفح <b>Chrome</b>:</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="background:var(--accent);color:var(--accent-text);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">١</span>
+        <div style="font-size:14px;line-height:1.7">اضغط قائمة المتصفح <b>(⋮)</b> في أعلى يمين الشاشة.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="background:var(--accent);color:var(--accent-text);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">٢</span>
+        <div style="font-size:14px;line-height:1.7">اختر <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span style="background:var(--accent);color:var(--accent-text);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;flex-shrink:0">٣</span>
+        <div style="font-size:14px;line-height:1.7">أكّد بالضغط على <b>«تثبيت»</b>.</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModals()" style="width:100%;justify-content:center">فهمت</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ────────────────────────────────────────────
+let state = {
+  cars: [],
+  logs: [],
+  selectedCar: null
+};
+
+let editingCarId = null;
+let currentImages = [];   // {id, dataUrl} for images in the log modal being edited
+let currentCarPhoto = null;   // image id (in IDB) for the car photo being edited
+let calcItems = [];       // calculator amounts
+let imageCache = {};      // id -> dataUrl, loaded from IndexedDB for display
+
+// ─── IndexedDB (image storage) ────────────────────────
+const DB_NAME = 'carMaintenanceDB';
+const DB_STORE = 'images';
+let _db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (_db) return resolve(_db);
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE);
+    };
+    req.onsuccess = e => { _db = e.target.result; resolve(_db); };
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+function idbPut(key, value) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+    tx.onabort = e => reject(tx.error || (e.target && e.target.error));
+  }));
+}
+
+function idbGet(key) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const r = tx.objectStore(DB_STORE).get(key);
+    r.onsuccess = () => resolve(r.result || null);
+    r.onerror = e => reject(e.target.error);
+  }));
+}
+
+function idbDelete(key) {
+  return openDB().then(db => new Promise((resolve) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  }));
+}
+
+function idbKeys() {
+  return openDB().then(db => new Promise((resolve) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const r = tx.objectStore(DB_STORE).getAllKeys();
+    r.onsuccess = () => resolve(r.result || []);
+    r.onerror = () => resolve([]);
+  }));
+}
+
+function idbClear() {
+  return openDB().then(db => new Promise((resolve) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  }));
+}
+
+// Load all stored images into memory cache (for display)
+async function loadImageCache() {
+  try {
+    const keys = await idbKeys();
+    for (const k of keys) {
+      const v = await idbGet(k);
+      if (v) imageCache[k] = v;
+    }
+  } catch(e) { console.warn('image cache load failed', e); }
+}
+
+// ─── Theme ────────────────────────────────────────────
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeBtn').textContent = t === 'light' ? '☀️' : '🌙';
+  localStorage.setItem('carMaintenance_theme', t);
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+}
+
+// ─── Init ─────────────────────────────────────────────
+async function init() {
+  applyTheme(localStorage.getItem('carMaintenance_theme') || 'dark');
+  const saved = localStorage.getItem('carMaintenance_v2');
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) {}
+  }
+  // Migrate old logs that stored base64 directly in images[]
+  await migrateOldImages();
+  await loadImageCache();
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('logDate').value = today;
+  document.getElementById('logDate').max = today;   // block future dates
+  renderAll();
+  updateStorageMeter();
+}
+
+// Move any inline base64 images (old format) into IndexedDB
+async function migrateOldImages() {
+  let changed = false;
+  for (const log of state.logs) {
+    if (!log.images || !log.images.length) continue;
+    const newIds = [];
+    for (const img of log.images) {
+      if (typeof img === 'string' && img.startsWith('data:')) {
+        const id = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        try { await idbPut(id, img); newIds.push(id); changed = true; }
+        catch(e) { newIds.push(img); } // keep as-is if migration fails
+      } else {
+        newIds.push(img); // already an id
+      }
+    }
+    log.images = newIds;
+  }
+  if (changed) { try { localStorage.setItem('carMaintenance_v2', JSON.stringify(state)); } catch(e){} }
+}
+
+function save() {
+  try {
+    localStorage.setItem('carMaintenance_v2', JSON.stringify(state));
+    return true;
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || /quota/i.test(e.message || '')) {
+      showStorageFullAlert();
+    } else {
+      showToast('تعذّر الحفظ: ' + (e.message || 'خطأ'), 'error');
+    }
+    return false;
+  }
+}
+
+function showStorageFullAlert() {
+  alert('⚠️ مساحة التخزين ممتلئة!\n\nلم يتم حفظ آخر تغيير بشكل دائم.\n\nالحلول:\n• صدّر نسخة احتياطية (JSON) من الإعدادات\n• احذف صوراً أو سجلات قديمة\n\nملاحظة: الصور تُحفظ في قاعدة بيانات منفصلة بسعة أكبر، لكن بيانات السجلات نفسها امتلأت.');
+  showPage2('settings');
+  updateStorageMeter();
+}
+
+// ─── Storage meter (real numbers from the browser) ────
+async function updateStorageMeter() {
+  const labelEl = document.getElementById('storageLabel');
+  const pctEl = document.getElementById('storagePercent');
+  const barEl = document.getElementById('storageBar');
+  const detailEl = document.getElementById('storageDetail');
+  if (!labelEl) return;
+
+  if (navigator.storage && navigator.storage.estimate) {
+    try {
+      const est = await navigator.storage.estimate();
+      const usage = est.usage || 0;
+      const quota = est.quota || 0;
+      const usedMB = (usage / 1048576).toFixed(2);
+      const quotaMB = quota ? (quota / 1048576).toFixed(0) : '؟';
+      const pct = quota ? (usage / quota * 100) : 0;
+      labelEl.textContent = `${usedMB} م.ب مستخدم من ${quotaMB} م.ب`;
+      pctEl.textContent = pct.toFixed(1) + '%';
+      barEl.style.width = Math.min(pct, 100) + '%';
+      barEl.style.background = pct < 60 ? 'var(--green)' : pct < 85 ? 'var(--orange)' : 'var(--red)';
+      detailEl.textContent = pct >= 85
+        ? '⚠️ المساحة شبه ممتلئة — صدّر نسخة احتياطية واحذف صوراً قديمة قريباً.'
+        : 'الصور في قاعدة بيانات IndexedDB ذات سعة كبيرة، وبيانات السجلات في تخزين خفيف منفصل.';
+    } catch (e) {
+      fallbackMeter(labelEl, pctEl, barEl, detailEl);
+    }
+  } else {
+    fallbackMeter(labelEl, pctEl, barEl, detailEl);
+  }
+}
+
+// Fallback: estimate localStorage usage only (older browsers without Storage API)
+function fallbackMeter(labelEl, pctEl, barEl, detailEl) {
+  let bytes = 0;
+  try {
+    const raw = localStorage.getItem('carMaintenance_v2') || '';
+    bytes = new Blob([raw]).size;
+  } catch(e) {}
+  const usedKB = (bytes / 1024).toFixed(1);
+  const limitKB = 5120; // ~5MB typical localStorage cap
+  const pct = bytes / (limitKB * 1024) * 100;
+  labelEl.textContent = `${usedKB} ك.ب من بيانات السجلات (تقدير)`;
+  pctEl.textContent = pct.toFixed(1) + '%';
+  barEl.style.width = Math.min(pct, 100) + '%';
+  barEl.style.background = pct < 60 ? 'var(--green)' : pct < 85 ? 'var(--orange)' : 'var(--red)';
+  detailEl.textContent = 'متصفحك لا يدعم القياس الدقيق — هذا تقدير لبيانات السجلات فقط (بدون الصور).';
+}
+
+function renderAll() {
+  renderCarGrid();
+  renderReminders();
+  renderLogs();
+  renderStats();
+  renderSettings();
+  updateCarSelects();
+}
+
+// ─── Renewal reminders ────────────────────────────────
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / 86400000);
+}
+
+function renderReminders() {
+  const banner = document.getElementById('reminderBanner');
+  if (!banner) return;
+  const items = [];
+  state.cars.forEach(car => {
+    const lead = car.reminderDays != null ? car.reminderDays : 30;
+    if (!lead) return;
+    [['insurance', 'التأمين'], ['inspection', 'الفحص (الاستمارة)']].forEach(([key, label]) => {
+      const d = daysUntil(car[key]);
+      if (d == null) return;
+      if (d < 0) items.push({ car, label, days: d, expired: true });
+      else if (d <= lead) items.push({ car, label, days: d, expired: false });
+    });
+  });
+  if (!items.length) { banner.innerHTML = ''; return; }
+  items.sort((a, b) => a.days - b.days);
+  banner.innerHTML = items.map(it => {
+    const color = it.expired ? 'var(--red)' : (it.days <= 7 ? 'var(--red)' : 'var(--orange)');
+    const bg = it.expired || it.days <= 7 ? 'rgba(239,68,68,0.12)' : 'rgba(249,115,22,0.12)';
+    const msg = it.expired
+      ? `انتهى ${it.label} منذ ${Math.abs(it.days)} يوم`
+      : (it.days === 0 ? `${it.label} ينتهي اليوم!` : `${it.label} ينتهي خلال ${it.days} يوم`);
+    return `<div onclick="openEditCar('${it.car.id}')" style="cursor:pointer;background:${bg};border:1px solid ${color};border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">${it.expired ? '⛔' : '⏰'}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14px;color:${color}">${it.car.emoji||'🚗'} ${it.car.name} — ${msg}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">اضغط للتعديل والتجديد</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Pages ────────────────────────────────────────────
+function showPage(name, ev) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const trigger = (ev && ev.target) || (typeof event !== 'undefined' && event.target) || null;
+  if (trigger && trigger.classList.contains('tab-btn')) {
+    trigger.classList.add('active');
+  } else {
+    // programmatic: highlight the matching tab by data-page
+    const tab = document.querySelector('.tab-btn[data-page="' + name + '"]');
+    if (tab) tab.classList.add('active');
+  }
+  document.getElementById('addLogBtn').style.display = (name === 'logs') ? 'flex' : 'none';
+  if (name === 'settings') updateStorageMeter();
+}
+
+// Programmatic page switch (no event)
+function showPage2(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const tab = document.querySelector('.tab-btn[data-page="' + name + '"]');
+  if (tab) tab.classList.add('active');
+  document.getElementById('addLogBtn').style.display = (name === 'logs') ? 'flex' : 'none';
+  if (name === 'settings') updateStorageMeter();
+}
+
+// ─── Cars ─────────────────────────────────────────────
+function renderCarGrid() {
+  const grid = document.getElementById('carGrid');
+  grid.innerHTML = '';
+  state.cars.forEach(car => {
+    const carLogs = state.logs.filter(l => l.carId === car.id);
+    const totalCost = carLogs.reduce((s, l) => s + (parseFloat(l.cost) || 0), 0);
+    const lastLog = carLogs.sort((a,b) => b.date.localeCompare(a.date))[0];
+    const div = document.createElement('div');
+    div.className = 'car-card' + (state.selectedCar === car.id ? ' selected' : '');
+    div.onclick = () => selectCar(car.id);
+    div.innerHTML = `
+      ${car.photo && imageCache[car.photo]
+        ? `<img src="${imageCache[car.photo]}" style="width:100%;max-height:220px;object-fit:contain;border-radius:8px;margin-bottom:10px;background:var(--surface2)">`
+        : `<div class="car-icon">${car.emoji || '🚗'}</div>`}
+      <div class="car-name">${car.name}</div>
+      <div class="car-meta">${[car.make, car.model, car.year].filter(Boolean).join(' • ')}</div>
+      ${car.plate ? `<div class="car-meta" style="margin-top:3px">🔢 ${car.plate}</div>` : ''}
+      <div class="car-stats">
+        <div class="stat-item">
+          <div class="stat-val">${carLogs.length}</div>
+          <div class="stat-lbl">سجل</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">${totalCost.toFixed(2)}</div>
+          <div class="stat-lbl">ر.ع إجمالي</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">${lastLog ? formatDateShort(lastLog.date) : '—'}</div>
+          <div class="stat-lbl">آخر صيانة</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="btn btn-secondary" style="flex:1;justify-content:center;padding:8px" onclick="event.stopPropagation();openEditCar('${car.id}')">✏️ تعديل بيانات السيارة</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+
+  // Quick log preview
+  if (state.selectedCar) {
+    const car = state.cars.find(c => c.id === state.selectedCar);
+    const carLogs = state.logs.filter(l => l.carId === state.selectedCar)
+      .sort((a,b) => b.date.localeCompare(a.date)).slice(0, 3);
+    document.getElementById('quickLog').style.display = 'block';
+    document.getElementById('selectedCarName').textContent = car ? car.name : '';
+    const list = document.getElementById('quickLogList');
+    if (carLogs.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="emoji">📋</div><p>لا توجد سجلات بعد — أضف أول سجل!</p></div>`;
+    } else {
+      list.innerHTML = carLogs.map(l => logEntryHTML(l, false)).join('');
+    }
+  } else {
+    document.getElementById('quickLog').style.display = 'none';
+  }
+}
+
+function selectCar(carId) {
+  state.selectedCar = state.selectedCar === carId ? null : carId;
+  save();
+  renderCarGrid();
+}
+
+function openAddCar() {
+  editingCarId = null;
+  document.getElementById('carModalTitle').textContent = 'إضافة سيارة';
+  ['carName','carMake','carModel','carYear','carColor','carPlate','carInsurance','carInspection'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('carEmoji').value = '🚗';
+  document.getElementById('carReminderDays').value = '30';
+  currentCarPhoto = null;
+  renderCarPhotoArea();
+  document.getElementById('modalCar').classList.remove('hidden');
+}
+
+function openEditCar(id) {
+  const car = state.cars.find(c => c.id === id);
+  if (!car) return;
+  editingCarId = id;
+  document.getElementById('carModalTitle').textContent = 'تعديل السيارة';
+  document.getElementById('carName').value = car.name || '';
+  document.getElementById('carMake').value = car.make || '';
+  document.getElementById('carModel').value = car.model || '';
+  document.getElementById('carYear').value = car.year || '';
+  document.getElementById('carColor').value = car.color || '';
+  document.getElementById('carPlate').value = car.plate || '';
+  document.getElementById('carEmoji').value = car.emoji || '🚗';
+  document.getElementById('carInsurance').value = car.insurance || '';
+  document.getElementById('carInspection').value = car.inspection || '';
+  document.getElementById('carReminderDays').value = (car.reminderDays != null ? car.reminderDays : 30);
+  currentCarPhoto = car.photo || null;
+  renderCarPhotoArea();
+  document.getElementById('modalCar').classList.remove('hidden');
+}
+
+function saveCar() {
+  const name = document.getElementById('carName').value.trim();
+  if (!name) { showToast('أدخل اسم السيارة', 'error'); return; }
+  const car = {
+    id: editingCarId || Date.now().toString(),
+    name,
+    make: document.getElementById('carMake').value.trim(),
+    model: document.getElementById('carModel').value.trim(),
+    year: document.getElementById('carYear').value.trim(),
+    color: document.getElementById('carColor').value.trim(),
+    plate: document.getElementById('carPlate').value.trim(),
+    emoji: document.getElementById('carEmoji').value.trim() || '🚗',
+    photo: currentCarPhoto || null,
+    insurance: document.getElementById('carInsurance').value || '',
+    inspection: document.getElementById('carInspection').value || '',
+    reminderDays: parseInt(document.getElementById('carReminderDays').value) || 0,
+    createdAt: editingCarId ? undefined : new Date().toISOString()
+  };
+  if (editingCarId) {
+    const idx = state.cars.findIndex(c => c.id === editingCarId);
+    if (idx !== -1) {
+      car.createdAt = state.cars[idx].createdAt;
+      // if photo was removed/replaced, delete the old one from IDB
+      const oldPhoto = state.cars[idx].photo;
+      if (oldPhoto && oldPhoto !== car.photo) { idbDelete(oldPhoto); delete imageCache[oldPhoto]; }
+      state.cars[idx] = car;
+    }
+  } else {
+    state.cars.push(car);
+  }
+  save(); closeModals(); renderAll();
+  showToast(editingCarId ? 'تم تعديل السيارة' : 'تمت إضافة السيارة');
+}
+
+function deleteCar(id) {
+  if (!confirm('هل أنت متأكد؟ سيتم حذف السيارة وجميع سجلاتها.')) return;
+  const car = state.cars.find(c => c.id === id);
+  if (car && car.photo) { idbDelete(car.photo); delete imageCache[car.photo]; }
+  // delete images belonging to this car's logs
+  state.logs.filter(l => l.carId === id).forEach(l => {
+    (l.images || []).forEach(imgId => { idbDelete(imgId); delete imageCache[imgId]; });
+  });
+  state.cars = state.cars.filter(c => c.id !== id);
+  state.logs = state.logs.filter(l => l.carId !== id);
+  if (state.selectedCar === id) state.selectedCar = null;
+  save(); renderAll(); updateStorageMeter();
+  showToast('تم حذف السيارة');
+}
+
+// ─── Logs ─────────────────────────────────────────────
+function openAddLog(carId) {
+  document.getElementById('logModalTitle').textContent = 'إضافة سجل صيانة';
+  document.getElementById('editLogId').value = '';
+  document.getElementById('opPicker').value = '';
+  document.getElementById('customOpInput').value = '';
+  currentOps = [];
+  renderOps();
+  document.getElementById('logType').value = 'routine';
+  const todayD = new Date().toISOString().split('T')[0];
+  document.getElementById('logDate').value = todayD;
+  document.getElementById('logDate').max = todayD;
+  document.getElementById('logKm').value = '';
+  document.getElementById('logCost').value = '';
+  document.getElementById('logWorkshop').value = '';
+  document.getElementById('logNotes').value = '';
+  currentImages = [];
+  removedImageIds = [];
+  renderImagePreview();
+  if (carId) document.getElementById('logCar').value = carId;
+  else if (state.selectedCar) document.getElementById('logCar').value = state.selectedCar;
+  document.getElementById('modalLog').classList.remove('hidden');
+}
+
+function openEditLog(id) {
+  const log = state.logs.find(l => l.id === id);
+  if (!log) return;
+  document.getElementById('logModalTitle').textContent = 'تعديل السجل';
+  document.getElementById('editLogId').value = id;
+  document.getElementById('logCar').value = log.carId;
+  document.getElementById('logType').value = log.type;
+  document.getElementById('opPicker').value = '';
+  document.getElementById('customOpInput').value = '';
+  // load operations: prefer stored array, fallback to splitting old title
+  currentOps = Array.isArray(log.operations) && log.operations.length
+    ? [...log.operations]
+    : (log.title ? log.title.split(' + ').map(s => s.trim()).filter(Boolean) : []);
+  renderOps();
+  document.getElementById('logDate').value = log.date;
+  document.getElementById('logKm').value = log.km || '';
+  document.getElementById('logCost').value = log.cost || '';
+  document.getElementById('logWorkshop').value = log.workshop || '';
+  document.getElementById('logNotes').value = log.notes || '';
+  currentImages = (log.images || []).map(id => ({ id, dataUrl: imageCache[id] || '' }));
+  removedImageIds = [];
+  renderImagePreview();
+  document.getElementById('modalLog').classList.remove('hidden');
+}
+
+// ─── Operations multi-select (chips) ─────────────────
+let currentOps = [];   // array of selected operation strings
+
+function renderOps() {
+  const c = document.getElementById('selectedOps');
+  if (!currentOps.length) {
+    c.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">لم تُختر أي عملية بعد</span>';
+    return;
+  }
+  c.innerHTML = currentOps.map((op, i) => `
+    <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-text);padding:5px 10px;border-radius:16px;font-size:13px;font-weight:600">
+      ${op}
+      <button onclick="removeOp(${i})" style="background:rgba(0,0,0,0.2);color:inherit;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;line-height:1;padding:0">×</button>
+    </span>
+  `).join('');
+}
+
+function addOp(op) {
+  op = (op || '').trim();
+  if (!op) return;
+  if (currentOps.includes(op)) { showToast('العملية مضافة بالفعل', 'error'); return; }
+  currentOps.push(op);
+  renderOps();
+}
+
+function addOpFromPicker() {
+  const sel = document.getElementById('opPicker');
+  if (sel.value) { addOp(sel.value); sel.value = ''; }
+}
+
+function addCustomOp() {
+  const input = document.getElementById('customOpInput');
+  addOp(input.value);
+  input.value = '';
+  input.focus();
+}
+
+function removeOp(i) { currentOps.splice(i, 1); renderOps(); }
+
+function saveLog() {
+  const carId = document.getElementById('logCar').value;
+  // pick up any custom text left unconfirmed in the input
+  const pending = document.getElementById('customOpInput').value.trim();
+  if (pending && !currentOps.includes(pending)) currentOps.push(pending);
+  const title = currentOps.join(' + ');
+  const date = document.getElementById('logDate').value;
+  if (!carId || !currentOps.length || !date) { showToast('اختر سيارة وعملية صيانة واحدة على الأقل', 'error'); return; }
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (date > todayStr) { showToast('لا يمكن اختيار تاريخ مستقبلي', 'error'); return; }
+
+  const editId = document.getElementById('editLogId').value;
+  const log = {
+    id: editId || Date.now().toString(),
+    carId,
+    type: document.getElementById('logType').value,
+    title,
+    operations: [...currentOps],
+    date,
+    km: document.getElementById('logKm').value,
+    cost: document.getElementById('logCost').value,
+    workshop: document.getElementById('logWorkshop').value.trim(),
+    notes: document.getElementById('logNotes').value.trim(),
+    images: currentImages.map(im => im.id),   // store ids only; blobs live in IndexedDB
+    createdAt: editId ? undefined : new Date().toISOString()
+  };
+
+  if (editId) {
+    const idx = state.logs.findIndex(l => l.id === editId);
+    if (idx !== -1) { log.createdAt = state.logs[idx].createdAt; state.logs[idx] = log; }
+  } else {
+    state.logs.push(log);
+  }
+  // Delete images the user removed in the modal
+  const keptIds = new Set(currentImages.map(im => im.id));
+  removedImageIds.forEach(rid => {
+    if (!keptIds.has(rid)) { idbDelete(rid); delete imageCache[rid]; }
+  });
+  removedImageIds = [];
+  save(); closeModals(); renderAll(); updateStorageMeter();
+  showToast(editId ? 'تم تعديل السجل' : 'تمت إضافة السجل');
+}
+
+function deleteLog(id) {
+  if (!confirm('حذف هذا السجل؟')) return;
+  const log = state.logs.find(l => l.id === id);
+  if (log && log.images) log.images.forEach(imgId => { idbDelete(imgId); delete imageCache[imgId]; });
+  state.logs = state.logs.filter(l => l.id !== id);
+  save(); renderAll(); updateStorageMeter();
+  showToast('تم حذف السجل');
+}
+
+function renderLogs() {
+  const filterCar = document.getElementById('filterCar').value;
+  const filterType = document.getElementById('filterType').value;
+  const filterSort = document.getElementById('filterSort').value;
+  const searchEl = document.getElementById('searchBox');
+  const query = (searchEl ? searchEl.value : '').trim().toLowerCase();
+  const clearBtn = document.getElementById('searchClear');
+  if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+
+  let logs = [...state.logs];
+  if (filterCar) logs = logs.filter(l => l.carId === filterCar);
+  if (filterType) logs = logs.filter(l => l.type === filterType);
+
+  if (query) {
+    const norm = s => (s || '').toString().toLowerCase();
+    logs = logs.filter(l => {
+      const car = state.cars.find(c => c.id === l.carId);
+      const ops = Array.isArray(l.operations) ? l.operations.join(' ') : '';
+      const hay = [l.title, ops, l.workshop, l.notes, l.date, car && car.name, car && car.plate]
+        .map(norm).join(' ');
+      return hay.includes(query);
+    });
+  }
+
+  logs.sort((a, b) => {
+    if (filterSort === 'date-asc') return a.date.localeCompare(b.date);
+    if (filterSort === 'cost-desc') return (parseFloat(b.cost)||0) - (parseFloat(a.cost)||0);
+    return b.date.localeCompare(a.date);
+  });
+
+  const container = document.getElementById('logsList');
+  if (logs.length === 0) {
+    const msg = query ? `لا توجد نتائج لـ "${searchEl.value.trim()}"` : 'لا توجد سجلات — أضف أول سجل من الزر أعلاه';
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p>${msg}</p></div>`;
+    return;
+  }
+  container.innerHTML = logs.map(l => logEntryHTML(l, true, query)).join('');
+}
+
+function clearSearch() {
+  const s = document.getElementById('searchBox');
+  if (s) { s.value = ''; renderLogs(); s.focus(); }
+}
+
+// highlight matched substring (safe: escapes HTML first)
+function highlight(text, query) {
+  const t = (text == null ? '' : String(text));
+  if (!query) return escapeHtml(t);
+  const esc = escapeHtml(t);
+  const idx = t.toLowerCase().indexOf(query);
+  if (idx < 0) return esc;
+  // re-find on escaped string is unsafe; do simple case-insensitive wrap on raw then escape parts
+  const before = escapeHtml(t.slice(0, idx));
+  const match = escapeHtml(t.slice(idx, idx + query.length));
+  const after = highlight(t.slice(idx + query.length), query);
+  return before + '<mark style="background:var(--accent);color:var(--accent-text);border-radius:3px;padding:0 2px">' + match + '</mark>' + after;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function logEntryHTML(log, showCar, query) {
+  const car = state.cars.find(c => c.id === log.carId);
+  const badgeClass = { routine:'badge-routine', repair:'badge-repair', inspection:'badge-inspection', accident:'badge-accident', other:'badge-other' }[log.type] || 'badge-other';
+  const typeName = { routine:'صيانة دورية', repair:'تصليح', inspection:'فحص', accident:'حادث', other:'أخرى' }[log.type] || log.type;
+  const ops = Array.isArray(log.operations) && log.operations.length
+    ? log.operations
+    : (log.title ? log.title.split(' + ').map(s => s.trim()).filter(Boolean) : []);
+  const titleHtml = ops.length > 1
+    ? ops.map(o => '• ' + highlight(o, query)).join('<br>')
+    : highlight(log.title || (ops[0] || ''), query);
+  return `
+    <div class="log-entry">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <span class="log-type-badge ${badgeClass}">${typeName}</span>
+          ${showCar && car ? `<span style="font-size:11px;color:var(--text-muted)">${car.emoji||'🚗'} ${car.name}</span>` : ''}
+        </div>
+        <div class="log-title">${titleHtml}</div>
+        <div class="log-meta">
+          <span>📅 ${formatDate(log.date)}</span>
+          ${log.km ? `<span>🛣️ ${Number(log.km).toLocaleString()} كم</span>` : ''}
+          ${log.workshop ? `<span>🔧 ${highlight(log.workshop, query)}</span>` : ''}
+        </div>
+        ${log.notes ? `<div class="log-notes">${highlight(log.notes, query)}</div>` : ''}
+        ${log.images && log.images.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${log.images.map((imgId,ii) => imageCache[imgId] ? `<img src="${imageCache[imgId]}" data-log="${log.id}" data-idx="${ii}" onclick="event.stopPropagation();viewLogImage(this)" style="width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer">` : '').join('')}</div>` : ''}
+        <div class="log-actions">
+          <button class="icon-btn" onclick="openEditLog('${log.id}')">✏️ تعديل</button>
+          <button class="icon-btn delete" onclick="deleteLog('${log.id}')">🗑️ حذف</button>
+        </div>
+      </div>
+      ${log.cost ? `<div class="log-cost">${parseFloat(log.cost).toFixed(3)}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted)">ر.ع</span></div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Stats ────────────────────────────────────────────
+function renderStats() {
+  const totalLogs = state.logs.length;
+  const totalCost = state.logs.reduce((s, l) => s + (parseFloat(l.cost)||0), 0);
+  const totalCars = state.cars.length;
+  const thisYear = new Date().getFullYear().toString();
+  const yearCost = state.logs.filter(l => l.date.startsWith(thisYear)).reduce((s,l) => s+(parseFloat(l.cost)||0), 0);
+
+  document.getElementById('globalStats').innerHTML = `
+    <div class="stat-card"><div class="val">${totalCars}</div><div class="lbl">سيارات</div></div>
+    <div class="stat-card"><div class="val">${totalLogs}</div><div class="lbl">سجل إجمالي</div></div>
+    <div class="stat-card"><div class="val">${totalCost.toFixed(2)}</div><div class="lbl">ر.ع إجمالي</div></div>
+    <div class="stat-card"><div class="val">${yearCost.toFixed(2)}</div><div class="lbl">ر.ع هذا العام</div></div>
+  `;
+
+  const perCar = document.getElementById('perCarStats');
+  perCar.innerHTML = '';
+  state.cars.forEach(car => {
+    const logs = state.logs.filter(l => l.carId === car.id);
+    const cost = logs.reduce((s,l) => s+(parseFloat(l.cost)||0), 0);
+    const byType = {};
+    logs.forEach(l => { byType[l.type] = (byType[l.type]||0) + 1; });
+    const typeNames = { routine:'صيانة دورية', repair:'تصليح', inspection:'فحص', accident:'حادث', other:'أخرى' };
+    const topLog = logs.sort((a,b)=>b.date.localeCompare(a.date))[0];
+    perCar.innerHTML += `
+      <div class="section-title">${car.emoji||'🚗'} ${car.name}</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="val">${logs.length}</div><div class="lbl">سجل</div></div>
+        <div class="stat-card"><div class="val">${cost.toFixed(2)}</div><div class="lbl">ر.ع إجمالي</div></div>
+        ${topLog ? `<div class="stat-card"><div class="val">${formatDateShort(topLog.date)}</div><div class="lbl">آخر صيانة</div></div>` : ''}
+        ${topLog && topLog.km ? `<div class="stat-card"><div class="val">${Number(topLog.km).toLocaleString()}</div><div class="lbl">آخر عداد (كم)</div></div>` : ''}
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        ${Object.entries(byType).map(([t,n]) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px">${typeNames[t]||t}</span>
+            <span style="font-weight:700;color:var(--accent)">${n}</span>
+          </div>
+        `).join('') || '<p style="color:var(--text-muted);font-size:13px">لا توجد سجلات بعد</p>'}
+      </div>
+    `;
+  });
+  if (state.cars.length === 0) {
+    perCar.innerHTML = `<div class="empty-state"><div class="emoji">🚗</div><p>أضف سيارة أولاً</p></div>`;
+  }
+}
+
+// ─── Settings ─────────────────────────────────────────
+function renderSettings() {
+  const container = document.getElementById('carManage');
+  if (state.cars.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🚗</div><p>لا توجد سيارات مضافة</p></div>`;
+    return;
+  }
+  container.innerHTML = state.cars.map(car => {
+    const logs = state.logs.filter(l => l.carId === car.id).length;
+    return `
+      <div class="card" style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:28px">${car.emoji||'🚗'}</div>
+        <div style="flex:1">
+          <div style="font-weight:700">${car.name}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${[car.make,car.model,car.year].filter(Boolean).join(' ')} • ${logs} سجل</div>
+        </div>
+        <button class="icon-btn" onclick="openEditCar('${car.id}')">✏️</button>
+        <button class="icon-btn delete" onclick="deleteCar('${car.id}')">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── Car selects ──────────────────────────────────────
+function updateCarSelects() {
+  const filterCar = document.getElementById('filterCar');
+  const prev = filterCar.value;
+  filterCar.innerHTML = '<option value="">كل السيارات</option>';
+  state.cars.forEach(c => {
+    filterCar.innerHTML += `<option value="${c.id}">${c.emoji||'🚗'} ${c.name}</option>`;
+  });
+  if (prev) filterCar.value = prev;
+
+  const logCar = document.getElementById('logCar');
+  const prev2 = logCar.value;
+  logCar.innerHTML = state.cars.map(c => `<option value="${c.id}">${c.emoji||'🚗'} ${c.name}</option>`).join('');
+  if (prev2) logCar.value = prev2;
+}
+
+// ─── Modals ───────────────────────────────────────────
+function closeModals() {
+  document.getElementById('modalCar').classList.add('hidden');
+  document.getElementById('modalLog').classList.add('hidden');
+  document.getElementById('modalShare').classList.add('hidden');
+  document.getElementById('modalCalc').classList.add('hidden');
+  document.getElementById('modalImgView').classList.add('hidden');
+  document.getElementById('modalIOS').classList.add('hidden');
+  document.getElementById('modalAndroid').classList.add('hidden');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModals(); });
+});
+
+// ─── Backup ───────────────────────────────────────────
+async function exportData() {
+  // Bundle images from IndexedDB so the backup is complete and portable
+  const images = {};
+  try {
+    const keys = await idbKeys();
+    for (const k of keys) { const v = await idbGet(k); if (v) images[k] = v; }
+  } catch(e) {}
+  const payload = { version: 3, cars: state.cars, logs: state.logs, selectedCar: state.selectedCar, images };
+  const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `car_maintenance_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  showToast('تم التصدير (يشمل الصور)');
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.cars || !data.logs) throw new Error();
+      state = { cars: data.cars, logs: data.logs, selectedCar: data.selectedCar || null };
+      // Restore images into IndexedDB
+      if (data.images && typeof data.images === 'object') {
+        try {
+          await idbClear();
+          imageCache = {};
+          for (const [k, v] of Object.entries(data.images)) {
+            await idbPut(k, v); imageCache[k] = v;
+          }
+        } catch(err) {
+          showToast('تم استيراد البيانات لكن تعذّر استيراد بعض الصور', 'error');
+        }
+      }
+      if (!save()) return;
+      renderAll(); updateStorageMeter();
+      showToast('تم الاستيراد بنجاح');
+    } catch { showToast('ملف غير صالح', 'error'); }
+  };
+  r.readAsText(file);
+  input.value = '';
+}
+
+function confirmClearAll() {
+  if (confirm('هل أنت متأكد تماماً؟ سيتم حذف كل السيارات والسجلات والصور نهائياً.')) {
+    if (confirm('تأكيد أخير — هذه العملية لا يمكن التراجع عنها!')) {
+      state = { cars: [], logs: [], selectedCar: null };
+      idbClear(); imageCache = {};
+      save(); renderAll(); updateStorageMeter();
+      showToast('تم حذف كل البيانات');
+    }
+  }
+}
+
+// ─── Images (with compression) ────────────────────────
+function handleImages(input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    compressImage(file, 1024, 0.6).then(async dataUrl => {
+      const id = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      const size = dataUrlBytes(dataUrl);
+      try {
+        await idbPut(id, dataUrl);
+        imageCache[id] = dataUrl;
+        currentImages.push({ id, dataUrl, size });
+        renderImagePreview();
+        updateStorageMeter();
+      } catch (e) {
+        if (e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''))) {
+          alert('⚠️ مساحة تخزين الصور ممتلئة!\n\nلم تُحفظ الصورة. صدّر نسخة احتياطية واحذف صوراً قديمة من سجلات سابقة.');
+          updateStorageMeter();
+        } else {
+          showToast('تعذّر حفظ الصورة', 'error');
+        }
+      }
+    });
+  });
+  input.value = '';
+}
+
+function compressImage(file, maxDim, quality) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxDim) { height = height * maxDim / width; width = maxDim; }
+        else if (height > maxDim) { width = width * maxDim / height; height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── Car photo ────────────────────────────────────────
+function handleCarPhoto(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file || !file.type.startsWith('image/')) return;
+  compressImage(file, 1280, 0.65).then(async dataUrl => {
+    const id = 'car_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    try {
+      await idbPut(id, dataUrl);
+      imageCache[id] = dataUrl;
+      currentCarPhoto = id;
+      renderCarPhotoArea();
+      updateStorageMeter();
+    } catch (e) {
+      if (e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''))) {
+        alert('⚠️ مساحة التخزين ممتلئة! لم تُحفظ الصورة.');
+      } else { showToast('تعذّر حفظ الصورة', 'error'); }
+    }
+  });
+}
+
+function renderCarPhotoArea() {
+  const area = document.getElementById('carPhotoArea');
+  if (currentCarPhoto && imageCache[currentCarPhoto]) {
+    area.innerHTML = `
+      <div style="position:relative;width:100%;border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+        <img src="${imageCache[currentCarPhoto]}" style="width:100%;max-height:160px;object-fit:cover;display:block">
+        <button type="button" onclick="removeCarPhoto()" style="position:absolute;top:8px;left:8px;background:var(--red);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;line-height:1">×</button>
+        <button type="button" onclick="document.getElementById('carPhotoInput').click()" style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer">تغيير الصورة</button>
+      </div>`;
+  } else {
+    area.innerHTML = `<button type="button" class="btn btn-secondary" onclick="document.getElementById('carPhotoInput').click()" style="width:100%">📷 إضافة صورة السيارة</button>`;
+  }
+}
+
+function removeCarPhoto() {
+  // mark for deletion only on save if it was the persisted one; here just drop the reference
+  currentCarPhoto = null;
+  renderCarPhotoArea();
+}
+
+// Approximate decoded byte size of a base64 data URL
+function dataUrlBytes(dataUrl) {
+  const i = dataUrl.indexOf(',');
+  const b64 = i >= 0 ? dataUrl.slice(i + 1) : dataUrl;
+  const padding = (b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0);
+  return Math.max(0, Math.floor(b64.length * 3 / 4) - padding);
+}
+
+function formatBytes(b) {
+  if (b == null) return '';
+  if (b < 1024) return b + ' بايت';
+  if (b < 1048576) return (b / 1024).toFixed(0) + ' ك.ب';
+  return (b / 1048576).toFixed(1) + ' م.ب';
+}
+
+function renderImagePreview() {
+  const c = document.getElementById('imagePreview');
+  c.innerHTML = currentImages.map((im, i) => {
+    const sz = im.size != null ? im.size : dataUrlBytes(im.dataUrl || '');
+    return `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="position:relative;width:70px;height:70px">
+        <img src="${im.dataUrl}" onclick="viewImageData('${im.id}')" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer">
+        <button onclick="removeImage(${i})" style="position:absolute;top:-6px;left:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <span style="font-size:10px;color:var(--text-muted)">${formatBytes(sz)}</span>
+    </div>`;
+  }).join('');
+}
+
+// Remove an image from the modal. Track removed ids so we can clean IndexedDB on save.
+let removedImageIds = [];
+function removeImage(i) {
+  const im = currentImages[i];
+  if (im) removedImageIds.push(im.id);
+  currentImages.splice(i, 1);
+  renderImagePreview();
+}
+
+function viewImageData(id) {
+  const url = imageCache[id] || (currentImages.find(im => im.id === id) || {}).dataUrl;
+  if (!url) return;
+  document.getElementById('imgViewFull').src = url;
+  document.getElementById('modalImgView').classList.remove('hidden');
+}
+
+function viewLogImage(el) {
+  const log = state.logs.find(l => l.id === el.getAttribute('data-log'));
+  if (!log) return;
+  const imgId = log.images[parseInt(el.getAttribute('data-idx'))];
+  const url = imageCache[imgId];
+  if (!url) return;
+  document.getElementById('imgViewFull').src = url;
+  document.getElementById('modalImgView').classList.remove('hidden');
+}
+
+// ─── Calculator ───────────────────────────────────────
+function openCalc() {
+  calcItems = [];
+  const cur = parseFloat(document.getElementById('logCost').value);
+  if (cur) calcItems.push(cur);
+  renderCalc();
+  document.getElementById('modalCalc').classList.remove('hidden');
+  setTimeout(() => document.getElementById('calcInput').focus(), 100);
+}
+function addCalcItem() {
+  const v = parseFloat(document.getElementById('calcInput').value);
+  if (!isNaN(v)) { calcItems.push(v); document.getElementById('calcInput').value = ''; renderCalc(); document.getElementById('calcInput').focus(); }
+}
+function renderCalc() {
+  const c = document.getElementById('calcItems');
+  c.innerHTML = calcItems.map((v, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+      <button onclick="removeCalcItem(${i})" class="icon-btn delete" style="padding:2px 8px">×</button>
+      <span style="font-weight:600">${v.toFixed(3)} ر.ع</span>
+    </div>
+  `).join('') || '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">لا توجد مبالغ بعد</p>';
+  const total = calcItems.reduce((s, v) => s + v, 0);
+  document.getElementById('calcTotal').textContent = total.toFixed(3);
+}
+function removeCalcItem(i) { calcItems.splice(i, 1); renderCalc(); }
+function clearCalc() { calcItems = []; renderCalc(); }
+function applyCalc() {
+  const total = calcItems.reduce((s, v) => s + v, 0);
+  document.getElementById('logCost').value = total.toFixed(3);
+  closeCalc();
+}
+function closeCalc() { document.getElementById('modalCalc').classList.add('hidden'); }
+
+// ─── Share / Export ───────────────────────────────────
+function openShare() {
+  const sel = document.getElementById('shareCar');
+  sel.innerHTML = '<option value="">كل السيارات</option>' +
+    state.cars.map(c => `<option value="${c.id}">${c.emoji||'🚗'} ${c.name}</option>`).join('');
+  document.getElementById('modalShare').classList.remove('hidden');
+}
+
+function getShareData() {
+  const carId = document.getElementById('shareCar').value;
+  const cars = carId ? state.cars.filter(c => c.id === carId) : state.cars;
+  return cars.map(car => ({
+    car,
+    logs: state.logs.filter(l => l.carId === car.id).sort((a,b) => b.date.localeCompare(a.date))
+  }));
+}
+
+const TYPE_NAMES = { routine:'صيانة دورية', repair:'تصليح', inspection:'فحص', accident:'حادث', other:'أخرى' };
+
+function exportFormat(fmt) {
+  const data = getShareData();
+  if (data.length === 0) { showToast('لا توجد بيانات', 'error'); return; }
+  const dateStr = new Date().toISOString().split('T')[0];
+  if (fmt === 'html') downloadFile(buildHtml(data, false), `سجل_الصيانة_${dateStr}.html`, 'text/html');
+  else if (fmt === 'pdf') openPdf(data);
+  showToast('جارٍ التجهيز...');
+}
+
+function buildHtml(data, forPdf) {
+  const esc = s => escapeHtml(s == null ? '' : String(s));
+  let blocks = '';
+  data.forEach(({car, logs}) => {
+    const total = logs.reduce((s,l) => s+(parseFloat(l.cost)||0), 0);
+    const renew = [];
+    if (car.insurance) renew.push(`التأمين: ${formatDate(car.insurance)}`);
+    if (car.inspection) renew.push(`الفحص: ${formatDate(car.inspection)}`);
+
+    const rows = logs.map(l => {
+      const ops = Array.isArray(l.operations) && l.operations.length ? l.operations
+        : (l.title ? l.title.split(' + ').map(s=>s.trim()).filter(Boolean) : []);
+      const desc = ops.length > 1
+        ? '<ul class="ops">' + ops.map(o => `<li>${esc(o)}</li>`).join('') + '</ul>'
+        : esc(ops[0] || l.title || '');
+      return `<tr>
+        <td data-label="النوع"><span class="badge badge-${l.type}">${TYPE_NAMES[l.type]}</span></td>
+        <td class="desc" data-label="الوصف">${desc}</td>
+        <td class="nowrap" data-label="التاريخ">${formatDate(l.date)}</td>
+        <td class="nowrap" data-label="العداد">${l.km?Number(l.km).toLocaleString()+' كم':'—'}</td>
+        <td class="cost" data-label="التكلفة">${l.cost?parseFloat(l.cost).toFixed(3)+' ر.ع':'—'}</td>
+        <td data-label="الورشة">${esc(l.workshop)||'—'}</td>
+        <td data-label="ملاحظات">${esc(l.notes)||'—'}</td>
+      </tr>`;
+    }).join('');
+
+    blocks += `<div class="car-block">
+      <h2>${car.emoji||'🚗'} ${esc(car.name)}</h2>
+      <p class="meta">${esc([car.make,car.model,car.year].filter(Boolean).join(' • '))}${car.plate?' — اللوحة: '+esc(car.plate):''}</p>
+      ${renew.length ? `<p class="renew">${renew.join(' &nbsp;•&nbsp; ')}</p>` : ''}
+      <p class="summary">عدد السجلات: <b>${logs.length}</b> &nbsp;|&nbsp; الإجمالي: <b>${total.toFixed(3)} ر.ع</b></p>
+      ${logs.length ? `<table>
+        <thead><tr><th>النوع</th><th>الوصف</th><th>التاريخ</th><th>العداد</th><th>التكلفة</th><th>الورشة</th><th>ملاحظات</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>` : '<p class="empty">لا توجد سجلات لهذه السيارة.</p>'}
+    </div>`;
+  });
+
+  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>سجل صيانة السيارات</title>
+<style>
+  *{box-sizing:border-box;}
+  body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f1f4f9;color:#1a2230;margin:0;padding:20px;}
+  .wrap{max-width:900px;margin:0 auto;background:#fff;border-radius:14px;padding:26px;box-shadow:0 2px 16px rgba(0,0,0,.08);}
+  h1{margin:0 0 4px;font-size:23px;}
+  .exp{color:#8a94a6;font-size:12px;margin-bottom:24px;}
+  .car-block{margin-bottom:30px;}
+  h2{font-size:19px;border-bottom:2px solid #d68910;padding-bottom:6px;margin:0 0 8px;}
+  .meta{color:#50607a;font-size:13px;margin:4px 0;}
+  .renew{color:#b45309;font-size:12px;margin:6px 0;background:#fff7ed;display:inline-block;padding:3px 10px;border-radius:6px;}
+  .summary{font-size:13px;margin:8px 0 14px;color:#3a4657;}
+  .summary b{color:#d68910;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{background:#f7f9fc;text-align:right;padding:9px 8px;border:1px solid #dde3ec;font-weight:700;white-space:nowrap;}
+  td{padding:9px 8px;border:1px solid #dde3ec;vertical-align:top;}
+  td.desc{font-weight:600;min-width:130px;}
+  td.nowrap{white-space:nowrap;}
+  td.cost{font-weight:700;color:#d68910;white-space:nowrap;}
+  ul.ops{list-style:none;padding:0;margin:0;}
+  ul.ops li{padding-right:14px;position:relative;margin-bottom:2px;}
+  ul.ops li::before{content:'•';position:absolute;right:0;color:#d68910;font-weight:800;}
+  .empty{color:#8a94a6;font-size:13px;padding:10px 0;}
+  .badge{padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap;}
+  .badge-routine{background:#dcfce7;color:#16a34a;}
+  .badge-repair{background:#fee2e2;color:#dc2626;}
+  .badge-inspection{background:#dbeafe;color:#2563eb;}
+  .badge-accident{background:#ffedd5;color:#ea580c;}
+  .badge-other{background:#e8edf3;color:#64748b;}
+  .foot{text-align:center;color:#b0b8c4;font-size:11px;margin-top:20px;}
+
+  /* Responsive: stack table into cards on narrow screens */
+  @media screen and (max-width:640px){
+    body{padding:10px;}
+    .wrap{padding:16px;border-radius:12px;}
+    table,thead,tbody,tr,th,td{display:block;}
+    thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+    table{border:none;}
+    tr{border:1px solid #dde3ec;border-radius:10px;margin-bottom:12px;padding:6px 12px;background:#fff;}
+    td{border:none;border-bottom:1px solid #f0f3f7;padding:8px 0;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;text-align:left;}
+    td:last-child{border-bottom:none;}
+    td::before{content:attr(data-label);font-weight:700;color:#5a6678;font-size:12px;flex-shrink:0;}
+    td.desc{font-weight:600;}
+    td.desc ul.ops{text-align:right;}
+    td.cost{color:#d68910;font-weight:800;}
+    /* hide empty rows-cells that are just dashes to reduce clutter */
+  }
+
+  @media print{
+    body{background:#fff;padding:0;}
+    .wrap{box-shadow:none;border-radius:0;max-width:100%;padding:0;}
+    .car-block{break-inside:avoid;}
+    tr{break-inside:avoid;}
+  }
+</style></head><body><div class="wrap">
+<h1>🔧 سجل صيانة السيارات</h1>
+<p class="exp">تاريخ التقرير: ${formatDate(new Date().toISOString().split('T')[0])}</p>
+${blocks}
+<p class="foot">تم إنشاؤه بواسطة تطبيق سجل الصيانة</p>
+</div>${forPdf?'<script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script>':''}</body></html>`;
+}
+
+function openPdf(data) {
+  const html = buildHtml(data, true);
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
+  else showToast('اسمح بالنوافذ المنبثقة للطباعة', 'error');
+}
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], {type: type + ';charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ─── Helpers ──────────────────────────────────────────
+function formatDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+}
+
+function formatDateShort(d) {
+  if (!d) return '—';
+  const [y,m] = d.split('-');
+  return `${m}/${y.slice(2)}`;
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? 'var(--red)' : 'var(--green)';
+  t.style.color = type === 'error' ? '#fff' : '#000';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── PWA: install support (manifest + service worker) ─
+// Note: the manifest is linked statically in <head> via <link rel="manifest" href="manifest.json">
+// so Chrome can evaluate installability immediately on load (required for the install prompt).
+let deferredInstallPrompt = null;
+
+function setupPWA() {
+  // Register the real service worker file (only works over http/https, not file://)
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* sw optional */ });
+  }
+
+  // Capture the install prompt so the button can trigger it directly
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    showToast('تم تثبيت التطبيق');
+    const sec = document.getElementById('installSection');
+    if (sec) sec.style.display = 'none';
+  });
+
+  // If already installed (opened from home screen), hide the install prompt
+  if (isStandalone()) {
+    const sec = document.getElementById('installSection');
+    if (sec) sec.style.display = 'none';
+  }
+}
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
+function installApp() {
+  // Already installed / running standalone
+  if (isStandalone()) { showToast('التطبيق مثبّت بالفعل ✓'); return; }
+
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  // Android/desktop Chrome with a captured prompt → one-tap native install
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => { deferredInstallPrompt = null; });
+    return;
+  }
+
+  // iOS → show manual Safari instructions
+  if (isIOS) {
+    document.getElementById('modalIOS').classList.remove('hidden');
+    return;
+  }
+
+  // Android without a prompt (already dismissed, or Firefox, etc.) → manual steps
+  document.getElementById('modalAndroid').classList.remove('hidden');
+}
+
+// ─── Start ────────────────────────────────────────────
+setupPWA();
+init();
+</script>
+</body>
+</html>
