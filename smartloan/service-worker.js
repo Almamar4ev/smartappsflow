@@ -1,7 +1,7 @@
 /* Smart Loan Calculator — service worker
    Bump CACHE on every new version so old caches are cleared. */
-const CACHE = 'smartloan-v27';
-const CORE = ['./', './index.html', './manifest.json', './icon-only.png'];
+const CACHE = 'smartloan-v28';
+const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 // Install: pre-cache the core files
 self.addEventListener('install', (e) => {

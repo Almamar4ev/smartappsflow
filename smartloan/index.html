@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Smart Loan"/>
-<link rel="apple-touch-icon" href="icon-only.png"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
 
 <style>
 :root{--acc:#6366f1;--acc2:#8b5cf6;--acc3:#ec4899;--bg:#0a0f1e;--bg2:#1e293b;--bg3:#0f172a;--brd:#334155;--txt:#e2e8f0;--txt2:#c8d8e8;--txt3:#a0b4c8;--lbl:#f0b429;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(99,102,241,0.18)}
@@ -299,6 +299,14 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .set-section-hd .ic{width:18px;height:18px;flex-shrink:0}
 .theme-light .set-section{background:#fff}
 .currency-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cur-search-wrap{position:relative;margin-bottom:12px}
+.cur-search-ic{position:absolute;top:50%;transform:translateY(-50%);inset-inline-start:12px;width:16px;height:16px;color:var(--txt3);pointer-events:none}
+.cur-search-inp{width:100%;box-sizing:border-box;padding:11px 14px;padding-inline-start:36px;background:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;color:var(--txt);font-family:inherit;font-size:14px;outline:none}
+.cur-search-inp:focus{border-color:var(--acc)}
+.cur-noresult{text-align:center;color:var(--txt3);font-size:13px;padding:16px 0}
+.cur-none-ic{opacity:.5;font-weight:700}
+.cur-showall{width:100%;margin-top:10px;padding:11px;background:transparent;border:1.5px dashed var(--brd);border-radius:12px;color:var(--acc2);font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.cur-showall:active{background:var(--bg3)}
 .cur-btn{position:relative;border-radius:13px;padding:11px 6px 9px;border:1.5px solid var(--brd);background:var(--bg);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .18s}
 .theme-light .cur-btn{background:#f6f7fb}
 .cur-btn.active{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,transparent)}
@@ -695,7 +703,13 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2 0 0 0-2.5-1.5c-1.4 0-2.5.8-2.5 2s1.1 1.7 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2 0 0 1 9.5 16"/><path d="M12 6v1.5M12 16.5V18"/></svg>
         <span class="card-label" id="lbl-currency-set" style="margin:0">CURRENCY</span>
       </div>
+      <div class="cur-search-wrap">
+        <svg class="cur-search-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+        <input id="cur-search" class="cur-search-inp" type="text" oninput="renderCurrencyGrid()" autocomplete="off">
+      </div>
       <div class="currency-grid" id="currency-grid"></div>
+      <button id="cur-showall" class="cur-showall" onclick="toggleCurExpand()"></button>
+      <div id="cur-noresult" class="cur-noresult" style="display:none"></div>
     </div>
     <div class="set-section">
       <div class="set-section-hd">
@@ -739,6 +753,15 @@ const CURRENCIES=[
   {id:'NONE', symbol:'',    nameAr:'بدون عملة',     nameEn:'No currency',    nameEs:'Sin moneda',     flag:''},
   {id:'USD',  symbol:'$',   nameAr:'دولار أمريكي',  nameEn:'US Dollar',      nameEs:'Dólar USD',      flag:'🇺🇸'},
   {id:'EUR',  symbol:'€',   nameAr:'يورو',           nameEn:'Euro',           nameEs:'Euro',           flag:'🇪🇺'},
+  {id:'INR',  symbol:'₹',   nameAr:'روبية هندية',   nameEn:'Indian Rupee',   nameEs:'Rupia india',    flag:'🇮🇳'},
+  {id:'GBP',  symbol:'£',   nameAr:'جنيه إسترليني', nameEn:'British Pound',  nameEs:'Libra esterlina',flag:'🇬🇧'},
+  {id:'EGP',  symbol:'ج.م', nameAr:'جنيه مصري',     nameEn:'Egyptian Pound', nameEs:'Libra egipcia',  flag:'🇪🇬'},
+  {id:'PKR',  symbol:'₨',   nameAr:'روبية باكستانية',nameEn:'Pakistani Rupee',nameEs:'Rupia pakistaní',flag:'🇵🇰'},
+  {id:'TRY',  symbol:'₺',   nameAr:'ليرة تركية',    nameEn:'Turkish Lira',   nameEs:'Lira turca',     flag:'🇹🇷'},
+  {id:'CAD',  symbol:'C$',  nameAr:'دولار كندي',    nameEn:'Canadian Dollar',nameEs:'Dólar canadiense',flag:'🇨🇦'},
+  {id:'AUD',  symbol:'A$',  nameAr:'دولار أسترالي', nameEn:'Australian Dollar',nameEs:'Dólar australiano',flag:'🇦🇺'},
+  {id:'BDT',  symbol:'৳',   nameAr:'تاكا بنغلاديشية',nameEn:'Bangladeshi Taka',nameEs:'Taka',          flag:'🇧🇩'},
+  {id:'IDR',  symbol:'Rp',  nameAr:'روبية إندونيسية',nameEn:'Indonesian Rupiah',nameEs:'Rupia indonesia',flag:'🇮🇩'},
   {id:'SAR',  symbol:'ر.س', nameAr:'ريال سعودي',    nameEn:'Saudi Riyal',    nameEs:'Riyal saudí',    flag:'🇸🇦'},
   {id:'OMR',  symbol:'ر.ع', nameAr:'ريال عماني',    nameEn:'Omani Rial',     nameEs:'Rial omaní',     flag:'🇴🇲'},
   {id:'AED',  symbol:'د.إ', nameAr:'درهم إماراتي',  nameEn:'UAE Dirham',     nameEs:'Dírham EAU',     flag:'🇦🇪'},
@@ -756,9 +779,18 @@ const FLAGS={
   ae:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="7.3" y="0" fill="#157f3b"/><rect width="30" height="7.3" y="7.3" fill="#fff"/><rect width="30" height="7.4" y="14.6" fill="#111"/><rect width="8" height="22" fill="#db161b"/></svg>`,
   kw:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="7.3" y="0" fill="#157f3b"/><rect width="30" height="7.3" y="7.3" fill="#fff"/><rect width="30" height="7.4" y="14.6" fill="#db161b"/><path d="M0 0 L8 7.3 L8 14.6 L0 22 Z" fill="#111"/></svg>`,
   bh:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#db161b"/><path d="M0 0 H9 L13 2.7 L9 5.5 L13 8.2 L9 11 L13 13.7 L9 16.5 L13 19.2 L9 22 H0 Z" fill="#fff"/></svg>`,
-  qa:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#8a1538"/><path d="M0 0 H9 L13 2.7 L9 5.5 L13 8.2 L9 11 L13 13.7 L9 16.5 L13 19.2 L9 22 H0 Z" fill="#fff"/></svg>`
+  qa:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#8a1538"/><path d="M0 0 H9 L13 2.7 L9 5.5 L13 8.2 L9 11 L13 13.7 L9 16.5 L13 19.2 L9 22 H0 Z" fill="#fff"/></svg>`,
+  in:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="7.3" y="0" fill="#ff9933"/><rect width="30" height="7.3" y="7.3" fill="#fff"/><rect width="30" height="7.4" y="14.6" fill="#138808"/><circle cx="15" cy="11" r="2.4" fill="none" stroke="#0a3b96" stroke-width="0.7"/></svg>`,
+  gb:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#012169"/><path d="M0 0 L30 22 M30 0 L0 22" stroke="#fff" stroke-width="4"/><path d="M0 0 L30 22 M30 0 L0 22" stroke="#c8102e" stroke-width="2"/><path d="M15 0 V22 M0 11 H30" stroke="#fff" stroke-width="6"/><path d="M15 0 V22 M0 11 H30" stroke="#c8102e" stroke-width="3.5"/></svg>`,
+  eg:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="7.3" y="0" fill="#ce1126"/><rect width="30" height="7.3" y="7.3" fill="#fff"/><rect width="30" height="7.4" y="14.6" fill="#111"/><circle cx="15" cy="11" r="1.8" fill="#c09300"/></svg>`,
+  pk:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#01411c"/><rect width="8" height="22" fill="#fff"/><circle cx="19" cy="11" r="4" fill="#fff"/><circle cx="20.5" cy="11" r="3.3" fill="#01411c"/><path d="M22 8 l0.6 1.6 1.7 0.1-1.3 1.1 0.5 1.6-1.5-0.9-1.5 0.9 0.5-1.6-1.3-1.1 1.7-0.1z" fill="#fff"/></svg>`,
+  tr:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#e30a17"/><circle cx="12" cy="11" r="5" fill="#fff"/><circle cx="13.5" cy="11" r="4" fill="#e30a17"/><path d="M18 8 l0.7 1.9 2 0.1-1.5 1.3 0.5 1.9-1.7-1.1-1.7 1.1 0.5-1.9-1.5-1.3 2-0.1z" fill="#fff"/></svg>`,
+  ca:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#fff"/><rect width="7.5" height="22" fill="#d52b1e"/><rect width="7.5" height="22" x="22.5" fill="#d52b1e"/><path d="M15 6 l1 2.2 2.3-1.3-1 2.4 2 0.4-2 1.4 0.8 2.6-2.1-1.3-2.1 1.3 0.8-2.6-2-1.4 2-0.4-1-2.4 2.3 1.3z" fill="#d52b1e"/></svg>`,
+  au:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#00247d"/><rect width="14" height="10" fill="#012169"/><path d="M0 0 L14 10 M14 0 L0 10" stroke="#fff" stroke-width="2"/><path d="M7 0 V10 M0 5 H14" stroke="#fff" stroke-width="3"/><path d="M7 0 V10 M0 5 H14" stroke="#c8102e" stroke-width="1.6"/><path d="M7 14 l0.6 1.7 1.8 0-1.5 1.1 0.6 1.7-1.5-1.1-1.5 1.1 0.6-1.7-1.5-1.1 1.8 0z" fill="#fff"/><circle cx="23" cy="7" r="1.1" fill="#fff"/><circle cx="26" cy="12" r="1.1" fill="#fff"/></svg>`,
+  bd:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="22" fill="#006a4e"/><circle cx="13" cy="11" r="6" fill="#f42a41"/></svg>`,
+  id:`<svg class="ob-flag" viewBox="0 0 30 22"><rect width="30" height="11" y="0" fill="#ce1126"/><rect width="30" height="11" y="11" fill="#fff"/></svg>`
 };
-const CUR_FLAG={USD:'us',EUR:'eu',SAR:'sa',OMR:'om',AED:'ae',KWD:'kw',BHD:'bh',QAR:'qa'};
+const CUR_FLAG={USD:'us',EUR:'eu',SAR:'sa',OMR:'om',AED:'ae',KWD:'kw',BHD:'bh',QAR:'qa',INR:'in',GBP:'gb',EGP:'eg',PKR:'pk',TRY:'tr',CAD:'ca',AUD:'au',BDT:'bd',IDR:'id'};
 function flagSvg(key){return FLAGS[key]||'';}
 function getCurrencySymbol(){
   return CURRENCIES.find(c=>c.id===currency)?.symbol||'';
@@ -1028,7 +1060,7 @@ function showCurrencyPicker(){
     <div class="ob-list">
       ${CURRENCIES.map(c=>{
         const isNone=c.id==='NONE';
-        const flag=isNone?'<span class="ob-none">⊘</span>':flagSvg(CUR_FLAG[c.id]);
+        const flag=isNone?'<span class="ob-none">—</span>':flagSvg(CUR_FLAG[c.id]);
         const name=isNone?noneLbl:getCurrencyName(c);
         const sym=isNone?'':`<span class="ob-sym">${c.symbol}</span>`;
         return `<button class="ob-row" onclick="setCurrency('${c.id}')">
@@ -1041,18 +1073,62 @@ function setCurrency(id){
   persistState();
   rerenderAll();showScreen('home');renderHome();
 }
+let curExpanded=false;
+function toggleCurExpand(){curExpanded=!curExpanded;renderCurrencyGrid();}
 function renderCurrencyGrid(){
   const grid=document.getElementById('currency-grid');
   if(!grid) return;
+  const isAr=lang==='ar', isEs=lang==='es';
+  // localized search placeholder
+  const si=document.getElementById('cur-search');
+  if(si) si.placeholder=isAr?'ابحث عن عملة…':isEs?'Buscar moneda…':'Search currency…';
+  const q=(si?si.value:'').trim().toLowerCase();
   const check='<svg class="set-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
-  grid.innerHTML=CURRENCIES.map(c=>{
+  let list=CURRENCIES.filter(c=>{
+    if(!q) return true;
+    if(c.id==='NONE') return false; // hide "none" while searching
+    return c.id.toLowerCase().includes(q)
+      || (c.nameEn||'').toLowerCase().includes(q)
+      || (c.nameAr||'').includes(q)
+      || (c.nameEs||'').toLowerCase().includes(q)
+      || (c.symbol||'').toLowerCase().includes(q);
+  });
+  // Collapsed mode (no search): show top 8, always including the selected currency
+  const TOP=8;
+  let collapsed = !q && !curExpanded && CURRENCIES.length>TOP;
+  if(collapsed){
+    const top=CURRENCIES.slice(0,TOP);
+    if(currency && !top.some(c=>c.id===currency)){
+      const sel=CURRENCIES.find(c=>c.id===currency);
+      if(sel) top.splice(TOP-1,1,sel); // replace last slot with selected
+    }
+    list=top;
+  }
+  grid.innerHTML=list.map(c=>{
     const isNone=c.id==='NONE';
-    const flag=isNone?'<span class="cur-flag" style="opacity:.45">∅</span>':`<span class="cur-flag">${c.flag}</span>`;
-    const code=isNone?(lang==='ar'?'بدون':lang==='es'?'Sin':'None'):c.id;
+    const flag=isNone?'<span class="cur-flag cur-none-ic">—</span>':`<span class="cur-flag">${c.flag}</span>`;
+    const code=isNone?(isAr?'بدون':isEs?'Sin':'None'):c.id;
     const sym=isNone?'<span class="cur-sym">&nbsp;</span>':`<span class="cur-sym">${c.symbol}</span>`;
     return `<button class="cur-btn${currency===c.id?' active':''}" onclick="setCurrencyFromSettings('${c.id}')">
       ${check}${flag}<span class="cur-code">${code}</span>${sym}</button>`;
   }).join('');
+  // Show-all / show-less toggle (hidden while searching)
+  const tg=document.getElementById('cur-showall');
+  if(tg){
+    if(q){ tg.style.display='none'; }
+    else{
+      tg.style.display='block';
+      const more=CURRENCIES.length-TOP;
+      tg.textContent = curExpanded
+        ? (isAr?'عرض أقل':isEs?'Mostrar menos':'Show less')
+        : (isAr?`عرض كل العملات (${CURRENCIES.length-1})`:isEs?`Ver todas (${CURRENCIES.length-1})`:`Show all currencies (${CURRENCIES.length-1})`);
+    }
+  }
+  const nr=document.getElementById('cur-noresult');
+  if(nr){
+    if(list.length===0){ nr.style.display='block'; nr.textContent=isAr?'لا توجد عملة بهذا الاسم':isEs?'No se encontró':'No currency found'; }
+    else nr.style.display='none';
+  }
 }
 function renderLangRows(){
   const box=document.getElementById('lang-rows');
