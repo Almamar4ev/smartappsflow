@@ -56,6 +56,9 @@ jobs:
           }
           CFGEOF
 
+      - name: Move store assets aside (repo android/ folder conflicts with Capacitor)
+        run: mv android assets-src
+
       - name: Add Android platform
         run: npx cap add android
 
@@ -75,11 +78,11 @@ jobs:
       - name: Generate app icons and splash screens
         run: |
           mkdir -p assets
-          cp android/smartloan/icon-foreground.png assets/icon-foreground.png
-          cp android/smartloan/icon-background.png assets/icon-background.png
-          cp android/smartloan/icon-only.png assets/icon-only.png
-          cp android/smartloan/splash-source.png assets/splash.png
-          cp android/smartloan/splash-source.png assets/splash-dark.png
+          cp assets-src/smartloan/icon-foreground.png assets/icon-foreground.png
+          cp assets-src/smartloan/icon-background.png assets/icon-background.png
+          cp assets-src/smartloan/icon-only.png assets/icon-only.png
+          cp assets-src/smartloan/splash-source.png assets/splash.png
+          cp assets-src/smartloan/splash-source.png assets/splash-dark.png
           npx @capacitor/assets generate \
             --android \
             --iconBackgroundColor '#221B3E' \
