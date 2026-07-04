@@ -62,7 +62,7 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
-      - name: Set Android 12+ system splash background (dark, matches icon)
+      - name: Set Android 12+ system splash (dark bg + sharp dedicated icon)
         run: |
           mkdir -p android/app/src/main/res/values-v31
           cat > android/app/src/main/res/values-v31/styles.xml <<'XMLEOF'
@@ -70,10 +70,14 @@ jobs:
           <resources>
               <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
                   <item name="android:windowSplashScreenBackground">#221B3E</item>
+                  <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
               </style>
           </resources>
           XMLEOF
-          echo "Android 12+ splash background set"
+          mkdir -p android/app/src/main/res/drawable
+          convert assets-src/smartloan/icon-only.png -resize 540x540 -background none -gravity center -extent 1152x1152 android/app/src/main/res/drawable/splash_icon.png
+          identify android/app/src/main/res/drawable/splash_icon.png
+          echo "Android 12+ splash configured with dedicated hi-res icon"
 
       - name: Generate app icons and splash screens
         run: |
