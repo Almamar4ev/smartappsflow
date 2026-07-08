@@ -75,16 +75,9 @@ jobs:
           </resources>
           XMLEOF
           mkdir -p android/app/src/main/res/drawable
-          python3 -m pip install --quiet pillow
-          python3 <<'PYEOF'
-          from PIL import Image
-          src = Image.open('assets-src/smartloan/icon-only.png').convert('RGBA')
-          icon = src.resize((540, 540), Image.LANCZOS)
-          canvas = Image.new('RGBA', (1152, 1152), (0, 0, 0, 0))
-          canvas.paste(icon, ((1152-540)//2, (1152-540)//2), icon)
-          canvas.save('android/app/src/main/res/drawable/splash_icon.png')
-          print('splash_icon.png created:', canvas.size)
-          PYEOF
+          convert assets-src/smartloan/icon-only.png -resize 540x540 -background none -gravity center -extent 1152x1152 android/app/src/main/res/drawable/splash_icon.png
+          identify android/app/src/main/res/drawable/splash_icon.png
+          echo "Android 12+ splash configured with dedicated hi-res icon"
 
       - name: Generate app icons and splash screens
         run: |
@@ -106,8 +99,8 @@ jobs:
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode .*/versionCode 27/' android/app/build.gradle
-          sed -i 's/versionName .*/versionName "2.7"/' android/app/build.gradle
+          sed -i 's/versionCode .*/versionCode 28/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "2.8"/' android/app/build.gradle
 
       - name: Enable edge-to-edge for safe-area support
         run: |
