@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <base href="/compoundcalc/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="حاسبة الفائدة المركبة — أداة تقديرية لتخطيط الاستثمار طويل الأجل. Compound interest calculator for long-term investment planning.">
+  <meta name="theme-color" content="#0B5ED7">
+
+  <!-- iOS / Safari PWA -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="حاسبة الاستثمار">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <title>حاسبة الفائدة المركبة</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!--
+    Web analytics guard — tracks web/PWA visitors only, not Play Store app users.
+    Paste your analytics loader inside initWebAnalytics() when ready.
+  -->
+  <script>
+    (function () {
+      function shouldTrackWebUsage() {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('source') === 'play') return false;
+        if (document.referrer && document.referrer.indexOf('play.google.com') !== -1) {
+          return false;
+        }
+        return true;
+      }
+
+      window.initWebAnalytics = function () {
+        if (!shouldTrackWebUsage()) return;
+        // TODO: paste your web analytics script here (same pattern as your other apps)
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.initWebAnalytics);
+      } else {
+        window.initWebAnalytics();
+      }
+    })();
+  </script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
