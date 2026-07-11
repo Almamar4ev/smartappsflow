@@ -25,7 +25,7 @@ jobs:
       - name: Install Capacitor
         run: |
           npm install -g @capacitor/cli
-          npm install @capacitor/core @capacitor/android @capacitor/splash-screen@^6.0.0 @capacitor/filesystem@^6.0.0 @capacitor/share@^6.0.0
+          npm install @capacitor/core @capacitor/android @capacitor/splash-screen@^6.0.0 @capacitor/filesystem@^6.0.0 @capacitor/share@^6.0.0 @capacitor/status-bar@^6.0.0
           npm install -D @capacitor/assets
 
       - name: Prepare web folder
@@ -105,25 +105,18 @@ jobs:
           sed -i 's/versionCode .*/versionCode 30/' android/app/build.gradle
           sed -i 's/versionName .*/versionName "3.0"/' android/app/build.gradle
 
-      - name: Enable edge-to-edge for safe-area support
+      - name: Set plain MainActivity (system-insets handled by Android + StatusBar plugin)
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main/java -name "MainActivity.java")
           cat > "$MAIN_ACTIVITY" <<'JAVAEOF'
           package com.smartapps.smartloanadvisor;
 
-          import android.os.Bundle;
-          import androidx.core.view.WindowCompat;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
-              @Override
-              public void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-              }
           }
           JAVAEOF
-          echo "MainActivity.java updated for edge-to-edge"
+          echo "MainActivity.java set to default (no edge-to-edge; content sits below status/nav bars)"
 
       - name: Sync web app to Android
         run: npx cap sync android
