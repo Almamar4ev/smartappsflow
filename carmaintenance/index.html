@@ -1,0 +1,3635 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<title>سجل صيانة السيارات</title>
+<meta name="theme-color" content="#161920" id="themeColorMeta">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="سجل الصيانة">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="color-scheme" content="dark" id="colorSchemeMeta">
+<style>
+  :root, [data-theme="dark"] {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e222e;
+    --border: #2a2f3e;
+    --accent: #e8a020;
+    --accent-text: #000;
+    --accent2: #3b82f6;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f97316;
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --text-dim: #b6c2d1;
+    --modal-bg: rgba(0,0,0,0.7);
+    --input-bg: #1e222e;
+    color-scheme: dark;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  [data-theme="light"] {
+    --bg: #f1f4f9;
+    --surface: #ffffff;
+    --surface2: #f7f9fc;
+    --border: #dde3ec;
+    --accent: #d68910;
+    --accent-text: #fff;
+    --accent2: #2563eb;
+    --green: #16a34a;
+    --red: #dc2626;
+    --orange: #ea580c;
+    --text: #1a2230;
+    --text-muted: #5b6879;
+    --text-dim: #3d4a5c;
+    --modal-bg: rgba(20,30,50,0.45);
+    --input-bg: #ffffff;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    min-height: 100dvh;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); /* clearance for bottom nav */
+  }
+
+  /* ─── Header ─── */
+  .app-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    padding-top: calc(10px + env(safe-area-inset-top, 0px));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .app-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .app-title .icon {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .app-title h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .app-title span {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: block;
+  }
+
+  /* ─── Nav Tabs ─── */
+  /* ─── Bottom Navigation (native style) ─── */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    z-index: 150;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .update-dot {
+    position: absolute;
+    top: 6px;
+    inset-inline-end: 22%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 4px 7px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: color 0.15s, transform 0.12s;
+      position: relative;
+  }
+
+  .tab-btn .bicon {
+    width: 22px;
+    height: 22px;
+    display: block;
+    margin: 0 auto 3px;
+  }
+  .tab-btn { color: var(--text-muted); }
+  .tab-btn.active { color: var(--accent); }
+  .tab-btn:active { transform: scale(0.94); }
+
+  .tab-btn.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* ─── Floating Action Button (FAB) ─── */
+  .fab {
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.3);
+    cursor: pointer;
+    z-index: 140;
+    display: none;              /* shown only on home page via JS */
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s, box-shadow 0.15s, left 0.4s ease, right 0.4s ease;
+  }
+  [dir="rtl"] .fab { left: 20px; right: auto; }
+  [dir="ltr"] .fab { right: 20px; left: auto; }
+  .fab.show { display: flex; }
+  .fab:active { transform: scale(0.9); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  .fab-plus { font-size: 26px; font-weight: 400; line-height: 1; margin-top: -1px; }
+
+  /* ─── Pages ─── */
+  .page { display: none; padding: 16px 16px 24px; max-width: 900px; margin: 0 auto; animation: pageIn 0.18s ease; }
+  .page.active { display: block; }
+  @keyframes pageIn { from { opacity: 0.4; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ─── Cards ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* ─── Section Title ─── */
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ─── Car Cards ─── */
+  .car-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .car-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .car-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .car-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232,160,32,0.2); }
+
+  .car-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+
+  .car-card .car-icon { font-size: 32px; margin-bottom: 8px; }
+  .car-card .car-name { font-size: 16px; font-weight: 700; }
+  .car-card .car-meta { font-size: 13px; color: var(--text-dim); margin-top: 5px; }
+
+  .car-card .car-stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat-item { flex: 1; }
+  .stat-item .stat-val { font-size: 15px; font-weight: 700; color: var(--accent); }
+  .stat-item .stat-lbl { font-size: 12px; color: var(--text-dim); }
+
+  /* ─── Add Car ─── */
+  .add-car-btn {
+    background: transparent;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 48px;
+  }
+
+  .add-car-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ─── Forms ─── */
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 13px; color: var(--text-dim); margin-bottom: 6px; display: block; }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 70px; }
+
+  select option { background: var(--input-bg); }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ─── Buttons ─── */
+  .btn {
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary { background: var(--accent); color: var(--accent-text); }
+  .btn-primary:hover { background: #f5b340; }
+  .btn-secondary { background: var(--surface2); color: var(--text-dim); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--text-dim); }
+  .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .btn-danger:hover { background: rgba(239,68,68,0.25); }
+  .btn-blue { background: var(--accent2); color: #fff; }
+  .btn-blue:hover { background: #2563eb; }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* ─── Log entries ─── */
+  .log-entry {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+
+  .log-entry:hover { border-color: var(--text-muted); }
+
+  .log-type-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .badge-routine { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-repair { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-inspection { background: rgba(59,130,246,0.15); color: var(--accent2); }
+  .badge-accident { background: rgba(249,115,22,0.15); color: var(--orange); }
+  .badge-other { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+
+  .log-main { flex: 1; min-width: 0; }
+  .log-title { font-size: 14px; font-weight: 600; }
+  .log-meta { font-size: 12.5px; color: var(--text-dim); margin-top: 5px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .log-meta span { display: flex; align-items: center; gap: 4px; }
+  .log-notes { font-size: 12.5px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
+
+  .log-cost {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .log-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .icon-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-muted);
+  }
+
+  .icon-btn:hover { border-color: var(--text-dim); color: var(--text); }
+  .icon-btn.delete:hover { border-color: var(--red); color: var(--red); }
+
+  /* ─── Stats row ─── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-card .val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-card .lbl {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* ─── Filter bar ─── */
+  /* Native controls (dropdowns, date pickers) follow the app theme.
+     Explicit per-theme rules on the controls themselves (Android WebView
+     needs the resolved value directly on the element). */
+  [data-theme="dark"] select, [data-theme="dark"] input, [data-theme="dark"] textarea { color-scheme: dark; }
+  [data-theme="light"] select, [data-theme="light"] input, [data-theme="light"] textarea { color-scheme: light; }
+
+  /* ─── Logs: sticky search + merged filters ─── */
+  /* ─── Custom themed dropdown (replaces native <select> popups, which
+         Android draws itself using the SYSTEM theme and cannot be styled) ─── */
+  .cs-trigger {
+    width: 100%;
+    padding: 11px 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .cs-trigger:active { border-color: var(--accent); }
+  .cs-trigger .cs-val {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cs-trigger .cs-arrow {
+    font-size: 9px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+  }
+  .cs-trigger.cs-placeholder .cs-val { color: var(--text-muted); }
+
+  .cs-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--modal-bg);
+    z-index: 400;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: csFade .15s ease;
+  }
+  @keyframes csFade { from { opacity: 0 } to { opacity: 1 } }
+
+  .cs-sheet {
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border-top-left-radius: 18px;
+    border-top-right-radius: 18px;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    animation: csUp .22s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes csUp { from { transform: translateY(16px); opacity: .6 } to { transform: none; opacity: 1 } }
+
+  .cs-grip {
+    width: 38px; height: 4px;
+    background: var(--border);
+    border-radius: 3px;
+    margin: 10px auto 4px;
+    flex-shrink: 0;
+  }
+  .cs-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    padding: 6px 18px 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .cs-list { overflow-y: auto; padding: 6px 0 10px; }
+
+  .cs-group {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--accent);
+    padding: 12px 18px 5px;
+    letter-spacing: .3px;
+  }
+  .cs-opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    font-size: 14.5px;
+    color: var(--text);
+    cursor: pointer;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: start;
+    font-family: inherit;
+    line-height: 1.4;
+  }
+  .cs-opt:active { background: var(--surface2); }
+  .cs-opt .cs-check {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cs-opt.cs-sel { color: var(--accent); font-weight: 700; }
+  .cs-opt.cs-sel .cs-check { border-color: var(--accent); }
+  .cs-opt.cs-sel .cs-check::after {
+    content: '';
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .logs-sticky {
+    position: sticky;
+    top: var(--header-h, 64px);   /* sit BELOW the sticky header, not under it */
+    z-index: 90;
+    background: var(--bg);
+    padding-top: 8px;
+    padding-bottom: 10px;
+    margin-bottom: 6px;
+  }
+
+  .filter-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .filter-toggle:active { background: var(--surface); }
+  .filter-toggle.active-filters { border-color: var(--accent); }
+
+  .filter-badge {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    min-width: 20px;
+    text-align: center;
+  }
+
+  .filter-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-top: 8px;
+  }
+  .filter-panel.hidden { display: none; }
+  .fp-group { margin-bottom: 10px; }
+  .fp-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .fp-reset {
+    width: 100%;
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 8px 0 2px;
+    margin-top: 8px;
+  }
+
+  /* ─── Modal ─── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--modal-bg);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    width: 100%;
+    max-width: 540px;
+    max-height: 90dvh;
+    overflow-y: auto;
+  }
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ─── Empty state ─── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ─── Timeline ─── */
+  .timeline { position: relative; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+  [dir="rtl"] .timeline::before { right: 8px; left: auto; }
+  [dir="ltr"] .timeline::before { left: 8px; right: auto; }
+
+  /* ─── Toast ─── */
+  .toast {
+    position: fixed;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    transform: translateX(-50%) translateY(40px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    background: var(--green);
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 999;
+    transition: transform 0.3s, opacity 0.3s, visibility 0.3s;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
+
+  /* ─── Delete confirm ─── */
+  .delete-bar {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.3);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  [dir="rtl"] .search-clear-btn { left: 8px; right: auto; }
+  [dir="ltr"] .search-clear-btn { right: 8px; left: auto; }
+
+  /* ─── Language toggle ─── */
+  .lang-toggle {
+    display: flex;
+    gap: 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .lang-toggle button {
+    background: var(--surface2);
+    border: none;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .lang-toggle button.active {
+    background: var(--accent);
+    color: var(--accent-text);
+  }
+
+  .step-num {
+    background: var(--accent);
+    color: var(--accent-text);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 480px) {
+    .form-row { grid-template-columns: 1fr; }
+    .car-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ─── Scrollbar ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="app-header">
+  <div class="app-title">
+    <div class="icon">🔧</div>
+    <div>
+      <h1 data-i18n="header_title">سجل الصيانة</h1>
+      <span data-i18n="header_subtitle">تتبع كل صيانة وعطل لسياراتك</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" style="font-size:18px;padding:8px 10px" data-i18n-title="themeToggle">🌙</button>
+    <button class="btn btn-primary" onclick="openAddLog()" id="addLogBtn" style="display:none;white-space:nowrap;padding:10px 14px;font-size:13px;line-height:1.2;flex-shrink:0" data-i18n="btn_newLog">+ سجل جديد</button>
+  </div>
+</div>
+
+<!-- Bottom Navigation (native style) -->
+<nav class="bottom-nav">
+  <button class="tab-btn active" data-page="home" onclick="showPage('home')"><svg class="bicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg><span data-i18n="nav_home">الرئيسية</span></button>
+  <button class="tab-btn" data-page="logs" onclick="showPage('logs')" id="logsTab"><svg class="bicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8.5 8h7"/><path d="M8.5 12h7"/><path d="M8.5 16h4.5"/></svg><span data-i18n="nav_logs">السجلات</span></button>
+  <button class="tab-btn" data-page="stats" onclick="showPage('stats')"><svg class="bicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 20v-7"/><path d="M12 20V6"/><path d="M17 20v-10"/></svg><span data-i18n="nav_stats">الإحصائيات</span></button>
+  <button class="tab-btn" data-page="settings" onclick="showPage('settings')"><svg class="bicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .32 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-.97 1.47V21a2 2 0 1 1-4 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.32l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.6 1.6 0 0 0 4.6 15a1.6 1.6 0 0 0-1.47-.97H3a2 2 0 1 1 0-4h.09A1.6 1.6 0 0 0 4.56 9a1.6 1.6 0 0 0-.32-1.77l-.06-.06A2 2 0 1 1 7 4.34l.06.06a1.6 1.6 0 0 0 1.77.32H9a1.6 1.6 0 0 0 .97-1.47V3a2 2 0 1 1 4 0v.09c0 .64.38 1.21.97 1.47a1.6 1.6 0 0 0 1.77-.32l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.32 1.77v.06c.26.59.83.97 1.47.97H21a2 2 0 1 1 0 4h-.09c-.64 0-1.21.38-1.47.97Z"/></svg><span data-i18n="nav_settings">الإعدادات</span></button>
+</nav>
+
+<!-- PAGE: Home -->
+<div class="page active" id="page-home">
+  <div id="reminderBanner"></div>
+  <div class="section-title" data-i18n="home_myCars">سياراتي</div>
+  <div class="car-grid" id="carGrid"></div>
+  <button class="add-car-btn" onclick="openAddCar()" data-i18n="home_addCar">+ إضافة سيارة</button>
+
+  <div id="quickLog" style="display:none; margin-top:20px;">
+    <div class="section-title"><span data-i18n="home_recentLogs">آخر سجلات</span> — <span id="selectedCarName"></span></div>
+    <div id="quickLogList"></div>
+    <button class="btn btn-secondary" onclick="showPage('logs')" style="margin-top:8px" data-i18n="home_viewAll">عرض كل السجلات</button>
+  </div>
+</div>
+
+<!-- PAGE: Logs -->
+<div class="page" id="page-logs">
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn btn-blue" onclick="openShare()" style="flex:1;justify-content:center" data-i18n="logs_share">📤 مشاركة السجل</button>
+  </div>
+
+  <!-- Sticky zone: search + merged filters (stays visible while scrolling the list) -->
+  <div class="logs-sticky">
+    <div style="position:relative;margin-bottom:8px">
+      <input type="text" id="searchBox" data-i18n-placeholder="logs_searchPlaceholder" placeholder="🔍 ابحث في السجلات (عملية، ورشة، ملاحظة...)" oninput="renderLogs()" style="width:100%">
+      <button id="searchClear" onclick="clearSearch()" style="display:none;position:absolute;top:50%;transform:translateY(-50%);background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:24px;height:24px;cursor:pointer;color:var(--text-muted);font-size:13px" class="search-clear-btn">×</button>
+    </div>
+
+    <button class="filter-toggle" onclick="toggleFilterPanel()" id="filterToggleBtn">
+      <span><span style="margin-inline-end:6px">⚙️</span><span data-i18n="filters_title">الفلاتر والترتيب</span></span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span id="filterBadge" class="filter-badge" style="display:none">0</span>
+        <span id="filterChevron" style="font-size:11px;color:var(--text-dim)">▼</span>
+      </span>
+    </button>
+
+    <div class="filter-panel hidden" id="filterPanel">
+      <div class="fp-group">
+        <label class="fp-label" data-i18n="filters_car">السيارة</label>
+        <select id="filterCar" onchange="renderLogs()">
+          <option value="" data-i18n="filter_allCars">كل السيارات</option>
+        </select>
+      </div>
+      <div class="fp-group">
+        <label class="fp-label" data-i18n="filters_type">النوع</label>
+        <select id="filterType" onchange="renderLogs()">
+          <option value="" data-i18n="filter_allTypes">كل الأنواع</option>
+          <option value="routine" data-i18n="type_routine">صيانة دورية</option>
+          <option value="repair" data-i18n="type_repair">تصليح</option>
+          <option value="inspection" data-i18n="type_inspection">فحص</option>
+          <option value="accident" data-i18n="type_accident">حادث</option>
+          <option value="other" data-i18n="type_other">أخرى</option>
+        </select>
+      </div>
+      <div class="fp-group" style="margin-bottom:0">
+        <label class="fp-label" data-i18n="filters_sort">الترتيب</label>
+        <select id="filterSort" onchange="renderLogs()">
+          <option value="date-desc" data-i18n="sort_newest">الأحدث أولاً</option>
+          <option value="date-asc" data-i18n="sort_oldest">الأقدم أولاً</option>
+          <option value="cost-desc" data-i18n="sort_expensive">الأغلى أولاً</option>
+        </select>
+      </div>
+      <button class="fp-reset" onclick="resetFilters()" data-i18n="filters_reset">مسح الفلاتر</button>
+    </div>
+  </div>
+
+  <div id="logsList"></div>
+</div>
+
+<!-- PAGE: Stats -->
+<div class="page" id="page-stats">
+  <div class="section-title" data-i18n="stats_summary">ملخص كل السيارات</div>
+  <div class="stats-row" id="globalStats"></div>
+  <div id="perCarStats"></div>
+</div>
+
+<!-- PAGE: Settings -->
+<div class="page" id="page-settings">
+  
+    <!-- بند التحديث المعلّق (يظهر فقط عند توفّر نسخة جديدة) -->
+  <div id="settingsUpdateBox" style="display:none;margin-bottom:6px">
+    <div class="section-title" data-i18n="settings_updateTitle">التحديث</div>
+    <div class="card" style="border:1px solid var(--accent)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:15px">🎉</span>
+        <span style="font-size:14px;font-weight:800;color:var(--accent)" data-i18n="settings_updateReady">نسخة جديدة جاهزة</span>
+        <span id="settingsUpdateVersion" style="font-size:12px;color:var(--text-dim);font-weight:700"></span>
+      </div>
+      <p id="settingsUpdateDesc" style="font-size:12.5px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">—</p>
+      <button class="btn btn-primary" onclick="applyPendingUpdate()" style="width:100%;justify-content:center" data-i18n="update_now">تحديث الآن</button>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:20px" data-i18n="settings_language">اللغة</div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <span style="font-size:14px;font-weight:600" data-i18n="settings_appLanguage">لغة التطبيق</span>
+      <div class="lang-toggle" id="langToggle">
+        <button onclick="setLanguage('ar')" data-lang-btn="ar" class="active">العربية</button>
+        <button onclick="setLanguage('en')" data-lang-btn="en">English</button>
+      </div>
+    </div>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:10px;" data-i18n="settings_langNote">تغيير اللغة يطبّق فوراً على كامل واجهة التطبيق</p>
+  </div>
+
+  <div class="section-title" style="margin-top:20px" data-i18n="settings_registeredCars">السيارات المسجلة</div>
+  <div id="carManage"></div>
+
+  <div class="section-title" style="margin-top:20px" data-i18n="settings_backup">النسخ الاحتياطي</div>
+  <div class="card">
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-blue" onclick="exportData()" data-i18n="settings_export">📤 تصدير JSON</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()" data-i18n="settings_import">📥 استيراد JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+    </div>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:12px;" data-i18n="settings_exportDesc">التصدير يحفظ جميع السيارات والسجلات والصور في ملف JSON واحد</p>
+  </div>
+
+  <div class="section-title" data-i18n="settings_storage">مساحة التخزين</div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+      <span style="font-size:13px;color:var(--text-dim)" id="storageLabel" data-i18n="settings_calculating">جارٍ الحساب...</span>
+      <span style="font-size:18px;font-weight:800;color:var(--accent)" id="storagePercent">—</span>
+    </div>
+    <div style="background:var(--surface2);border-radius:20px;height:14px;overflow:hidden;border:1px solid var(--border)">
+      <div id="storageBar" style="height:100%;width:0%;background:var(--green);transition:width .4s,background .4s;border-radius:20px"></div>
+    </div>
+    <button type="button" onclick="toggleStorageInfo()" id="storageInfoBtn"
+      style="background:none;border:none;color:var(--accent);font-size:12.5px;font-weight:600;font-family:inherit;cursor:pointer;padding:10px 0 2px;display:inline-flex;align-items:center;gap:6px">
+      <span style="font-size:13px;display:inline-flex;align-items:center;line-height:1">ℹ️</span><span data-i18n="settings_storageInfoBtn" style="display:inline-flex;align-items:center;line-height:1.2">ما الذي يقيسه هذا؟</span><span id="storageInfoChevron" style="font-size:8px;display:inline-flex;align-items:center;justify-content:center;line-height:1;height:1em">▼</span>
+    </button>
+    <div id="storageInfoPanel" style="display:none">
+      <div style="font-size:12px;color:var(--text-dim);margin-top:8px;line-height:1.7" data-i18n-html="settings_storageDesc">
+        📦 هذا القياس يخص <b>بيانات هذا التطبيق فقط</b> داخل متصفحك (السجلات + الصور)، وليس مساحة هاتفك كاملة.
+      </div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:10px" id="storageDetail" data-i18n="settings_storageNote">
+        الصور تُحفظ في قاعدة بيانات IndexedDB ذات سعة كبيرة، وبيانات السجلات في تخزين خفيف منفصل.
+      </p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.7" data-i18n-html="settings_storageQuota">
+        💡 الرقم الكلي هو <b>السقف الأقصى</b> الذي يمنحه المتصفح لهذا التطبيق، وهو متغيّر — لو امتلأ هاتفك أو امتلأت تطبيقات أخرى في المتصفح، قد يُخفّض المتصفح هذا السقف تلقائياً.
+      </p>
+    </div>
+  </div>
+
+  <div id="installSection">
+  <div class="section-title" data-i18n="settings_install">تثبيت التطبيق</div>
+    <div class="card">
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:12px;line-height:1.7" data-i18n="settings_installDesc">📱 ثبّت التطبيق على شاشتك الرئيسية ليعمل كتطبيق مستقل بملء الشاشة، ويفتح أسرع.</p>
+      <button class="btn btn-primary" onclick="installApp()" style="width:100%;justify-content:center" data-i18n="settings_installBtn">⬇️ تثبيت على الشاشة الرئيسية</button>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:20px" data-i18n="settings_danger">خطر</div>
+  <div class="card">
+    <button class="btn btn-danger" onclick="confirmClearAll()" data-i18n="settings_clearAll">🗑️ حذف كل البيانات</button>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:10px;" data-i18n="settings_clearNote">هذا الإجراء لا يمكن التراجع عنه</p>
+  </div>
+</div>
+
+<!-- Modal: Add Car -->
+<div class="modal-overlay hidden" id="modalCar">
+  <div class="modal">
+    <div class="modal-title">🚗 <span id="carModalTitle" data-i18n="modal_addCar">إضافة سيارة</span></div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="car_nameLabel">اسم / لقب السيارة *</label>
+      <input type="text" id="carName" data-i18n-placeholder="car_namePlaceholder" placeholder="مثال: كامري العائلة">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="car_makeLabel">الماركة</label>
+        <input type="text" id="carMake" placeholder="Toyota">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="car_modelLabel">الموديل</label>
+        <input type="text" id="carModel" placeholder="Camry">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="car_yearLabel">سنة الصنع</label>
+        <input type="number" id="carYear" placeholder="2020">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="car_colorLabel">لون السيارة</label>
+        <input type="text" id="carColor" data-i18n-placeholder="car_colorPlaceholder" placeholder="أبيض">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="car_plateLabel">رقم اللوحة</label>
+      <input type="text" id="carPlate" data-i18n-placeholder="car_platePlaceholder" placeholder="ع م ا 1234">
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="car_emojiLabel">رمز (إيموجي)</label>
+      <input type="text" id="carEmoji" placeholder="🚗" maxlength="4">
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="car_photoLabel">صورة السيارة (اختياري)</label>
+      <input type="file" id="carPhotoInput" accept="image/*" style="display:none" onchange="handleCarPhoto(this)">
+      <div id="carPhotoArea">
+        <button type="button" class="btn btn-secondary" onclick="document.getElementById('carPhotoInput').click()" style="width:100%" data-i18n="car_addPhoto">📷 إضافة صورة السيارة</button>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:6px" data-i18n="car_renewals">التجديدات والتنبيهات (اختياري)</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.7" data-i18n="car_renewalsDesc">
+      أدخل تواريخ انتهاء المستندات، وسيُنبّهك التطبيق عند فتحه قبل الموعد بالمدة التي تحددها.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="car_insuranceLabel">انتهاء التأمين</label>
+        <input type="date" id="carInsurance">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="car_inspectionLabel">انتهاء الفحص (الاستمارة)</label>
+        <input type="date" id="carInspection">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="car_reminderLabel">نبّهني قبل الموعد بـ</label>
+      <select id="carReminderDays">
+        <option value="7" data-i18n="reminder_week">أسبوع</option>
+        <option value="14" data-i18n="reminder_2weeks">أسبوعين</option>
+        <option value="30" selected data-i18n="reminder_month">شهر</option>
+        <option value="60" data-i18n="reminder_2months">شهرين</option>
+        <option value="0" data-i18n="reminder_none">بدون تنبيه</option>
+      </select>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveCar()" data-i18n="btn_save">حفظ</button>
+      <button class="btn btn-secondary" onclick="closeModals()" data-i18n="btn_cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Log -->
+<div class="modal-overlay hidden" id="modalLog">
+  <div class="modal">
+    <div class="modal-title">🔧 <span id="logModalTitle" data-i18n="modal_addLog">إضافة سجل صيانة</span></div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="log_carLabel">السيارة *</label>
+      <select id="logCar"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="log_typeLabel">نوع العملية *</label>
+      <select id="logType">
+        <option value="routine" data-i18n="logType_routine">🔄 صيانة دورية</option>
+        <option value="repair" data-i18n="logType_repair">🔨 تصليح / إصلاح</option>
+        <option value="inspection" data-i18n="logType_inspection">🔍 فحص</option>
+        <option value="accident" data-i18n="logType_accident">⚠️ حادث / ضرر</option>
+        <option value="other" data-i18n="logType_other">📝 أخرى</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="log_opsLabel">عمليات الصيانة (اختر واحدة أو أكثر) *</label>
+      <div id="selectedOps" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <input type="text" id="customOpInput" data-i18n-placeholder="log_customOpPlaceholder" placeholder="أضف عملية بكتابتها هنا..." style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomOp();}">
+        <button type="button" class="btn btn-blue" onclick="addCustomOp()" style="padding:10px 16px">+</button>
+      </div>
+      <select id="opPicker" onchange="addOpFromPicker()">
+        <option value="" data-i18n="opPicker_default">-- اختر من القائمة لإضافتها --</option>
+        <optgroup label="صيانة دورية" data-i18n-optgroup="og_routine">
+          <option value="تغيير زيت المحرك والفلتر" data-i18n="op_oilFilter">تغيير زيت المحرك والفلتر</option>
+          <option value="تغيير فلتر الهواء" data-i18n="op_airFilter">تغيير فلتر الهواء</option>
+          <option value="تغيير فلتر الوقود" data-i18n="op_fuelFilter">تغيير فلتر الوقود</option>
+          <option value="تغيير سائل الفرامل" data-i18n="op_brakeFluid">تغيير سائل الفرامل</option>
+          <option value="تغيير سائل التبريد" data-i18n="op_coolant">تغيير سائل التبريد</option>
+          <option value="تغيير سائل ناقل الحركة" data-i18n="op_transFluid">تغيير سائل ناقل الحركة</option>
+          <option value="تشحيم عام" data-i18n="op_lubrication">تشحيم عام</option>
+        </optgroup>
+        <optgroup label="إطارات وعجلات" data-i18n-optgroup="og_tires">
+          <option value="تغيير إطار / إطارات" data-i18n="op_tireChange">تغيير إطار / إطارات</option>
+          <option value="ترصيص (ضبط زوايا العجلات)" data-i18n="op_alignment">ترصيص (ضبط زوايا العجلات)</option>
+          <option value="موازنة العجلات" data-i18n="op_balancing">موازنة العجلات</option>
+          <option value="تدوير الإطارات" data-i18n="op_rotation">تدوير الإطارات</option>
+        </optgroup>
+        <optgroup label="فرامل" data-i18n-optgroup="og_brakes">
+          <option value="تغيير فحمات الفرامل الأمامية" data-i18n="op_frontPads">تغيير فحمات الفرامل الأمامية</option>
+          <option value="تغيير فحمات الفرامل الخلفية" data-i18n="op_rearPads">تغيير فحمات الفرامل الخلفية</option>
+          <option value="تغيير ديسك (قرص) الفرامل" data-i18n="op_brakeDisc">تغيير ديسك (قرص) الفرامل</option>
+          <option value="ضبط فرامل اليد (الهاند بريك)" data-i18n="op_handbrake">ضبط فرامل اليد (الهاند بريك)</option>
+        </optgroup>
+        <optgroup label="المحرك والكهرباء" data-i18n-optgroup="og_engine">
+          <option value="تغيير البلكات (إشعال)" data-i18n="op_sparkPlugs">تغيير البلكات (إشعال)</option>
+          <option value="تغيير السير (تايمنج)" data-i18n="op_timingBelt">تغيير السير (تايمنج)</option>
+          <option value="تغيير حزام المروحة" data-i18n="op_fanBelt">تغيير حزام المروحة</option>
+          <option value="تغيير البطارية" data-i18n="op_battery">تغيير البطارية</option>
+          <option value="تغيير المولد (دينامو)" data-i18n="op_alternator">تغيير المولد (دينامو)</option>
+          <option value="تغيير سلف" data-i18n="op_starter">تغيير سلف</option>
+          <option value="تغيير مضخة الماء" data-i18n="op_waterPump">تغيير مضخة الماء</option>
+          <option value="تغيير ثرموستات" data-i18n="op_thermostat">تغيير ثرموستات</option>
+        </optgroup>
+        <optgroup label="تكييف وجسم" data-i18n-optgroup="og_ac_body">
+          <option value="صيانة مكيف" data-i18n="op_acService">صيانة مكيف</option>
+          <option value="شحن غاز مكيف" data-i18n="op_acGas">شحن غاز مكيف</option>
+          <option value="تلميع وحماية الجسم" data-i18n="op_polish">تلميع وحماية الجسم</option>
+          <option value="تغيير شمعات الزجاج" data-i18n="op_wipers">تغيير شمعات الزجاج</option>
+          <option value="إصلاح الزجاج الأمامي" data-i18n="op_windshield">إصلاح الزجاج الأمامي</option>
+        </optgroup>
+        <optgroup label="فحص وتشخيص" data-i18n-optgroup="og_inspection">
+          <option value="فحص شامل" data-i18n="op_fullInspection">فحص شامل</option>
+          <option value="فحص ما قبل السفر" data-i18n="op_tripInspection">فحص ما قبل السفر</option>
+          <option value="تشخيص كمبيوتر" data-i18n="op_computerDiag">تشخيص كمبيوتر</option>
+          <option value="إصلاح عطل كهربائي" data-i18n="op_electricalFault">إصلاح عطل كهربائي</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="log_dateLabel">التاريخ *</label>
+        <input type="date" id="logDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="log_kmLabel">عداد الكيلومترات</label>
+        <input type="number" id="logKm" placeholder="85000">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" data-i18n="log_costLabel">التكلفة (ر.ع)</label>
+        <div style="display:flex;gap:6px">
+          <input type="number" id="logCost" placeholder="0.000" step="0.001" style="flex:1">
+          <button type="button" class="btn btn-secondary" onclick="openCalc()" style="padding:10px 14px" data-i18n-title="log_calcTitle">🧮</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" data-i18n="log_workshopLabel">اسم الورشة / المكان</label>
+        <input type="text" id="logWorkshop" data-i18n-placeholder="log_workshopPlaceholder" placeholder="ورشة المعلم سالم">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="log_notesLabel">ملاحظات إضافية</label>
+      <textarea id="logNotes" data-i18n-placeholder="log_notesPlaceholder" placeholder="أي تفاصيل إضافية..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="log_photosLabel">صور (موقع المحل / فاتورة / قطعة الغيار)</label>
+      <input type="file" id="logImageInput" accept="image/*" multiple style="display:none" onchange="handleImages(this)">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('logImageInput').click()" style="width:100%" data-i18n="log_addPhotos">📷 إضافة صور (تُضغط تلقائياً)</button>
+      <div id="imagePreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"></div>
+    </div>
+    <input type="hidden" id="editLogId">
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveLog()" data-i18n="btn_saveLog">حفظ السجل</button>
+      <button class="btn btn-secondary" onclick="closeModals()" data-i18n="btn_cancel">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Share / Export -->
+<div class="modal-overlay hidden" id="modalShare">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title" data-i18n="modal_share">📤 مشاركة السجل</div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="share_carLabel">السيارة</label>
+      <select id="shareCar">
+        <option value="" data-i18n="filter_allCars">كل السيارات</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" data-i18n="share_dateRange">الفترة الزمنية (اختياري)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px" data-i18n="share_from">من</label>
+          <input type="date" id="shareFrom" style="width:100%">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px" data-i18n="share_to">إلى</label>
+          <input type="date" id="shareTo" style="width:100%">
+        </div>
+      </div>
+      <button type="button" onclick="clearShareDates()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:6px 0;margin-top:2px" data-i18n="share_clearDates">مسح الفترة</button>
+    </div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px" data-i18n="share_desc">اختر صيغة الملف. يشمل كل السجلات والتكاليف والتفاصيل.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-primary" onclick="exportFormat('pdf')" style="justify-content:center">📄 PDF</button>
+      <button class="btn btn-blue" onclick="exportFormat('html')" style="justify-content:center">🌐 HTML</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModals()" style="width:100%;justify-content:center" data-i18n="btn_close">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Calculator -->
+<div class="modal-overlay hidden" id="modalCalc">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title" data-i18n="calc_title">🧮 حاسبة جمع المبالغ</div>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px" data-i18n="calc_desc">أضف مبالغ الصيانة المتعددة (زيت + قطع + أجرة...) وستُجمع تلقائياً</p>
+    <div id="calcItems"></div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <input type="number" id="calcInput" data-i18n-placeholder="calc_amountPlaceholder" placeholder="مبلغ" step="0.001" style="flex:1" onkeydown="if(event.key==='Enter')addCalcItem()">
+      <button class="btn btn-blue" onclick="addCalcItem()" style="padding:10px 16px">+</button>
+    </div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);margin-bottom:0">
+      <span style="font-weight:600" data-i18n="calc_total">المجموع</span>
+      <span id="calcTotal" style="font-size:20px;font-weight:800;color:var(--accent)">0.000</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="applyCalc()" data-i18n="calc_apply">استخدام المجموع</button>
+      <button class="btn btn-secondary" onclick="clearCalc()" data-i18n="calc_clear">مسح</button>
+      <button class="btn btn-secondary" onclick="closeCalc()" data-i18n="btn_close">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Image viewer -->
+<div class="modal-overlay hidden" id="modalImgView" onclick="closeModals()" style="align-items:center">
+  <img id="imgViewFull" style="max-width:100%;max-height:90dvh;border-radius:8px" alt="">
+</div>
+
+<!-- Modal: iOS install instructions -->
+<div class="modal-overlay hidden" id="modalIOS">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title" data-i18n="ios_title">📱 التثبيت على آيفون / آيباد</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.8" data-i18n-html="ios_desc">لإضافة التطبيق إلى شاشتك الرئيسية على أجهزة Apple، اتبع هذه الخطوات في متصفح <b>Safari</b>:</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span class="step-num" data-i18n="step_1">١</span>
+        <div style="font-size:14px;line-height:1.7" data-i18n-html="ios_step1">اضغط زر <b>المشاركة</b> <span style="font-size:18px">􀈂</span> (المربع مع السهم للأعلى) في أسفل الشاشة.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span class="step-num" data-i18n="step_2">٢</span>
+        <div style="font-size:14px;line-height:1.7" data-i18n-html="ios_step2">مرّر للأسفل واختر <b>«إضافة إلى الشاشة الرئيسية»</b> (Add to Home Screen) ➕</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span class="step-num" data-i18n="step_3">٣</span>
+        <div style="font-size:14px;line-height:1.7" data-i18n-html="ios_step3">اضغط <b>«إضافة»</b> في الأعلى — وسيظهر التطبيق على شاشتك الرئيسية.</div>
+      </div>
+    </div>
+    <div style="background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:8px;padding:10px 12px;margin-top:16px;font-size:12px;color:var(--orange);line-height:1.7" data-i18n-html="ios_note">
+      💡 مهم: على آيفون، خذ نسخة احتياطية (تصدير JSON) بين فترة وأخرى، لأن النظام قد يمسح بيانات المواقع غير المستخدمة لفترة طويلة.
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModals()" style="width:100%;justify-content:center" data-i18n="ios_ok">فهمت</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Android manual install instructions (fallback) -->
+<div class="modal-overlay hidden" id="modalAndroid">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title" data-i18n="android_title">📱 التثبيت على أندرويد</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.8" data-i18n-html="android_desc">لإضافة التطبيق إلى شاشتك الرئيسية في متصفح <b>Chrome</b>:</p>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span class="step-num" data-i18n="step_1">١</span>
+        <div style="font-size:14px;line-height:1.7" data-i18n-html="android_step1">اضغط قائمة المتصفح <b>(⋮)</b> في أعلى يمين الشاشة.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span class="step-num" data-i18n="step_2">٢</span>
+        <div style="font-size:14px;line-height:1.7" data-i18n-html="android_step2">اختر <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <span class="step-num" data-i18n="step_3">٣</span>
+        <div style="font-size:14px;line-height:1.7" data-i18n-html="android_step3">أكّد بالضغط على <b>«تثبيت»</b>.</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModals()" style="width:100%;justify-content:center" data-i18n="android_ok">فهمت</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Action Button (add maintenance log) -->
+<button class="fab" id="fab" onclick="openAddLog()" aria-label="سجل صيانة جديد">
+  <span class="fab-plus">+</span>
+</button>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// ─── i18n (Internationalization) System ───────────────
+// ═══════════════════════════════════════════════════════
+let currentLang = 'ar';
+
+const translations = {
+  ar: {
+    header_title: 'سجل الصيانة',
+    header_subtitle: 'تتبع كل صيانة وعطل لسياراتك',
+    themeToggle: 'تبديل الثيم',
+    btn_newLog: '+ سجل جديد',
+    nav_home: 'الرئيسية',
+    nav_logs: 'السجلات',
+    nav_stats: 'الإحصائيات',
+    nav_settings: 'الإعدادات',
+    home_myCars: 'سياراتي',
+    home_addCar: '+ إضافة سيارة',
+    home_recentLogs: 'آخر سجلات',
+    home_viewAll: 'عرض كل السجلات',
+    home_noLogs: 'لا توجد سجلات بعد — أضف أول سجل!',
+    logs_share: '📤 مشاركة السجل',
+    logs_searchPlaceholder: '🔍 ابحث في السجلات (عملية، ورشة، ملاحظة...)',
+    filter_allCars: 'كل السيارات',
+    filters_title: 'الفلاتر والترتيب',
+    filters_car: 'السيارة',
+    filters_type: 'النوع',
+    filters_sort: 'الترتيب',
+    filters_reset: 'مسح الفلاتر',
+    filter_allTypes: 'كل الأنواع',
+    type_routine: 'صيانة دورية',
+    type_repair: 'تصليح',
+    type_inspection: 'فحص',
+    type_accident: 'حادث',
+    type_other: 'أخرى',
+    sort_newest: 'الأحدث أولاً',
+    sort_oldest: 'الأقدم أولاً',
+    sort_expensive: 'الأغلى أولاً',
+    logs_noResults: 'لا توجد نتائج لـ',
+    logs_empty: 'لا توجد سجلات — أضف أول سجل من الزر أعلاه',
+    stats_summary: 'ملخص كل السيارات',
+    stats_cars: 'سيارات',
+    stats_totalLogs: 'سجل إجمالي',
+    stats_totalCost: 'ر.ع إجمالي',
+    stats_yearCost: 'ر.ع هذا العام',
+    stats_log: 'سجل',
+    stats_lastMaint: 'آخر صيانة',
+    stats_lastKm: 'آخر عداد (كم)',
+    stats_noCars: 'أضف سيارة أولاً',
+    stats_noLogs: 'لا توجد سجلات بعد',
+    settings_install: 'تثبيت التطبيق',
+    settings_installDesc: '📱 ثبّت التطبيق على شاشتك الرئيسية ليعمل كتطبيق مستقل بملء الشاشة، ويفتح أسرع.',
+    settings_installBtn: '⬇️ تثبيت على الشاشة الرئيسية',
+    settings_storage: 'مساحة التخزين',
+    settings_storageDesc: '📦 هذا القياس يخص <b>بيانات هذا التطبيق فقط</b> داخل متصفحك (السجلات + الصور)، وليس مساحة هاتفك كاملة.',
+    settings_storageInfoBtn: 'ما الذي يقيسه هذا؟',
+    settings_calculating: 'جارٍ الحساب...',
+    settings_storageNote: 'الصور تُحفظ في قاعدة بيانات IndexedDB ذات سعة كبيرة، وبيانات السجلات في تخزين خفيف منفصل.',
+    settings_storageQuota: '💡 الرقم الكلي هو <b>السقف الأقصى</b> الذي يمنحه المتصفح لهذا التطبيق، وهو متغيّر — لو امتلأ هاتفك أو امتلأت تطبيقات أخرى في المتصفح، قد يُخفّض المتصفح هذا السقف تلقائياً.',
+    settings_registeredCars: 'السيارات المسجلة',
+    settings_noCars: 'لا توجد سيارات مضافة',
+    settings_backup: 'النسخ الاحتياطي',
+    settings_export: '📤 تصدير JSON',
+    settings_import: '📥 استيراد JSON',
+    settings_exportDesc: 'التصدير يحفظ جميع السيارات والسجلات والصور في ملف JSON واحد',
+    settings_language: 'اللغة',
+    settings_appLanguage: 'لغة التطبيق',
+    settings_langNote: 'تغيير اللغة يطبّق فوراً على كامل واجهة التطبيق',
+    settings_danger: 'خطر',
+    settings_clearAll: '🗑️ حذف كل البيانات',
+    settings_clearNote: 'هذا الإجراء لا يمكن التراجع عنه',
+    modal_addCar: 'إضافة سيارة',
+    modal_editCar: 'تعديل السيارة',
+    car_nameLabel: 'اسم / لقب السيارة *',
+    car_namePlaceholder: 'مثال: كامري العائلة',
+    car_makeLabel: 'الماركة',
+    car_modelLabel: 'الموديل',
+    car_yearLabel: 'سنة الصنع',
+    car_colorLabel: 'لون السيارة',
+    car_colorPlaceholder: 'أبيض',
+    car_plateLabel: 'رقم اللوحة',
+    car_platePlaceholder: 'ع م ا 1234',
+    car_emojiLabel: 'رمز (إيموجي)',
+    car_photoLabel: 'صورة السيارة (اختياري)',
+    car_addPhoto: '📷 إضافة صورة السيارة',
+    car_changePhoto: 'تغيير الصورة',
+    car_renewals: 'التجديدات والتنبيهات (اختياري)',
+    car_renewalsDesc: 'أدخل تواريخ انتهاء المستندات، وسيُنبّهك التطبيق عند فتحه قبل الموعد بالمدة التي تحددها.',
+    car_insuranceLabel: 'انتهاء التأمين',
+    car_inspectionLabel: 'انتهاء الفحص (الاستمارة)',
+    car_reminderLabel: 'نبّهني قبل الموعد بـ',
+    reminder_week: 'أسبوع',
+    reminder_2weeks: 'أسبوعين',
+    reminder_month: 'شهر',
+    reminder_2months: 'شهرين',
+    reminder_none: 'بدون تنبيه',
+    modal_addLog: 'إضافة سجل صيانة',
+    modal_editLog: 'تعديل السجل',
+    log_carLabel: 'السيارة *',
+    log_typeLabel: 'نوع العملية *',
+    logType_routine: '🔄 صيانة دورية',
+    logType_repair: '🔨 تصليح / إصلاح',
+    logType_inspection: '🔍 فحص',
+    logType_accident: '⚠️ حادث / ضرر',
+    logType_other: '📝 أخرى',
+    log_opsLabel: 'عمليات الصيانة (اختر واحدة أو أكثر) *',
+    log_customOpPlaceholder: 'أضف عملية بكتابتها هنا...',
+    log_noOps: 'لم تُختر أي عملية بعد',
+    log_opExists: 'العملية مضافة بالفعل',
+    log_dateLabel: 'التاريخ *',
+    log_kmLabel: 'عداد الكيلومترات',
+    log_costLabel: 'التكلفة (ر.ع)',
+    log_calcTitle: 'حاسبة جمع المبالغ',
+    log_workshopLabel: 'اسم الورشة / المكان',
+    log_workshopPlaceholder: 'ورشة المعلم سالم',
+    log_notesLabel: 'ملاحظات إضافية',
+    log_notesPlaceholder: 'أي تفاصيل إضافية...',
+    log_photosLabel: 'صور (موقع المحل / فاتورة / قطعة الغيار)',
+    log_addPhotos: '📷 إضافة صور (تُضغط تلقائياً)',
+    modal_share: '📤 مشاركة السجل',
+    share_carLabel: 'السيارة',
+    share_desc: 'اختر صيغة الملف. يشمل كل السجلات والتكاليف والتفاصيل.',
+    share_dateRange: 'الفترة الزمنية (اختياري)',
+    share_from: 'من',
+    share_to: 'إلى',
+    share_clearDates: 'مسح الفترة',
+    export_period: 'الفترة',
+    calc_title: '🧮 حاسبة جمع المبالغ',
+    calc_desc: 'أضف مبالغ الصيانة المتعددة (زيت + قطع + أجرة...) وستُجمع تلقائياً',
+    calc_amountPlaceholder: 'مبلغ',
+    calc_total: 'المجموع',
+    calc_apply: 'استخدام المجموع',
+    calc_clear: 'مسح',
+    calc_noAmounts: 'لا توجد مبالغ بعد',
+    btn_save: 'حفظ',
+    btn_saveLog: 'حفظ السجل',
+    btn_cancel: 'إلغاء',
+    btn_close: 'إغلاق',
+    btn_edit: '✏️ تعديل',
+    btn_delete: '🗑️ حذف',
+    btn_editCar: '✏️ تعديل بيانات السيارة',
+    card_log: 'سجل',
+    card_totalCost: 'ر.ع إجمالي',
+    card_lastMaint: 'آخر صيانة',
+    toast_carAdded: 'تمت إضافة السيارة',
+    toast_carEdited: 'تم تعديل السيارة',
+    toast_carDeleted: 'تم حذف السيارة',
+    toast_logAdded: 'تمت إضافة السجل',
+    toast_logEdited: 'تم تعديل السجل',
+    toast_logDeleted: 'تم حذف السجل',
+    toast_exported: 'تم التصدير (يشمل الصور)',
+    toast_imported: 'تم الاستيراد بنجاح',
+    toast_cleared: 'تم حذف كل البيانات',
+    toast_preparing: 'جارٍ التجهيز...',
+    toast_noData: 'لا توجد بيانات',
+    toast_invalidFile: 'ملف غير صالح',
+    toast_installed: 'تم تثبيت التطبيق',
+    update_available: '🎉 يتوفر تحديث جديد',
+    update_now: 'تحديث الآن',
+    update_later: 'لاحقاً',
+    update_deferred: 'يمكنك التحديث لاحقاً من الإعدادات',
+    settings_updateTitle: 'التحديث',
+    settings_updateReady: 'نسخة جديدة جاهزة',
+    update_generic: 'تحسينات وإصلاحات جديدة.',
+    toast_alreadyInstalled: 'التطبيق مثبّت بالفعل ✓',
+    toast_allowPopups: 'اسمح بالنوافذ المنبثقة للطباعة',
+    toast_printFailed: 'تعذّر تجهيز التقرير للطباعة',
+    toast_enterCarName: 'أدخل اسم السيارة',
+    toast_selectCarOp: 'اختر سيارة وعملية صيانة واحدة على الأقل',
+    toast_noFutureDate: 'لا يمكن اختيار تاريخ مستقبلي',
+    toast_saveFailed: 'تعذّر الحفظ: ',
+    alert_deleteCar: 'هل أنت متأكد؟ سيتم حذف السيارة وجميع سجلاتها.',
+    alert_deleteLog: 'حذف هذا السجل؟',
+    alert_clearAll1: 'هل أنت متأكد تماماً؟ سيتم حذف كل السيارات والسجلات والصور نهائياً.',
+    alert_clearAll2: 'تأكيد أخير — هذه العملية لا يمكن التراجع عنها!',
+    alert_storageFull: '⚠️ مساحة التخزين ممتلئة!\n\nلم يتم حفظ آخر تغيير بشكل دائم.\n\nالحلول:\n• صدّر نسخة احتياطية (JSON) من الإعدادات\n• احذف صوراً أو سجلات قديمة',
+    alert_imageStorageFull: '⚠️ مساحة تخزين الصور ممتلئة!\n\nلم تُحفظ الصورة. صدّر نسخة احتياطية واحذف صوراً قديمة من سجلات سابقة.',
+    reminder_expired: 'انتهى {label} منذ {days} يوم',
+    reminder_today: '{label} ينتهي اليوم!',
+    reminder_soon: '{label} ينتهي خلال {days} يوم',
+    reminder_insurance: 'التأمين',
+    reminder_inspection: 'الفحص (الاستمارة)',
+    reminder_tapEdit: 'اضغط للتعديل والتجديد',
+    storage_usedOf: '{used} م.ب مستخدم من {total} م.ب',
+    storage_warning: '⚠️ المساحة شبه ممتلئة — صدّر نسخة احتياطية واحذف صوراً قديمة قريباً.',
+    storage_fallback: '{used} ك.ب من بيانات السجلات (تقدير)',
+    storage_fallbackNote: 'متصفحك لا يدعم القياس الدقيق — هذا تقدير لبيانات السجلات فقط (بدون الصور).',
+    unit_km: 'كم',
+    unit_omr: 'ر.ع',
+    opPicker_default: '-- اختر من القائمة لإضافتها --',
+    months: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'],
+    type_routine_plain: 'صيانة دورية',
+    type_repair_plain: 'تصليح',
+    type_inspection_plain: 'فحص',
+    type_accident_plain: 'حادث',
+    type_other_plain: 'أخرى',
+    toast_importImgError: 'تم استيراد البيانات لكن تعذّر استيراد بعض الصور',
+    toast_imgSaveFail: 'تعذّر حفظ الصورة',
+    toast_imgProcessFail: 'تعذّر معالجة الصورة، جرّب صورة أخرى',
+    car_changePhoto: 'تغيير الصورة',
+    car_addPhotoBtn: '📷 إضافة صورة السيارة',
+    formatBytes_bytes: 'بايت',
+    formatBytes_kb: 'ك.ب',
+    formatBytes_mb: 'م.ب',
+    share_allCars: 'كل السيارات',
+    export_title: '🔧 سجل صيانة السيارات',
+    export_reportDate: 'تاريخ التقرير',
+    export_plate: 'اللوحة',
+    export_insurance: 'التأمين',
+    export_inspection: 'الفحص',
+    export_numLogs: 'عدد السجلات',
+    export_total: 'الإجمالي',
+    export_thType: 'النوع',
+    export_thDesc: 'الوصف',
+    export_thDate: 'التاريخ',
+    export_thOdometer: 'العداد',
+    export_thCost: 'التكلفة',
+    export_thWorkshop: 'الورشة',
+    export_thNotes: 'ملاحظات',
+    export_noLogs: 'لا توجد سجلات لهذه السيارة.',
+    export_footer: 'تم إنشاؤه بواسطة تطبيق سجل الصيانة',
+    export_filename: 'سجل_الصيانة',
+    ios_title: '📱 التثبيت على آيفون / آيباد',
+    ios_desc: 'لإضافة التطبيق إلى شاشتك الرئيسية على أجهزة Apple، اتبع هذه الخطوات في متصفح <b>Safari</b>:',
+    ios_step1: 'اضغط زر <b>المشاركة</b> <span style="font-size:18px">􀈂</span> (المربع مع السهم للأعلى) في أسفل الشاشة.',
+    ios_step2: 'مرّر للأسفل واختر <b>«إضافة إلى الشاشة الرئيسية»</b> (Add to Home Screen) ➕',
+    ios_step3: 'اضغط <b>«إضافة»</b> في الأعلى — وسيظهر التطبيق على شاشتك الرئيسية.',
+    ios_note: '💡 مهم: على آيفون، خذ نسخة احتياطية (تصدير JSON) بين فترة وأخرى، لأن النظام قد يمسح بيانات المواقع غير المستخدمة لفترة طويلة.',
+    ios_ok: 'فهمت',
+    android_title: '📱 التثبيت على أندرويد',
+    android_desc: 'لإضافة التطبيق إلى شاشتك الرئيسية في متصفح <b>Chrome</b>:',
+    android_step1: 'اضغط قائمة المتصفح <b>(⋮)</b> في أعلى يمين الشاشة.',
+    android_step2: 'اختر <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b>.',
+    android_step3: 'أكّد بالضغط على <b>«تثبيت»</b>.',
+    android_ok: 'فهمت',
+    step_1: '١',
+    step_2: '٢',
+    step_3: '٥',
+    og_routine: 'صيانة دورية',
+    og_tires: 'إطارات وعجلات',
+    og_brakes: 'فرامل',
+    og_engine: 'المحرك والكهرباء',
+    og_ac_body: 'تكييف وجسم',
+    og_inspection: 'فحص وتشخيص',
+    op_oilFilter: 'تغيير زيت المحرك والفلتر',
+    op_airFilter: 'تغيير فلتر الهواء',
+    op_fuelFilter: 'تغيير فلتر الوقود',
+    op_brakeFluid: 'تغيير سائل الفرامل',
+    op_coolant: 'تغيير سائل التبريد',
+    op_transFluid: 'تغيير سائل ناقل الحركة',
+    op_lubrication: 'تشحيم عام',
+    op_tireChange: 'تغيير إطار / إطارات',
+    op_alignment: 'ترصيص (ضبط زوايا العجلات)',
+    op_balancing: 'موازنة العجلات',
+    op_rotation: 'تدوير الإطارات',
+    op_frontPads: 'تغيير فحمات الفرامل الأمامية',
+    op_rearPads: 'تغيير فحمات الفرامل الخلفية',
+    op_brakeDisc: 'تغيير ديسك (قرص) الفرامل',
+    op_handbrake: 'ضبط فرامل اليد (الهاند بريك)',
+    op_sparkPlugs: 'تغيير البلكات (إشعال)',
+    op_timingBelt: 'تغيير السير (تايمنج)',
+    op_fanBelt: 'تغيير حزام المروحة',
+    op_battery: 'تغيير البطارية',
+    op_alternator: 'تغيير المولد (دينامو)',
+    op_starter: 'تغيير سلف',
+    op_waterPump: 'تغيير مضخة الماء',
+    op_thermostat: 'تغيير ثرموستات',
+    op_acService: 'صيانة مكيف',
+    op_acGas: 'شحن غاز مكيف',
+    op_polish: 'تلميع وحماية الجسم',
+    op_wipers: 'تغيير شمعات الزجاج',
+    op_windshield: 'إصلاح الزجاج الأمامي',
+    op_fullInspection: 'فحص شامل',
+    op_tripInspection: 'فحص ما قبل السفر',
+    op_computerDiag: 'تشخيص كمبيوتر',
+    op_electricalFault: 'إصلاح عطل كهربائي',
+  },
+  en: {
+    header_title: 'Maintenance Log',
+    header_subtitle: 'Track all maintenance & repairs for your cars',
+    themeToggle: 'Toggle theme',
+    btn_newLog: '+ New Log',
+    nav_home: 'Home',
+    nav_logs: 'Logs',
+    nav_stats: 'Statistics',
+    nav_settings: 'Settings',
+    home_myCars: 'My Cars',
+    home_addCar: '+ Add Car',
+    home_recentLogs: 'Recent Logs',
+    home_viewAll: 'View All Logs',
+    home_noLogs: 'No logs yet — add your first log!',
+    logs_share: '📤 Share Log',
+    logs_searchPlaceholder: '🔍 Search logs (service, workshop, notes...)',
+    filter_allCars: 'All Cars',
+    filters_title: 'Filters & Sort',
+    filters_car: 'Car',
+    filters_type: 'Type',
+    filters_sort: 'Sort',
+    filters_reset: 'Clear filters',
+    filter_allTypes: 'All Types',
+    type_routine: 'Routine Maintenance',
+    type_repair: 'Repair',
+    type_inspection: 'Inspection',
+    type_accident: 'Accident',
+    type_other: 'Other',
+    sort_newest: 'Newest First',
+    sort_oldest: 'Oldest First',
+    sort_expensive: 'Most Expensive',
+    logs_noResults: 'No results for',
+    logs_empty: 'No logs yet — add your first log using the button above',
+    stats_summary: 'All Cars Summary',
+    stats_cars: 'Cars',
+    stats_totalLogs: 'Total Logs',
+    stats_totalCost: 'OMR Total',
+    stats_yearCost: 'OMR This Year',
+    stats_log: 'Log',
+    stats_lastMaint: 'Last Service',
+    stats_lastKm: 'Last Odometer (km)',
+    stats_noCars: 'Add a car first',
+    stats_noLogs: 'No logs yet',
+    settings_install: 'Install App',
+    settings_installDesc: '📱 Install the app on your home screen for a full-screen standalone experience and faster access.',
+    settings_installBtn: '⬇️ Install on Home Screen',
+    settings_storage: 'Storage',
+    settings_storageDesc: '📦 This measures <b>this app\'s data only</b> in your browser (logs + photos), not your entire phone storage.',
+    settings_storageInfoBtn: 'What does this measure?',
+    settings_calculating: 'Calculating...',
+    settings_storageNote: 'Photos are stored in a large-capacity IndexedDB database, while log data uses a separate lightweight storage.',
+    settings_storageQuota: '💡 The total is the <b>maximum quota</b> the browser grants this app, which varies — if your phone fills up or other browser apps use storage, the browser may reduce this quota automatically.',
+    settings_registeredCars: 'Registered Cars',
+    settings_noCars: 'No cars added',
+    settings_backup: 'Backup',
+    settings_export: '📤 Export JSON',
+    settings_import: '📥 Import JSON',
+    settings_exportDesc: 'Export saves all cars, logs, and photos in a single JSON file',
+    settings_language: 'Language',
+    settings_appLanguage: 'App Language',
+    settings_langNote: 'Language change applies immediately to the entire interface',
+    settings_danger: 'Danger Zone',
+    settings_clearAll: '🗑️ Delete All Data',
+    settings_clearNote: 'This action cannot be undone',
+    modal_addCar: 'Add Car',
+    modal_editCar: 'Edit Car',
+    car_nameLabel: 'Car Name / Nickname *',
+    car_namePlaceholder: 'e.g.: Family Camry',
+    car_makeLabel: 'Make',
+    car_modelLabel: 'Model',
+    car_yearLabel: 'Year',
+    car_colorLabel: 'Color',
+    car_colorPlaceholder: 'White',
+    car_plateLabel: 'Plate Number',
+    car_platePlaceholder: 'ABC 1234',
+    car_emojiLabel: 'Icon (Emoji)',
+    car_photoLabel: 'Car Photo (optional)',
+    car_addPhoto: '📷 Add Car Photo',
+    car_changePhoto: 'Change Photo',
+    car_renewals: 'Renewals & Alerts (optional)',
+    car_renewalsDesc: 'Enter document expiry dates. The app will alert you before the deadline by the period you specify.',
+    car_insuranceLabel: 'Insurance Expiry',
+    car_inspectionLabel: 'Inspection Expiry',
+    car_reminderLabel: 'Remind me before',
+    reminder_week: '1 Week',
+    reminder_2weeks: '2 Weeks',
+    reminder_month: '1 Month',
+    reminder_2months: '2 Months',
+    reminder_none: 'No reminder',
+    modal_addLog: 'Add Maintenance Log',
+    modal_editLog: 'Edit Log',
+    log_carLabel: 'Car *',
+    log_typeLabel: 'Service Type *',
+    logType_routine: '🔄 Routine Maintenance',
+    logType_repair: '🔨 Repair',
+    logType_inspection: '🔍 Inspection',
+    logType_accident: '⚠️ Accident / Damage',
+    logType_other: '📝 Other',
+    log_opsLabel: 'Maintenance Operations (select one or more) *',
+    log_customOpPlaceholder: 'Type a custom operation...',
+    log_noOps: 'No operations selected yet',
+    log_opExists: 'Operation already added',
+    log_dateLabel: 'Date *',
+    log_kmLabel: 'Odometer (km)',
+    log_costLabel: 'Cost (OMR)',
+    log_calcTitle: 'Amount Calculator',
+    log_workshopLabel: 'Workshop / Location',
+    log_workshopPlaceholder: 'e.g.: Salem Auto Shop',
+    log_notesLabel: 'Additional Notes',
+    log_notesPlaceholder: 'Any additional details...',
+    log_photosLabel: 'Photos (shop location / invoice / parts)',
+    log_addPhotos: '📷 Add Photos (auto-compressed)',
+    modal_share: '📤 Share Log',
+    share_carLabel: 'Car',
+    share_desc: 'Choose file format. Includes all logs, costs, and details.',
+    share_dateRange: 'Date range (optional)',
+    share_from: 'From',
+    share_to: 'To',
+    share_clearDates: 'Clear range',
+    export_period: 'Period',
+    calc_title: '🧮 Amount Calculator',
+    calc_desc: 'Add multiple maintenance costs (oil + parts + labor...) and they will be summed automatically',
+    calc_amountPlaceholder: 'Amount',
+    calc_total: 'Total',
+    calc_apply: 'Use Total',
+    calc_clear: 'Clear',
+    calc_noAmounts: 'No amounts yet',
+    btn_save: 'Save',
+    btn_saveLog: 'Save Log',
+    btn_cancel: 'Cancel',
+    btn_close: 'Close',
+    btn_edit: '✏️ Edit',
+    btn_delete: '🗑️ Delete',
+    btn_editCar: '✏️ Edit Car Details',
+    card_log: 'Logs',
+    card_totalCost: 'OMR Total',
+    card_lastMaint: 'Last Service',
+    toast_carAdded: 'Car added successfully',
+    toast_carEdited: 'Car updated successfully',
+    toast_carDeleted: 'Car deleted',
+    toast_logAdded: 'Log added successfully',
+    toast_logEdited: 'Log updated successfully',
+    toast_logDeleted: 'Log deleted',
+    toast_exported: 'Exported (including photos)',
+    toast_imported: 'Imported successfully',
+    toast_cleared: 'All data deleted',
+    toast_preparing: 'Preparing...',
+    toast_noData: 'No data available',
+    toast_invalidFile: 'Invalid file',
+    toast_installed: 'App installed',
+    update_available: '🎉 A new update is available',
+    update_now: 'Update now',
+    update_later: 'Later',
+    update_deferred: 'You can update later from Settings',
+    settings_updateTitle: 'Update',
+    settings_updateReady: 'A new version is ready',
+    update_generic: 'New improvements and fixes.',
+    toast_alreadyInstalled: 'App is already installed ✓',
+    toast_allowPopups: 'Allow popups for printing',
+    toast_printFailed: 'Could not prepare the report for printing',
+    toast_enterCarName: 'Enter a car name',
+    toast_selectCarOp: 'Select a car and at least one operation',
+    toast_noFutureDate: 'Future dates are not allowed',
+    toast_saveFailed: 'Failed to save: ',
+    alert_deleteCar: 'Are you sure? This will delete the car and all its logs.',
+    alert_deleteLog: 'Delete this log?',
+    alert_clearAll1: 'Are you absolutely sure? All cars, logs, and photos will be permanently deleted.',
+    alert_clearAll2: 'Final confirmation — this action cannot be undone!',
+    alert_storageFull: '⚠️ Storage is full!\n\nLast change was not saved permanently.\n\nSolutions:\n• Export a backup (JSON) from Settings\n• Delete old photos or logs',
+    alert_imageStorageFull: '⚠️ Photo storage is full!\n\nPhoto was not saved. Export a backup and delete old photos from previous logs.',
+    reminder_expired: '{label} expired {days} days ago',
+    reminder_today: '{label} expires today!',
+    reminder_soon: '{label} expires in {days} days',
+    reminder_insurance: 'Insurance',
+    reminder_inspection: 'Inspection',
+    reminder_tapEdit: 'Tap to edit and renew',
+    storage_usedOf: '{used} MB used of {total} MB',
+    storage_warning: '⚠️ Storage is almost full — export a backup and delete old photos soon.',
+    storage_fallback: '{used} KB of log data (estimate)',
+    storage_fallbackNote: 'Your browser does not support precise measurement — this is an estimate of log data only (without photos).',
+    unit_km: 'km',
+    unit_omr: 'OMR',
+    opPicker_default: '-- Select from list to add --',
+    months: ['January','February','March','April','May','June','July','August','September','October','November','December'],
+    type_routine_plain: 'Routine Maintenance',
+    type_repair_plain: 'Repair',
+    type_inspection_plain: 'Inspection',
+    type_accident_plain: 'Accident',
+    type_other_plain: 'Other',
+    toast_importImgError: 'Data imported but some photos could not be restored',
+    toast_imgSaveFail: 'Failed to save photo',
+    toast_imgProcessFail: 'Could not process this image, please try another one',
+    car_changePhoto: 'Change Photo',
+    car_addPhotoBtn: '📷 Add Car Photo',
+    formatBytes_bytes: 'bytes',
+    formatBytes_kb: 'KB',
+    formatBytes_mb: 'MB',
+    share_allCars: 'All Cars',
+    export_title: '🔧 Car Maintenance Log',
+    export_reportDate: 'Report Date',
+    export_plate: 'Plate',
+    export_insurance: 'Insurance',
+    export_inspection: 'Inspection',
+    export_numLogs: 'Number of Logs',
+    export_total: 'Total',
+    export_thType: 'Type',
+    export_thDesc: 'Description',
+    export_thDate: 'Date',
+    export_thOdometer: 'Odometer',
+    export_thCost: 'Cost',
+    export_thWorkshop: 'Workshop',
+    export_thNotes: 'Notes',
+    export_noLogs: 'No logs for this car.',
+    export_footer: 'Generated by Car Maintenance Log app',
+    export_filename: 'maintenance_log',
+    ios_title: '📱 Install on iPhone / iPad',
+    ios_desc: 'To add the app to your home screen on Apple devices, follow these steps in <b>Safari</b>:',
+    ios_step1: 'Tap the <b>Share</b> button <span style="font-size:18px">􀈂</span> (the square with an arrow) at the bottom of the screen.',
+    ios_step2: 'Scroll down and select <b>"Add to Home Screen"</b> ➕',
+    ios_step3: 'Tap <b>"Add"</b> at the top — the app will appear on your home screen.',
+    ios_note: '💡 Important: On iPhone, export a JSON backup periodically, as the system may clear unused website data.',
+    ios_ok: 'Got it',
+    android_title: '📱 Install on Android',
+    android_desc: 'To add the app to your home screen in <b>Chrome</b>:',
+    android_step1: 'Tap the browser menu <b>(⋮)</b> at the top right of the screen.',
+    android_step2: 'Select <b>"Install App"</b> or <b>"Add to Home Screen"</b>.',
+    android_step3: 'Confirm by tapping <b>"Install"</b>.',
+    android_ok: 'Got it',
+    step_1: '1',
+    step_2: '2',
+    step_3: '3',
+    og_routine: 'Routine Maintenance',
+    og_tires: 'Tires & Wheels',
+    og_brakes: 'Brakes',
+    og_engine: 'Engine & Electrical',
+    og_ac_body: 'AC & Body',
+    og_inspection: 'Inspection & Diagnostics',
+    op_oilFilter: 'Engine oil & filter change',
+    op_airFilter: 'Air filter change',
+    op_fuelFilter: 'Fuel filter change',
+    op_brakeFluid: 'Brake fluid change',
+    op_coolant: 'Coolant change',
+    op_transFluid: 'Transmission fluid change',
+    op_lubrication: 'General lubrication',
+    op_tireChange: 'Tire(s) replacement',
+    op_alignment: 'Wheel alignment',
+    op_balancing: 'Wheel balancing',
+    op_rotation: 'Tire rotation',
+    op_frontPads: 'Front brake pads change',
+    op_rearPads: 'Rear brake pads change',
+    op_brakeDisc: 'Brake disc change',
+    op_handbrake: 'Handbrake adjustment',
+    op_sparkPlugs: 'Spark plugs change',
+    op_timingBelt: 'Timing belt change',
+    op_fanBelt: 'Fan belt change',
+    op_battery: 'Battery change',
+    op_alternator: 'Alternator change',
+    op_starter: 'Starter motor change',
+    op_waterPump: 'Water pump change',
+    op_thermostat: 'Thermostat change',
+    op_acService: 'AC service',
+    op_acGas: 'AC gas recharge',
+    op_polish: 'Body polish & protection',
+    op_wipers: 'Wiper blades change',
+    op_windshield: 'Windshield repair',
+    op_fullInspection: 'Full inspection',
+    op_tripInspection: 'Pre-trip inspection',
+    op_computerDiag: 'Computer diagnostics',
+    op_electricalFault: 'Electrical fault repair',
+  }
+};
+
+function t(key, params) {
+  let str = (translations[currentLang] && translations[currentLang][key]) || (translations['ar'] && translations['ar'][key]) || key;
+  if (params) {
+    Object.keys(params).forEach(k => {
+      str = str.replace(new RegExp('\\{' + k + '\\}', 'g'), params[k]);
+    });
+  }
+  return str;
+}
+
+// Maps a canonical Arabic preset operation string (as stored in log.operations)
+// to its translation key, so saved logs display correctly in whichever language
+// is active. Custom user-typed operations (not in this map) are returned unchanged.
+const OP_NAME_TO_KEY = {
+  'تغيير زيت المحرك والفلتر': 'op_oilFilter',
+  'تغيير فلتر الهواء': 'op_airFilter',
+  'تغيير فلتر الوقود': 'op_fuelFilter',
+  'تغيير سائل الفرامل': 'op_brakeFluid',
+  'تغيير سائل التبريد': 'op_coolant',
+  'تغيير سائل ناقل الحركة': 'op_transFluid',
+  'تشحيم عام': 'op_lubrication',
+  'تغيير إطار / إطارات': 'op_tireChange',
+  'ترصيص (ضبط زوايا العجلات)': 'op_alignment',
+  'موازنة العجلات': 'op_balancing',
+  'تدوير الإطارات': 'op_rotation',
+  'تغيير فحمات الفرامل الأمامية': 'op_frontPads',
+  'تغيير فحمات الفرامل الخلفية': 'op_rearPads',
+  'تغيير ديسك (قرص) الفرامل': 'op_brakeDisc',
+  'ضبط فرامل اليد (الهاند بريك)': 'op_handbrake',
+  'تغيير البلكات (إشعال)': 'op_sparkPlugs',
+  'تغيير السير (تايمنج)': 'op_timingBelt',
+  'تغيير حزام المروحة': 'op_fanBelt',
+  'تغيير البطارية': 'op_battery',
+  'تغيير المولد (دينامو)': 'op_alternator',
+  'تغيير سلف': 'op_starter',
+  'تغيير مضخة الماء': 'op_waterPump',
+  'تغيير ثرموستات': 'op_thermostat',
+  'صيانة مكيف': 'op_acService',
+  'شحن غاز مكيف': 'op_acGas',
+  'تلميع وحماية الجسم': 'op_polish',
+  'تغيير شمعات الزجاج': 'op_wipers',
+  'إصلاح الزجاج الأمامي': 'op_windshield',
+  'فحص شامل': 'op_fullInspection',
+  'فحص ما قبل السفر': 'op_tripInspection',
+  'تشخيص كمبيوتر': 'op_computerDiag',
+  'إصلاح عطل كهربائي': 'op_electricalFault',
+};
+
+function translateOpName(opText) {
+  const key = OP_NAME_TO_KEY[opText];
+  return key ? t(key) : opText; // unknown/custom text passes through unchanged
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (translations[currentLang] && translations[currentLang][key] != null) {
+      el.textContent = translations[currentLang][key];
+    }
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (translations[currentLang] && translations[currentLang][key] != null) {
+      el.innerHTML = translations[currentLang][key];
+    }
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (translations[currentLang] && translations[currentLang][key] != null) {
+      el.placeholder = translations[currentLang][key];
+    }
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (translations[currentLang] && translations[currentLang][key] != null) {
+      el.title = translations[currentLang][key];
+    }
+  });
+  document.querySelectorAll('[data-i18n-optgroup]').forEach(el => {
+    const key = el.getAttribute('data-i18n-optgroup');
+    if (translations[currentLang] && translations[currentLang][key] != null) {
+      el.label = translations[currentLang][key];
+    }
+  });
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  const dir = lang === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('dir', dir);
+  document.body.setAttribute('dir', dir);
+  localStorage.setItem('carMaintenance_lang', lang);
+  document.title = lang === 'ar' ? 'سجل صيانة السيارات' : 'Car Maintenance Log';
+  document.querySelectorAll('[data-lang-btn]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-lang-btn') === lang);
+  });
+  applyTranslations();
+  renderAll();
+  syncAllSelects();
+  if (typeof updateHeaderHeight === 'function') updateHeaderHeight();
+  updateStorageMeter();
+}
+
+// ─── State ────────────────────────────────────────────
+let state = {
+  cars: [],
+  logs: [],
+  selectedCar: null
+};
+
+let editingCarId = null;
+let currentImages = [];   // {id, dataUrl} for images in the log modal being edited
+let currentCarPhoto = null;   // image id (in IDB) for the car photo being edited
+let calcItems = [];       // calculator amounts
+let imageCache = {};      // id -> dataUrl, loaded from IndexedDB for display
+
+// ─── IndexedDB (image storage) ────────────────────────
+const DB_NAME = 'carMaintenanceDB';
+const DB_STORE = 'images';
+let _db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    if (_db) return resolve(_db);
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE);
+    };
+    req.onsuccess = e => { _db = e.target.result; resolve(_db); };
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+function idbPut(key, value) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = e => reject(e.target.error);
+    tx.onabort = e => reject(tx.error || (e.target && e.target.error));
+  }));
+}
+
+function idbGet(key) {
+  return openDB().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const r = tx.objectStore(DB_STORE).get(key);
+    r.onsuccess = () => resolve(r.result || null);
+    r.onerror = e => reject(e.target.error);
+  }));
+}
+
+function idbDelete(key) {
+  return openDB().then(db => new Promise((resolve) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  }));
+}
+
+function idbKeys() {
+  return openDB().then(db => new Promise((resolve) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const r = tx.objectStore(DB_STORE).getAllKeys();
+    r.onsuccess = () => resolve(r.result || []);
+    r.onerror = () => resolve([]);
+  }));
+}
+
+function idbClear() {
+  return openDB().then(db => new Promise((resolve) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+  }));
+}
+
+// Load all stored images into memory cache (for display)
+async function loadImageCache() {
+  try {
+    const keys = await idbKeys();
+    for (const k of keys) {
+      const v = await idbGet(k);
+      if (v) imageCache[k] = v;
+    }
+  } catch(e) { console.warn('image cache load failed', e); }
+}
+
+// ─── Theme ────────────────────────────────────────────
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('themeBtn').textContent = t === 'light' ? '☀️' : '🌙';
+  // Native-feel: keep the Android status bar in sync with the app header color
+  const meta = document.getElementById('themeColorMeta');
+  if (meta) meta.setAttribute('content', t === 'light' ? '#ffffff' : '#161920');
+  // Make the browser render NATIVE controls (select dropdowns, date pickers)
+  // in the matching scheme. Setting it directly on <html> is the reliable way.
+  document.documentElement.style.colorScheme = (t === 'light') ? 'light' : 'dark';
+  const csMeta = document.getElementById('colorSchemeMeta');
+  if (csMeta) csMeta.setAttribute('content', (t === 'light') ? 'light' : 'dark');
+  localStorage.setItem('carMaintenance_theme', t);
+}
+function toggleTheme() {
+  const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+}
+
+// ─── Init ─────────────────────────────────────────────
+async function init() {
+  // Load language preference
+  const savedLang = localStorage.getItem('carMaintenance_lang') || 'ar';
+  setLanguage(savedLang);
+
+  applyTheme(localStorage.getItem('carMaintenance_theme') || 'dark');
+  const saved = localStorage.getItem('carMaintenance_v2');
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) {}
+  }
+  // Migrate old logs that stored base64 directly in images[]
+  await migrateOldImages();
+  await loadImageCache();
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('logDate').value = today;
+  document.getElementById('logDate').max = today;   // block future dates
+  renderAll();
+  updateStorageMeter();
+  document.getElementById('fab').classList.add('show'); // home is the default active page
+}
+
+// Move any inline base64 images (old format) into IndexedDB
+async function migrateOldImages() {
+  let changed = false;
+  for (const log of state.logs) {
+    if (!log.images || !log.images.length) continue;
+    const newIds = [];
+    for (const img of log.images) {
+      if (typeof img === 'string' && img.startsWith('data:')) {
+        const id = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        try { await idbPut(id, img); newIds.push(id); changed = true; }
+        catch(e) { newIds.push(img); } // keep as-is if migration fails
+      } else {
+        newIds.push(img); // already an id
+      }
+    }
+    log.images = newIds;
+  }
+  if (changed) { try { localStorage.setItem('carMaintenance_v2', JSON.stringify(state)); } catch(e){} }
+}
+
+function save() {
+  try {
+    localStorage.setItem('carMaintenance_v2', JSON.stringify(state));
+    return true;
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || /quota/i.test(e.message || '')) {
+      showStorageFullAlert();
+    } else {
+      showToast(t('toast_saveFailed') + (e.message || ''), 'error');
+    }
+    return false;
+  }
+}
+
+function showStorageFullAlert() {
+  alert(t('alert_storageFull'));
+  showPage2('settings');
+  updateStorageMeter();
+}
+
+// ─── Storage meter (real numbers from the browser) ────
+async function updateStorageMeter() {
+  const labelEl = document.getElementById('storageLabel');
+  const pctEl = document.getElementById('storagePercent');
+  const barEl = document.getElementById('storageBar');
+  const detailEl = document.getElementById('storageDetail');
+  if (!labelEl) return;
+
+  if (navigator.storage && navigator.storage.estimate) {
+    try {
+      const est = await navigator.storage.estimate();
+      const usage = est.usage || 0;
+      const quota = est.quota || 0;
+      const usedMB = (usage / 1048576).toFixed(2);
+      const quotaMB = quota ? (quota / 1048576).toFixed(0) : '؟';
+      const pct = quota ? (usage / quota * 100) : 0;
+      labelEl.textContent = t('storage_usedOf', {used: usedMB, total: quotaMB});
+      pctEl.textContent = pct.toFixed(1) + '%';
+      barEl.style.width = Math.min(pct, 100) + '%';
+      barEl.style.background = pct < 60 ? 'var(--green)' : pct < 85 ? 'var(--orange)' : 'var(--red)';
+      detailEl.textContent = pct >= 85 ? t('storage_warning') : t('settings_storageNote');
+    } catch (e) {
+      fallbackMeter(labelEl, pctEl, barEl, detailEl);
+    }
+  } else {
+    fallbackMeter(labelEl, pctEl, barEl, detailEl);
+  }
+}
+
+// Fallback: estimate localStorage usage only (older browsers without Storage API)
+function fallbackMeter(labelEl, pctEl, barEl, detailEl) {
+  let bytes = 0;
+  try {
+    const raw = localStorage.getItem('carMaintenance_v2') || '';
+    bytes = new Blob([raw]).size;
+  } catch(e) {}
+  const usedKB = (bytes / 1024).toFixed(1);
+  const limitKB = 5120; // ~5MB typical localStorage cap
+  const pct = bytes / (limitKB * 1024) * 100;
+  labelEl.textContent = t('storage_fallback', {used: usedKB});
+  pctEl.textContent = pct.toFixed(1) + '%';
+  barEl.style.width = Math.min(pct, 100) + '%';
+  barEl.style.background = pct < 60 ? 'var(--green)' : pct < 85 ? 'var(--orange)' : 'var(--red)';
+  detailEl.textContent = t('storage_fallbackNote');
+}
+
+function renderAll() {
+  renderCarGrid();
+  renderReminders();
+  renderLogs();
+  renderStats();
+  renderSettings();
+  updateCarSelects();
+}
+
+// ─── Renewal reminders ────────────────────────────────
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / 86400000);
+}
+
+function renderReminders() {
+  const banner = document.getElementById('reminderBanner');
+  if (!banner) return;
+  const items = [];
+  state.cars.forEach(car => {
+    const lead = car.reminderDays != null ? car.reminderDays : 30;
+    if (!lead) return;
+    [['insurance', 'reminder_insurance'], ['inspection', 'reminder_inspection']].forEach(([key, labelKey]) => {
+      const label = t(labelKey);
+      const d = daysUntil(car[key]);
+      if (d == null) return;
+      if (d < 0) items.push({ car, label, days: d, expired: true });
+      else if (d <= lead) items.push({ car, label, days: d, expired: false });
+    });
+  });
+  if (!items.length) { banner.innerHTML = ''; return; }
+  items.sort((a, b) => a.days - b.days);
+  banner.innerHTML = items.map(it => {
+    const color = it.expired ? 'var(--red)' : (it.days <= 7 ? 'var(--red)' : 'var(--orange)');
+    const bg = it.expired || it.days <= 7 ? 'rgba(239,68,68,0.12)' : 'rgba(249,115,22,0.12)';
+    const msg = it.expired
+      ? t('reminder_expired', {label: it.label, days: Math.abs(it.days)})
+      : (it.days === 0 ? t('reminder_today', {label: it.label}) : t('reminder_soon', {label: it.label, days: it.days}));
+    return `<div onclick="openEditCar('${it.car.id}')" style="cursor:pointer;background:${bg};border:1px solid ${color};border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">${it.expired ? '⛔' : '⏰'}</span>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:14px;color:${color}">${it.car.emoji||'🚗'} ${it.car.name} — ${msg}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${t('reminder_tapEdit')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── Pages ────────────────────────────────────────────
+function showPage(name, ev) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const trigger = (ev && ev.target) || (typeof event !== 'undefined' && event.target) || null;
+  if (trigger && trigger.classList.contains('tab-btn')) {
+    trigger.classList.add('active');
+  } else {
+    // programmatic: highlight the matching tab by data-page
+    const tab = document.querySelector('.tab-btn[data-page="' + name + '"]');
+    if (tab) tab.classList.add('active');
+  }
+  document.getElementById('addLogBtn').style.display = (name === 'logs') ? 'flex' : 'none';
+  if (typeof updateHeaderHeight === 'function') updateHeaderHeight();
+  document.getElementById('fab').classList.toggle('show', name === 'home');
+  if (name === 'settings') updateStorageMeter();
+}
+
+// Programmatic page switch (no event)
+function showPage2(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const tab = document.querySelector('.tab-btn[data-page="' + name + '"]');
+  if (tab) tab.classList.add('active');
+  document.getElementById('addLogBtn').style.display = (name === 'logs') ? 'flex' : 'none';
+  if (typeof updateHeaderHeight === 'function') updateHeaderHeight();
+  document.getElementById('fab').classList.toggle('show', name === 'home');
+  if (name === 'settings') updateStorageMeter();
+}
+
+// ─── Cars ─────────────────────────────────────────────
+function renderCarGrid() {
+  const grid = document.getElementById('carGrid');
+  grid.innerHTML = '';
+  state.cars.forEach(car => {
+    const carLogs = state.logs.filter(l => l.carId === car.id);
+    const totalCost = carLogs.reduce((s, l) => s + (parseFloat(l.cost) || 0), 0);
+    const lastLog = carLogs.sort((a,b) => b.date.localeCompare(a.date))[0];
+    const div = document.createElement('div');
+    div.className = 'car-card' + (state.selectedCar === car.id ? ' selected' : '');
+    div.onclick = () => selectCar(car.id);
+    div.innerHTML = `
+      ${car.photo && imageCache[car.photo]
+        ? `<img src="${imageCache[car.photo]}" style="width:100%;max-height:220px;object-fit:contain;border-radius:8px;margin-bottom:10px;background:var(--surface2)">`
+        : `<div class="car-icon">${car.emoji || '🚗'}</div>`}
+      <div class="car-name">${car.name}</div>
+      <div class="car-meta">${[car.make, car.model, car.year].filter(Boolean).join(' • ')}</div>
+      ${car.plate ? `<div class="car-meta" style="margin-top:3px">🔢 ${car.plate}</div>` : ''}
+      <div class="car-stats">
+        <div class="stat-item">
+          <div class="stat-val">${carLogs.length}</div>
+          <div class="stat-lbl">${t('card_log')}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">${totalCost.toFixed(2)}</div>
+          <div class="stat-lbl">${t('card_totalCost')}</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">${lastLog ? formatDateShort(lastLog.date) : '—'}</div>
+          <div class="stat-lbl">${t('card_lastMaint')}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button class="btn btn-secondary" style="flex:1;justify-content:center;padding:8px" onclick="event.stopPropagation();openEditCar('${car.id}')">${t('btn_editCar')}</button>
+      </div>
+    `;
+    grid.appendChild(div);
+  });
+
+  // Quick log preview
+  if (state.selectedCar) {
+    const car = state.cars.find(c => c.id === state.selectedCar);
+    const carLogs = state.logs.filter(l => l.carId === state.selectedCar)
+      .sort((a,b) => b.date.localeCompare(a.date)).slice(0, 3);
+    document.getElementById('quickLog').style.display = 'block';
+    document.getElementById('selectedCarName').textContent = car ? car.name : '';
+    const list = document.getElementById('quickLogList');
+    if (carLogs.length === 0) {
+      list.innerHTML = `<div class="empty-state"><div class="emoji">📋</div><p>${t('home_noLogs')}</p></div>`;
+    } else {
+      list.innerHTML = carLogs.map(l => logEntryHTML(l, false)).join('');
+    }
+  } else {
+    document.getElementById('quickLog').style.display = 'none';
+  }
+}
+
+function selectCar(carId) {
+  state.selectedCar = state.selectedCar === carId ? null : carId;
+  save();
+  renderCarGrid();
+}
+
+function openAddCar() {
+  editingCarId = null;
+  document.getElementById('carModalTitle').textContent = t('modal_addCar');
+  ['carName','carMake','carModel','carYear','carColor','carPlate','carInsurance','carInspection'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('carEmoji').value = '🚗';
+  document.getElementById('carReminderDays').value = '30';
+  currentCarPhoto = null;
+  renderCarPhotoArea();
+  document.getElementById('modalCar').classList.remove('hidden');
+  enhanceAllSelects();
+  syncAllSelects();
+}
+
+function openEditCar(id) {
+  const car = state.cars.find(c => c.id === id);
+  if (!car) return;
+  editingCarId = id;
+  document.getElementById('carModalTitle').textContent = t('modal_editCar');
+  document.getElementById('carName').value = car.name || '';
+  document.getElementById('carMake').value = car.make || '';
+  document.getElementById('carModel').value = car.model || '';
+  document.getElementById('carYear').value = car.year || '';
+  document.getElementById('carColor').value = car.color || '';
+  document.getElementById('carPlate').value = car.plate || '';
+  document.getElementById('carEmoji').value = car.emoji || '🚗';
+  document.getElementById('carInsurance').value = car.insurance || '';
+  document.getElementById('carInspection').value = car.inspection || '';
+  document.getElementById('carReminderDays').value = (car.reminderDays != null ? car.reminderDays : 30);
+  currentCarPhoto = car.photo || null;
+  renderCarPhotoArea();
+  document.getElementById('modalCar').classList.remove('hidden');
+  enhanceAllSelects();
+  syncAllSelects();
+}
+
+function saveCar() {
+  const name = document.getElementById('carName').value.trim();
+  if (!name) { showToast(t('toast_enterCarName'), 'error'); return; }
+  const car = {
+    id: editingCarId || Date.now().toString(),
+    name,
+    make: document.getElementById('carMake').value.trim(),
+    model: document.getElementById('carModel').value.trim(),
+    year: document.getElementById('carYear').value.trim(),
+    color: document.getElementById('carColor').value.trim(),
+    plate: document.getElementById('carPlate').value.trim(),
+    emoji: document.getElementById('carEmoji').value.trim() || '🚗',
+    photo: currentCarPhoto || null,
+    insurance: document.getElementById('carInsurance').value || '',
+    inspection: document.getElementById('carInspection').value || '',
+    reminderDays: parseInt(document.getElementById('carReminderDays').value) || 0,
+    createdAt: editingCarId ? undefined : new Date().toISOString()
+  };
+  if (editingCarId) {
+    const idx = state.cars.findIndex(c => c.id === editingCarId);
+    if (idx !== -1) {
+      car.createdAt = state.cars[idx].createdAt;
+      // if photo was removed/replaced, delete the old one from IDB
+      const oldPhoto = state.cars[idx].photo;
+      if (oldPhoto && oldPhoto !== car.photo) { idbDelete(oldPhoto); delete imageCache[oldPhoto]; }
+      state.cars[idx] = car;
+    }
+  } else {
+    state.cars.push(car);
+  }
+  save(); closeModals(); renderAll();
+  showToast(editingCarId ? t('toast_carEdited') : t('toast_carAdded'));
+}
+
+function deleteCar(id) {
+  if (!confirm(t('alert_deleteCar'))) return;
+  const car = state.cars.find(c => c.id === id);
+  if (car && car.photo) { idbDelete(car.photo); delete imageCache[car.photo]; }
+  // delete images belonging to this car's logs
+  state.logs.filter(l => l.carId === id).forEach(l => {
+    (l.images || []).forEach(imgId => { idbDelete(imgId); delete imageCache[imgId]; });
+  });
+  state.cars = state.cars.filter(c => c.id !== id);
+  state.logs = state.logs.filter(l => l.carId !== id);
+  if (state.selectedCar === id) state.selectedCar = null;
+  save(); renderAll(); updateStorageMeter();
+  showToast(t('toast_carDeleted'));
+}
+
+// ─── Logs ─────────────────────────────────────────────
+function openAddLog(carId) {
+  document.getElementById('logModalTitle').textContent = t('modal_addLog');
+  document.getElementById('editLogId').value = '';
+  document.getElementById('opPicker').value = '';
+  syncAllSelects();
+  document.getElementById('customOpInput').value = '';
+  currentOps = [];
+  renderOps();
+  document.getElementById('logType').value = 'routine';
+  const todayD = new Date().toISOString().split('T')[0];
+  document.getElementById('logDate').value = todayD;
+  document.getElementById('logDate').max = todayD;
+  document.getElementById('logKm').value = '';
+  document.getElementById('logCost').value = '';
+  document.getElementById('logWorkshop').value = '';
+  document.getElementById('logNotes').value = '';
+  currentImages = [];
+  removedImageIds = [];
+  renderImagePreview();
+  if (carId) document.getElementById('logCar').value = carId;
+  else if (state.selectedCar) document.getElementById('logCar').value = state.selectedCar;
+  document.getElementById('modalLog').classList.remove('hidden');
+  enhanceAllSelects();
+  syncAllSelects();
+}
+
+function openEditLog(id) {
+  const log = state.logs.find(l => l.id === id);
+  if (!log) return;
+  document.getElementById('logModalTitle').textContent = t('modal_editLog');
+  document.getElementById('editLogId').value = id;
+  document.getElementById('logCar').value = log.carId;
+  document.getElementById('logType').value = log.type;
+  document.getElementById('opPicker').value = '';
+  syncAllSelects();
+  document.getElementById('customOpInput').value = '';
+  // load operations: prefer stored array, fallback to splitting old title
+  currentOps = Array.isArray(log.operations) && log.operations.length
+    ? [...log.operations]
+    : (log.title ? log.title.split(' + ').map(s => s.trim()).filter(Boolean) : []);
+  renderOps();
+  document.getElementById('logDate').value = log.date;
+  document.getElementById('logKm').value = log.km || '';
+  document.getElementById('logCost').value = log.cost || '';
+  document.getElementById('logWorkshop').value = log.workshop || '';
+  document.getElementById('logNotes').value = log.notes || '';
+  currentImages = (log.images || []).map(id => ({ id, dataUrl: imageCache[id] || '' }));
+  removedImageIds = [];
+  renderImagePreview();
+  document.getElementById('modalLog').classList.remove('hidden');
+  enhanceAllSelects();
+  syncAllSelects();
+}
+
+// ─── Operations multi-select (chips) ─────────────────
+let currentOps = [];   // array of selected operation strings
+
+function renderOps() {
+  const c = document.getElementById('selectedOps');
+  if (!currentOps.length) {
+    c.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">' + t('log_noOps') + '</span>';
+    return;
+  }
+  c.innerHTML = currentOps.map((op, i) => `
+    <span style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--accent-text);padding:5px 10px;border-radius:16px;font-size:13px;font-weight:600">
+      ${escapeHtml(translateOpName(op))}
+      <button onclick="removeOp(${i})" style="background:rgba(0,0,0,0.2);color:inherit;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;line-height:1;padding:0">×</button>
+    </span>
+  `).join('');
+}
+
+function addOp(op) {
+  op = (op || '').trim();
+  if (!op) return;
+  if (currentOps.includes(op)) { showToast(t('log_opExists'), 'error'); return; }
+  currentOps.push(op);
+  renderOps();
+}
+
+function addOpFromPicker() {
+  const sel = document.getElementById('opPicker');
+  if (sel.value) { addOp(sel.value); sel.value = ''; }
+}
+
+function addCustomOp() {
+  const input = document.getElementById('customOpInput');
+  addOp(input.value);
+  input.value = '';
+  input.focus();
+}
+
+function removeOp(i) { currentOps.splice(i, 1); renderOps(); }
+
+function saveLog() {
+  const carId = document.getElementById('logCar').value;
+  // pick up any custom text left unconfirmed in the input
+  const pending = document.getElementById('customOpInput').value.trim();
+  if (pending && !currentOps.includes(pending)) currentOps.push(pending);
+  const title = currentOps.join(' + ');
+  const date = document.getElementById('logDate').value;
+  if (!carId || !currentOps.length || !date) { showToast(t('toast_selectCarOp'), 'error'); return; }
+  const todayStr = new Date().toISOString().split('T')[0];
+  if (date > todayStr) { showToast(t('toast_noFutureDate'), 'error'); return; }
+
+  const editId = document.getElementById('editLogId').value;
+  const log = {
+    id: editId || Date.now().toString(),
+    carId,
+    type: document.getElementById('logType').value,
+    title,
+    operations: [...currentOps],
+    date,
+    km: document.getElementById('logKm').value,
+    cost: document.getElementById('logCost').value,
+    workshop: document.getElementById('logWorkshop').value.trim(),
+    notes: document.getElementById('logNotes').value.trim(),
+    images: currentImages.map(im => im.id),   // store ids only; blobs live in IndexedDB
+    createdAt: editId ? undefined : new Date().toISOString()
+  };
+
+  if (editId) {
+    const idx = state.logs.findIndex(l => l.id === editId);
+    if (idx !== -1) { log.createdAt = state.logs[idx].createdAt; state.logs[idx] = log; }
+  } else {
+    state.logs.push(log);
+  }
+  // Delete images the user removed in the modal
+  const keptIds = new Set(currentImages.map(im => im.id));
+  removedImageIds.forEach(rid => {
+    if (!keptIds.has(rid)) { idbDelete(rid); delete imageCache[rid]; }
+  });
+  removedImageIds = [];
+  save(); closeModals(); renderAll(); updateStorageMeter();
+  showToast(editId ? t('toast_logEdited') : t('toast_logAdded'));
+}
+
+function deleteLog(id) {
+  if (!confirm(t('alert_deleteLog'))) return;
+  const log = state.logs.find(l => l.id === id);
+  if (log && log.images) log.images.forEach(imgId => { idbDelete(imgId); delete imageCache[imgId]; });
+  state.logs = state.logs.filter(l => l.id !== id);
+  save(); renderAll(); updateStorageMeter();
+  showToast(t('toast_logDeleted'));
+}
+
+function renderLogs() {
+  const filterCar = document.getElementById('filterCar').value;
+  const filterType = document.getElementById('filterType').value;
+  const filterSort = document.getElementById('filterSort').value;
+  const searchEl = document.getElementById('searchBox');
+  const query = (searchEl ? searchEl.value : '').trim().toLowerCase();
+  const clearBtn = document.getElementById('searchClear');
+  if (clearBtn) clearBtn.style.display = query ? 'block' : 'none';
+  updateFilterBadge();
+
+  let logs = [...state.logs];
+  if (filterCar) logs = logs.filter(l => l.carId === filterCar);
+  if (filterType) logs = logs.filter(l => l.type === filterType);
+
+  if (query) {
+    const norm = s => (s || '').toString().toLowerCase();
+    logs = logs.filter(l => {
+      const car = state.cars.find(c => c.id === l.carId);
+      const ops = Array.isArray(l.operations) ? l.operations.join(' ') : '';
+      const hay = [l.title, ops, l.workshop, l.notes, l.date, car && car.name, car && car.plate]
+        .map(norm).join(' ');
+      return hay.includes(query);
+    });
+  }
+
+  logs.sort((a, b) => {
+    if (filterSort === 'date-asc') return a.date.localeCompare(b.date);
+    if (filterSort === 'cost-desc') return (parseFloat(b.cost)||0) - (parseFloat(a.cost)||0);
+    return b.date.localeCompare(a.date);
+  });
+
+  const container = document.getElementById('logsList');
+  if (logs.length === 0) {
+    const msg = query ? `${t('logs_noResults')} "${searchEl.value.trim()}"` : t('logs_empty');
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p>${msg}</p></div>`;
+    return;
+  }
+  container.innerHTML = logs.map(l => logEntryHTML(l, true, query)).join('');
+}
+
+function clearSearch() {
+  const s = document.getElementById('searchBox');
+  if (s) { s.value = ''; renderLogs(); s.focus(); }
+}
+
+// ─── Merged filters (toggle panel + active-count badge) ───
+// ─── Custom themed dropdowns ──────────────────────────
+// Android draws native <select> popups ITSELF using the phone's system theme,
+// ignoring all CSS and color-scheme. So we hide the real <select> (keeping it as
+// the single source of truth for value/options/i18n — all existing code keeps
+// working untouched) and render our own themed bottom sheet on top of it.
+function enhanceSelect(sel) {
+  if (!sel || sel.dataset.csDone === '1') return;
+  sel.dataset.csDone = '1';
+
+  // Hide the native control but keep it in the DOM & form flow
+  sel.style.display = 'none';
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'cs-trigger';
+  trigger.innerHTML = '<span class="cs-val"></span><span class="cs-arrow">▼</span>';
+  sel.insertAdjacentElement('afterend', trigger);
+  sel.__csTrigger = trigger;
+
+  const sync = () => {
+    const opt = sel.options[sel.selectedIndex];
+    const label = opt ? opt.textContent.trim() : '';
+    trigger.querySelector('.cs-val').textContent = label;
+    // grey out when the chosen option is the empty/placeholder one
+    trigger.classList.toggle('cs-placeholder', !!opt && opt.value === '');
+  };
+  sel.__csSync = sync;
+  sync();
+
+  trigger.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (sel.disabled) return;
+    openSelectSheet(sel);
+  });
+}
+
+function openSelectSheet(sel) {
+  const overlay = document.createElement('div');
+  overlay.className = 'cs-overlay';
+
+  const sheet = document.createElement('div');
+  sheet.className = 'cs-sheet';
+
+  const grip = document.createElement('div');
+  grip.className = 'cs-grip';
+  sheet.appendChild(grip);
+
+  // Title: reuse the field's own label when there is one
+  let titleText = '';
+  const grp = sel.closest('.form-group, .fp-group');
+  if (grp) {
+    const lab = grp.querySelector('.form-label, .fp-label');
+    if (lab) titleText = lab.textContent.trim();
+  }
+  if (titleText) {
+    const title = document.createElement('div');
+    title.className = 'cs-title';
+    title.textContent = titleText;
+    sheet.appendChild(title);
+  }
+
+  const list = document.createElement('div');
+  list.className = 'cs-list';
+
+  const addOption = opt => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cs-opt' + (opt.selected ? ' cs-sel' : '');
+    const check = document.createElement('span');
+    check.className = 'cs-check';
+    const txt = document.createElement('span');
+    txt.textContent = opt.textContent.trim();
+    b.appendChild(check);
+    b.appendChild(txt);
+    b.addEventListener('click', () => {
+      sel.value = opt.value;
+      if (sel.__csSync) sel.__csSync();
+      close();
+      // fire change so existing handlers (renderLogs, addOpFromPicker...) run
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    list.appendChild(b);
+  };
+
+  // Preserve <optgroup> structure (used by the maintenance-operations picker)
+  Array.from(sel.children).forEach(child => {
+    if (child.tagName === 'OPTGROUP') {
+      const g = document.createElement('div');
+      g.className = 'cs-group';
+      g.textContent = child.label;
+      list.appendChild(g);
+      Array.from(child.children).forEach(addOption);
+    } else if (child.tagName === 'OPTION') {
+      addOption(child);
+    }
+  });
+
+  sheet.appendChild(list);
+  overlay.appendChild(sheet);
+
+  function close() {
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  }
+  function onKey(e) { if (e.key === 'Escape') close(); }
+
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', onKey);
+
+  document.body.appendChild(overlay);
+  const selected = list.querySelector('.cs-sel');
+  if (selected) selected.scrollIntoView({ block: 'center' });
+}
+
+// Enhance every select on the page, and re-sync labels after re-renders/i18n
+function enhanceAllSelects() {
+  document.querySelectorAll('select').forEach(enhanceSelect);
+}
+function syncAllSelects() {
+  document.querySelectorAll('select').forEach(s => { if (s.__csSync) s.__csSync(); });
+}
+
+function toggleStorageInfo() {
+  const p = document.getElementById('storageInfoPanel');
+  const ch = document.getElementById('storageInfoChevron');
+  if (!p) return;
+  const show = p.style.display === 'none';
+  p.style.display = show ? 'block' : 'none';
+  if (ch) ch.textContent = show ? '▲' : '▼';
+}
+
+function toggleFilterPanel() {
+  const panel = document.getElementById('filterPanel');
+  const chev = document.getElementById('filterChevron');
+  if (!panel) return;
+  const nowHidden = panel.classList.toggle('hidden');
+  if (chev) chev.textContent = nowHidden ? '▼' : '▲';
+}
+
+function resetFilters() {
+  const car = document.getElementById('filterCar');
+  const type = document.getElementById('filterType');
+  const sort = document.getElementById('filterSort');
+  if (car) car.value = '';
+  if (type) type.value = '';
+  if (sort) sort.value = 'date-desc';
+  syncAllSelects();
+  renderLogs();
+}
+
+// Counts only "non-default" filters so the badge reflects real narrowing
+function updateFilterBadge() {
+  const car = document.getElementById('filterCar');
+  const type = document.getElementById('filterType');
+  const sort = document.getElementById('filterSort');
+  const badge = document.getElementById('filterBadge');
+  const btn = document.getElementById('filterToggleBtn');
+  if (!badge || !btn) return;
+  let n = 0;
+  if (car && car.value) n++;
+  if (type && type.value) n++;
+  if (sort && sort.value && sort.value !== 'date-desc') n++;
+  badge.textContent = n;
+  badge.style.display = n ? 'inline-block' : 'none';
+  btn.classList.toggle('active-filters', n > 0);
+}
+
+// highlight matched substring (safe: escapes HTML first)
+function highlight(text, query) {
+  const t = (text == null ? '' : String(text));
+  if (!query) return escapeHtml(t);
+  const esc = escapeHtml(t);
+  const idx = t.toLowerCase().indexOf(query);
+  if (idx < 0) return esc;
+  // re-find on escaped string is unsafe; do simple case-insensitive wrap on raw then escape parts
+  const before = escapeHtml(t.slice(0, idx));
+  const match = escapeHtml(t.slice(idx, idx + query.length));
+  const after = highlight(t.slice(idx + query.length), query);
+  return before + '<mark style="background:var(--accent);color:var(--accent-text);border-radius:3px;padding:0 2px">' + match + '</mark>' + after;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function logEntryHTML(log, showCar, query) {
+  const car = state.cars.find(c => c.id === log.carId);
+  const badgeClass = { routine:'badge-routine', repair:'badge-repair', inspection:'badge-inspection', accident:'badge-accident', other:'badge-other' }[log.type] || 'badge-other';
+  const typeName = { routine: t('type_routine'), repair: t('type_repair'), inspection: t('type_inspection'), accident: t('type_accident'), other: t('type_other') }[log.type] || log.type;
+  const ops = Array.isArray(log.operations) && log.operations.length
+    ? log.operations
+    : (log.title ? log.title.split(' + ').map(s => s.trim()).filter(Boolean) : []);
+  const titleHtml = ops.length > 1
+    ? ops.map(o => '• ' + highlight(translateOpName(o), query)).join('<br>')
+    : highlight(translateOpName(ops[0] || log.title || ''), query);
+  return `
+    <div class="log-entry">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <span class="log-type-badge ${badgeClass}">${typeName}</span>
+          ${showCar && car ? `<span style="font-size:11px;color:var(--text-muted)">${car.emoji||'🚗'} ${car.name}</span>` : ''}
+        </div>
+        <div class="log-title">${titleHtml}</div>
+        <div class="log-meta">
+          <span>📅 ${formatDate(log.date)}</span>
+          ${log.km ? `<span>🛣️ ${Number(log.km).toLocaleString()} ${t('unit_km')}</span>` : ''}
+          ${log.workshop ? `<span>🔧 ${highlight(log.workshop, query)}</span>` : ''}
+        </div>
+        ${log.notes ? `<div class="log-notes">${highlight(log.notes, query)}</div>` : ''}
+        ${log.images && log.images.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${log.images.map((imgId,ii) => imageCache[imgId] ? `<img src="${imageCache[imgId]}" data-log="${log.id}" data-idx="${ii}" onclick="event.stopPropagation();viewLogImage(this)" style="width:54px;height:54px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer">` : '').join('')}</div>` : ''}
+        <div class="log-actions">
+          <button class="icon-btn" onclick="openEditLog('${log.id}')">${t('btn_edit')}</button>
+          <button class="icon-btn delete" onclick="deleteLog('${log.id}')">${t('btn_delete')}</button>
+        </div>
+      </div>
+      ${log.cost ? `<div class="log-cost">${parseFloat(log.cost).toFixed(3)}<br><span style="font-size:10px;font-weight:400;color:var(--text-muted)">${t('unit_omr')}</span></div>` : ''}
+    </div>
+  `;
+}
+
+// ─── Stats ────────────────────────────────────────────
+function renderStats() {
+  const totalLogs = state.logs.length;
+  const totalCost = state.logs.reduce((s, l) => s + (parseFloat(l.cost)||0), 0);
+  const totalCars = state.cars.length;
+  const thisYear = new Date().getFullYear().toString();
+  const yearCost = state.logs.filter(l => l.date.startsWith(thisYear)).reduce((s,l) => s+(parseFloat(l.cost)||0), 0);
+
+  document.getElementById('globalStats').innerHTML = `
+    <div class="stat-card"><div class="val">${totalCars}</div><div class="lbl">${t('stats_cars')}</div></div>
+    <div class="stat-card"><div class="val">${totalLogs}</div><div class="lbl">${t('stats_totalLogs')}</div></div>
+    <div class="stat-card"><div class="val">${totalCost.toFixed(2)}</div><div class="lbl">${t('stats_totalCost')}</div></div>
+    <div class="stat-card"><div class="val">${yearCost.toFixed(2)}</div><div class="lbl">${t('stats_yearCost')}</div></div>
+  `;
+
+  const perCar = document.getElementById('perCarStats');
+  perCar.innerHTML = '';
+  state.cars.forEach(car => {
+    const logs = state.logs.filter(l => l.carId === car.id);
+    const cost = logs.reduce((s,l) => s+(parseFloat(l.cost)||0), 0);
+    const byType = {};
+    logs.forEach(l => { byType[l.type] = (byType[l.type]||0) + 1; });
+    const typeNames = { routine:t('type_routine_plain'), repair:t('type_repair_plain'), inspection:t('type_inspection_plain'), accident:t('type_accident_plain'), other:t('type_other_plain') };
+    const topLog = logs.sort((a,b)=>b.date.localeCompare(a.date))[0];
+    perCar.innerHTML += `
+      <div class="section-title">${car.emoji||'🚗'} ${car.name}</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="val">${logs.length}</div><div class="lbl">${t('stats_log')}</div></div>
+        <div class="stat-card"><div class="val">${cost.toFixed(2)}</div><div class="lbl">${t('stats_totalCost')}</div></div>
+        ${topLog ? `<div class="stat-card"><div class="val">${formatDateShort(topLog.date)}</div><div class="lbl">${t('stats_lastMaint')}</div></div>` : ''}
+        ${topLog && topLog.km ? `<div class="stat-card"><div class="val">${Number(topLog.km).toLocaleString()}</div><div class="lbl">${t('stats_lastKm')}</div></div>` : ''}
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        ${Object.entries(byType).map(([tp,n]) => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px">${typeNames[tp]||tp}</span>
+            <span style="font-weight:700;color:var(--accent)">${n}</span>
+          </div>
+        `).join('') || `<p style="color:var(--text-muted);font-size:13px">${t('stats_noLogs')}</p>`}
+      </div>
+    `;
+  });
+  if (state.cars.length === 0) {
+    perCar.innerHTML = `<div class="empty-state"><div class="emoji">🚗</div><p>${t('stats_noCars')}</p></div>`;
+  }
+}
+
+// ─── Settings ─────────────────────────────────────────
+function renderSettings() {
+  const container = document.getElementById('carManage');
+  if (state.cars.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="emoji">🚗</div><p>${t('settings_noCars')}</p></div>`;
+    return;
+  }
+  container.innerHTML = state.cars.map(car => {
+    const logs = state.logs.filter(l => l.carId === car.id).length;
+    return `
+      <div class="card" style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:28px">${car.emoji||'🚗'}</div>
+        <div style="flex:1">
+          <div style="font-weight:700">${car.name}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${[car.make,car.model,car.year].filter(Boolean).join(' ')} • ${logs} ${t('stats_log')}</div>
+        </div>
+        <button class="icon-btn" onclick="openEditCar('${car.id}')">✏️</button>
+        <button class="icon-btn delete" onclick="deleteCar('${car.id}')">🗑️</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// ─── Car selects ──────────────────────────────────────
+function updateCarSelects() {
+  const filterCar = document.getElementById('filterCar');
+  const prev = filterCar.value;
+  filterCar.innerHTML = `<option value="">${t('filter_allCars')}</option>`;
+  state.cars.forEach(c => {
+    filterCar.innerHTML += `<option value="${c.id}">${c.emoji||'🚗'} ${c.name}</option>`;
+  });
+  if (prev) filterCar.value = prev;
+
+  const logCar = document.getElementById('logCar');
+  const prev2 = logCar.value;
+  logCar.innerHTML = state.cars.map(c => `<option value="${c.id}">${c.emoji||'🚗'} ${c.name}</option>`).join('');
+  if (prev2) logCar.value = prev2;
+  enhanceAllSelects();
+  syncAllSelects();
+}
+
+// ─── Modals ───────────────────────────────────────────
+function closeModals() {
+  document.getElementById('modalCar').classList.add('hidden');
+  document.getElementById('modalLog').classList.add('hidden');
+  document.getElementById('modalShare').classList.add('hidden');
+  document.getElementById('modalCalc').classList.add('hidden');
+  document.getElementById('modalImgView').classList.add('hidden');
+  document.getElementById('modalIOS').classList.add('hidden');
+  document.getElementById('modalAndroid').classList.add('hidden');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) closeModals(); });
+});
+
+// ─── Backup ───────────────────────────────────────────
+async function exportData() {
+  // Bundle images from IndexedDB so the backup is complete and portable
+  const images = {};
+  try {
+    const keys = await idbKeys();
+    for (const k of keys) { const v = await idbGet(k); if (v) images[k] = v; }
+  } catch(e) {}
+  const payload = { version: 3, cars: state.cars, logs: state.logs, selectedCar: state.selectedCar, images };
+  const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `car_maintenance_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  showToast(t('toast_exported'));
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = async e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.cars || !data.logs) throw new Error();
+      state = { cars: data.cars, logs: data.logs, selectedCar: data.selectedCar || null };
+      // Restore images into IndexedDB
+      if (data.images && typeof data.images === 'object') {
+        try {
+          await idbClear();
+          imageCache = {};
+          for (const [k, v] of Object.entries(data.images)) {
+            await idbPut(k, v); imageCache[k] = v;
+          }
+        } catch(err) {
+          showToast(t('toast_importImgError'), 'error');
+        }
+      }
+      if (!save()) return;
+      renderAll(); updateStorageMeter();
+      showToast(t('toast_imported'));
+    } catch { showToast(t('toast_invalidFile'), 'error'); }
+  };
+  r.readAsText(file);
+  input.value = '';
+}
+
+function confirmClearAll() {
+  if (confirm(t('alert_clearAll1'))) {
+    if (confirm(t('alert_clearAll2'))) {
+      state = { cars: [], logs: [], selectedCar: null };
+      idbClear(); imageCache = {};
+      save(); renderAll(); updateStorageMeter();
+      showToast(t('toast_cleared'));
+    }
+  }
+}
+
+// ─── Images (with compression) ────────────────────────
+function handleImages(input) {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    if (!file.type.startsWith('image/')) return;
+    compressImage(file, 1024, 0.6).then(async dataUrl => {
+      const id = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+      const size = dataUrlBytes(dataUrl);
+      try {
+        await idbPut(id, dataUrl);
+        imageCache[id] = dataUrl;
+        currentImages.push({ id, dataUrl, size });
+        renderImagePreview();
+        updateStorageMeter();
+      } catch (e) {
+        if (e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''))) {
+          alert(t('alert_imageStorageFull'));
+          updateStorageMeter();
+        } else {
+          showToast(t('toast_imgSaveFail'), 'error');
+        }
+      }
+    }).catch(err => {
+      console.error('compressImage failed:', err);
+      showToast(t('toast_imgProcessFail'), 'error');
+    });
+  });
+  input.value = '';
+}
+
+function compressImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('file-read-failed'));
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('image-decode-failed'));
+      img.onload = () => {
+        try {
+          let { width, height } = img;
+          if (!width || !height) { reject(new Error('image-zero-dimensions')); return; }
+          if (width > height && width > maxDim) { height = height * maxDim / width; width = maxDim; }
+          else if (height > maxDim) { width = width * maxDim / height; height = maxDim; }
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(width));
+          canvas.height = Math.max(1, Math.round(height));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { reject(new Error('canvas-context-unavailable')); return; }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          if (!dataUrl || dataUrl === 'data:,') { reject(new Error('canvas-export-failed')); return; }
+          resolve(dataUrl);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── Car photo ────────────────────────────────────────
+function handleCarPhoto(input) {
+  const file = input.files[0];
+  input.value = '';
+  if (!file || !file.type.startsWith('image/')) return;
+  compressImage(file, 1280, 0.65).then(async dataUrl => {
+    const id = 'car_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    try {
+      await idbPut(id, dataUrl);
+      imageCache[id] = dataUrl;
+      currentCarPhoto = id;
+      renderCarPhotoArea();
+      updateStorageMeter();
+    } catch (e) {
+      if (e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''))) {
+        alert(t('alert_imageStorageFull'));
+      } else { showToast(t('toast_imgSaveFail'), 'error'); }
+    }
+  }).catch(err => {
+    console.error('compressImage failed:', err);
+    showToast(t('toast_imgProcessFail'), 'error');
+  });
+}
+
+function renderCarPhotoArea() {
+  const area = document.getElementById('carPhotoArea');
+  if (currentCarPhoto && imageCache[currentCarPhoto]) {
+    area.innerHTML = `
+      <div style="position:relative;width:100%;border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+        <img src="${imageCache[currentCarPhoto]}" style="width:100%;max-height:160px;object-fit:cover;display:block">
+        <button type="button" onclick="removeCarPhoto()" style="position:absolute;top:8px;left:8px;background:var(--red);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;line-height:1">×</button>
+        <button type="button" onclick="document.getElementById('carPhotoInput').click()" style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer">${t('car_changePhoto')}</button>
+      </div>`;
+  } else {
+    area.innerHTML = `<button type="button" class="btn btn-secondary" onclick="document.getElementById('carPhotoInput').click()" style="width:100%">${t('car_addPhotoBtn')}</button>`;
+  }
+}
+
+function removeCarPhoto() {
+  // mark for deletion only on save if it was the persisted one; here just drop the reference
+  currentCarPhoto = null;
+  renderCarPhotoArea();
+}
+
+// Approximate decoded byte size of a base64 data URL
+function dataUrlBytes(dataUrl) {
+  const i = dataUrl.indexOf(',');
+  const b64 = i >= 0 ? dataUrl.slice(i + 1) : dataUrl;
+  const padding = (b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0);
+  return Math.max(0, Math.floor(b64.length * 3 / 4) - padding);
+}
+
+function formatBytes(b) {
+  if (b == null) return '';
+  if (b < 1024) return b + ' ' + t('formatBytes_bytes');
+  if (b < 1048576) return (b / 1024).toFixed(0) + ' ' + t('formatBytes_kb');
+  return (b / 1048576).toFixed(1) + ' ' + t('formatBytes_mb');
+}
+
+function renderImagePreview() {
+  const c = document.getElementById('imagePreview');
+  c.innerHTML = currentImages.map((im, i) => {
+    const sz = im.size != null ? im.size : dataUrlBytes(im.dataUrl || '');
+    return `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+      <div style="position:relative;width:70px;height:70px">
+        <img src="${im.dataUrl}" onclick="viewImageData('${im.id}')" style="width:70px;height:70px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer">
+        <button onclick="removeImage(${i})" style="position:absolute;top:-6px;left:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1">×</button>
+      </div>
+      <span style="font-size:10px;color:var(--text-muted)">${formatBytes(sz)}</span>
+    </div>`;
+  }).join('');
+}
+
+// Remove an image from the modal. Track removed ids so we can clean IndexedDB on save.
+let removedImageIds = [];
+function removeImage(i) {
+  const im = currentImages[i];
+  if (im) removedImageIds.push(im.id);
+  currentImages.splice(i, 1);
+  renderImagePreview();
+}
+
+function viewImageData(id) {
+  const url = imageCache[id] || (currentImages.find(im => im.id === id) || {}).dataUrl;
+  if (!url) return;
+  document.getElementById('imgViewFull').src = url;
+  document.getElementById('modalImgView').classList.remove('hidden');
+}
+
+function viewLogImage(el) {
+  const log = state.logs.find(l => l.id === el.getAttribute('data-log'));
+  if (!log) return;
+  const imgId = log.images[parseInt(el.getAttribute('data-idx'))];
+  const url = imageCache[imgId];
+  if (!url) return;
+  document.getElementById('imgViewFull').src = url;
+  document.getElementById('modalImgView').classList.remove('hidden');
+}
+
+// ─── Calculator ───────────────────────────────────────
+function openCalc() {
+  calcItems = [];
+  const cur = parseFloat(document.getElementById('logCost').value);
+  if (cur) calcItems.push(cur);
+  renderCalc();
+  document.getElementById('modalCalc').classList.remove('hidden');
+  setTimeout(() => document.getElementById('calcInput').focus(), 100);
+}
+function addCalcItem() {
+  const v = parseFloat(document.getElementById('calcInput').value);
+  if (!isNaN(v)) { calcItems.push(v); document.getElementById('calcInput').value = ''; renderCalc(); document.getElementById('calcInput').focus(); }
+}
+function renderCalc() {
+  const c = document.getElementById('calcItems');
+  c.innerHTML = calcItems.map((v, i) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+      <button onclick="removeCalcItem(${i})" class="icon-btn delete" style="padding:2px 8px">×</button>
+      <span style="font-weight:600">${v.toFixed(3)} ${t('unit_omr')}</span>
+    </div>
+  `).join('') || `<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:8px">${t('calc_noAmounts')}</p>`;
+  const total = calcItems.reduce((s, v) => s + v, 0);
+  document.getElementById('calcTotal').textContent = total.toFixed(3);
+}
+function removeCalcItem(i) { calcItems.splice(i, 1); renderCalc(); }
+function clearCalc() { calcItems = []; renderCalc(); }
+function applyCalc() {
+  const total = calcItems.reduce((s, v) => s + v, 0);
+  document.getElementById('logCost').value = total.toFixed(3);
+  closeCalc();
+}
+function closeCalc() { document.getElementById('modalCalc').classList.add('hidden'); }
+
+// ─── Share / Export ───────────────────────────────────
+function openShare() {
+  const sel = document.getElementById('shareCar');
+  sel.innerHTML = `<option value="">${t('share_allCars')}</option>` +
+    state.cars.map(c => `<option value="${c.id}">${c.emoji||'🚗'} ${c.name}</option>`).join('');
+  document.getElementById('modalShare').classList.remove('hidden');
+  enhanceAllSelects();
+  syncAllSelects();
+}
+
+function clearShareDates() {
+  document.getElementById('shareFrom').value = '';
+  document.getElementById('shareTo').value = '';
+}
+
+function getShareData() {
+  const carId = document.getElementById('shareCar').value;
+  const fromEl = document.getElementById('shareFrom');
+  const toEl = document.getElementById('shareTo');
+  const from = fromEl ? fromEl.value : '';
+  const to = toEl ? toEl.value : '';
+  const cars = carId ? state.cars.filter(c => c.id === carId) : state.cars;
+  return cars.map(car => ({
+    car,
+    logs: state.logs
+      .filter(l => l.carId === car.id)
+      .filter(l => {
+        if (from && l.date < from) return false;   // ISO date strings compare lexicographically
+        if (to && l.date > to) return false;
+        return true;
+      })
+      .sort((a,b) => b.date.localeCompare(a.date))
+  }));
+}
+
+function getTypeNames() { return { routine:t('type_routine_plain'), repair:t('type_repair_plain'), inspection:t('type_inspection_plain'), accident:t('type_accident_plain'), other:t('type_other_plain') }; }
+
+function exportFormat(fmt) {
+  const data = getShareData();
+  const totalLogs = data.reduce((n, d) => n + d.logs.length, 0);
+  if (data.length === 0 || totalLogs === 0) { showToast(t('toast_noData'), 'error'); return; }
+  const dateStr = new Date().toISOString().split('T')[0];
+  if (fmt === 'html') downloadFile(buildHtml(data), `${t('export_filename')}_${dateStr}.html`, 'text/html');
+  else if (fmt === 'pdf') openPdf(data);
+  showToast(t('toast_preparing'));
+}
+
+// Builds the report's CSS + inner body HTML (shared by both the downloadable
+// standalone file and the in-page print flow).
+function buildReportContent(data) {
+  const esc = s => escapeHtml(s == null ? '' : String(s));
+  let blocks = '';
+  data.forEach(({car, logs}) => {
+    const total = logs.reduce((s,l) => s+(parseFloat(l.cost)||0), 0);
+    const TN = getTypeNames();
+    const renew = [];
+    if (car.insurance) renew.push(`${t('export_insurance')}: ${formatDate(car.insurance)}`);
+    if (car.inspection) renew.push(`${t('export_inspection')}: ${formatDate(car.inspection)}`);
+
+    const rows = logs.map(l => {
+      const ops = Array.isArray(l.operations) && l.operations.length ? l.operations
+        : (l.title ? l.title.split(' + ').map(s=>s.trim()).filter(Boolean) : []);
+      const desc = ops.length > 1
+        ? '<ul class="ops">' + ops.map(o => `<li>${esc(translateOpName(o))}</li>`).join('') + '</ul>'
+        : esc(translateOpName(ops[0] || l.title || ''));
+      return `<tr>
+        <td data-label="${t('export_thType')}"><span class="badge badge-${l.type}">${TN[l.type]}</span></td>
+        <td class="desc" data-label="${t('export_thDesc')}">${desc}</td>
+        <td class="nowrap" data-label="${t('export_thDate')}">${formatDate(l.date)}</td>
+        <td class="nowrap" data-label="${t('export_thOdometer')}">${l.km?Number(l.km).toLocaleString()+' '+t('unit_km'):'—'}</td>
+        <td class="cost" data-label="${t('export_thCost')}">${l.cost?parseFloat(l.cost).toFixed(3)+' '+t('unit_omr'):'—'}</td>
+        <td data-label="${t('export_thWorkshop')}">${esc(l.workshop)||'—'}</td>
+        <td data-label="${t('export_thNotes')}">${esc(l.notes)||'—'}</td>
+      </tr>`;
+    }).join('');
+
+    blocks += `<div class="car-block">
+      <h2>${car.emoji||'🚗'} ${esc(car.name)}</h2>
+      <p class="meta">${esc([car.make,car.model,car.year].filter(Boolean).join(' • '))}${car.plate?' — '+t('export_plate')+': '+esc(car.plate):''}</p>
+      ${renew.length ? `<p class="renew">${renew.join(' • ')}</p>` : ''}
+      <p class="summary">${t('export_numLogs')}: <b>${logs.length}</b> &nbsp;|&nbsp; ${t('export_total')}: <b>${total.toFixed(3)} ${t('unit_omr')}</b></p>
+      ${logs.length ? `<table>
+        <thead><tr><th>${t('export_thType')}</th><th>${t('export_thDesc')}</th><th>${t('export_thDate')}</th><th>${t('export_thOdometer')}</th><th>${t('export_thCost')}</th><th>${t('export_thWorkshop')}</th><th>${t('export_thNotes')}</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>` : `<p class="empty">${t('export_noLogs')}</p>`}
+    </div>`;
+  });
+
+  const styles = `
+  *{box-sizing:border-box;}
+  .report-root{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f1f4f9;color:#1a2230;margin:0;padding:20px;}
+  .report-root .wrap{max-width:900px;margin:0 auto;background:#fff;border-radius:14px;padding:26px;box-shadow:0 2px 16px rgba(0,0,0,.08);}
+  .report-root h1{margin:0 0 4px;font-size:23px;}
+  .report-root .exp{color:#8a94a6;font-size:12px;margin-bottom:24px;}
+  .report-root .car-block{margin-bottom:30px;}
+  .report-root h2{font-size:19px;border-bottom:2px solid #d68910;padding-bottom:6px;margin:0 0 8px;}
+  .report-root .meta{color:#50607a;font-size:13px;margin:4px 0;}
+  .report-root .renew{color:#b45309;font-size:12px;margin:6px 0;background:#fff7ed;display:inline-block;padding:3px 10px;border-radius:6px;}
+  .report-root .summary{font-size:13px;margin:8px 0 14px;color:#3a4657;}
+  .report-root .summary b{color:#d68910;}
+  .report-root table{width:100%;border-collapse:collapse;font-size:13px;}
+  .report-root th{background:#f7f9fc;text-align:start;padding:9px 8px;border:1px solid #dde3ec;font-weight:700;white-space:nowrap;}
+  .report-root td{padding:9px 8px;border:1px solid #dde3ec;vertical-align:top;}
+  .report-root td.desc{font-weight:600;min-width:130px;}
+  .report-root td.nowrap{white-space:nowrap;}
+  .report-root td.cost{font-weight:700;color:#d68910;white-space:nowrap;}
+  .report-root ul.ops{list-style:none;padding:0;margin:0;}
+  .report-root ul.ops li{padding-right:14px;position:relative;margin-bottom:2px;}
+  .report-root ul.ops li::before{content:'•';position:absolute;right:0;color:#d68910;font-weight:800;}
+  .report-root .empty{color:#8a94a6;font-size:13px;padding:10px 0;}
+  .report-root .badge{padding:2px 9px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap;}
+  .report-root .badge-routine{background:#dcfce7;color:#16a34a;}
+  .report-root .badge-repair{background:#fee2e2;color:#dc2626;}
+  .report-root .badge-inspection{background:#dbeafe;color:#2563eb;}
+  .report-root .badge-accident{background:#ffedd5;color:#ea580c;}
+  .report-root .badge-other{background:#e8edf3;color:#64748b;}
+  .report-root .foot{text-align:center;color:#b0b8c4;font-size:11px;margin-top:20px;}
+
+  @media screen and (max-width:640px){
+    .report-root{padding:10px;}
+    .report-root .wrap{padding:16px;border-radius:12px;}
+    .report-root table,.report-root thead,.report-root tbody,.report-root tr,.report-root th,.report-root td{display:block;}
+    .report-root thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+    .report-root table{border:none;}
+    .report-root tr{border:1px solid #dde3ec;border-radius:10px;margin-bottom:12px;padding:6px 12px;background:#fff;}
+    .report-root td{border:none;border-bottom:1px solid #f0f3f7;padding:8px 0;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;text-align:left;}
+    .report-root td:last-child{border-bottom:none;}
+    .report-root td::before{content:attr(data-label);font-weight:700;color:#5a6678;font-size:12px;flex-shrink:0;}
+    .report-root td.desc{font-weight:600;}
+    .report-root td.desc ul.ops{text-align:right;}
+    .report-root td.cost{color:#d68910;font-weight:800;}
+  }`;
+
+  // Show the selected period in the report header, if a date filter is active
+  const _fromEl = document.getElementById('shareFrom');
+  const _toEl = document.getElementById('shareTo');
+  const _from = _fromEl ? _fromEl.value : '';
+  const _to = _toEl ? _toEl.value : '';
+  let periodLine = '';
+  if (_from || _to) {
+    const fromTxt = _from ? formatDate(_from) : '…';
+    const toTxt = _to ? formatDate(_to) : '…';
+    periodLine = `<p class="exp">${t('export_period')}: ${fromTxt} — ${toTxt}</p>`;
+  }
+
+  const bodyHtml = `<div class="wrap">
+<h1>${t('export_title')}</h1>
+<p class="exp">${t('export_reportDate')}: ${formatDate(new Date().toISOString().split('T')[0])}</p>
+${periodLine}
+${blocks}
+<p class="foot">${t('export_footer')}</p>
+</div>`;
+
+  return { styles, bodyHtml };
+}
+
+// Standalone downloadable HTML file (used by the "HTML" export button)
+function buildHtml(data) {
+  const { styles, bodyHtml } = buildReportContent(data);
+  const exportDir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  const exportLang = currentLang;
+  return `<!DOCTYPE html><html lang="${exportLang}" dir="${exportDir}"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${t('export_title')}</title>
+<style>body{margin:0;}${styles.replace(/\.report-root/g, 'body')}
+@media print{ body{background:#fff;padding:0;} .wrap{box-shadow:none;border-radius:0;max-width:100%;padding:0;} .car-block{break-inside:avoid;} tr{break-inside:avoid;} }
+</style></head><body>
+${bodyHtml}
+</body></html>`;
+}
+
+// Robust in-page print/PDF flow: instead of opening a new window (unreliable on
+// mobile Chrome / installed PWA contexts, where document.write() to a popup can
+// silently fail), we inject the report into the CURRENT page inside a dedicated
+// print container, use @media print to hide the app UI, and call window.print()
+// directly. The browser's own "Save as PDF" option in the print dialog then
+// produces a real, correctly-rendered file (including full Arabic text support,
+// since it's the actual browser engine rendering it — not a font-limited library).
+function printReport(data) {
+  const { styles, bodyHtml } = buildReportContent(data);
+  let container = document.getElementById('printReportContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'printReportContainer';
+    document.body.appendChild(container);
+  }
+  let styleTag = document.getElementById('printReportStyles');
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = 'printReportStyles';
+    document.head.appendChild(styleTag);
+  }
+  styleTag.textContent = styles + `
+    #printReportContainer { display: none; }
+    @media print {
+      body > *:not(#printReportContainer) { display: none !important; }
+      #printReportContainer { display: block !important; }
+      #printReportContainer .wrap { box-shadow: none !important; border-radius: 0 !important; max-width: 100% !important; padding: 0 !important; }
+      #printReportContainer .car-block { break-inside: avoid; }
+      #printReportContainer tr { break-inside: avoid; }
+    }`;
+  container.className = 'report-root';
+  container.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+  container.innerHTML = bodyHtml;
+
+  // Give the browser a moment to apply layout/styles before invoking print,
+  // then print the CURRENT document (reliable) rather than a new popup window.
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      window.print();
+    }, 50);
+  });
+}
+
+function openPdf(data) {
+  try {
+    printReport(data);
+  } catch (e) {
+    console.error('printReport failed:', e);
+    showToast(t('toast_printFailed'), 'error');
+  }
+}
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], {type: type + ';charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ─── Helpers ──────────────────────────────────────────
+function formatDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  const months = t('months');
+  return `${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+}
+
+function formatDateShort(d) {
+  if (!d) return '—';
+  const [y,m] = d.split('-');
+  return `${m}/${y.slice(2)}`;
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type === 'error' ? 'var(--red)' : 'var(--green)';
+  t.style.color = type === 'error' ? '#fff' : '#000';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── PWA: install support (manifest + service worker) ─
+// Note: the manifest is linked statically in <head> via <link rel="manifest" href="manifest.json">
+// so Chrome can evaluate installability immediately on load (required for the install prompt).
+let deferredInstallPrompt = null;
+
+// ─── حالة التحديث المعلّق ─────────────────────────────
+// "لاحقاً" تعني: لا تزعجني في هذه الجلسة — لا تعني: لا تخبرني أبداً.
+// نحفظ إصدار النسخة المؤجَّلة، ونمتنع عن إظهار الشريط لها مجدداً خلال
+// نفس الجلسة فقط. عند فتح التطبيق من جديد يظهر الشريط مرة أخرى، لأن
+// التحديث قد يحمل إصلاحاً مهماً ولا يصح نسيانه للأبد.
+let pendingUpdateWorker = null;   // النسخة المنتظرة (لتطبيقها من الإعدادات)
+let pendingUpdateInfo = null;     // { version, changelog }
+let updateBannerDismissed = false; // أُغلق الشريط في هذه الجلسة؟
+
+function applyPendingUpdate() {
+  if (pendingUpdateWorker) pendingUpdateWorker.postMessage('SKIP_WAITING');
+  else window.location.reload();
+}
+
+// نقطة برتقالية على تبويب الإعدادات + بند "تحديث متاح" داخل الإعدادات
+function markUpdateAvailable() {
+  const tab = document.querySelector(".tab-btn[data-page='settings']");
+  if (tab && !tab.querySelector('.update-dot')) {
+    const dot = document.createElement('span');
+    dot.className = 'update-dot';
+    tab.appendChild(dot);
+  }
+  const box = document.getElementById('settingsUpdateBox');
+  if (box) {
+    box.style.display = 'block';
+    const d = document.getElementById('settingsUpdateDesc');
+    if (d) {
+      const cl = pendingUpdateInfo && pendingUpdateInfo.changelog;
+      const txt = cl ? (cl[currentLang] || cl.ar || cl.en) : null;
+      d.textContent = txt || t('update_generic');
+    }
+    const v = document.getElementById('settingsUpdateVersion');
+    if (v) v.textContent = (pendingUpdateInfo && pendingUpdateInfo.version) ? '(' + pendingUpdateInfo.version + ')' : '';
+  }
+}
+
+// يظهر شريطاً للمستخدم عند توفّر نسخة جديدة، مع وصف مختصر لما تغيّر.
+// نسأل النسخة المنتظرة عن إصدارها وسجل تغييراتها عبر قناة رسائل.
+function showUpdateBanner(newWorker) {
+  if (document.getElementById('updateBanner')) return;
+  pendingUpdateWorker = newWorker || null;
+  markUpdateAvailable();           // المؤشر الدائم يظهر فوراً على أي حال
+  if (updateBannerDismissed) return;  // ضغط "لاحقاً" في هذه الجلسة → لا تُزعجه
+
+  const bar = document.createElement('div');
+  bar.id = 'updateBanner';
+  bar.style.cssText = [
+    'position:fixed', 'left:12px', 'right:12px',
+    'bottom:calc(76px + env(safe-area-inset-bottom, 0px))',
+    'z-index:350', 'background:var(--surface)', 'color:var(--text)',
+    'border:1px solid var(--accent)',
+    'border-inline-start:4px solid var(--accent)',
+    'border-radius:14px', 'padding:14px 16px',
+    'box-shadow:0 10px 30px rgba(0,0,0,0.5)',
+    'display:flex', 'flex-direction:column', 'gap:8px',
+    'font-family:inherit',
+    'animation:csUp .25s cubic-bezier(.2,.8,.2,1)'
+  ].join(';');
+
+  const head = document.createElement('div');
+  head.style.cssText = 'font-size:14px;font-weight:800;line-height:1.3;color:var(--accent)';
+  head.textContent = t('update_available');
+
+  const desc = document.createElement('div');
+  desc.id = 'updateBannerDesc';
+  desc.style.cssText = 'font-size:12.5px;font-weight:500;line-height:1.7;color:var(--text-dim)';
+  desc.textContent = t('update_generic');
+
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:flex-end';
+
+  const later = document.createElement('button');
+  later.textContent = t('update_later');
+  later.style.cssText = 'background:none;border:none;color:var(--text-muted);font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;padding:8px 12px';
+  later.onclick = () => {
+    updateBannerDismissed = true;   // لا يظهر الشريط ثانيةً في هذه الجلسة
+    bar.remove();
+    markUpdateAvailable();          // يبقى متاحاً من الإعدادات
+    showToast(t('update_deferred'));
+  };
+
+  const btn = document.createElement('button');
+  btn.textContent = t('update_now');
+  btn.style.cssText = 'background:var(--accent);color:var(--accent-text);border:none;border-radius:9px;padding:9px 20px;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap';
+  btn.onclick = () => {
+    btn.disabled = true;
+    btn.textContent = '…';
+    if (newWorker) newWorker.postMessage('SKIP_WAITING');
+    else window.location.reload();
+  };
+
+  row.appendChild(later);
+  row.appendChild(btn);
+  bar.appendChild(head);
+  bar.appendChild(desc);
+  bar.appendChild(row);
+  document.body.appendChild(bar);
+
+  // اسأل النسخة المنتظرة: ما الجديد فيك؟
+  if (newWorker) {
+    const ch = new MessageChannel();
+    navigator.serviceWorker.addEventListener('message', function onMsg(e) {
+      if (e.data && e.data.type === 'VERSION_INFO') {
+        pendingUpdateInfo = { version: e.data.version, changelog: e.data.changelog };
+        const cl = e.data.changelog || {};
+        const txt = cl[currentLang] || cl.ar || cl.en;
+        if (txt) {
+          desc.textContent = txt;
+          head.textContent = t('update_available') + (e.data.version ? ' (' + e.data.version + ')' : '');
+        }
+        markUpdateAvailable();   // حدّث بند الإعدادات بالوصف نفسه
+        navigator.serviceWorker.removeEventListener('message', onMsg);
+      }
+    });
+    try { newWorker.postMessage('GET_VERSION_INFO'); } catch (_) {}
+  }
+}
+
+function setupPWA() {
+  // Register the real service worker file (only works over http/https, not file://)
+  if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    // updateViaCache:'none' → المتصفح لا يخدم sw.js من كاش HTTP، فيرى التغييرات فوراً
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then(reg => {
+
+      // (أ) نسخة جديدة جاهزة ومنتظرة أصلاً عند فتح الصفحة.
+      // ملاحظة: قد لا تكون reg.waiting جاهزة لحظة تسجيل السيرفس ووركر، لذا
+      // نفحصها الآن وأيضاً بعد كل reg.update() (انظر checkWaiting أدناه).
+      const checkWaiting = () => {
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          showUpdateBanner(reg.waiting);
+        }
+      };
+      checkWaiting();
+
+      // (ب) نسخة جديدة تصل أثناء فتح التطبيق
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', () => {
+          // "installed" + وجود controller = تحديث لنسخة كانت مثبّتة مسبقاً
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            showUpdateBanner(nw);
+          }
+        });
+      });
+
+      // افحص فور التشغيل
+      reg.update().then(checkWaiting).catch(() => {});
+
+      // افحص كلما عاد التطبيق للمقدمة
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().then(checkWaiting).catch(() => {});
+      });
+
+      // افحص دورياً بينما التطبيق مفتوح (كل دقيقة) → يظهر الإشعار حياً
+      setInterval(() => { reg.update().then(checkWaiting).catch(() => {}); }, 60 * 1000);
+
+    }).catch(() => { /* sw optional */ });
+
+    // أعد تحميل الصفحة مرة واحدة عندما يتسلّم السيرفس ووركر الجديد التحكم
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  }
+
+  // Capture the install prompt so the button can trigger it directly
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    showToast(t('toast_installed'));
+    const sec = document.getElementById('installSection');
+    if (sec) sec.style.display = 'none';
+  });
+
+  // If already installed (opened from home screen), hide the install prompt
+  if (isStandalone()) {
+    const sec = document.getElementById('installSection');
+    if (sec) sec.style.display = 'none';
+  }
+}
+
+function isStandalone() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+
+function installApp() {
+  // Already installed / running standalone
+  if (isStandalone()) { showToast(t('toast_alreadyInstalled')); return; }
+
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  // Android/desktop Chrome with a captured prompt → one-tap native install
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.finally(() => { deferredInstallPrompt = null; });
+    return;
+  }
+
+  // iOS → show manual Safari instructions
+  if (isIOS) {
+    document.getElementById('modalIOS').classList.remove('hidden');
+    return;
+  }
+
+  // Android without a prompt (already dismissed, or Firefox, etc.) → manual steps
+  document.getElementById('modalAndroid').classList.remove('hidden');
+}
+
+// ─── Start ────────────────────────────────────────────
+// Keep the sticky filter bar positioned exactly below the sticky header.
+// The header height varies (safe-area inset differs per device), so measure it.
+function updateHeaderHeight() {
+  const header = document.querySelector('.app-header');
+  if (!header) return;
+  const h = Math.round(header.getBoundingClientRect().height);
+  if (h > 0) document.documentElement.style.setProperty('--header-h', h + 'px');
+}
+
+window.addEventListener('resize', updateHeaderHeight);
+window.addEventListener('orientationchange', () => setTimeout(updateHeaderHeight, 150));
+
+setupPWA();
+init();
+enhanceAllSelects();
+updateHeaderHeight();
+// re-measure after fonts/layout settle
+setTimeout(updateHeaderHeight, 300);
+</script>
+</body>
+</html>
