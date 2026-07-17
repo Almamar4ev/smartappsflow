@@ -98,44 +98,88 @@ jobs:
           chmod +x ./gradlew
           ./gradlew bundleRelease assembleRelease
 
-      - name: Switch to JDK 11 for signing
-        uses: actions/setup-java@v4
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-
-      # SECURITY: third-party signing action pinned to the immutable
-      # commit currently associated with the v1 release tag.
-      - name: Sign AAB
-        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
-        with:
-          releaseDirectory: tradelogpro/android/app/build/outputs/bundle/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      # Decode the base64 signing key into a temporary keystore outside the
+      # workspace ($RUNNER_TEMP is a per-job scratch dir, not checked out and
+      # not uploaded). tr strips any CR/LF/spaces that break DER length parsing
+      # (the "Short read of DER length" error), then base64 --decode writes the
+      # raw keystore bytes.
+      - name: Decode signing keystore
         env:
-          BUILD_TOOLS_VERSION: "34.0.0"
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/tradelog-signing"
+          printf '%s' "$SIGNING_KEY" \
+            | tr -d '\r\n ' \
+            | base64 --decode \
+            > "$RUNNER_TEMP/tradelog-signing/signing.keystore"
+          # Confirm the file exists and is non-empty; print only its size.
+          test -s "$RUNNER_TEMP/tradelog-signing/signing.keystore" \
+            || { echo "ERROR: decoded keystore is missing or empty"; exit 1; }
+          echo "keystore size (bytes): $(stat -c%s "$RUNNER_TEMP/tradelog-signing/signing.keystore")"
 
-      - name: Sign APK
-        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
-        with:
-          releaseDirectory: tradelogpro/android/app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      # Prove the keystore, store password and alias all agree, using the
+      # JDK 17 already set up above. No -v, so no certificate details leak.
+      - name: Verify keystore, password and alias
         env:
-          BUILD_TOOLS_VERSION: "34.0.0"
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+        run: |
+          keytool -list \
+            -keystore "$RUNNER_TEMP/tradelog-signing/signing.keystore" \
+            -storepass:env KEY_STORE_PASSWORD \
+            -alias "$KEY_ALIAS"
+
+      # Sign the App Bundle with jarsigner (the standard tool for AAB upload
+      # signing) and verify the signature.
+      - name: Sign and verify AAB (jarsigner)
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          AAB="android/app/build/outputs/bundle/release/app-release.aab"
+          jarsigner \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            -keystore "$RUNNER_TEMP/tradelog-signing/signing.keystore" \
+            -storepass:env KEY_STORE_PASSWORD \
+            -keypass:env KEY_PASSWORD \
+            "$AAB" \
+            "$KEY_ALIAS"
+          jarsigner -verify "$AAB"
+
+      # Sign the APK with the official Android SDK tools: zipalign then
+      # apksigner. The newest installed build-tools version is auto-detected.
+      - name: Sign and verify APK (zipalign + apksigner)
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          ALIGNED="android/app/build/outputs/apk/release/app-release-aligned.apk"
+          SIGNED="android/app/build/outputs/apk/release/app-release-signed.apk"
+          BT_DIR="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)"
+          BT_DIR="${BT_DIR%/}"
+          echo "Using build-tools: $(basename "$BT_DIR")"
+          "$BT_DIR/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
+          "$BT_DIR/apksigner" sign \
+            --ks "$RUNNER_TEMP/tradelog-signing/signing.keystore" \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass env:KEY_STORE_PASSWORD \
+            --key-pass env:KEY_PASSWORD \
+            --out "$SIGNED" \
+            "$ALIGNED"
+          "$BT_DIR/apksigner" verify "$SIGNED"
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: TradeLogPro-release
-          path: tradelogpro/android/app/build/outputs/bundle/release/*.aab
+          path: tradelogpro/android/app/build/outputs/bundle/release/app-release.aab
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: TradeLogPro-apk
-          path: tradelogpro/android/app/build/outputs/apk/release/*-signed.apk
+          path: tradelogpro/android/app/build/outputs/apk/release/app-release-signed.apk

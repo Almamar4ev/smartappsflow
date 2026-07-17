@@ -8,4 +8,4 @@ ce4df79705ccfd4b7ae30316a66b822a8a13ef73be93f15cd69e20d93ab3d7f2 *manifest.json
 45a755e64f1416b0de5292fc904cec680c4bcdac650fc65276811b3a919346b1 *tests/pwa-tests.mjs
 cec51ab75d89c8cf00680497e23e74823f5290cbd9d02280fe321f6a3d6ca879 *tests/runtime-guard-tests.mjs
 bc1ce83b5e2603fca550f2546339e2b74ca2739581c77953846b3cfa1d72ed35 *tests/security-tests.mjs
-f92ae84685dab90f8dd77a51caebf959442cc35fb789823722432503d1866063 *../.github/workflows/build-tradelogpro.yml
+e632124a228784b4f01ac1852f3635801ff9df45c8b29e0cf7e117fed44032f7 *../.github/workflows/build-tradelogpro.yml
