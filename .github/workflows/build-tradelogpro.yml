@@ -1,11 +1,17 @@
 name: Build TradeLog Pro AAB
 
 on:
+  # Trusted signing runs. The feature branch is TEMPORARY here so signed
+  # artifacts can be produced before this workflow reaches main; remove it
+  # after the baseline PR is merged.
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - fix/tradelogpro-baseline
     paths:
       - 'tradelogpro/**'
       - '.github/workflows/build-tradelogpro.yml'
+  # PR runs only test and build unsigned artifacts; they never touch secrets.
   pull_request:
     branches: [ main ]
     paths:
@@ -98,6 +104,15 @@ jobs:
           chmod +x ./gradlew
           ./gradlew bundleRelease assembleRelease
 
+      # -------------------------------------------------------------------
+      # Signing section. Runs ONLY on trusted events (push / workflow_dispatch),
+      # never on pull_request: PR runs validate tests and the unsigned build
+      # without ever reading signing secrets.
+      # -------------------------------------------------------------------
+      - name: Skip signing on pull_request
+        if: github.event_name == 'pull_request'
+        run: echo "Signing skipped for pull_request; trusted push run will sign artifacts."
+
       # Decode the base64 signing key into a temporary keystore outside the
       # workspace ($RUNNER_TEMP is a per-job scratch dir, not checked out and
       # not uploaded). A hard empty-check fails fast with a clear message if the
@@ -105,6 +120,7 @@ jobs:
       # break DER length parsing, then base64 --decode writes the raw bytes.
       # The keystore path is exported via GITHUB_ENV for the later steps.
       - name: Decode signing keystore
+        if: github.event_name != 'pull_request'
         shell: bash
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
@@ -137,6 +153,7 @@ jobs:
       # Prove the keystore, store password and alias all agree, using the
       # JDK 17 already set up above. No -v, so no certificate details leak.
       - name: Verify keystore, password and alias
+        if: github.event_name != 'pull_request'
         shell: bash
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -150,6 +167,7 @@ jobs:
       # Sign the App Bundle with jarsigner (the standard tool for AAB upload
       # signing) and verify the signature.
       - name: Sign and verify AAB (jarsigner)
+        if: github.event_name != 'pull_request'
         shell: bash
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -170,6 +188,7 @@ jobs:
       # Sign the APK with the official Android SDK tools: zipalign then
       # apksigner. The newest installed build-tools version is auto-detected.
       - name: Sign and verify APK (zipalign + apksigner)
+        if: github.event_name != 'pull_request'
         shell: bash
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -193,12 +212,14 @@ jobs:
           "$BT_DIR/apksigner" verify "$SIGNED"
 
       - name: Upload AAB
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: TradeLogPro-release
           path: tradelogpro/android/app/build/outputs/bundle/release/app-release.aab
 
       - name: Upload APK
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: TradeLogPro-apk
