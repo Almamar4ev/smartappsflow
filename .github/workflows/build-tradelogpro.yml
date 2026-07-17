@@ -100,38 +100,57 @@ jobs:
 
       # Decode the base64 signing key into a temporary keystore outside the
       # workspace ($RUNNER_TEMP is a per-job scratch dir, not checked out and
-      # not uploaded). tr strips any CR/LF/spaces that break DER length parsing
-      # (the "Short read of DER length" error), then base64 --decode writes the
-      # raw keystore bytes.
+      # not uploaded). A hard empty-check fails fast with a clear message if the
+      # SIGNING_KEY secret is unbound or blank. tr strips any CR/LF/spaces that
+      # break DER length parsing, then base64 --decode writes the raw bytes.
+      # The keystore path is exported via GITHUB_ENV for the later steps.
       - name: Decode signing keystore
+        shell: bash
         env:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
         run: |
-          mkdir -p "$RUNNER_TEMP/tradelog-signing"
+          set -euo pipefail
+
+          if [ -z "${SIGNING_KEY:-}" ]; then
+            echo "::error::SIGNING_KEY repository secret is unavailable or empty"
+            exit 1
+          fi
+
+          KEYSTORE_DIR="$RUNNER_TEMP/tradelog-signing"
+          KEYSTORE_PATH="$KEYSTORE_DIR/signing.keystore"
+
+          mkdir -p "$KEYSTORE_DIR"
+
           printf '%s' "$SIGNING_KEY" \
             | tr -d '\r\n ' \
             | base64 --decode \
-            > "$RUNNER_TEMP/tradelog-signing/signing.keystore"
-          # Confirm the file exists and is non-empty; print only its size.
-          test -s "$RUNNER_TEMP/tradelog-signing/signing.keystore" \
-            || { echo "ERROR: decoded keystore is missing or empty"; exit 1; }
-          echo "keystore size (bytes): $(stat -c%s "$RUNNER_TEMP/tradelog-signing/signing.keystore")"
+            > "$KEYSTORE_PATH"
+
+          if [ ! -s "$KEYSTORE_PATH" ]; then
+            echo "::error::Decoded keystore is missing or empty"
+            exit 1
+          fi
+
+          echo "KEYSTORE_PATH=$KEYSTORE_PATH" >> "$GITHUB_ENV"
+          echo "Decoded keystore size: $(stat -c%s "$KEYSTORE_PATH") bytes"
 
       # Prove the keystore, store password and alias all agree, using the
       # JDK 17 already set up above. No -v, so no certificate details leak.
       - name: Verify keystore, password and alias
+        shell: bash
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
         run: |
           keytool -list \
-            -keystore "$RUNNER_TEMP/tradelog-signing/signing.keystore" \
+            -keystore "$KEYSTORE_PATH" \
             -storepass:env KEY_STORE_PASSWORD \
             -alias "$KEY_ALIAS"
 
       # Sign the App Bundle with jarsigner (the standard tool for AAB upload
       # signing) and verify the signature.
       - name: Sign and verify AAB (jarsigner)
+        shell: bash
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -141,7 +160,7 @@ jobs:
           jarsigner \
             -sigalg SHA256withRSA \
             -digestalg SHA-256 \
-            -keystore "$RUNNER_TEMP/tradelog-signing/signing.keystore" \
+            -keystore "$KEYSTORE_PATH" \
             -storepass:env KEY_STORE_PASSWORD \
             -keypass:env KEY_PASSWORD \
             "$AAB" \
@@ -151,6 +170,7 @@ jobs:
       # Sign the APK with the official Android SDK tools: zipalign then
       # apksigner. The newest installed build-tools version is auto-detected.
       - name: Sign and verify APK (zipalign + apksigner)
+        shell: bash
         env:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -164,7 +184,7 @@ jobs:
           echo "Using build-tools: $(basename "$BT_DIR")"
           "$BT_DIR/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
           "$BT_DIR/apksigner" sign \
-            --ks "$RUNNER_TEMP/tradelog-signing/signing.keystore" \
+            --ks "$KEYSTORE_PATH" \
             --ks-key-alias "$KEY_ALIAS" \
             --ks-pass env:KEY_STORE_PASSWORD \
             --key-pass env:KEY_PASSWORD \
