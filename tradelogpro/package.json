@@ -1,0 +1,18 @@
+{
+  "name": "tradelog-pro",
+  "version": "1.0.0",
+  "description": "TradeLog Pro - Trading Journal",
+  "scripts": {
+    "test": "node tests/financial-tests.mjs && node tests/security-tests.mjs && node tests/runtime-guard-tests.mjs && node tests/pwa-tests.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "6.2.1",
+    "@capacitor/core": "6.2.1",
+    "@capacitor/status-bar": "6.0.3",
+    "@capacitor/filesystem": "6.0.4",
+    "@capacitor/share": "6.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "6.2.1"
+  }
+}

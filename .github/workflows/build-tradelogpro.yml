@@ -1,0 +1,141 @@
+name: Build TradeLog Pro AAB
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'tradelogpro/**'
+      - '.github/workflows/build-tradelogpro.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'tradelogpro/**'
+      - '.github/workflows/build-tradelogpro.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    # All `run:` steps execute inside the tradelogpro/ project folder so that
+    # npm, Capacitor, and Gradle operate on this app only. Steps that use
+    # `uses:` (checkout, setup-*, signing, upload) ignore this and take paths
+    # relative to the workspace root, so those are written as tradelogpro/... .
+    defaults:
+      run:
+        working-directory: tradelogpro
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Install exactly the locked versions. `npm ci` fails if package.json
+      # and package-lock.json disagree, so builds are fully reproducible.
+      - name: Install dependencies (locked)
+        run: npm ci
+
+      # Gate the build on the financial engine. If any of the accounting
+      # tests fail, the whole workflow stops here and no APK/AAB is produced.
+      - name: Run financial tests
+        run: npm test
+
+      - name: Prepare web folder
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+          # PWA assets: manifest.json and sw.js are required and must exist.
+          cp manifest.json www/manifest.json
+          cp sw.js www/sw.js
+          # Icons are optional for now: copy only if present so the build does
+          # not fail before a TradeLog Pro icon has been added.
+          [ -f icon-192.png ] && cp icon-192.png www/icon-192.png || echo "icon-192.png not present yet — skipping"
+          [ -f icon-512.png ] && cp icon-512.png www/icon-512.png || echo "icon-512.png not present yet — skipping"
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js -o www/xlsx.full.min.js
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js -o www/jspdf.umd.min.js
+          curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js -o www/chart.umd.min.js
+          mkdir -p www/fonts
+          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@5.2.7/latin-400-normal.woff2 -o www/fonts/ibm-plex-mono-400.woff2
+          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@5.2.7/latin-500-normal.woff2 -o www/fonts/ibm-plex-mono-500.woff2
+          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@5.2.7/latin-600-normal.woff2 -o www/fonts/ibm-plex-mono-600.woff2
+          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@5.2.7/latin-700-normal.woff2 -o www/fonts/ibm-plex-mono-700.woff2
+          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-400-normal.woff2 -o www/fonts/dm-sans-400.woff2
+          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-500-normal.woff2 -o www/fonts/dm-sans-500.woff2
+          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-600-normal.woff2 -o www/fonts/dm-sans-600.woff2
+          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-700-normal.woff2 -o www/fonts/dm-sans-700.woff2
+
+      - name: Init Capacitor
+        run: |
+          npx cap init "TradeLog Pro" "com.tradelog.pro" --web-dir www
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Update SDK and version
+        run: |
+          sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
+          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
+          sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
+          sed -i "s/versionCode .*/versionCode ${GITHUB_RUN_NUMBER}/" android/app/build.gradle
+          sed -i "s/versionName .*/versionName \"1.0.${GITHUB_RUN_NUMBER}\"/" android/app/build.gradle
+
+      - name: Copy web assets
+        run: npx cap sync android
+
+      - name: Build AAB and APK
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew bundleRelease assembleRelease
+
+      - name: Switch to JDK 11 for signing
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      # SECURITY: third-party signing action pinned to the immutable
+      # commit currently associated with the v1 release tag.
+      - name: Sign AAB
+        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
+        with:
+          releaseDirectory: tradelogpro/android/app/build/outputs/bundle/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@349ebdef58775b1e0d8099458af0816dc79b6407 # v1
+        with:
+          releaseDirectory: tradelogpro/android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: "34.0.0"
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: TradeLogPro-release
+          path: tradelogpro/android/app/build/outputs/bundle/release/*.aab
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TradeLogPro-apk
+          path: tradelogpro/android/app/build/outputs/apk/release/*-signed.apk
