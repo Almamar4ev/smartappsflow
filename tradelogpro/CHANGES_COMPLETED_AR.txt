@@ -1,0 +1,18 @@
+التعديلات المكتملة في حزمة Trade Log Pro
+
+1. تثبيت Action التوقيع إلى Commit SHA حقيقي بدل PIN_ME_TO_SHA.
+2. إنشاء المسار الصحيح tests/financial-tests.mjs.
+3. إضافة tests/security-tests.mjs.
+4. إضافة tests/runtime-guard-tests.mjs.
+5. تحديث npm test لتشغيل الاختبارات الثلاثة.
+6. إضافة حارس يسمح بتتبع Cloudflare فقط على smartappsflow.net عبر HTTPS.
+7. منع Cloudflare Analytics داخل Capacitor Android/iOS وlocalhost وfile:.
+8. منع sendBeacon الخاص بـCloudflare وإزالة سكربت beacon إذا دخل نسخة المتجر بالخطأ.
+9. تعقيم savedCalcs وtemplates وjournals وprofile وbenchmark وprefs عند Restore.
+10. تعقيم نفس البيانات عند قراءتها من localStorage.
+11. إصلاح Sanitizer للحفاظ على startingCapital وbroker.
+12. إصلاح Sanitizer للحفاظ على target وstoploss وrisk.
+13. التحقق الصارم من IDs والتواريخ والأنواع والصور.
+14. إصلاح تعقيم المعاملات: الحفاظ على withdraw، وتحويل withdrawal القديمة إلى withdraw، وإسقاط الأنواع المجهولة بدل تحويلها إلى إيداع.
+15. إضافة اختبارات صريحة للإيداع والسحب والترحيل من withdrawal ورفض النوع المجهول.
+16. نجاح 56 اختبارًا دون فشل.

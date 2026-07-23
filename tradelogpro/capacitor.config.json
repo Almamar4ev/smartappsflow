@@ -1,0 +1,15 @@
+{
+  "appId": "com.tradelog.pro",
+  "appName": "TradeLog Pro",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#07090f"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#07090f",
+      "showSpinner": false
+    }
+  }
+}

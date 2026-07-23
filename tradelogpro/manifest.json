@@ -1,0 +1,11 @@
+{
+  "name": "TradeLog Pro",
+  "short_name": "TradeLog Pro",
+  "description": "Trading journal and performance tracker.",
+  "start_url": "/tradelogpro/",
+  "scope": "/tradelogpro/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07090f",
+  "theme_color": "#07090f"
+}
