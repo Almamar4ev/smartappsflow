@@ -1,0 +1,6 @@
+# Keep TradeLog Pro sources and its build workflow at LF on every OS so the
+# tradelogpro/SHA256SUMS.txt integrity hashes verify identically everywhere
+# (Windows checkouts would otherwise render CRLF and fail local verification).
+# Scoped by path — no other project in this repo is affected.
+/tradelogpro/**                            text=auto eol=lf
+/.github/workflows/build-tradelogpro.yml   text eol=lf

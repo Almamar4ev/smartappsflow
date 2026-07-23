@@ -1,13 +1,10 @@
 name: Build TradeLog Pro AAB
 
 on:
-  # Trusted signing runs. The feature branch is TEMPORARY here so signed
-  # artifacts can be produced before this workflow reaches main; remove it
-  # after the baseline PR is merged.
+  # Trusted signing runs happen only on push to main (and manual dispatch).
   push:
     branches:
       - main
-      - fix/tradelogpro-baseline
     paths:
       - 'tradelogpro/**'
       - '.github/workflows/build-tradelogpro.yml'
@@ -119,16 +116,15 @@ jobs:
       # SIGNING_KEY secret is unbound or blank. tr strips any CR/LF/spaces that
       # break DER length parsing, then base64 --decode writes the raw bytes.
       # The keystore path is exported via GITHUB_ENV for the later steps.
-      # NOTE: secret names map to this repository's existing Actions secrets
-      # (KEYSTORE_BASE64 / KEYSTORE_PASSWORD / KEY_ALIAS / KEY_PASSWORD).
-      # These names are shared with the Smart Loan workflow; TradeLog values
-      # are currently stored in them. If Smart Loan ever needs its own
-      # different keystore again, split these into per-app secret names.
+      # NOTE: TradeLog Pro uses its OWN dedicated Actions secrets
+      # (TRADELOG_KEYSTORE_BASE64 / TRADELOG_KEYSTORE_PASSWORD /
+      # TRADELOG_KEY_ALIAS / TRADELOG_KEY_PASSWORD), separate from Smart Loan's
+      # shared KEYSTORE_* / KEY_* secrets, so the two apps never collide.
       - name: Decode signing keystore
         if: github.event_name != 'pull_request'
         shell: bash
         env:
-          SIGNING_KEY: ${{ secrets.KEYSTORE_BASE64 }}
+          SIGNING_KEY: ${{ secrets.TRADELOG_KEYSTORE_BASE64 }}
         run: |
           set -euo pipefail
 
@@ -161,8 +157,8 @@ jobs:
         if: github.event_name != 'pull_request'
         shell: bash
         env:
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.TRADELOG_KEY_ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.TRADELOG_KEYSTORE_PASSWORD }}
         run: |
           keytool -list \
             -keystore "$KEYSTORE_PATH" \
@@ -175,9 +171,9 @@ jobs:
         if: github.event_name != 'pull_request'
         shell: bash
         env:
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.TRADELOG_KEY_ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.TRADELOG_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.TRADELOG_KEY_PASSWORD }}
         run: |
           AAB="android/app/build/outputs/bundle/release/app-release.aab"
           jarsigner \
@@ -196,9 +192,9 @@ jobs:
         if: github.event_name != 'pull_request'
         shell: bash
         env:
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_STORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.TRADELOG_KEY_ALIAS }}
+          KEY_STORE_PASSWORD: ${{ secrets.TRADELOG_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.TRADELOG_KEY_PASSWORD }}
         run: |
           UNSIGNED="android/app/build/outputs/apk/release/app-release-unsigned.apk"
           ALIGNED="android/app/build/outputs/apk/release/app-release-aligned.apk"
