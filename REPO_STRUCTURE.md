@@ -95,10 +95,13 @@ trusted `push`/`workflow_dispatch` events, never on pull_request.**
 - **TradeLog Pro privacy policy**: create `tradelogpro/privacy-policy.html`
   before publishing to the Play Store.
 
-Smart Loan's privacy policy moved from the repo root into
-`smartloan/privacy-policy.html`, so its public URL is now
-`https://smartappsflow.net/smartloan/privacy-policy.html`. Keep the link in
-Google Play Console pointing at that path.
+Smart Loan's **published** privacy policy — the URL registered in Google Play
+Console — lives in a **separate repo** (`smart-apps-legal`), served from GitHub
+Pages at:
+`https://almamar4ev.github.io/smart-apps-legal/smart-loan-calculator/privacy-policy.html`
+That repo is the source of truth for the store; update it there (done manually,
+outside this repo). The `smartloan/privacy-policy.html` file kept here is a
+convenience copy of the same content — it is not the registered store URL.
 
 ---
 

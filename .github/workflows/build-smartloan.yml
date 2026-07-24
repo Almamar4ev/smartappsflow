@@ -167,21 +167,63 @@ jobs:
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode .*/versionCode 30/' android/app/build.gradle
-          sed -i 's/versionName .*/versionName "3.0"/' android/app/build.gradle
+          sed -i 's/versionCode .*/versionCode 31/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "3.1"/' android/app/build.gradle
 
-      - name: Set plain MainActivity (system-insets handled by Android + StatusBar plugin)
+      # On Android 15 / targetSdk 35 the app is forced edge-to-edge, and inside
+      # the WebView env(safe-area-inset-*) always resolves to 0 — so content
+      # slid under the status bar (clock/battery) and the navigation buttons.
+      # Fix: read the REAL system-bar + display-cutout insets natively, convert
+      # px -> dp, and push them into the CSS variables --safe-top/bottom/left/right
+      # that index.html already consumes via var(--safe-*). Re-applied on every
+      # inset change (rotation, IME, gesture/3-button nav switch).
+      - name: Set MainActivity that bridges real Android insets into CSS
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main/java -name "MainActivity.java")
           cat > "$MAIN_ACTIVITY" <<'JAVAEOF'
           package com.smartapps.smartloanadvisor;
 
+          import android.os.Bundle;
+          import android.webkit.WebView;
+          import androidx.core.graphics.Insets;
+          import androidx.core.view.ViewCompat;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+                  // Draw edge-to-edge (default on API 35; also enforced for older APIs).
+                  WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+                  final WebView webView = getBridge().getWebView();
+                  final float density = getResources().getDisplayMetrics().density;
+
+                  ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
+                      Insets bars = insets.getInsets(
+                          WindowInsetsCompat.Type.systemBars()
+                          | WindowInsetsCompat.Type.displayCutout());
+                      int top = Math.round(bars.top / density);
+                      int bottom = Math.round(bars.bottom / density);
+                      int left = Math.round(bars.left / density);
+                      int right = Math.round(bars.right / density);
+                      String js =
+                          "document.documentElement.style.setProperty('--safe-top','" + top + "px');" +
+                          "document.documentElement.style.setProperty('--safe-bottom','" + bottom + "px');" +
+                          "document.documentElement.style.setProperty('--safe-left','" + left + "px');" +
+                          "document.documentElement.style.setProperty('--safe-right','" + right + "px');";
+                      webView.post(() -> webView.evaluateJavascript(js, null));
+                      return insets;
+                  });
+
+                  // Make sure the listener fires once the WebView is attached.
+                  ViewCompat.requestApplyInsets(webView);
+              }
           }
           JAVAEOF
-          echo "MainActivity.java set to default (no edge-to-edge; content sits below status/nav bars)"
+          echo "MainActivity.java set to bridge real system insets into CSS --safe-* variables"
 
       - name: Sync web app to Android
         run: npx cap sync android
