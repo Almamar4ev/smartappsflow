@@ -1,6 +1,19 @@
 name: Build Smart Loan AAB
 
 on:
+  # Trusted signing runs happen only on push to main (and manual dispatch).
+  push:
+    branches:
+      - main
+    paths:
+      - 'smartloan/**'
+      - '.github/workflows/build-smartloan.yml'
+  # PR runs only test + an unsigned compile check; they never touch secrets.
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'smartloan/**'
+      - '.github/workflows/build-smartloan.yml'
   workflow_dispatch:
 
 jobs:
@@ -22,11 +35,47 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      # The build targets compileSdkVersion 35, so the android-35 platform and
+      # its build-tools must be present in the SAME SDK root Gradle reads
+      # (/usr/local/lib/android/sdk). sdkmanager installs relative to its own
+      # location by default, which can land in a different root — so we force
+      # the target with --sdk_root and then hard-verify android.jar exists.
+      - name: Install Android SDK platform 35
+        run: |
+          set -e
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "Target SDK root: $SDK_ROOT"
+          SDKMGR=""
+          for c in "$SDK_ROOT"/cmdline-tools/latest/bin/sdkmanager \
+                   "$SDK_ROOT"/cmdline-tools/*/bin/sdkmanager \
+                   "$(command -v sdkmanager || true)"; do
+            if [ -x "$c" ]; then SDKMGR="$c"; break; fi
+          done
+          echo "Using sdkmanager: $SDKMGR"
+          yes | "$SDKMGR" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+          "$SDKMGR" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "Platforms present:"; ls -1 "$SDK_ROOT/platforms" || true
+          if [ ! -f "$SDK_ROOT/platforms/android-35/android.jar" ]; then
+            echo "::error::android-35/android.jar missing after install at $SDK_ROOT"
+            exit 1
+          fi
+          echo "OK: $SDK_ROOT/platforms/android-35/android.jar present"
+
+      # Gate the build on the loan-math + PWA tests. These import only Node
+      # built-ins, so no npm install is needed. If any test fails the whole
+      # workflow stops here and no APK/AAB is produced.
+      - name: Run loan-math and PWA tests
+        working-directory: smartloan
+        run: npm test
+
+      # Pin every Capacitor package to the v6 line (matching smartloan/package.json).
+      # Leaving @capacitor/core / @capacitor/android unpinned pulls Capacitor 7,
+      # which conflicts with the ^6 plugins and fails npm's peer resolution (ERESOLVE).
       - name: Install Capacitor
         run: |
-          npm install -g @capacitor/cli
-          npm install @capacitor/core @capacitor/android @capacitor/splash-screen@^6.0.0 @capacitor/filesystem@^6.0.0 @capacitor/share@^6.0.0 @capacitor/status-bar@^6.0.0
-          npm install -D @capacitor/assets
+          npm install -g @capacitor/cli@6.2.1
+          npm install @capacitor/core@6.2.1 @capacitor/android@6.2.1 @capacitor/splash-screen@6.0.3 @capacitor/filesystem@6.0.4 @capacitor/share@6.0.4 @capacitor/status-bar@6.0.3
+          npm install -D @capacitor/assets@3.0.5
 
       - name: Prepare web folder
         run: |
@@ -36,6 +85,12 @@ jobs:
       - name: Init Capacitor
         run: |
           npx cap init "Smart Loan Calculator" "com.smartapps.smartloanadvisor" --web-dir www
+          # `cap init` may scaffold a TypeScript config (capacitor.config.ts).
+          # Loading it needs the `typescript` package, which isn't installed, so
+          # `cap add android` crashes with "Cannot read properties of undefined
+          # (reading 'CommonJS')". We supply our own JSON config below, so remove
+          # any generated .ts and keep the JSON as the single source of truth.
+          rm -f capacitor.config.ts
           cat > capacitor.config.json <<'CFGEOF'
           {
             "appId": "com.smartapps.smartloanadvisor",
@@ -56,11 +111,21 @@ jobs:
           }
           CFGEOF
 
-      - name: Move store assets aside (repo android/ folder conflicts with Capacitor)
-        run: mv android assets-src
-
       - name: Add Android platform
         run: npx cap add android
+
+      # The AGP that Capacitor 6 scaffolds is only tested up to compileSdk 33,
+      # so it cannot load the android-35 framework and the build fails with
+      # "failed to load include path .../android-35/android.jar". Bump the
+      # Android Gradle Plugin and the Gradle wrapper to versions that support
+      # compileSdk 35 (AGP 8.6.0 needs Gradle 8.7+, JDK 17 — already set up).
+      - name: Upgrade Android Gradle Plugin + Gradle for compileSdk 35
+        run: |
+          set -e
+          sed -i "s#com.android.tools.build:gradle:[0-9.]*#com.android.tools.build:gradle:8.6.0#" android/build.gradle
+          sed -i "s#gradle-[0-9.]*-\(all\|bin\).zip#gradle-8.7-\1.zip#" android/gradle/wrapper/gradle-wrapper.properties
+          echo "AGP:";    grep "com.android.tools.build:gradle" android/build.gradle
+          echo "Gradle:"; grep distributionUrl android/gradle/wrapper/gradle-wrapper.properties
 
       - name: Install ImageMagick (provides 'convert')
         run: sudo apt-get update && sudo apt-get install -y imagemagick
@@ -78,18 +143,18 @@ jobs:
           </resources>
           XMLEOF
           mkdir -p android/app/src/main/res/drawable
-          convert assets-src/smartloan/icon-only.png -resize 540x540 -background none -gravity center -extent 1152x1152 android/app/src/main/res/drawable/splash_icon.png
+          convert smartloan/assets/icon-only.png -resize 540x540 -background none -gravity center -extent 1152x1152 android/app/src/main/res/drawable/splash_icon.png
           identify android/app/src/main/res/drawable/splash_icon.png
           echo "Android 12+ splash configured with dedicated hi-res icon"
 
       - name: Generate app icons and splash screens
         run: |
           mkdir -p assets
-          cp assets-src/smartloan/icon-foreground.png assets/icon-foreground.png
-          cp assets-src/smartloan/icon-background.png assets/icon-background.png
-          cp assets-src/smartloan/icon-only.png assets/icon-only.png
-          cp assets-src/smartloan/splash-source.png assets/splash.png
-          cp assets-src/smartloan/splash-source.png assets/splash-dark.png
+          cp smartloan/assets/icon-foreground.png assets/icon-foreground.png
+          cp smartloan/assets/icon-background.png assets/icon-background.png
+          cp smartloan/assets/icon-only.png assets/icon-only.png
+          cp smartloan/assets/splash-source.png assets/splash.png
+          cp smartloan/assets/splash-source.png assets/splash-dark.png
           npx @capacitor/assets generate \
             --android \
             --iconBackgroundColor '#221B3E' \
@@ -124,14 +189,48 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      # The Gradle wrapper downloads the Gradle distribution on first use, which
+      # occasionally fails mid-stream on hosted runners (transient SSL/network
+      # read). Warm it up with retries so a flaky download doesn't fail the
+      # whole build; once fetched it is cached for the later build steps.
+      - name: Warm up Gradle wrapper (retry flaky distribution download)
+        run: |
+          cd android
+          for i in 1 2 3; do
+            ./gradlew --version --no-daemon && exit 0
+            echo "Gradle bootstrap attempt $i failed; retrying in 15s..."
+            sleep 15
+          done
+          echo "::error::Gradle wrapper failed to download after 3 attempts"
+          exit 1
+
+      # -------------------------------------------------------------------
+      # PR compile check (no secrets). Validates the Android project builds
+      # before anything is signed. Runs only on pull_request.
+      # -------------------------------------------------------------------
+      - name: Unsigned compile check (pull_request only)
+        if: github.event_name == 'pull_request'
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      # -------------------------------------------------------------------
+      # Signing section. Runs ONLY on trusted events (push / workflow_dispatch),
+      # never on pull_request, so PRs never read Smart Loan's signing secrets.
+      # Smart Loan uses its OWN secrets: KEYSTORE_BASE64 / KEYSTORE_PASSWORD /
+      # KEY_ALIAS / KEY_PASSWORD (never shared with another app).
+      # -------------------------------------------------------------------
       - name: Decode Keystore
+        if: github.event_name != 'pull_request'
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/smartloan.keystore
 
       - name: Print SHA-256 fingerprint
+        if: github.event_name != 'pull_request'
         run: keytool -list -v -keystore android/app/smartloan.keystore -alias ${{ secrets.KEY_ALIAS }} -storepass ${{ secrets.KEYSTORE_PASSWORD }} | grep SHA256
 
       - name: Build Release AAB
+        if: github.event_name != 'pull_request'
         run: |
           cd android
           ./gradlew bundleRelease --no-daemon \
@@ -141,11 +240,13 @@ jobs:
             -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
 
       - name: Build Debug APK for testing
+        if: github.event_name != 'pull_request'
         run: |
           cd android
           ./gradlew assembleDebug --no-daemon
 
       - name: Upload AAB artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: SmartLoanCalculator-release-aab
@@ -153,6 +254,7 @@ jobs:
           retention-days: 30
 
       - name: Upload Debug APK artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: SmartLoanCalculator-debug-apk

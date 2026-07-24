@@ -40,14 +40,13 @@ Plus, outside the folder:
 
 ```
 smartappsflow/
-├── index.html            # public homepage (smartappsflow.net)
-├── privacy-policy.html   # Smart Loan's policy (NOT a shared/global policy)
+├── index.html            # public homepage (smartappsflow.net) — NOT an app
 ├── CNAME                 # custom-domain binding
 ├── .gitattributes        # line-ending rules (LF for app sources)
 ├── REPO_STRUCTURE.md     # this file
 │
 ├── tradelogpro/          # ✅ fully self-contained (reference model)
-├── smartloan/            # ⚠️ works, but its files are scattered (see §5)
+├── smartloan/            # ✅ fully self-contained (own privacy-policy.html)
 ├── carmaintenance/       # PWA only (web)
 ├── compoundcalc/         # Flutter build output (web)
 │
@@ -93,13 +92,13 @@ trusted `push`/`workflow_dispatch` events, never on pull_request.**
 
 ## 5. Known pending work (do each in its own focused session)
 
-- **Consolidate Smart Loan** into `smartloan/`. Its `package.json`,
-  `capacitor.config.json`, `icon-only.png`, `android/smartloan/`, `splash/`, and
-  `privacy-policy.html` currently sit at the repo root. Moving them requires
-  editing `build-smartloan.yml` and verifying a full signed build — do it in a
-  Smart-Loan-only session, using `tradelogpro/` as the template.
 - **TradeLog Pro privacy policy**: create `tradelogpro/privacy-policy.html`
   before publishing to the Play Store.
+
+Smart Loan's privacy policy moved from the repo root into
+`smartloan/privacy-policy.html`, so its public URL is now
+`https://smartappsflow.net/smartloan/privacy-policy.html`. Keep the link in
+Google Play Console pointing at that path.
 
 ---
 

@@ -1,0 +1,55 @@
+التعديلات المكتملة في حزمة Smart Loan Calculator
+التاريخ: 24 يوليو 2026
+الفرع: chore/smartloan-consolidate
+
+--------------------------------------------------------------
+توحيد التطبيق داخل مجلد smartloan/ (على نمط tradelogpro/)
+--------------------------------------------------------------
+
+هذا العمل تنظيمي فقط — لم يُغيَّر أي حساب أو منطق أو واجهة في التطبيق.
+
+1. نقل أصول الأيقونة والسبلاش من android/smartloan/ إلى smartloan/assets/
+   (icon-foreground.png, icon-background.png, icon-only.png, splash-source.png).
+2. نقل privacy-policy.html من جذر المستودع إلى smartloan/privacy-policy.html
+   بدون أي تغيير في محتواها.
+   * الرابط العام الجديد: https://smartappsflow.net/smartloan/privacy-policy.html
+   * يجب تحديث هذا الرابط في Google Play Console بعد الدمج والنشر.
+3. إضافة smartloan/package.json (بالاسم الصحيح smart-loan-calculator + سكربت test).
+4. إضافة smartloan/capacitor.config.json (appId: com.smartapps.smartloanadvisor
+   المطابق لما يستخدمه الـ workflow وما هو منشور في Play Console).
+5. إضافة smartloan/.gitignore (node_modules/ www/ android/).
+6. إضافة اختبارات تُبوّب البناء، تُستخرج من index.html الحقيقي (لا نسخة):
+   * tests/financial-tests.mjs — 18 اختبارًا لحسابات القرض
+     (calcLoan, maxPrincipal, termForPayment، وحالات الفائدة صفر والحدود).
+   * tests/pwa-tests.mjs — 8 اختبارات لسلامة الـ PWA وخدمة العامل
+     (مسارات نسبية، نطاق cache خاص بالتطبيق، Network-First للتنقّل).
+7. حذف ملفات ميتة/مكرّرة:
+   * android/smartloan/index.html (نسخة قديمة) — ومعها اختفى مجلد android/ الجذري بالكامل.
+   * splash/ الجذري (غير مستخدم في الـ workflow).
+   * package.json و capacitor.config.json و icon-only.png من جذر المستودع.
+   * ملاحظة: index.html الجذري = الصفحة الرئيسية للموقع ولم يُمَس.
+8. تعديل .github/workflows/build-smartloan.yml:
+   * توجيه مسارات الأصول إلى smartloan/assets/.
+   * حذف خطوة "mv android" التي لم تعد لازمة (لا يوجد android/ جذري).
+   * إضافة مشغّلات push(main) و pull_request مقيّدة بـ paths: smartloan/**.
+   * تبويب البناء على npm test.
+   * حماية كل خطوات التوقيع بشرط github.event_name != 'pull_request'
+     حتى لا تقرأ الـ PRs أسرار التوقيع إطلاقًا.
+   * أوامر التوقيع وأسماء الأسرار (KEYSTORE_BASE64 / KEYSTORE_PASSWORD /
+     KEY_ALIAS / KEY_PASSWORD) بقيت كما هي دون تغيير.
+9. تحديث .gitattributes: فرض LF على /smartloan/** وعلى الـ workflow.
+10. تحديث REPO_STRUCTURE.md: تعليم Smart Loan كمكتفٍ ذاتيًا + ملاحظة رابط الخصوصية الجديد.
+
+--------------------------------------------------------------
+نتائج التحقق المحلي
+--------------------------------------------------------------
+
+npm test  (من داخل smartloan/)
+
+Loan-math tests: 18 passed, 0 failed
+PWA / service-worker tests: 8 passed, 0 failed
+
+Total: 26 passed, 0 failed
+
+لم يُبنَ APK/AAB محليًا لأن البناء النهائي يحتاج GitHub Actions وأسرار التوقيع.
+يجب التحقق من ذلك بتشغيل الـ workflow على الفرع (workflow_dispatch) قبل الدمج.
