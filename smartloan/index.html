@@ -3638,10 +3638,155 @@ function dismissIosInstall(){
   localStorage.setItem('sla_ios_install_dismissed','1');
 }
 
-// ── PWA service worker — web only (skipped inside the Android app) ──
+// ── PWA service worker + in-app update notifier — web only (skipped in the Android app) ──
+// New releases are picked up as a "waiting" service worker; we surface a banner
+// (and a persistent Settings card) so the user updates on their own terms. The
+// UI never changes mid-session — updates apply only on consent.
 if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.startsWith('http')) {
+  var pendingUpdateWorker = null;
+  var pendingUpdateInfo = null;      // { version, changelog }
+  var updateBannerDismissed = false; // dismissed for this session only
+
+  // Tiny local i18n so this block stays self-contained (no changes to the big T table).
+  function uT(key){
+    var L = (typeof lang !== 'undefined' && lang) ? lang : 'en';
+    var S = {
+      ar:{avail:'يتوفّر تحديث جديد',now:'تحديث الآن',later:'لاحقاً',generic:'تحسينات وإصلاحات جديدة.',deferred:'يمكنك التحديث لاحقاً من الإعدادات',ready:'نسخة جديدة جاهزة'},
+      en:{avail:'A new update is available',now:'Update now',later:'Later',generic:'New improvements and fixes.',deferred:'You can update later from Settings',ready:'A new version is ready'},
+      es:{avail:'Hay una actualización disponible',now:'Actualizar ahora',later:'Después',generic:'Nuevas mejoras y correcciones.',deferred:'Puedes actualizar luego en Ajustes',ready:'Una nueva versión está lista'}
+    };
+    return (S[L]||S.en)[key];
+  }
+  function changelogText(cl){
+    if(!cl) return uT('generic');
+    var L = (typeof lang !== 'undefined' && lang) ? lang : 'en';
+    return cl[L] || cl.en || cl.ar || uT('generic');
+  }
+
+  window.applyPendingUpdate = function(){
+    if (pendingUpdateWorker) pendingUpdateWorker.postMessage('SKIP_WAITING');
+    else window.location.reload();
+  };
+
+  // Persistent card at the top of Settings so the update stays reachable after "Later".
+  function markUpdateAvailable(){
+    var body = document.querySelector('#settings-screen .settings-body');
+    if (!body) return;
+    var box = document.getElementById('settingsUpdateBox');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'settingsUpdateBox';
+      box.className = 'set-section';
+      body.insertBefore(box, body.firstChild);
+    }
+    var desc = changelogText(pendingUpdateInfo && pendingUpdateInfo.changelog);
+    var ver = (pendingUpdateInfo && pendingUpdateInfo.version) ? ' ('+pendingUpdateInfo.version+')' : '';
+    box.innerHTML =
+      '<div class="card" style="border:1.5px solid var(--acc);padding:14px 16px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      + '<span style="font-size:15px">✨</span>'
+      + '<span style="font-size:14px;font-weight:800;color:var(--acc)">'+uT('ready')+ver+'</span></div>'
+      + '<p style="font-size:12.5px;color:var(--txt2);line-height:1.7;margin-bottom:12px">'+desc+'</p>'
+      + '<button onclick="applyPendingUpdate()" style="width:100%;background:var(--acc);color:#fff;border:none;border-radius:10px;padding:11px;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">'+uT('now')+'</button></div>';
+    box.style.display = 'block';
+  }
+
+  function showUpdateBanner(newWorker){
+    pendingUpdateWorker = newWorker || null;
+    markUpdateAvailable();               // the Settings entry appears regardless
+    if (updateBannerDismissed) return;   // user said "Later" this session
+    if (document.getElementById('updateBanner')) return;
+
+    var bar = document.createElement('div');
+    bar.id = 'updateBanner';
+    bar.style.cssText = [
+      'position:fixed','left:12px','right:12px',
+      'bottom:calc(16px + var(--safe-bottom))',
+      'max-width:460px','margin:0 auto','z-index:4000',
+      'background:var(--bg2)','color:var(--txt)',
+      'border:1.5px solid var(--acc)','border-inline-start:4px solid var(--acc)',
+      'border-radius:14px','padding:14px 16px',
+      'box-shadow:0 12px 34px rgba(0,0,0,.45)',
+      'display:flex','flex-direction:column','gap:8px','font-family:inherit'
+    ].join(';');
+
+    var head = document.createElement('div');
+    head.style.cssText = 'font-size:14px;font-weight:800;line-height:1.3;color:var(--acc)';
+    head.textContent = uT('avail');
+
+    var desc = document.createElement('div');
+    desc.style.cssText = 'font-size:12.5px;font-weight:500;line-height:1.7;color:var(--txt2)';
+    desc.textContent = changelogText(pendingUpdateInfo && pendingUpdateInfo.changelog);
+
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:flex-end';
+
+    var later = document.createElement('button');
+    later.textContent = uT('later');
+    later.style.cssText = 'background:none;border:none;color:var(--txt3);font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;padding:8px 12px';
+    later.onclick = function(){
+      updateBannerDismissed = true;
+      bar.remove();
+      markUpdateAvailable();
+      if (typeof showToast === 'function') showToast(uT('deferred'));
+    };
+
+    var btn = document.createElement('button');
+    btn.textContent = uT('now');
+    btn.style.cssText = 'background:var(--acc);color:#fff;border:none;border-radius:9px;padding:9px 20px;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap';
+    btn.onclick = function(){
+      btn.disabled = true; btn.textContent = '…';
+      if (newWorker) newWorker.postMessage('SKIP_WAITING');
+      else window.location.reload();
+    };
+
+    row.appendChild(later); row.appendChild(btn);
+    bar.appendChild(head); bar.appendChild(desc); bar.appendChild(row);
+    document.body.appendChild(bar);
+
+    // Ask the waiting worker for its version + changelog to fill in the texts.
+    if (newWorker) {
+      navigator.serviceWorker.addEventListener('message', function onMsg(e){
+        if (e.data && e.data.type === 'VERSION_INFO') {
+          pendingUpdateInfo = { version: e.data.version, changelog: e.data.changelog };
+          desc.textContent = changelogText(e.data.changelog);
+          head.textContent = uT('avail') + (e.data.version ? ' ('+e.data.version+')' : '');
+          markUpdateAvailable();
+          navigator.serviceWorker.removeEventListener('message', onMsg);
+        }
+      });
+      try { newWorker.postMessage('GET_VERSION_INFO'); } catch(_){}
+    }
+  }
+
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('service-worker.js').catch(function(){});
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(function(reg){
+      var checkWaiting = function(){
+        if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
+      };
+      checkWaiting();                                   // already-waiting version on open
+      reg.addEventListener('updatefound', function(){   // a new version arrives while open
+        var nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', function(){
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(nw);
+        });
+      });
+      // Poll for updates: now, on tab focus, and every minute.
+      reg.update().then(checkWaiting).catch(function(){});
+      document.addEventListener('visibilitychange', function(){
+        if (document.visibilityState === 'visible') reg.update().then(checkWaiting).catch(function(){});
+      });
+      setInterval(function(){ reg.update().then(checkWaiting).catch(function(){}); }, 60000);
+    }).catch(function(){});
+
+    // One reload when the new worker takes control (after the user consents).
+    var refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
   });
 }
 </script>

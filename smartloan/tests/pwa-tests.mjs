@@ -28,8 +28,13 @@ function assert(name, condition) {
 console.log('Smart Loan Calculator — PWA / service-worker scope tests\n');
 
 // 1. Service worker is registered with a relative path (subfolder-safe).
+//    Options (e.g. { updateViaCache:'none' }) are allowed after the path.
 assert("service worker is registered with relative path 'service-worker.js'",
-  html.includes("navigator.serviceWorker.register('service-worker.js')"));
+  /serviceWorker\.register\(\s*['"]service-worker\.js['"]/.test(html));
+
+// 1c. Registered with updateViaCache:'none' so the browser always re-checks sw.js.
+assert("registration uses updateViaCache: 'none'",
+  /updateViaCache:\s*['"]none['"]/.test(html));
 
 // 1b. No absolute registration path that would force the root scope.
 assert('service worker is not registered from an absolute path',
@@ -53,12 +58,29 @@ assert("cache name is namespaced with 'smartloan-'",
 assert('service worker CORE precache list is relative',
   /const\s+CORE\s*=\s*\[[^\]]*'\.\/'/.test(sw) && !/CORE\s*=\s*\[[^\]]*'\/[a-z]/i.test(sw));
 
-// 4. Navigation requests use Network First (fetch first, cache only on failure)
-//    so users pick up new deploys immediately.
-const navFirst =
-  /req\.mode === 'navigate'/.test(sw) &&
-  /if \(isHTML\)[\s\S]*?fetch\(req\)[\s\S]*?\.catch\(\(\)\s*=>\s*caches\.match/.test(sw);
-assert('navigation uses Network First (fetch first, cache on failure)', navFirst);
+// 4. Cache-first for HTML: the update-notification model requires the page to
+//    change ONLY through the consent flow, never silently on navigation. So the
+//    fetch handler must consult the cache before the network.
+assert('service worker is cache-first (caches.match(req) before fetch)',
+  /caches\.match\(req\)\.then\(\s*\(?\s*hit\s*\)?\s*=>/.test(sw));
+
+// 4b. Update is user-consented: skipWaiting() must NOT run on install. The only
+//     actual call (self.skipWaiting(...)) must be gated behind the SKIP_WAITING
+//     message. (Count real calls, not the word in comments.)
+assert('skipWaiting is user-triggered only (single call, gated by SKIP_WAITING)',
+  (sw.match(/self\.skipWaiting\(/g) || []).length === 1 &&
+  /SKIP_WAITING['"]\)\s*self\.skipWaiting\(\)/.test(sw));
+
+// 4c. The worker exposes its version/changelog to the page for the banner.
+assert('service worker answers GET_VERSION_INFO with VERSION_INFO',
+  /GET_VERSION_INFO/.test(sw) && /VERSION_INFO/.test(sw) &&
+  /const\s+VERSION\s*=/.test(sw) && /const\s+CHANGELOG\s*=/.test(sw));
+
+// 4d. The page side wires up the notifier: a waiting worker + a Settings entry.
+assert('page shows an update banner and a Settings update card',
+  /getElementById\(['"]updateBanner['"]\)/.test(html) &&
+  /settingsUpdateBox/.test(html) &&
+  /reg\.waiting/.test(html) && /controllerchange/.test(html));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
