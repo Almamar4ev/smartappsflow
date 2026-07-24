@@ -927,7 +927,7 @@ const T={
     basisTitle:'HOW YOUR LOAN IS CALCULATED',
     grossIncome:'Total Gross Income',netIncome:'Net (after expenses)',
     newInstall:'New Loan Installment',existingLoans:'Existing Loan Payments',
-    dtiGrossLbl:'DTI % of Gross Income',dtiNetLbl:'DTI % of Net Income',
+    dtiGrossLbl:'DTI % of Gross Income',dtiNetLbl:'Debt % of Net (after expenses)',
     addLoan:'Add Another Loan',mainLoan:'Main Loan',loanN:'Loan',
     totalInstall:'Total Monthly Payments',totalPctGross:'% of Gross Income',totalPctNet:'% of Net Income',
     settings:'Settings',themes:'CHOOSE THEME',langSet:'LANGUAGE',
@@ -974,7 +974,7 @@ const T={
     basisTitle:'كيف يُحسب قرضك؟',
     grossIncome:'إجمالي الدخل الكلي',netIncome:'الصافي (بعد المصروفات)',
     newInstall:'قسط القرض الجديد',existingLoans:'الأقساط القائمة',
-    dtiGrossLbl:'نسبة الدين من الدخل الكلي',dtiNetLbl:'نسبة الدين من الصافي',
+    dtiGrossLbl:'نسبة الدين من الدخل الكلي',dtiNetLbl:'نسبة الأقساط من الصافي (بعد المصروفات)',
     addLoan:'إضافة قرض آخر',mainLoan:'القرض الرئيسي',loanN:'قرض',
     totalInstall:'إجمالي الأقساط الشهرية',totalPctGross:'% من الدخل الكلي',totalPctNet:'% من الصافي',
     settings:'الإعدادات',themes:'اختر الثيم',langSet:'اللغة',
@@ -1012,7 +1012,7 @@ const T={
     tab_report:'Informe',tab_charts:'Gráficos',tab_simulate:'Simular',tab_restructure:'Refinanciar',tab_loans:'Préstamos',tab_saved:'Guardados',
     principal:'Capital',interest:'Intereses',month:'Mes',sim_amt:'MONTO',sim_per:'PLAZO',sim_rate:'TASA',
     basisTitle:'CÓMO SE CALCULA TU PRÉSTAMO',grossIncome:'Ingresos brutos totales',netIncome:'Neto (tras gastos)',
-    newInstall:'Nueva cuota',existingLoans:'Cuotas vigentes',dtiGrossLbl:'% Deuda sobre ingreso bruto',dtiNetLbl:'% Deuda sobre ingreso neto',
+    newInstall:'Nueva cuota',existingLoans:'Cuotas vigentes',dtiGrossLbl:'% Deuda sobre ingreso bruto',dtiNetLbl:'% Deuda sobre neto (tras gastos)',
     addLoan:'Añadir préstamo',mainLoan:'Préstamo principal',loanN:'Préstamo',totalInstall:'Total mensual',totalPctGross:'% del ingreso bruto',totalPctNet:'% del ingreso neto',
     settings:'Ajustes',themes:'ELEGIR TEMA',langSet:'IDIOMA',savedScenarios:'PRÉSTAMOS GUARDADOS',detailTitle:'Detalles del préstamo',
     compareBtnHome:'Comparar',compareTitle:'Comparar préstamos',features:['Cálculo instantáneo','Estimaciones detalladas','Indicadores de riesgo','Simulación de escenarios'],
@@ -1146,7 +1146,8 @@ function analyse(){
   if(dtiGross>50||dtiNet>80)riskLevel='risky';
   else if(dtiGross>35||dtiNet>60)riskLevel='moderate';
   const safeMax=Math.max(0,(netIncome-existing)*0.35*period/(1+rate*period/24));
-  const remaining=Math.max(0,netIncome-monthly-existing);
+  // Can be negative → a real monthly deficit. Do NOT clamp to 0 (that hid the shortfall).
+  const remaining=netIncome-monthly-existing;
   return{monthly,total,interest,dtiGross,dtiNet,affordability:Math.max(0,Math.min(100,100-dtiGross)),riskLevel,safeMax,grossIncome,netIncome,rate,existing,expenses,variable,remaining};
 }
 function amortize(amount,annualRate,months){
@@ -1491,13 +1492,20 @@ function renderHome(){
     const totalInc=(+profile.salary||0)+(+profile.income||0);
     const totalExp=(+profile.expenses||0)+(+profile.variable||0);
     const totalLoans=saved.filter(s=>s.type!=='scenario').reduce((s,l)=>s+l.loanMonthly,0);
-    const rem=Math.max(0,totalInc-totalExp-totalLoans);
+    const rem=totalInc-totalExp-totalLoans; // قد يكون سالباً = عجز شهري (لا نقصّه إلى صفر)
     const remPct=totalInc>0?parseFloat(((rem/totalInc)*100).toFixed(2)):0;
-    const remColor=remPct>30?'var(--safe)':remPct>15?'#f59e0b':'var(--risk)';
-    const remLabel=lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder';
-    const remDesc=lang==='ar'?`${remPct}% من دخلك متاح بعد كل الأقساط والمصروفات`:
-                  lang==='es'?`${remPct}% de tus ingresos disponibles`:
-                  `${remPct}% of your income available after all payments`;
+    const remIsDeficit=rem<0;
+    const remColor=remIsDeficit?'var(--risk)':remPct>30?'var(--safe)':remPct>15?'#f59e0b':'var(--risk)';
+    const remLabel=remIsDeficit
+      ? (lang==='ar'?'عجز شهري':lang==='es'?'Déficit mensual':'Monthly Deficit')
+      : (lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder');
+    const remDesc=remIsDeficit
+      ? (lang==='ar'?'دخلك لا يكفي الأقساط والمصروفات — لديك عجز شهري':
+         lang==='es'?'Tus ingresos no cubren cuotas y gastos — tienes déficit':
+         'Your income does not cover payments and expenses — you have a deficit')
+      : (lang==='ar'?`${remPct}% من دخلك متاح بعد كل الأقساط والمصروفات`:
+         lang==='es'?`${remPct}% de tus ingresos disponibles`:
+         `${remPct}% of your income available after all payments`);
     remainingCard.style.display='block';
     remainingCard.innerHTML=`
       <div style="background:var(--bg2);border-radius:16px;padding:14px 16px;border:1.5px solid ${remColor}40;position:relative;overflow:hidden">
@@ -1505,7 +1513,7 @@ function renderHome(){
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--lbl);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${remLabel}</div>
-            <div style="font-size:24px;font-weight:900;color:var(--txt)">${fmtAmt(rem)}</div>
+            <div style="font-size:24px;font-weight:900;color:${remIsDeficit?'var(--risk)':'var(--txt)'}">${fmtAmt(Math.abs(rem))}</div>
             <div style="font-size:11px;color:var(--txt3);margin-top:3px">${remDesc}</div>
           </div>
           <div style="width:52px;height:52px;border-radius:50%;border:3px solid ${remColor}40;display:flex;align-items:center;justify-content:center;background:${remColor}15;flex-shrink:0">
@@ -1935,20 +1943,25 @@ function renderResults(){
     else el.textContent=lbl;
   });
   const monthlyColor='var(--txt)';
-  // remaining: إذا محسوب مسبقاً نستخدمه، وإلا نحسبه
+  // remaining: إذا محسوب مسبقاً نستخدمه، وإلا نحسبه (قد يكون سالباً = عجز شهري)
   const remaining=r.remaining!==undefined
     ? r.remaining
-    : Math.max(0,r.netIncome-r.monthly-r.existing);
+    : (r.netIncome-r.monthly-r.existing);
   // نسبة المتبقي موحدة: remaining/grossIncome بفاصلتين
   const remainingPct=r.grossIncome>0?Math.round((remaining/r.grossIncome)*10000)/100:0;
-  const remainingLabel=lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder';
+  const isDeficit=remaining<0;
+  // عند العجز: عنوان "عجز شهري" وقيمة موجبة بالأحمر بدل صفر مضلِّل
+  const remainingLabel=isDeficit
+    ? (lang==='ar'?'عجز شهري':lang==='es'?'Déficit mensual':'Monthly Deficit')
+    : (lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder');
   const remainingColor=remaining>0?'var(--safe)':'var(--risk)';
+  const remainingVal=fmtAmt(Math.abs(remaining));
   // القيم بيضاء (احترافية)؛ الحافة العلوية الملوّنة تكفي للتمييز. الدلالة (أحمر للفائدة، أخضر/أحمر للمتبقي) تبقى على القيمة
   document.getElementById('kpi-grid').innerHTML=[
     {label:tc.monthlyInstallment, val:fmtAmt(r.monthly),  edge:'var(--acc)',  vc:'var(--txt)'},
     {label:tc.totalCost,          val:fmtAmt(r.total),    edge:'var(--acc2)', vc:'var(--txt)'},
     {label:tc.totalInterest,      val:fmtAmt(r.interest), edge:'var(--risk)', vc:'var(--txt)'},
-    {label:remainingLabel,        val:fmtAmt(remaining),  edge:remainingColor, vc:'var(--txt)'},
+    {label:remainingLabel,        val:remainingVal,       edge:remainingColor, vc:isDeficit?'var(--risk)':'var(--txt)'},
   ].map(k=>`<div class="kpi-card" style="border-top-color:${k.edge}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.vc}">${k.val}</p></div>`).join('');
   document.getElementById('lbl-basis').textContent=tc.basisTitle;
   // calculate expected end date
@@ -2793,7 +2806,7 @@ function openSavedDetail(i){
   const totalDebt=results.monthly+currentExisting;
   results.dtiGross=curGross>0?(totalDebt/curGross)*100:0;
   results.dtiNet  =curNetInc>0?(totalDebt/curNetInc)*100:0;
-  results.remaining=Math.max(0,curNetInc-results.monthly-currentExisting);
+  results.remaining=curNetInc-results.monthly-currentExisting; // قد يكون سالباً = عجز
   // نحفظ بيانات السيناريو لعرض بطاقة المقارنة
   results._isScenario=isScenario;
   results._replacedLoan=replacedLoan||null;
@@ -2933,7 +2946,7 @@ function renderCompare(){
       if(repL && x===repL) return false;
       return true;
     }).reduce((sum,x)=>sum+x.loanMonthly,0);
-    return Math.max(0,cmpCurNet-s.loanMonthly-otherLoans);
+    return cmpCurNet-s.loanMonthly-otherLoans; // قد يكون سالباً = عجز
   }
 
   const fields=[
@@ -2941,7 +2954,7 @@ function renderCompare(){
     {key:'total',label:tc.totalCost,fmt:v=>fmtAmt(v),best:'min'},
     {key:'interest',label:tc.totalInterest,fmt:v=>fmtAmt(v),best:'min'},
     {key:'dtiGross',label:tc.dtiRatio,fmt:v=>v.toFixed(2)+'%',best:'min'},
-    {key:'remaining',label:remLbl,fmt:v=>fmtAmt(Math.max(0,v)),best:'max'},
+    {key:'remaining',label:remLbl,fmt:v=>fmtAmt(v),best:'max'},
   ];
 
   // رأس الجدول — يضيف "يستبدل X" للسيناريوهات
