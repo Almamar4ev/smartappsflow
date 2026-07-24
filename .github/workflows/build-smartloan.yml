@@ -36,13 +36,18 @@ jobs:
           distribution: 'temurin'
 
       # The build targets compileSdkVersion 35, so the android-35 platform and
-      # its build-tools must be present. setup-android puts sdkmanager on PATH
-      # and accepts licenses; then we install exactly the SDK packages we need.
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
+      # its build-tools must be present. Install them into the runner's
+      # PRE-INSTALLED SDK ($ANDROID_SDK_ROOT = /usr/local/lib/android/sdk) — the
+      # exact root Gradle reads — instead of a separate SDK that Gradle ignores.
       - name: Install Android SDK platform 35
-        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+        run: |
+          set -e
+          SDKMGR="$(command -v sdkmanager || echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager")"
+          echo "Using sdkmanager: $SDKMGR  (SDK root: $ANDROID_SDK_ROOT)"
+          yes | "$SDKMGR" --licenses >/dev/null 2>&1 || true
+          "$SDKMGR" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "Installed platforms:"
+          ls -1 "$ANDROID_SDK_ROOT/platforms"
 
       # Gate the build on the loan-math + PWA tests. These import only Node
       # built-ins, so no npm install is needed. If any test fails the whole
