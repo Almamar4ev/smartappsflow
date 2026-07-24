@@ -114,6 +114,19 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      # The AGP that Capacitor 6 scaffolds is only tested up to compileSdk 33,
+      # so it cannot load the android-35 framework and the build fails with
+      # "failed to load include path .../android-35/android.jar". Bump the
+      # Android Gradle Plugin and the Gradle wrapper to versions that support
+      # compileSdk 35 (AGP 8.6.0 needs Gradle 8.7+, JDK 17 — already set up).
+      - name: Upgrade Android Gradle Plugin + Gradle for compileSdk 35
+        run: |
+          set -e
+          sed -i "s#com.android.tools.build:gradle:[0-9.]*#com.android.tools.build:gradle:8.6.0#" android/build.gradle
+          sed -i "s#gradle-[0-9.]*-\(all\|bin\).zip#gradle-8.7-\1.zip#" android/gradle/wrapper/gradle-wrapper.properties
+          echo "AGP:";    grep "com.android.tools.build:gradle" android/build.gradle
+          echo "Gradle:"; grep distributionUrl android/gradle/wrapper/gradle-wrapper.properties
+
       - name: Install ImageMagick (provides 'convert')
         run: sudo apt-get update && sudo apt-get install -y imagemagick
 
