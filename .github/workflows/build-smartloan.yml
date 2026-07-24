@@ -59,6 +59,12 @@ jobs:
       - name: Init Capacitor
         run: |
           npx cap init "Smart Loan Calculator" "com.smartapps.smartloanadvisor" --web-dir www
+          # `cap init` may scaffold a TypeScript config (capacitor.config.ts).
+          # Loading it needs the `typescript` package, which isn't installed, so
+          # `cap add android` crashes with "Cannot read properties of undefined
+          # (reading 'CommonJS')". We supply our own JSON config below, so remove
+          # any generated .ts and keep the JSON as the single source of truth.
+          rm -f capacitor.config.ts
           cat > capacitor.config.json <<'CFGEOF'
           {
             "appId": "com.smartapps.smartloanadvisor",
