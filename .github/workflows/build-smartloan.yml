@@ -159,6 +159,21 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      # The Gradle wrapper downloads the Gradle distribution on first use, which
+      # occasionally fails mid-stream on hosted runners (transient SSL/network
+      # read). Warm it up with retries so a flaky download doesn't fail the
+      # whole build; once fetched it is cached for the later build steps.
+      - name: Warm up Gradle wrapper (retry flaky distribution download)
+        run: |
+          cd android
+          for i in 1 2 3; do
+            ./gradlew --version --no-daemon && exit 0
+            echo "Gradle bootstrap attempt $i failed; retrying in 15s..."
+            sleep 15
+          done
+          echo "::error::Gradle wrapper failed to download after 3 attempts"
+          exit 1
+
       # -------------------------------------------------------------------
       # PR compile check (no secrets). Validates the Android project builds
       # before anything is signed. Runs only on pull_request.
