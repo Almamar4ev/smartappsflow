@@ -42,11 +42,14 @@ jobs:
         working-directory: smartloan
         run: npm test
 
+      # Pin every Capacitor package to the v6 line (matching smartloan/package.json).
+      # Leaving @capacitor/core / @capacitor/android unpinned pulls Capacitor 7,
+      # which conflicts with the ^6 plugins and fails npm's peer resolution (ERESOLVE).
       - name: Install Capacitor
         run: |
-          npm install -g @capacitor/cli
-          npm install @capacitor/core @capacitor/android @capacitor/splash-screen@^6.0.0 @capacitor/filesystem@^6.0.0 @capacitor/share@^6.0.0 @capacitor/status-bar@^6.0.0
-          npm install -D @capacitor/assets
+          npm install -g @capacitor/cli@6.2.1
+          npm install @capacitor/core@6.2.1 @capacitor/android@6.2.1 @capacitor/splash-screen@6.0.3 @capacitor/filesystem@6.0.4 @capacitor/share@6.0.4 @capacitor/status-bar@6.0.3
+          npm install -D @capacitor/assets@3.0.5
 
       - name: Prepare web folder
         run: |
