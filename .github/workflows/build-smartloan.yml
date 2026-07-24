@@ -1,6 +1,19 @@
 name: Build Smart Loan AAB
 
 on:
+  # Trusted signing runs happen only on push to main (and manual dispatch).
+  push:
+    branches:
+      - main
+    paths:
+      - 'smartloan/**'
+      - '.github/workflows/build-smartloan.yml'
+  # PR runs only test + an unsigned compile check; they never touch secrets.
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'smartloan/**'
+      - '.github/workflows/build-smartloan.yml'
   workflow_dispatch:
 
 jobs:
@@ -21,6 +34,13 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      # Gate the build on the loan-math + PWA tests. These import only Node
+      # built-ins, so no npm install is needed. If any test fails the whole
+      # workflow stops here and no APK/AAB is produced.
+      - name: Run loan-math and PWA tests
+        working-directory: smartloan
+        run: npm test
 
       - name: Install Capacitor
         run: |
@@ -56,9 +76,6 @@ jobs:
           }
           CFGEOF
 
-      - name: Move store assets aside (repo android/ folder conflicts with Capacitor)
-        run: mv android assets-src
-
       - name: Add Android platform
         run: npx cap add android
 
@@ -78,18 +95,18 @@ jobs:
           </resources>
           XMLEOF
           mkdir -p android/app/src/main/res/drawable
-          convert assets-src/smartloan/icon-only.png -resize 540x540 -background none -gravity center -extent 1152x1152 android/app/src/main/res/drawable/splash_icon.png
+          convert smartloan/assets/icon-only.png -resize 540x540 -background none -gravity center -extent 1152x1152 android/app/src/main/res/drawable/splash_icon.png
           identify android/app/src/main/res/drawable/splash_icon.png
           echo "Android 12+ splash configured with dedicated hi-res icon"
 
       - name: Generate app icons and splash screens
         run: |
           mkdir -p assets
-          cp assets-src/smartloan/icon-foreground.png assets/icon-foreground.png
-          cp assets-src/smartloan/icon-background.png assets/icon-background.png
-          cp assets-src/smartloan/icon-only.png assets/icon-only.png
-          cp assets-src/smartloan/splash-source.png assets/splash.png
-          cp assets-src/smartloan/splash-source.png assets/splash-dark.png
+          cp smartloan/assets/icon-foreground.png assets/icon-foreground.png
+          cp smartloan/assets/icon-background.png assets/icon-background.png
+          cp smartloan/assets/icon-only.png assets/icon-only.png
+          cp smartloan/assets/splash-source.png assets/splash.png
+          cp smartloan/assets/splash-source.png assets/splash-dark.png
           npx @capacitor/assets generate \
             --android \
             --iconBackgroundColor '#221B3E' \
@@ -124,14 +141,33 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      # -------------------------------------------------------------------
+      # PR compile check (no secrets). Validates the Android project builds
+      # before anything is signed. Runs only on pull_request.
+      # -------------------------------------------------------------------
+      - name: Unsigned compile check (pull_request only)
+        if: github.event_name == 'pull_request'
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      # -------------------------------------------------------------------
+      # Signing section. Runs ONLY on trusted events (push / workflow_dispatch),
+      # never on pull_request, so PRs never read Smart Loan's signing secrets.
+      # Smart Loan uses its OWN secrets: KEYSTORE_BASE64 / KEYSTORE_PASSWORD /
+      # KEY_ALIAS / KEY_PASSWORD (never shared with another app).
+      # -------------------------------------------------------------------
       - name: Decode Keystore
+        if: github.event_name != 'pull_request'
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/smartloan.keystore
 
       - name: Print SHA-256 fingerprint
+        if: github.event_name != 'pull_request'
         run: keytool -list -v -keystore android/app/smartloan.keystore -alias ${{ secrets.KEY_ALIAS }} -storepass ${{ secrets.KEYSTORE_PASSWORD }} | grep SHA256
 
       - name: Build Release AAB
+        if: github.event_name != 'pull_request'
         run: |
           cd android
           ./gradlew bundleRelease --no-daemon \
@@ -141,11 +177,13 @@ jobs:
             -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
 
       - name: Build Debug APK for testing
+        if: github.event_name != 'pull_request'
         run: |
           cd android
           ./gradlew assembleDebug --no-daemon
 
       - name: Upload AAB artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: SmartLoanCalculator-release-aab
@@ -153,6 +191,7 @@ jobs:
           retention-days: 30
 
       - name: Upload Debug APK artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: SmartLoanCalculator-debug-apk

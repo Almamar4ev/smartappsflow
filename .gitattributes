@@ -4,3 +4,8 @@
 # Scoped by path — no other project in this repo is affected.
 /tradelogpro/**                            text=auto eol=lf
 /.github/workflows/build-tradelogpro.yml   text eol=lf
+
+# Same for Smart Loan: keep its sources and workflow at LF everywhere. Binary
+# assets (PNGs) are auto-detected by text=auto and left untouched.
+/smartloan/**                              text=auto eol=lf
+/.github/workflows/build-smartloan.yml     text eol=lf
