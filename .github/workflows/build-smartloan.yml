@@ -35,6 +35,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      # The build targets compileSdkVersion 35, so the android-35 platform and
+      # its build-tools must be present. setup-android puts sdkmanager on PATH
+      # and accepts licenses; then we install exactly the SDK packages we need.
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK platform 35
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
       # Gate the build on the loan-math + PWA tests. These import only Node
       # built-ins, so no npm install is needed. If any test fails the whole
       # workflow stops here and no APK/AAB is produced.
