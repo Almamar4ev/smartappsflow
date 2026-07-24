@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "TradeLog Pro - Trading Journal",
   "scripts": {
-    "test": "node tests/financial-tests.mjs && node tests/security-tests.mjs && node tests/runtime-guard-tests.mjs && node tests/pwa-tests.mjs"
+    "test": "node tests/financial-tests.mjs && node tests/security-tests.mjs && node tests/runtime-guard-tests.mjs && node tests/pwa-tests.mjs && node tests/display-tests.mjs"
   },
   "dependencies": {
     "@capacitor/android": "6.2.1",

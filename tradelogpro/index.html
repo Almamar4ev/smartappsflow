@@ -1947,6 +1947,19 @@ function fmtDate(d) {
   if (parts.length !== 3) return d;
   return parts[2] + '-' + parts[1] + '-' + parts[0];
 }
+// Report (PDF) number formatting — same thousands separators as the UI.
+// fmtReportNum keeps the sign of n and always shows 2 decimals (e.g. 100000
+// -> "100,000.00", -5778.01 -> "-5,778.01"). fmtReportQty adds separators but
+// trims trailing zeros for share counts (e.g. 1500 -> "1,500", 12.5 -> "12.5").
+function fmtReportNum(n) { return Number(n || 0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtReportQty(n) { return Number(n || 0).toLocaleString('en-US',{maximumFractionDigits:4}); }
+// Label for a sell event in a trade's history: "CLOSE" when it is the final
+// sell that leaves the trade fully closed, otherwise "PARTIAL CLOSE".
+function closeEventLabel(t, idx) {
+  var pcs = (t && t.partial_closes) || [];
+  var isLast = idx === pcs.length - 1;
+  return (t && t.status === 'closed' && isLast) ? 'CLOSE' : 'PARTIAL CLOSE';
+}
 function pnlClass(n) { return n >= 0 ? 'pnl-pos' : 'pnl-neg'; }
 function pnlColor(n) { return (n > 0.005) ? 'var(--green)' : (n < -0.005 ? 'var(--red)' : 'var(--text3)'); }
 function fmtPnlCompact(n) {
@@ -3954,13 +3967,13 @@ function openTradeDetail(id) {
     }
     // Partial closes
     if (t.partial_closes) {
-      t.partial_closes.forEach(function(pc){
+      t.partial_closes.forEach(function(pc, pcIdx){
         var pcBasis = (pc.basis != null) ? pc.basis : (pc._ledgerBasis != null ? pc._ledgerBasis : avg);
         var pcGross = (pc.price - pcBasis) * pc.qty * (t.direction==='Long'?1:-1);
         var pcFee = calcFeesAmt(pc.fees, pc.fees_mode, pcGross);
         var pcNet = pcGross - pcFee;
         html += '<div style="background:var(--surface2);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center">' +
-          '<div style="flex:1"><span style="font-size:10px;color:var(--text3);font-family:var(--mono)">PARTIAL CLOSE</span>' +
+          '<div style="flex:1"><span style="font-size:10px;color:var(--text3);font-family:var(--mono)">' + closeEventLabel(t, pcIdx) + '</span>' +
           '<div style="font-size:13px;font-weight:600;margin-top:2px">' + parseFloat(pc.qty).toFixed(2) + ' shares @ ' + fmtPrice(pc.price) + '</div>' +
           '<div style="font-size:11px;color:var(--text3)">' + fmtDate(pc.date) + '</div></div>' +
           '<div style="display:flex;align-items:center;gap:6px;text-align:right">' +
@@ -4342,9 +4355,9 @@ function exportPDF() {
     'Total Trades: ' + trades.length,
     'Closed: ' + closed.length,
     'Win Rate: ' + wr + '%',
-    'Net P&L: ' + (totalPnl >= 0 ? '+' : '') + currSym() + totalPnl.toFixed(2),
+    'Net P&L: ' + (totalPnl >= 0 ? '+' : '') + currSym() + fmtReportNum(totalPnl),
     'P&L %: ' + (totalPnl >= 0 ? '+' : '') + pct + '%',
-    'Invested: ' + currSym() + totalInv.toFixed(2)
+    'Invested: ' + currSym() + fmtReportNum(totalInv)
   ];
   summaryItems.forEach(function(s, i) {
     doc.text(s, margin + (i % 3) * 90, 28 + Math.floor(i / 3) * 6);
@@ -4387,12 +4400,12 @@ function exportPDF() {
       t.status,
       t.entry_date || '',
       t.exit_date || '—',
-      currSym() + parseFloat(t.entry || 0).toFixed(2),
-      t.exit ? currSym() + parseFloat(t.exit).toFixed(2) : '—',
-      parseFloat(calcBoughtQty(t).toFixed(4)).toString(),
-      currSym() + calcInvestedValue(t).toFixed(2),
+      currSym() + fmtReportNum(parseFloat(t.entry || 0)),
+      t.exit ? currSym() + fmtReportNum(parseFloat(t.exit)) : '—',
+      fmtReportQty(calcBoughtQty(t)),
+      currSym() + fmtReportNum(calcInvestedValue(t)),
       t.fees_mode === '%' ? (t.fees || 0) + '%' : currSym() + (t.fees || 0),
-      (pnl >= 0 ? '+' : '-') + currSym() + Math.abs(pnl).toFixed(2),
+      (pnl >= 0 ? '+' : '-') + currSym() + fmtReportNum(Math.abs(pnl)),
       pctRow
     ];
 
