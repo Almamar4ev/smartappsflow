@@ -36,18 +36,30 @@ jobs:
           distribution: 'temurin'
 
       # The build targets compileSdkVersion 35, so the android-35 platform and
-      # its build-tools must be present. Install them into the runner's
-      # PRE-INSTALLED SDK ($ANDROID_SDK_ROOT = /usr/local/lib/android/sdk) — the
-      # exact root Gradle reads — instead of a separate SDK that Gradle ignores.
+      # its build-tools must be present in the SAME SDK root Gradle reads
+      # (/usr/local/lib/android/sdk). sdkmanager installs relative to its own
+      # location by default, which can land in a different root — so we force
+      # the target with --sdk_root and then hard-verify android.jar exists.
       - name: Install Android SDK platform 35
         run: |
           set -e
-          SDKMGR="$(command -v sdkmanager || echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager")"
-          echo "Using sdkmanager: $SDKMGR  (SDK root: $ANDROID_SDK_ROOT)"
-          yes | "$SDKMGR" --licenses >/dev/null 2>&1 || true
-          "$SDKMGR" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-          echo "Installed platforms:"
-          ls -1 "$ANDROID_SDK_ROOT/platforms"
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "Target SDK root: $SDK_ROOT"
+          SDKMGR=""
+          for c in "$SDK_ROOT"/cmdline-tools/latest/bin/sdkmanager \
+                   "$SDK_ROOT"/cmdline-tools/*/bin/sdkmanager \
+                   "$(command -v sdkmanager || true)"; do
+            if [ -x "$c" ]; then SDKMGR="$c"; break; fi
+          done
+          echo "Using sdkmanager: $SDKMGR"
+          yes | "$SDKMGR" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
+          "$SDKMGR" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "Platforms present:"; ls -1 "$SDK_ROOT/platforms" || true
+          if [ ! -f "$SDK_ROOT/platforms/android-35/android.jar" ]; then
+            echo "::error::android-35/android.jar missing after install at $SDK_ROOT"
+            exit 1
+          fi
+          echo "OK: $SDK_ROOT/platforms/android-35/android.jar present"
 
       # Gate the build on the loan-math + PWA tests. These import only Node
       # built-ins, so no npm install is needed. If any test fails the whole
