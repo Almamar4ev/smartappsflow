@@ -13,6 +13,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Smart Loan"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
+<script>
+// The Android store shell applies safe-area insets as native View padding.
+// Keep CSS env() for browsers, but never add it a second time in that shell.
+try{
+  if(window.Capacitor && typeof window.Capacitor.getPlatform==='function' &&
+     window.Capacitor.getPlatform()==='android'){
+    document.documentElement.classList.add('android-native');
+  }
+}catch(e){}
+</script>
 
 <style>
 :root{--acc:#6366f1;--acc2:#8b5cf6;--acc3:#ec4899;--bg:#0a0f1e;--bg2:#1e293b;--bg3:#0f172a;--brd:#334155;--txt:#e2e8f0;--txt2:#c8d8e8;--txt3:#a0b4c8;--lbl:#f0b429;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(99,102,241,0.18)}
@@ -30,6 +40,12 @@
   --safe-bottom:env(safe-area-inset-bottom, 0px);
   --safe-left:env(safe-area-inset-left, 0px);
   --safe-right:env(safe-area-inset-right, 0px);
+}
+:root.android-native{
+  --safe-top:0px;
+  --safe-bottom:0px;
+  --safe-left:0px;
+  --safe-right:0px;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -845,20 +861,26 @@ function themeBarColor(id){
     : '#0a0f1e'; // default (indigo)
 }
 function isLightThemeBar(id){ return id==='emerald' || id==='light'; }
-// يضبط لون شريط الحالة ليطابق الثيم — للويب (theme-color) وللتطبيق الأصلي (StatusBar)
+// يضبط منطقتي شريطي النظام وأيقوناتهما حسب الثيم، مع fallback لإضافة Capacitor.
 function applyStatusBar(id){
   var color=themeBarColor(id), light=isLightThemeBar(id);
   try{ var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',color); }catch(e){}
   try{
     var SB=window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
+    var nativeBars=window.Capacitor && window.Capacitor.Plugins &&
+      window.Capacitor.Plugins.SmartLoanSystemBars;
+    if(nativeBars && typeof nativeBars.setTheme==='function'){
+      document.documentElement.classList.add('android-native');
+      // light=true means a light bar background, therefore DARK system icons.
+      nativeBars.setTheme({color:color,darkIcons:light});
+      if(SB) SB.setOverlaysWebView({overlay:true});
+      return;
+    }
     if(SB){
-      // Edge-to-edge: the WebView draws behind the status bar and MainActivity
-      // feeds the real insets into --safe-*, which pad the content. overlay:true
-      // avoids the plugin also reserving top space (which double-padded / fought
-      // the injected insets). The top safe-area shows the page bg = theme color.
+      // Fallback for a native shell without the dedicated Android bridge.
       SB.setOverlaysWebView({overlay:true});
       SB.setBackgroundColor({color:color});
-      SB.setStyle({style: light ? 'LIGHT' : 'DARK'});
+      SB.setStyle({style: light ? 'DARK' : 'LIGHT'});
     }
   }catch(e){}
 }

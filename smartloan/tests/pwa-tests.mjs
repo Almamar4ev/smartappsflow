@@ -18,6 +18,8 @@ const root = join(__dirname, '..');
 const html = readFileSync(join(root, 'index.html'), 'utf8');
 const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
 const sw = readFileSync(join(root, 'service-worker.js'), 'utf8');
+const androidWorkflow = readFileSync(
+  join(root, '..', '.github', 'workflows', 'build-smartloan.yml'), 'utf8');
 
 let passed = 0, failed = 0;
 function assert(name, condition) {
@@ -81,6 +83,34 @@ assert('page shows an update banner and a Settings update card',
   /getElementById\(['"]updateBanner['"]\)/.test(html) &&
   /settingsUpdateBox/.test(html) &&
   /reg\.waiting/.test(html) && /controllerchange/.test(html));
+
+// 5. Browsers retain env(safe-area-*), while the Android shell zeros those CSS
+//    variables because MainActivity already applies the physical insets.
+assert('browser safe-area env values remain available',
+  /--safe-top:\s*env\(safe-area-inset-top/.test(html) &&
+  /--safe-bottom:\s*env\(safe-area-inset-bottom/.test(html));
+assert('Android native shell prevents double safe-area padding',
+  /:root\.android-native\s*\{[^}]*--safe-top:\s*0px[^}]*--safe-bottom:\s*0px/s.test(html));
+
+// 5b. The generated MainActivity owns edge-to-edge geometry, including the IME,
+//     and the narrow bridge owns both system-bar colours/icon contrast.
+assert('Android workflow enables one explicit edge-to-edge layout model',
+  /WindowCompat\.setDecorFitsSystemWindows\(getWindow\(\), false\)/.test(androidWorkflow));
+assert('Android native padding handles bars, cutout, and visible IME',
+  /Type\.systemBars\(\)/.test(androidWorkflow) &&
+  /Type\.displayCutout\(\)/.test(androidWorkflow) &&
+  /isVisible\(WindowInsetsCompat\.Type\.ime\(\)\)/.test(androidWorkflow) &&
+  /Math\.max\(bars\.bottom, ime\.bottom\)/.test(androidWorkflow));
+assert('Android insets are consumed after native root padding',
+  /return WindowInsetsCompat\.CONSUMED/.test(androidWorkflow));
+assert('theme bridge is shared by HTML and generated MainActivity',
+  /Plugins\.SmartLoanSystemBars/.test(html) &&
+  /@CapacitorPlugin\(name = "SmartLoanSystemBars"\)/.test(androidWorkflow));
+assert('native theme bridge is registered before the first page load',
+  /registerPlugin\(SystemBarsPlugin\.class\);\s*super\.onCreate/s.test(androidWorkflow));
+assert('native bridge controls status and navigation icon contrast',
+  /setAppearanceLightStatusBars\(darkIcons\)/.test(androidWorkflow) &&
+  /setAppearanceLightNavigationBars\(darkIcons\)/.test(androidWorkflow));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
