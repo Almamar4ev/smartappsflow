@@ -852,7 +852,11 @@ function applyStatusBar(id){
   try{
     var SB=window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
     if(SB){
-      SB.setOverlaysWebView({overlay:false});
+      // Edge-to-edge: the WebView draws behind the status bar and MainActivity
+      // feeds the real insets into --safe-*, which pad the content. overlay:true
+      // avoids the plugin also reserving top space (which double-padded / fought
+      // the injected insets). The top safe-area shows the page bg = theme color.
+      SB.setOverlaysWebView({overlay:true});
       SB.setBackgroundColor({color:color});
       SB.setStyle({style: light ? 'LIGHT' : 'DARK'});
     }

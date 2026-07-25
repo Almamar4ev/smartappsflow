@@ -185,10 +185,10 @@ jobs:
 
           import android.os.Bundle;
           import android.os.Handler;
+          import android.view.View;
           import android.webkit.WebView;
           import androidx.core.graphics.Insets;
           import androidx.core.view.ViewCompat;
-          import androidx.core.view.WindowCompat;
           import androidx.core.view.WindowInsetsCompat;
           import com.getcapacitor.BridgeActivity;
 
@@ -199,17 +199,17 @@ jobs:
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-                  // Draw edge-to-edge (default on API 35; also enforced for older APIs).
-                  WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
                   final WebView webView = getBridge().getWebView();
-                  if (webView == null) return;
                   final float density = getResources().getDisplayMetrics().density;
 
                   // env(safe-area-inset-*) is always 0 inside the Android WebView, so we
-                  // read the REAL insets natively, cache them, and push them into the CSS
-                  // variables index.html consumes (--safe-top/bottom/left/right).
-                  ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
+                  // read the REAL insets natively and push them into the CSS variables
+                  // index.html consumes (--safe-top/bottom/left/right). We attach the
+                  // listener to the CONTENT ROOT (not the WebView) so the insets are
+                  // reliably delivered even if an ancestor would otherwise consume them.
+                  final View root = findViewById(android.R.id.content);
+                  ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
                       Insets bars = insets.getInsets(
                           WindowInsetsCompat.Type.systemBars()
                           | WindowInsetsCompat.Type.displayCutout());
@@ -220,13 +220,13 @@ jobs:
                       applyInsets(webView);
                       return insets;
                   });
-                  ViewCompat.requestApplyInsets(webView);
+                  ViewCompat.requestApplyInsets(root);
 
                   // The listener can fire BEFORE index.html finishes loading, and CSS vars
                   // set then are lost once the page loads. Re-apply across the load window
-                  // so the values stick (this was the reason the first build still overlapped).
+                  // so the values stick (this was why earlier builds still overlapped).
                   Handler h = new Handler(getMainLooper());
-                  int[] delays = { 250, 600, 1200, 2000, 3000 };
+                  int[] delays = { 200, 500, 1000, 1800, 2800 };
                   for (int d : delays) {
                       h.postDelayed(() -> applyInsets(webView), d);
                   }
@@ -251,7 +251,7 @@ jobs:
               }
           }
           JAVAEOF
-          echo "MainActivity.java set to bridge real system insets into CSS --safe-* variables (with post-load re-apply)"
+          echo "MainActivity.java bridges real system insets into CSS --safe-* (listener on content root + post-load re-apply)"
 
       - name: Sync web app to Android
         run: npx cap sync android
