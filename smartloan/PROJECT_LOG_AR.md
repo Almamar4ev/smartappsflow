@@ -168,6 +168,13 @@ smartloan/
 - [ ] **الميزات المدفوعة (مؤجّلة):** PDF، إعادة الجدولة، حفظ/مقارنة أكثر من قرضين. حاليًا نظام
       «Coming Soon» بشارة ✨ بدل الشراء (لتجنّب مخالفة سياسة Google Play Billing قبل دمج الفوترة).
 
+### تذكير للجلسة القادمة (بيئة المطور — ليس كود التطبيق)
+- [ ] **عرض العربية RTL داخل محادثة Cursor:** الشات ما زال LTR (قيد معروف في Cursor).
+      في الجلسة القادمة: تثبيت إصلاح RTL للشات (إضافة مجتمعية أو باتش)، مثل
+      [cursor-chat-rtl-extension](https://github.com/yechielby/cursor-chat-rtl-extension)
+      أو [Cursor-RTL-Chat-Fix](https://github.com/WeZza2023/Cursor-RTL-Chat-Fix).
+      هذا عمل على **بيئة Cursor** وليس داخل `smartloan/`. انظر أيضًا `REPO_STRUCTURE.md` §0b.
+
 ---
 
 ## 5) البناء والنشر

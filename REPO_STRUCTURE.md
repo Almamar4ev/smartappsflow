@@ -71,6 +71,16 @@ to `main` as `51a3d72`):
 4. Optional: tests for deficit / chart distribution display helpers.
 5. Later: paid features (PDF, reschedule, multi-loan compare) + Play Billing.
 
+### Next session reminder (developer / Cursor IDE — not app code)
+
+- **Arabic RTL in Cursor chat:** the Agent/Chat panel still renders Arabic LTR
+  (known Cursor limitation). In the **next session**, set up a working RTL fix
+  for the chat UI (community extension or patch), e.g.:
+  - [cursor-chat-rtl-extension](https://github.com/yechielby/cursor-chat-rtl-extension)
+  - or [Cursor-RTL-Chat-Fix](https://github.com/WeZza2023/Cursor-RTL-Chat-Fix)
+  - Feature request to upvote: https://forum.cursor.com/t/add-rtl-right-to-left-support-for-chat-panel/151888
+  This is an **IDE workflow** task, not a change inside `smartloan/`.
+
 ---
 
 ## 1. Guiding principle: one self-contained folder per app
