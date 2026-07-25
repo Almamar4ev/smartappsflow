@@ -2113,10 +2113,11 @@ function drawCharts(){
   // ── بطاقة توزيع الدخل الشهري (4 أجزاء) ───────────────────────────────────
   // نستخدم الدخل الحالي من profile (نفس ما تستخدمه الصفحة الرئيسية)
   const gross = Math.max(1,(+profile.salary||0)+(+profile.income||0));
-  const expAmt = Math.round((r.expenses||0)+(r.variable||0));
-  const loanAmt = Math.round(r.monthly||0);
+  // قيم دقيقة (لا تقريب هنا) لتطابق التقرير والرئيسية بالضبط؛ التقريب عند العرض فقط عبر fmtAmt
+  const expAmt = (r.expenses||0)+(r.variable||0);
+  const loanAmt = r.monthly||0;
   // الأقساط الأخرى النشطة (ليس هذا القرض)
-  const otherLoansAmt = Math.round(r.existing||0);
+  const otherLoansAmt = r.existing||0;
   // قد يكون سالباً = عجز شهري (لا نقصّه إلى صفر — نطابق التقرير والرئيسية)
   const remAmt = gross - expAmt - loanAmt - otherLoansAmt;
   const idIsDeficit = remAmt < 0;
@@ -2402,7 +2403,7 @@ function saveRefinanceAsScenario(){
   saved.unshift({
     loanType:form.loanType,
     loanAmount:+newForm.amount,
-    loanMonthly:Math.round(d.newPmt),
+    loanMonthly:d.newPmt, // store exact; round only at display (fmtAmt)
     name:T[lang]['lt_'+form.loanType],
     results:{...r,monthly:d.newPmt,total:d.newPmt*d.newMonths,interest:d.newPmt*d.newMonths-(+newForm.amount)},
     form:{...newForm,...profile},
@@ -2663,7 +2664,7 @@ function saveScenario(){
   saved.unshift({
     loanType:form.loanType,
     loanAmount:+form.amount,
-    loanMonthly:Math.round(results.monthly),
+    loanMonthly:results.monthly, // store exact; round only at display (fmtAmt)
     name:T[lang]['lt_'+form.loanType],
     results:{...results},
     form:mergedForm,
