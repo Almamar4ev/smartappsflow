@@ -9,6 +9,35 @@ established build/deploy pipeline.
 
 ---
 
+## 0. Start here (onboarding for a new developer or AI agent)
+
+Read in this order, then you have the full picture:
+
+1. **This file** (`REPO_STRUCTURE.md`) — the repo-wide plan, layout, build/deploy
+   model, and rules. Applies to every app.
+2. **The app's own deep log** — each app that has had real work keeps a detailed
+   archive inside its folder. For the app you're touching, read it fully:
+   - **Smart Loan → [`smartloan/PROJECT_LOG_AR.md`](smartloan/PROJECT_LOG_AR.md)**
+     (Arabic): everything done, what remains (TODOs), the safe-area history and
+     final fix, the calc/precision rules, the PWA update notifier, the privacy-policy
+     repo, a code map of `index.html`, and the fixed rules. This is the single
+     source of truth for continuing Smart Loan.
+   - Smart Loan also has `smartloan/CHANGES_COMPLETED_AR.txt` and
+     `smartloan/README_NEXT_STEPS_AR.txt` (older notes).
+3. **The app's `index.html`** — for Smart Loan it is the whole app (HTML+CSS+JS in
+   one file); it is the single source of truth for both web and store builds.
+
+Working rules for an agent: work on a feature branch (never `main` directly),
+touch only the one app's folder, run `cd <app> && npm test` before/after changes,
+and remember merging to `main` publishes the web version immediately. When you
+finish a task, append it to the app's deep log so the next developer stays in sync.
+
+Current in-flight work (Smart Loan): branch `fix/smartloan-safearea-and-tweaks`
+(safe-area native-padding fix + deficit/precision fixes + PWA update notifier),
+pending a final on-device APK test before merge — see the deep log §3 and §4.
+
+---
+
 ## 1. Guiding principle: one self-contained folder per app
 
 Every app lives in **its own top-level folder** and owns **everything** it needs.
@@ -46,7 +75,7 @@ smartappsflow/
 ├── REPO_STRUCTURE.md     # this file
 │
 ├── tradelogpro/          # ✅ fully self-contained (reference model)
-├── smartloan/            # ✅ fully self-contained (own privacy-policy.html)
+├── smartloan/            # ✅ fully self-contained; deep log: PROJECT_LOG_AR.md
 ├── carmaintenance/       # PWA only (web)
 ├── compoundcalc/         # Flutter build output (web)
 │
