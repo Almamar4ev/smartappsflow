@@ -14,7 +14,7 @@
 - **المتجر:** Android AAB يُبنى عبر `.github/workflows/build-smartloan.yml` (يدوي: workflow_dispatch).
 - **معرّف الحزمة:** `com.smartapps.smartloanadvisor`.
 - **الإصدار الحالي في ملف البناء:** versionCode 31 / versionName 3.1.
-- **كاش الـ service worker الحالي:** `smartloan-v39`.
+- **كاش الـ service worker الحالي:** `smartloan-v40`.
 - **اللغات:** العربية، الإنجليزية، الإسبانية (كائن `T` في index.html).
 - **الثيمات:** light (الافتراضي)، black، indigo (default)، emerald.
 - **هاتف الاختبار:** Samsung S25 Ultra — Android 15 / One UI 7 (مهم: edge-to-edge مفروض).
@@ -127,10 +127,10 @@ smartloan/
 
 ## 4) ما تبقّى / أمور معلّقة (TODO)
 
-- [ ] **تأكيد حلّ المحاذاة** بالبناء الأخير (الحشوة الأصلية) على S25 Ultra — أعلى وأسفل، وكل الثيمات.
+- [x] **تأكيد حلّ المحاذاة** بالبناء الأخير على S25 Ultra — أعلى وأسفل، وكل الثيمات (مؤكَّد
+      25 يوليو 2026: المحاذاة سليمة والألوان متناسقة مع الثيمات).
 - [x] **لون أشرطة النظام حسب الثيم:** أُنجز بجسر `SmartLoanSystemBars`؛ يضبط خلفية منطقة
-      الحشوة وأيقونات status/navigation للثيمات الفاتحة والداكنة. يبقى التحقق المرئي ضمن
-      اختبار الجهاز في البند السابق.
+      الحشوة وأيقونات status/navigation للثيمات الفاتحة والداكنة — مؤكَّد على الجهاز.
 - [ ] **رفع versionCode** قبل كل رفعة للمتجر (31 → 32 …) وrename في build-smartloan.yml.
 - [ ] **تحديث سياسة الخصوصية المنشورة** (انظر §6) في مستودع `smart-apps-legal` عند الحاجة.
 - [ ] **تغيير اسم التطبيق على المتجر** (اقتراح: «Loan Calculator: EMI & Mortgage») + تحسين لقطات الشاشة — في Play Console (ليس كودًا).

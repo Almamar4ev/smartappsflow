@@ -33,8 +33,9 @@ and remember merging to `main` publishes the web version immediately. When you
 finish a task, append it to the app's deep log so the next developer stays in sync.
 
 Current in-flight work (Smart Loan): branch `fix/smartloan-safearea-and-tweaks`
-(safe-area native-padding fix + deficit/precision fixes + PWA update notifier),
-pending a final on-device APK test before merge — see the deep log §3 and §4.
+(safe-area native-padding fix + deficit/precision fixes + PWA update notifier) —
+on-device APK verified on S25 Ultra (25 Jul 2026); merge to `main` publishes the web
+version — see the deep log §3 and §4.
 
 ---
 
