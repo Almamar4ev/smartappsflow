@@ -9,6 +9,36 @@ established build/deploy pipeline.
 
 ---
 
+## 0. Start here (onboarding for a new developer or AI agent)
+
+Read in this order, then you have the full picture:
+
+1. **This file** (`REPO_STRUCTURE.md`) — the repo-wide plan, layout, build/deploy
+   model, and rules. Applies to every app.
+2. **The app's own deep log** — each app that has had real work keeps a detailed
+   archive inside its folder. For the app you're touching, read it fully:
+   - **Smart Loan → [`smartloan/PROJECT_LOG_AR.md`](smartloan/PROJECT_LOG_AR.md)**
+     (Arabic): everything done, what remains (TODOs), the safe-area history and
+     final fix, the calc/precision rules, the PWA update notifier, the privacy-policy
+     repo, a code map of `index.html`, and the fixed rules. This is the single
+     source of truth for continuing Smart Loan.
+   - Smart Loan also has `smartloan/CHANGES_COMPLETED_AR.txt` and
+     `smartloan/README_NEXT_STEPS_AR.txt` (older notes).
+3. **The app's `index.html`** — for Smart Loan it is the whole app (HTML+CSS+JS in
+   one file); it is the single source of truth for both web and store builds.
+
+Working rules for an agent: work on a feature branch (never `main` directly),
+touch only the one app's folder, run `cd <app> && npm test` before/after changes,
+and remember merging to `main` publishes the web version immediately. When you
+finish a task, append it to the app's deep log so the next developer stays in sync.
+
+Current in-flight work (Smart Loan): branch `fix/smartloan-safearea-and-tweaks`
+(safe-area native-padding fix + deficit/precision fixes + PWA update notifier) —
+on-device APK verified on S25 Ultra (25 Jul 2026); merge to `main` publishes the web
+version — see the deep log §3 and §4.
+
+---
+
 ## 1. Guiding principle: one self-contained folder per app
 
 Every app lives in **its own top-level folder** and owns **everything** it needs.
@@ -46,7 +76,7 @@ smartappsflow/
 ├── REPO_STRUCTURE.md     # this file
 │
 ├── tradelogpro/          # ✅ fully self-contained (reference model)
-├── smartloan/            # ✅ fully self-contained (own privacy-policy.html)
+├── smartloan/            # ✅ fully self-contained; deep log: PROJECT_LOG_AR.md
 ├── carmaintenance/       # PWA only (web)
 ├── compoundcalc/         # Flutter build output (web)
 │
@@ -95,10 +125,13 @@ trusted `push`/`workflow_dispatch` events, never on pull_request.**
 - **TradeLog Pro privacy policy**: create `tradelogpro/privacy-policy.html`
   before publishing to the Play Store.
 
-Smart Loan's privacy policy moved from the repo root into
-`smartloan/privacy-policy.html`, so its public URL is now
-`https://smartappsflow.net/smartloan/privacy-policy.html`. Keep the link in
-Google Play Console pointing at that path.
+Smart Loan's **published** privacy policy — the URL registered in Google Play
+Console — lives in a **separate repo** (`smart-apps-legal`), served from GitHub
+Pages at:
+`https://almamar4ev.github.io/smart-apps-legal/smart-loan-calculator/privacy-policy.html`
+That repo is the source of truth for the store; update it there (done manually,
+outside this repo). The `smartloan/privacy-policy.html` file kept here is a
+convenience copy of the same content — it is not the registered store URL.
 
 ---
 

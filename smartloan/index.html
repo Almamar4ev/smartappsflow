@@ -13,6 +13,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <meta name="apple-mobile-web-app-title" content="Smart Loan"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
+<script>
+// The Android store shell applies safe-area insets as native View padding.
+// Keep CSS env() for browsers, but never add it a second time in that shell.
+try{
+  if(window.Capacitor && typeof window.Capacitor.getPlatform==='function' &&
+     window.Capacitor.getPlatform()==='android'){
+    document.documentElement.classList.add('android-native');
+  }
+}catch(e){}
+</script>
 
 <style>
 :root{--acc:#6366f1;--acc2:#8b5cf6;--acc3:#ec4899;--bg:#0a0f1e;--bg2:#1e293b;--bg3:#0f172a;--brd:#334155;--txt:#e2e8f0;--txt2:#c8d8e8;--txt3:#a0b4c8;--lbl:#f0b429;--safe:#22c55e;--mod:#f59e0b;--risk:#ef4444;--glow:rgba(99,102,241,0.18)}
@@ -30,6 +40,12 @@
   --safe-bottom:env(safe-area-inset-bottom, 0px);
   --safe-left:env(safe-area-inset-left, 0px);
   --safe-right:env(safe-area-inset-right, 0px);
+}
+:root.android-native{
+  --safe-top:0px;
+  --safe-bottom:0px;
+  --safe-left:0px;
+  --safe-right:0px;
 }
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -363,7 +379,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 </div>
 
 <!-- ══ HOME ══ -->
-<div class="screen" id="home" style="height:auto;min-height:100vh;padding-bottom:calc(20px + var(--safe-bottom))">
+<div class="screen" id="home" style="height:auto;min-height:100vh;min-height:100dvh;padding-bottom:calc(20px + var(--safe-bottom))">
   <div class="home-top">
     <div class="home-top-row">
       <span class="home-app-name" id="home-app-name">Smart Loan Calculator</span>
@@ -745,7 +761,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 </div>
 
 <!-- ══ COMPARE ══ -->
-<div class="screen" id="compare-screen" style="height:auto;min-height:100vh;overflow-y:auto">
+<div class="screen" id="compare-screen" style="height:auto;min-height:100vh;min-height:100dvh;overflow-y:auto">
   <div style="display:flex;align-items:center;gap:12px;padding:18px 20px 0;flex-shrink:0">
     <button class="back-btn" onclick="goHome()" id="compare-back">←</button>
     <span style="font-size:19px;font-weight:800;color:var(--txt)" id="compare-title">Compare Loans</span>
@@ -845,16 +861,26 @@ function themeBarColor(id){
     : '#0a0f1e'; // default (indigo)
 }
 function isLightThemeBar(id){ return id==='emerald' || id==='light'; }
-// يضبط لون شريط الحالة ليطابق الثيم — للويب (theme-color) وللتطبيق الأصلي (StatusBar)
+// يضبط منطقتي شريطي النظام وأيقوناتهما حسب الثيم، مع fallback لإضافة Capacitor.
 function applyStatusBar(id){
   var color=themeBarColor(id), light=isLightThemeBar(id);
   try{ var m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute('content',color); }catch(e){}
   try{
     var SB=window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
+    var nativeBars=window.Capacitor && window.Capacitor.Plugins &&
+      window.Capacitor.Plugins.SmartLoanSystemBars;
+    if(nativeBars && typeof nativeBars.setTheme==='function'){
+      document.documentElement.classList.add('android-native');
+      // light=true means a light bar background, therefore DARK system icons.
+      nativeBars.setTheme({color:color,darkIcons:light});
+      if(SB) SB.setOverlaysWebView({overlay:true});
+      return;
+    }
     if(SB){
-      SB.setOverlaysWebView({overlay:false});
+      // Fallback for a native shell without the dedicated Android bridge.
+      SB.setOverlaysWebView({overlay:true});
       SB.setBackgroundColor({color:color});
-      SB.setStyle({style: light ? 'LIGHT' : 'DARK'});
+      SB.setStyle({style: light ? 'DARK' : 'LIGHT'});
     }
   }catch(e){}
 }
@@ -927,7 +953,7 @@ const T={
     basisTitle:'HOW YOUR LOAN IS CALCULATED',
     grossIncome:'Total Gross Income',netIncome:'Net (after expenses)',
     newInstall:'New Loan Installment',existingLoans:'Existing Loan Payments',
-    dtiGrossLbl:'DTI % of Gross Income',dtiNetLbl:'DTI % of Net Income',
+    dtiGrossLbl:'DTI % of Gross Income',dtiNetLbl:'Debt % of Net (after expenses)',
     addLoan:'Add Another Loan',mainLoan:'Main Loan',loanN:'Loan',
     totalInstall:'Total Monthly Payments',totalPctGross:'% of Gross Income',totalPctNet:'% of Net Income',
     settings:'Settings',themes:'CHOOSE THEME',langSet:'LANGUAGE',
@@ -974,7 +1000,7 @@ const T={
     basisTitle:'كيف يُحسب قرضك؟',
     grossIncome:'إجمالي الدخل الكلي',netIncome:'الصافي (بعد المصروفات)',
     newInstall:'قسط القرض الجديد',existingLoans:'الأقساط القائمة',
-    dtiGrossLbl:'نسبة الدين من الدخل الكلي',dtiNetLbl:'نسبة الدين من الصافي',
+    dtiGrossLbl:'نسبة الدين من الدخل الكلي',dtiNetLbl:'نسبة الأقساط من الصافي (بعد المصروفات)',
     addLoan:'إضافة قرض آخر',mainLoan:'القرض الرئيسي',loanN:'قرض',
     totalInstall:'إجمالي الأقساط الشهرية',totalPctGross:'% من الدخل الكلي',totalPctNet:'% من الصافي',
     settings:'الإعدادات',themes:'اختر الثيم',langSet:'اللغة',
@@ -1012,7 +1038,7 @@ const T={
     tab_report:'Informe',tab_charts:'Gráficos',tab_simulate:'Simular',tab_restructure:'Refinanciar',tab_loans:'Préstamos',tab_saved:'Guardados',
     principal:'Capital',interest:'Intereses',month:'Mes',sim_amt:'MONTO',sim_per:'PLAZO',sim_rate:'TASA',
     basisTitle:'CÓMO SE CALCULA TU PRÉSTAMO',grossIncome:'Ingresos brutos totales',netIncome:'Neto (tras gastos)',
-    newInstall:'Nueva cuota',existingLoans:'Cuotas vigentes',dtiGrossLbl:'% Deuda sobre ingreso bruto',dtiNetLbl:'% Deuda sobre ingreso neto',
+    newInstall:'Nueva cuota',existingLoans:'Cuotas vigentes',dtiGrossLbl:'% Deuda sobre ingreso bruto',dtiNetLbl:'% Deuda sobre neto (tras gastos)',
     addLoan:'Añadir préstamo',mainLoan:'Préstamo principal',loanN:'Préstamo',totalInstall:'Total mensual',totalPctGross:'% del ingreso bruto',totalPctNet:'% del ingreso neto',
     settings:'Ajustes',themes:'ELEGIR TEMA',langSet:'IDIOMA',savedScenarios:'PRÉSTAMOS GUARDADOS',detailTitle:'Detalles del préstamo',
     compareBtnHome:'Comparar',compareTitle:'Comparar préstamos',features:['Cálculo instantáneo','Estimaciones detalladas','Indicadores de riesgo','Simulación de escenarios'],
@@ -1146,7 +1172,8 @@ function analyse(){
   if(dtiGross>50||dtiNet>80)riskLevel='risky';
   else if(dtiGross>35||dtiNet>60)riskLevel='moderate';
   const safeMax=Math.max(0,(netIncome-existing)*0.35*period/(1+rate*period/24));
-  const remaining=Math.max(0,netIncome-monthly-existing);
+  // Can be negative → a real monthly deficit. Do NOT clamp to 0 (that hid the shortfall).
+  const remaining=netIncome-monthly-existing;
   return{monthly,total,interest,dtiGross,dtiNet,affordability:Math.max(0,Math.min(100,100-dtiGross)),riskLevel,safeMax,grossIncome,netIncome,rate,existing,expenses,variable,remaining};
 }
 function amortize(amount,annualRate,months){
@@ -1491,13 +1518,20 @@ function renderHome(){
     const totalInc=(+profile.salary||0)+(+profile.income||0);
     const totalExp=(+profile.expenses||0)+(+profile.variable||0);
     const totalLoans=saved.filter(s=>s.type!=='scenario').reduce((s,l)=>s+l.loanMonthly,0);
-    const rem=Math.max(0,totalInc-totalExp-totalLoans);
+    const rem=totalInc-totalExp-totalLoans; // قد يكون سالباً = عجز شهري (لا نقصّه إلى صفر)
     const remPct=totalInc>0?parseFloat(((rem/totalInc)*100).toFixed(2)):0;
-    const remColor=remPct>30?'var(--safe)':remPct>15?'#f59e0b':'var(--risk)';
-    const remLabel=lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder';
-    const remDesc=lang==='ar'?`${remPct}% من دخلك متاح بعد كل الأقساط والمصروفات`:
-                  lang==='es'?`${remPct}% de tus ingresos disponibles`:
-                  `${remPct}% of your income available after all payments`;
+    const remIsDeficit=rem<0;
+    const remColor=remIsDeficit?'var(--risk)':remPct>30?'var(--safe)':remPct>15?'#f59e0b':'var(--risk)';
+    const remLabel=remIsDeficit
+      ? (lang==='ar'?'عجز شهري':lang==='es'?'Déficit mensual':'Monthly Deficit')
+      : (lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder');
+    const remDesc=remIsDeficit
+      ? (lang==='ar'?'دخلك لا يكفي الأقساط والمصروفات — لديك عجز شهري':
+         lang==='es'?'Tus ingresos no cubren cuotas y gastos — tienes déficit':
+         'Your income does not cover payments and expenses — you have a deficit')
+      : (lang==='ar'?`${remPct}% من دخلك متاح بعد كل الأقساط والمصروفات`:
+         lang==='es'?`${remPct}% de tus ingresos disponibles`:
+         `${remPct}% of your income available after all payments`);
     remainingCard.style.display='block';
     remainingCard.innerHTML=`
       <div style="background:var(--bg2);border-radius:16px;padding:14px 16px;border:1.5px solid ${remColor}40;position:relative;overflow:hidden">
@@ -1505,7 +1539,7 @@ function renderHome(){
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--lbl);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${remLabel}</div>
-            <div style="font-size:24px;font-weight:900;color:var(--txt)">${fmtAmt(rem)}</div>
+            <div style="font-size:24px;font-weight:900;color:${remIsDeficit?'var(--risk)':'var(--txt)'}">${fmtAmt(Math.abs(rem))}</div>
             <div style="font-size:11px;color:var(--txt3);margin-top:3px">${remDesc}</div>
           </div>
           <div style="width:52px;height:52px;border-radius:50%;border:3px solid ${remColor}40;display:flex;align-items:center;justify-content:center;background:${remColor}15;flex-shrink:0">
@@ -1935,20 +1969,25 @@ function renderResults(){
     else el.textContent=lbl;
   });
   const monthlyColor='var(--txt)';
-  // remaining: إذا محسوب مسبقاً نستخدمه، وإلا نحسبه
+  // remaining: إذا محسوب مسبقاً نستخدمه، وإلا نحسبه (قد يكون سالباً = عجز شهري)
   const remaining=r.remaining!==undefined
     ? r.remaining
-    : Math.max(0,r.netIncome-r.monthly-r.existing);
+    : (r.netIncome-r.monthly-r.existing);
   // نسبة المتبقي موحدة: remaining/grossIncome بفاصلتين
   const remainingPct=r.grossIncome>0?Math.round((remaining/r.grossIncome)*10000)/100:0;
-  const remainingLabel=lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder';
+  const isDeficit=remaining<0;
+  // عند العجز: عنوان "عجز شهري" وقيمة موجبة بالأحمر بدل صفر مضلِّل
+  const remainingLabel=isDeficit
+    ? (lang==='ar'?'عجز شهري':lang==='es'?'Déficit mensual':'Monthly Deficit')
+    : (lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder');
   const remainingColor=remaining>0?'var(--safe)':'var(--risk)';
+  const remainingVal=fmtAmt(Math.abs(remaining));
   // القيم بيضاء (احترافية)؛ الحافة العلوية الملوّنة تكفي للتمييز. الدلالة (أحمر للفائدة، أخضر/أحمر للمتبقي) تبقى على القيمة
   document.getElementById('kpi-grid').innerHTML=[
     {label:tc.monthlyInstallment, val:fmtAmt(r.monthly),  edge:'var(--acc)',  vc:'var(--txt)'},
     {label:tc.totalCost,          val:fmtAmt(r.total),    edge:'var(--acc2)', vc:'var(--txt)'},
     {label:tc.totalInterest,      val:fmtAmt(r.interest), edge:'var(--risk)', vc:'var(--txt)'},
-    {label:remainingLabel,        val:fmtAmt(remaining),  edge:remainingColor, vc:'var(--txt)'},
+    {label:remainingLabel,        val:remainingVal,       edge:remainingColor, vc:isDeficit?'var(--risk)':'var(--txt)'},
   ].map(k=>`<div class="kpi-card" style="border-top-color:${k.edge}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.vc}">${k.val}</p></div>`).join('');
   document.getElementById('lbl-basis').textContent=tc.basisTitle;
   // calculate expected end date
@@ -2100,25 +2139,36 @@ function drawCharts(){
   // ── بطاقة توزيع الدخل الشهري (4 أجزاء) ───────────────────────────────────
   // نستخدم الدخل الحالي من profile (نفس ما تستخدمه الصفحة الرئيسية)
   const gross = Math.max(1,(+profile.salary||0)+(+profile.income||0));
-  const expAmt = Math.round((r.expenses||0)+(r.variable||0));
-  const loanAmt = Math.round(r.monthly||0);
+  // قيم دقيقة (لا تقريب هنا) لتطابق التقرير والرئيسية بالضبط؛ التقريب عند العرض فقط عبر fmtAmt
+  const expAmt = (r.expenses||0)+(r.variable||0);
+  const loanAmt = r.monthly||0;
   // الأقساط الأخرى النشطة (ليس هذا القرض)
-  const otherLoansAmt = Math.round(r.existing||0);
-  const remAmt = Math.max(0, gross - expAmt - loanAmt - otherLoansAmt);
+  const otherLoansAmt = r.existing||0;
+  // قد يكون سالباً = عجز شهري (لا نقصّه إلى صفر — نطابق التقرير والرئيسية)
+  const remAmt = gross - expAmt - loanAmt - otherLoansAmt;
+  const idIsDeficit = remAmt < 0;
 
   // نسب دقيقة (عشري واحد) للبطاقات
   const expPctExact   = gross>0?parseFloat(((expAmt/gross)*100).toFixed(2)):0;
   const loanPctExact  = gross>0?parseFloat(((loanAmt/gross)*100).toFixed(2)):0;
   const otherPctExact = gross>0?parseFloat(((otherLoansAmt/gross)*100).toFixed(2)):0;
-  const remPctExact   = gross>0?parseFloat(((remAmt/gross)*100).toFixed(2)):0;
-  // نسب مقربة للشريط البصري فقط (أرقام صحيحة)
+  const remPctExact   = gross>0?parseFloat(((remAmt/gross)*100).toFixed(2)):0; // قد تكون سالبة
+  const spendPctExact = expPctExact + loanPctExact + otherPctExact;
+  // عرض أجزاء الشريط: عند التجاوز (>100%) نُقيّس الأجزاء لتملأ الشريط دون أن تفيض،
+  // ونحذف الجزء الأخضر (لا يوجد متبقٍّ). النِّسب داخل الأجزاء تبقى الحقيقية.
+  const barScale = spendPctExact > 100 ? 100/spendPctExact : 1;
+  const expW   = expPctExact*barScale;
+  const loanW  = loanPctExact*barScale;
+  const otherW = otherPctExact*barScale;
+  const remW   = spendPctExact >= 100 ? 0 : (100 - spendPctExact);
+  // النِّسب المعروضة كنص (أرقام صحيحة حقيقية غير مُقيّسة)
   const expPct   = Math.round(expPctExact);
   const loanPct  = Math.round(loanPctExact);
   const otherPct = Math.round(otherPctExact);
-  const remPct   = Math.max(0, 100 - expPct - loanPct - otherPct);
+  const remPct   = Math.round(remPctExact);
 
-  const segStyle=(pct,grad,minW=6)=>
-    `width:${Math.max(pct,minW)}%;background:${grad};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;position:relative;overflow:hidden`;
+  const segStyle=(w,grad,minW=0)=>
+    `width:${Math.max(w,minW)}%;background:${grad};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;position:relative;overflow:hidden`;
 
   // القيمة الرقمية بيضاء/داكنة محايدة (احترافية)؛ النقطة الملوّنة + النسبة الملوّنة تكفيان للتمييز
   const miniCard=(dot,lbl,val,pct,bg,border,valColor)=>`
@@ -2126,7 +2176,7 @@ function drawCharts(){
       <div style="width:8px;height:8px;border-radius:50%;background:${dot};margin-bottom:5px"></div>
       <div style="font-size:10px;color:${txtSub};font-weight:600;margin-bottom:3px">${lbl}</div>
       <div style="font-size:16px;font-weight:900;color:${txtMain}">${fmtAmt(val)}</div>
-      <div style="font-size:10px;font-weight:700;color:${dot};opacity:.85;margin-top:2px">${pct}% ${isAr?'من دخلك':lang==='es'?'de ingresos':'of income'}</div>
+      <div style="font-size:10px;font-weight:700;color:${dot};opacity:.85;margin-top:2px"><bdi dir="ltr">${pct}%</bdi> ${isAr?'من دخلك':lang==='es'?'de ingresos':'of income'}</div>
     </div>`;
 
   const hasOther = otherLoansAmt > 0;
@@ -2140,29 +2190,30 @@ function drawCharts(){
           <div style="font-size:20px;font-weight:900;color:${txtMain}">${fmtAmt(gross)}</div>
         </div>
         <div style="text-align:end">
-          <div style="font-size:11px;color:${txtSub};font-weight:600;margin-bottom:2px">${isAr?'يتبقى لك':isEs?'Te queda':'Remaining'}</div>
-          <div style="font-size:20px;font-weight:900;color:var(--txt)">${fmtAmt(remAmt)}</div>
+          <div style="font-size:11px;color:${txtSub};font-weight:600;margin-bottom:2px">${idIsDeficit?(isAr?'عجز شهري':isEs?'Déficit':'Deficit'):(isAr?'يتبقى لك':isEs?'Te queda':'Remaining')}</div>
+          <div style="font-size:20px;font-weight:900;color:${idIsDeficit?'var(--risk)':'var(--txt)'}">${fmtAmt(Math.abs(remAmt))}</div>
         </div>
       </div>
-      <!-- الشريط الرئيسي -->
-      <div style="height:46px;border-radius:13px;overflow:hidden;display:flex;gap:2px;margin-bottom:14px;box-shadow:0 0 0 1px ${isLight?'#d1d5db':'#1e293b'}">
-        <div style="${segStyle(expPct,'linear-gradient(135deg,#f59e0b,#fbbf24)')}">
+      <!-- الشريط الرئيسي (النسب داخل الأجزاء حقيقية؛ العرض مُقيّس عند التجاوز) -->
+      <div style="height:46px;border-radius:13px;overflow:hidden;display:flex;gap:2px;margin-bottom:${idIsDeficit?'8px':'14px'};box-shadow:0 0 0 1px ${isLight?'#d1d5db':'#1e293b'}">
+        <div style="${segStyle(expW,'linear-gradient(135deg,#f59e0b,#fbbf24)',6)}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${expPct>8?expPct+'%':''}</span>
         </div>
-        <div style="${segStyle(loanPct,'linear-gradient(135deg,var(--risk),var(--risk))')}">
+        <div style="${segStyle(loanW,'linear-gradient(135deg,var(--risk),var(--risk))',6)}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${loanPct>8?loanPct+'%':''}</span>
         </div>
-        ${hasOther?`<div style="${segStyle(otherPct,'linear-gradient(135deg,#6366f1,#818cf8)',4)}">
+        ${hasOther?`<div style="${segStyle(otherW,'linear-gradient(135deg,#6366f1,#818cf8)',4)}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${otherPct>6?otherPct+'%':''}</span>
         </div>`:''}
-        <div style="${segStyle(remPct,'linear-gradient(135deg,var(--safe),var(--safe))')}">
+        ${idIsDeficit?'':`<div style="${segStyle(remW,'linear-gradient(135deg,var(--safe),var(--safe))',6)}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${remPct>5?remPct+'%':''}</span>
-        </div>
+        </div>`}
       </div>
+      ${idIsDeficit?`<div style="margin-bottom:14px;padding:7px 11px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid color-mix(in srgb,var(--risk) 35%,transparent);border-radius:9px;font-size:11px;font-weight:700;color:var(--risk);text-align:center">${isAr?'التزاماتك تتجاوز دخلك بـ':isEs?'Tus obligaciones superan tu ingreso en':'Your commitments exceed income by'} <bdi dir="ltr">${Math.round(spendPctExact-100)}%</bdi></div>`:''}
       <!-- البطاقات -->
       <div style="display:grid;grid-template-columns:${hasOther?'1fr 1fr':'1fr 1fr'};gap:9px">
         ${miniCard('#f59e0b',
@@ -2180,11 +2231,11 @@ function drawCharts(){
           otherLoansAmt,otherPctExact,
           isLight?'#eef2ff':'var(--bg3)',
           isLight?'#c7d2fe40':'var(--brd)','#818cf8'):''}
-        ${miniCard('var(--safe)',
-          isAr?'يتبقى لك شهرياً':isEs?'Te queda':'Remaining',
-          remAmt,remPctExact,
-          isLight?'#ecfdf5':'var(--bg3)',
-          isLight?'#a7f3d040':'var(--brd)','var(--safe)')}
+        ${miniCard(idIsDeficit?'var(--risk)':'var(--safe)',
+          idIsDeficit?(isAr?'عجز شهري':isEs?'Déficit':'Deficit'):(isAr?'يتبقى لك شهرياً':isEs?'Te queda':'Remaining'),
+          Math.abs(remAmt),remPctExact,
+          idIsDeficit?(isLight?'#fef2f2':'var(--bg3)'):(isLight?'#ecfdf5':'var(--bg3)'),
+          idIsDeficit?(isLight?'#fecaca40':'var(--brd)'):(isLight?'#a7f3d040':'var(--brd)'),idIsDeficit?'var(--risk)':'var(--safe)')}
       </div>
       <!-- ملاحظة: المتبقي يطابق رقم التقرير -->
       <div style="margin-top:11px;padding:9px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--brd);font-size:11px;color:${txtSub};line-height:1.6;display:flex;gap:7px;align-items:flex-start">
@@ -2378,7 +2429,7 @@ function saveRefinanceAsScenario(){
   saved.unshift({
     loanType:form.loanType,
     loanAmount:+newForm.amount,
-    loanMonthly:Math.round(d.newPmt),
+    loanMonthly:d.newPmt, // store exact; round only at display (fmtAmt)
     name:T[lang]['lt_'+form.loanType],
     results:{...r,monthly:d.newPmt,total:d.newPmt*d.newMonths,interest:d.newPmt*d.newMonths-(+newForm.amount)},
     form:{...newForm,...profile},
@@ -2584,8 +2635,8 @@ function renderMultiLoans(){
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function calcTotalExistingFromSaved(){
-  // حساب مجموع الأقساط من كل القروض المحفوظة
-  return saved.reduce((sum,s)=>sum+Math.round(s.results.monthly),0);
+  // مجموع الأقساط من كل القروض المحفوظة (قيم دقيقة؛ التقريب عند العرض فقط)
+  return saved.reduce((sum,s)=>sum+(s.results.monthly||0),0);
 }
 
 function isDuplicateActiveLoan(){
@@ -2639,7 +2690,7 @@ function saveScenario(){
   saved.unshift({
     loanType:form.loanType,
     loanAmount:+form.amount,
-    loanMonthly:Math.round(results.monthly),
+    loanMonthly:results.monthly, // store exact; round only at display (fmtAmt)
     name:T[lang]['lt_'+form.loanType],
     results:{...results},
     form:mergedForm,
@@ -2793,7 +2844,7 @@ function openSavedDetail(i){
   const totalDebt=results.monthly+currentExisting;
   results.dtiGross=curGross>0?(totalDebt/curGross)*100:0;
   results.dtiNet  =curNetInc>0?(totalDebt/curNetInc)*100:0;
-  results.remaining=Math.max(0,curNetInc-results.monthly-currentExisting);
+  results.remaining=curNetInc-results.monthly-currentExisting; // قد يكون سالباً = عجز
   // نحفظ بيانات السيناريو لعرض بطاقة المقارنة
   results._isScenario=isScenario;
   results._replacedLoan=replacedLoan||null;
@@ -2933,7 +2984,7 @@ function renderCompare(){
       if(repL && x===repL) return false;
       return true;
     }).reduce((sum,x)=>sum+x.loanMonthly,0);
-    return Math.max(0,cmpCurNet-s.loanMonthly-otherLoans);
+    return cmpCurNet-s.loanMonthly-otherLoans; // قد يكون سالباً = عجز
   }
 
   const fields=[
@@ -2941,7 +2992,7 @@ function renderCompare(){
     {key:'total',label:tc.totalCost,fmt:v=>fmtAmt(v),best:'min'},
     {key:'interest',label:tc.totalInterest,fmt:v=>fmtAmt(v),best:'min'},
     {key:'dtiGross',label:tc.dtiRatio,fmt:v=>v.toFixed(2)+'%',best:'min'},
-    {key:'remaining',label:remLbl,fmt:v=>fmtAmt(Math.max(0,v)),best:'max'},
+    {key:'remaining',label:remLbl,fmt:v=>fmtAmt(v),best:'max'},
   ];
 
   // رأس الجدول — يضيف "يستبدل X" للسيناريوهات
@@ -3550,7 +3601,14 @@ function loadState(){
     if(s.currentTheme) currentTheme=s.currentTheme;
     if(s.profile)      profile={...profile,...s.profile};
     if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
-    if(Array.isArray(s.saved)) saved=s.saved;
+    if(Array.isArray(s.saved)){
+      saved=s.saved;
+      // ترحيل: القروض المحفوظة في نسخ قديمة خزّنت loanMonthly مقرّباً. نعيده إلى
+      // القيمة الدقيقة (results.monthly) حتى تتطابق كل الصفحات للسنت (مصدر دقيق واحد).
+      saved.forEach(function(x){
+        if(x && x.results && typeof x.results.monthly==='number') x.loanMonthly=x.results.monthly;
+      });
+    }
     if(s.form)         form={...form,...s.form};
     // isPremium لا يُحمل من localStorage — يبقى false حتى يدفع المستخدم
     return true;
@@ -3625,10 +3683,155 @@ function dismissIosInstall(){
   localStorage.setItem('sla_ios_install_dismissed','1');
 }
 
-// ── PWA service worker — web only (skipped inside the Android app) ──
+// ── PWA service worker + in-app update notifier — web only (skipped in the Android app) ──
+// New releases are picked up as a "waiting" service worker; we surface a banner
+// (and a persistent Settings card) so the user updates on their own terms. The
+// UI never changes mid-session — updates apply only on consent.
 if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.startsWith('http')) {
+  var pendingUpdateWorker = null;
+  var pendingUpdateInfo = null;      // { version, changelog }
+  var updateBannerDismissed = false; // dismissed for this session only
+
+  // Tiny local i18n so this block stays self-contained (no changes to the big T table).
+  function uT(key){
+    var L = (typeof lang !== 'undefined' && lang) ? lang : 'en';
+    var S = {
+      ar:{avail:'يتوفّر تحديث جديد',now:'تحديث الآن',later:'لاحقاً',generic:'تحسينات وإصلاحات جديدة.',deferred:'يمكنك التحديث لاحقاً من الإعدادات',ready:'نسخة جديدة جاهزة'},
+      en:{avail:'A new update is available',now:'Update now',later:'Later',generic:'New improvements and fixes.',deferred:'You can update later from Settings',ready:'A new version is ready'},
+      es:{avail:'Hay una actualización disponible',now:'Actualizar ahora',later:'Después',generic:'Nuevas mejoras y correcciones.',deferred:'Puedes actualizar luego en Ajustes',ready:'Una nueva versión está lista'}
+    };
+    return (S[L]||S.en)[key];
+  }
+  function changelogText(cl){
+    if(!cl) return uT('generic');
+    var L = (typeof lang !== 'undefined' && lang) ? lang : 'en';
+    return cl[L] || cl.en || cl.ar || uT('generic');
+  }
+
+  window.applyPendingUpdate = function(){
+    if (pendingUpdateWorker) pendingUpdateWorker.postMessage('SKIP_WAITING');
+    else window.location.reload();
+  };
+
+  // Persistent card at the top of Settings so the update stays reachable after "Later".
+  function markUpdateAvailable(){
+    var body = document.querySelector('#settings-screen .settings-body');
+    if (!body) return;
+    var box = document.getElementById('settingsUpdateBox');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'settingsUpdateBox';
+      box.className = 'set-section';
+      body.insertBefore(box, body.firstChild);
+    }
+    var desc = changelogText(pendingUpdateInfo && pendingUpdateInfo.changelog);
+    var ver = (pendingUpdateInfo && pendingUpdateInfo.version) ? ' ('+pendingUpdateInfo.version+')' : '';
+    box.innerHTML =
+      '<div class="card" style="border:1.5px solid var(--acc);padding:14px 16px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+      + '<span style="font-size:15px">✨</span>'
+      + '<span style="font-size:14px;font-weight:800;color:var(--acc)">'+uT('ready')+ver+'</span></div>'
+      + '<p style="font-size:12.5px;color:var(--txt2);line-height:1.7;margin-bottom:12px">'+desc+'</p>'
+      + '<button onclick="applyPendingUpdate()" style="width:100%;background:var(--acc);color:#fff;border:none;border-radius:10px;padding:11px;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">'+uT('now')+'</button></div>';
+    box.style.display = 'block';
+  }
+
+  function showUpdateBanner(newWorker){
+    pendingUpdateWorker = newWorker || null;
+    markUpdateAvailable();               // the Settings entry appears regardless
+    if (updateBannerDismissed) return;   // user said "Later" this session
+    if (document.getElementById('updateBanner')) return;
+
+    var bar = document.createElement('div');
+    bar.id = 'updateBanner';
+    bar.style.cssText = [
+      'position:fixed','left:12px','right:12px',
+      'bottom:calc(16px + var(--safe-bottom))',
+      'max-width:460px','margin:0 auto','z-index:4000',
+      'background:var(--bg2)','color:var(--txt)',
+      'border:1.5px solid var(--acc)','border-inline-start:4px solid var(--acc)',
+      'border-radius:14px','padding:14px 16px',
+      'box-shadow:0 12px 34px rgba(0,0,0,.45)',
+      'display:flex','flex-direction:column','gap:8px','font-family:inherit'
+    ].join(';');
+
+    var head = document.createElement('div');
+    head.style.cssText = 'font-size:14px;font-weight:800;line-height:1.3;color:var(--acc)';
+    head.textContent = uT('avail');
+
+    var desc = document.createElement('div');
+    desc.style.cssText = 'font-size:12.5px;font-weight:500;line-height:1.7;color:var(--txt2)';
+    desc.textContent = changelogText(pendingUpdateInfo && pendingUpdateInfo.changelog);
+
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:flex-end';
+
+    var later = document.createElement('button');
+    later.textContent = uT('later');
+    later.style.cssText = 'background:none;border:none;color:var(--txt3);font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;padding:8px 12px';
+    later.onclick = function(){
+      updateBannerDismissed = true;
+      bar.remove();
+      markUpdateAvailable();
+      if (typeof showToast === 'function') showToast(uT('deferred'));
+    };
+
+    var btn = document.createElement('button');
+    btn.textContent = uT('now');
+    btn.style.cssText = 'background:var(--acc);color:#fff;border:none;border-radius:9px;padding:9px 20px;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap';
+    btn.onclick = function(){
+      btn.disabled = true; btn.textContent = '…';
+      if (newWorker) newWorker.postMessage('SKIP_WAITING');
+      else window.location.reload();
+    };
+
+    row.appendChild(later); row.appendChild(btn);
+    bar.appendChild(head); bar.appendChild(desc); bar.appendChild(row);
+    document.body.appendChild(bar);
+
+    // Ask the waiting worker for its version + changelog to fill in the texts.
+    if (newWorker) {
+      navigator.serviceWorker.addEventListener('message', function onMsg(e){
+        if (e.data && e.data.type === 'VERSION_INFO') {
+          pendingUpdateInfo = { version: e.data.version, changelog: e.data.changelog };
+          desc.textContent = changelogText(e.data.changelog);
+          head.textContent = uT('avail') + (e.data.version ? ' ('+e.data.version+')' : '');
+          markUpdateAvailable();
+          navigator.serviceWorker.removeEventListener('message', onMsg);
+        }
+      });
+      try { newWorker.postMessage('GET_VERSION_INFO'); } catch(_){}
+    }
+  }
+
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('service-worker.js').catch(function(){});
+    navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(function(reg){
+      var checkWaiting = function(){
+        if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
+      };
+      checkWaiting();                                   // already-waiting version on open
+      reg.addEventListener('updatefound', function(){   // a new version arrives while open
+        var nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', function(){
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(nw);
+        });
+      });
+      // Poll for updates: now, on tab focus, and every minute.
+      reg.update().then(checkWaiting).catch(function(){});
+      document.addEventListener('visibilitychange', function(){
+        if (document.visibilityState === 'visible') reg.update().then(checkWaiting).catch(function(){});
+      });
+      setInterval(function(){ reg.update().then(checkWaiting).catch(function(){}); }, 60000);
+    }).catch(function(){});
+
+    // One reload when the new worker takes control (after the user consents).
+    var refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
   });
 }
 </script>

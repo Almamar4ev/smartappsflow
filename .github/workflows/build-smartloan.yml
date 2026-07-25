@@ -167,21 +167,140 @@ jobs:
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode .*/versionCode 30/' android/app/build.gradle
-          sed -i 's/versionName .*/versionName "3.0"/' android/app/build.gradle
+          sed -i 's/versionCode .*/versionCode 31/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "3.1"/' android/app/build.gradle
 
-      - name: Set plain MainActivity (system-insets handled by Android + StatusBar plugin)
+      # On Android 15 / targetSdk 35 the app is forced edge-to-edge, and inside
+      # the WebView env(safe-area-inset-*) always resolves to 0 — so content
+      # slid under the status bar (clock/battery) and the navigation buttons.
+      # Fix: pad the Android content root with the REAL system-bar, cutout, and
+      # visible-IME insets. CSS safe-area values stay browser-only, preventing
+      # double padding. A narrow JS bridge also themes both bar regions/icons.
+      - name: Set MainActivity that natively pads the WebView by system insets
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main/java -name "MainActivity.java")
           cat > "$MAIN_ACTIVITY" <<'JAVAEOF'
           package com.smartapps.smartloanadvisor;
 
+          import android.graphics.Color;
+          import android.os.Build;
+          import android.os.Bundle;
+          import android.view.View;
+          import androidx.core.graphics.Insets;
+          import androidx.core.view.ViewCompat;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
+              private View content;
+
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  // Register before super so the bridge exists on the very first page load.
+                  registerPlugin(SystemBarsPlugin.class);
+                  super.onCreate(savedInstanceState);
+
+                  // Use one edge-to-edge model on Android 15 and earlier. The root's native
+                  // padding is the only native safe area; index.html sets its CSS safe-area
+                  // variables to zero only in this Android shell, so padding cannot double.
+                  WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+                  content = findViewById(android.R.id.content);
+
+                  // Transparent bars reveal the root background. Disable Android's contrast
+                  // scrims so the requested theme colour is not silently altered.
+                  getWindow().setStatusBarColor(Color.TRANSPARENT);
+                  getWindow().setNavigationBarColor(Color.TRANSPARENT);
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                      getWindow().setStatusBarContrastEnforced(false);
+                      getWindow().setNavigationBarContrastEnforced(false);
+                  }
+
+                  ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+                      Insets bars = insets.getInsets(
+                          WindowInsetsCompat.Type.systemBars()
+                          | WindowInsetsCompat.Type.displayCutout());
+
+                      // With edge-to-edge, IME may arrive as an inset rather than resize the
+                      // window. Use max(), never addition: IME and navigation bar overlap.
+                      Insets safe = bars;
+                      if (insets.isVisible(WindowInsetsCompat.Type.ime())) {
+                          Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+                          safe = Insets.of(
+                              Math.max(bars.left, ime.left),
+                              Math.max(bars.top, ime.top),
+                              Math.max(bars.right, ime.right),
+                              Math.max(bars.bottom, ime.bottom));
+                      }
+                      v.setPadding(safe.left, safe.top, safe.right, safe.bottom);
+                      return WindowInsetsCompat.CONSUMED;
+                  });
+
+                  applySystemBarsTheme(Color.parseColor("#F1F5F9"), true);
+                  ViewCompat.requestApplyInsets(content);
+              }
+
+              private void applySystemBarsTheme(final int color, final boolean darkIcons) {
+                  runOnUiThread(() -> {
+                      content.setBackgroundColor(color);
+                      WindowInsetsControllerCompat controller =
+                          WindowCompat.getInsetsController(getWindow(), content);
+                      controller.setAppearanceLightStatusBars(darkIcons);
+                      controller.setAppearanceLightNavigationBars(darkIcons);
+                  });
+              }
           }
           JAVAEOF
-          echo "MainActivity.java set to default (no edge-to-edge; content sits below status/nav bars)"
+
+          JAVA_DIR=$(dirname "$MAIN_ACTIVITY")
+          cat > "$JAVA_DIR/SystemBarsPlugin.java" <<'JAVAEOF'
+          package com.smartapps.smartloanadvisor;
+
+          import android.graphics.Color;
+          import android.view.View;
+          import androidx.core.view.WindowCompat;
+          import androidx.core.view.WindowInsetsControllerCompat;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+
+          @CapacitorPlugin(name = "SmartLoanSystemBars")
+          public class SystemBarsPlugin extends Plugin {
+              @PluginMethod
+              public void setTheme(PluginCall call) {
+                  String colorValue = call.getString("color");
+                  Boolean darkIconsValue = call.getBoolean("darkIcons");
+                  if (colorValue == null
+                      || !colorValue.matches("^#[0-9A-Fa-f]{6}$")
+                      || darkIconsValue == null) {
+                      call.reject("A valid #RRGGBB color and darkIcons are required");
+                      return;
+                  }
+
+                  final int color;
+                  try {
+                      color = Color.parseColor(colorValue);
+                  } catch (IllegalArgumentException error) {
+                      call.reject("Invalid system-bar color");
+                      return;
+                  }
+                  final boolean darkIcons = darkIconsValue;
+
+                  getActivity().runOnUiThread(() -> {
+                      View content = getActivity().findViewById(android.R.id.content);
+                      content.setBackgroundColor(color);
+                      WindowInsetsControllerCompat controller =
+                          WindowCompat.getInsetsController(getActivity().getWindow(), content);
+                      controller.setAppearanceLightStatusBars(darkIcons);
+                      controller.setAppearanceLightNavigationBars(darkIcons);
+                      call.resolve();
+                  });
+              }
+          }
+          JAVAEOF
+          echo "MainActivity.java applies native safe areas, IME handling, and themed system bars"
 
       - name: Sync web app to Android
         run: npx cap sync android
