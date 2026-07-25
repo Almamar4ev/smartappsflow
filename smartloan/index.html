@@ -2613,8 +2613,8 @@ function renderMultiLoans(){
 
 // ── SAVE ──────────────────────────────────────────────────────────────────────
 function calcTotalExistingFromSaved(){
-  // حساب مجموع الأقساط من كل القروض المحفوظة
-  return saved.reduce((sum,s)=>sum+Math.round(s.results.monthly),0);
+  // مجموع الأقساط من كل القروض المحفوظة (قيم دقيقة؛ التقريب عند العرض فقط)
+  return saved.reduce((sum,s)=>sum+(s.results.monthly||0),0);
 }
 
 function isDuplicateActiveLoan(){
