@@ -177,81 +177,49 @@ jobs:
       # px -> dp, and push them into the CSS variables --safe-top/bottom/left/right
       # that index.html already consumes via var(--safe-*). Re-applied on every
       # inset change (rotation, IME, gesture/3-button nav switch).
-      - name: Set MainActivity that bridges real Android insets into CSS
+      - name: Set MainActivity that natively pads the WebView by system insets
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main/java -name "MainActivity.java")
           cat > "$MAIN_ACTIVITY" <<'JAVAEOF'
           package com.smartapps.smartloanadvisor;
 
+          import android.graphics.Color;
           import android.os.Bundle;
-          import android.os.Handler;
           import android.view.View;
-          import android.webkit.WebView;
           import androidx.core.graphics.Insets;
           import androidx.core.view.ViewCompat;
           import androidx.core.view.WindowInsetsCompat;
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
-              // Cached system-bar + cutout insets in dp.
-              private int sTop, sBottom, sLeft, sRight;
-
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
 
-                  final WebView webView = getBridge().getWebView();
-                  final float density = getResources().getDisplayMetrics().density;
+                  // DEFINITIVE safe-area fix. Earlier builds injected the insets into CSS
+                  // via evaluateJavascript, but that never took on this device (Android 15
+                  // forces edge-to-edge and env(safe-area-inset-*) is always 0 in the
+                  // WebView). Instead we inset the whole WebView NATIVELY: pad the content
+                  // root by the real system-bar + display-cutout insets. This is done by
+                  // Android's own layout pass — no JS, no CSS, no timing — so content can
+                  // never draw under the status bar or the navigation buttons.
+                  final View content = findViewById(android.R.id.content);
+                  // The padded regions (status/nav bar) show this colour; matches the app's
+                  // light surface so the bars blend with the UI.
+                  content.setBackgroundColor(Color.parseColor("#F1F5F9"));
 
-                  // env(safe-area-inset-*) is always 0 inside the Android WebView, so we
-                  // read the REAL insets natively and push them into the CSS variables
-                  // index.html consumes (--safe-top/bottom/left/right). We attach the
-                  // listener to the CONTENT ROOT (not the WebView) so the insets are
-                  // reliably delivered even if an ancestor would otherwise consume them.
-                  final View root = findViewById(android.R.id.content);
-                  ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                  ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
                       Insets bars = insets.getInsets(
                           WindowInsetsCompat.Type.systemBars()
                           | WindowInsetsCompat.Type.displayCutout());
-                      sTop = Math.round(bars.top / density);
-                      sBottom = Math.round(bars.bottom / density);
-                      sLeft = Math.round(bars.left / density);
-                      sRight = Math.round(bars.right / density);
-                      applyInsets(webView);
-                      return insets;
+                      v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                      return WindowInsetsCompat.CONSUMED;
                   });
-                  ViewCompat.requestApplyInsets(root);
-
-                  // The listener can fire BEFORE index.html finishes loading, and CSS vars
-                  // set then are lost once the page loads. Re-apply across the load window
-                  // so the values stick (this was why earlier builds still overlapped).
-                  Handler h = new Handler(getMainLooper());
-                  int[] delays = { 200, 500, 1000, 1800, 2800 };
-                  for (int d : delays) {
-                      h.postDelayed(() -> applyInsets(webView), d);
-                  }
-              }
-
-              private void applyInsets(WebView webView) {
-                  if (webView == null) return;
-                  final String js =
-                      "(function(){var s=document.documentElement.style;" +
-                      "s.setProperty('--safe-top','" + sTop + "px');" +
-                      "s.setProperty('--safe-bottom','" + sBottom + "px');" +
-                      "s.setProperty('--safe-left','" + sLeft + "px');" +
-                      "s.setProperty('--safe-right','" + sRight + "px');})();";
-                  webView.post(() -> webView.evaluateJavascript(js, null));
-              }
-
-              @Override
-              public void onResume() {
-                  super.onResume();
-                  WebView webView = getBridge() != null ? getBridge().getWebView() : null;
-                  if (webView != null) applyInsets(webView);
+                  ViewCompat.requestApplyInsets(content);
               }
           }
           JAVAEOF
-          echo "MainActivity.java bridges real system insets into CSS --safe-* (listener on content root + post-load re-apply)"
+          echo "MainActivity.java natively pads the WebView by real system insets (no JS/CSS dependency)"
 
       - name: Sync web app to Android
         run: npx cap sync android

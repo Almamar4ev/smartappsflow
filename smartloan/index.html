@@ -3579,7 +3579,14 @@ function loadState(){
     if(s.currentTheme) currentTheme=s.currentTheme;
     if(s.profile)      profile={...profile,...s.profile};
     if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
-    if(Array.isArray(s.saved)) saved=s.saved;
+    if(Array.isArray(s.saved)){
+      saved=s.saved;
+      // ترحيل: القروض المحفوظة في نسخ قديمة خزّنت loanMonthly مقرّباً. نعيده إلى
+      // القيمة الدقيقة (results.monthly) حتى تتطابق كل الصفحات للسنت (مصدر دقيق واحد).
+      saved.forEach(function(x){
+        if(x && x.results && typeof x.results.monthly==='number') x.loanMonthly=x.results.monthly;
+      });
+    }
     if(s.form)         form={...form,...s.form};
     // isPremium لا يُحمل من localStorage — يبقى false حتى يدفع المستخدم
     return true;
