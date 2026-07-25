@@ -184,6 +184,7 @@ jobs:
           package com.smartapps.smartloanadvisor;
 
           import android.os.Bundle;
+          import android.os.Handler;
           import android.webkit.WebView;
           import androidx.core.graphics.Insets;
           import androidx.core.view.ViewCompat;
@@ -192,6 +193,9 @@ jobs:
           import com.getcapacitor.BridgeActivity;
 
           public class MainActivity extends BridgeActivity {
+              // Cached system-bar + cutout insets in dp.
+              private int sTop, sBottom, sLeft, sRight;
+
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
@@ -199,31 +203,55 @@ jobs:
                   WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
 
                   final WebView webView = getBridge().getWebView();
+                  if (webView == null) return;
                   final float density = getResources().getDisplayMetrics().density;
 
+                  // env(safe-area-inset-*) is always 0 inside the Android WebView, so we
+                  // read the REAL insets natively, cache them, and push them into the CSS
+                  // variables index.html consumes (--safe-top/bottom/left/right).
                   ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
                       Insets bars = insets.getInsets(
                           WindowInsetsCompat.Type.systemBars()
                           | WindowInsetsCompat.Type.displayCutout());
-                      int top = Math.round(bars.top / density);
-                      int bottom = Math.round(bars.bottom / density);
-                      int left = Math.round(bars.left / density);
-                      int right = Math.round(bars.right / density);
-                      String js =
-                          "document.documentElement.style.setProperty('--safe-top','" + top + "px');" +
-                          "document.documentElement.style.setProperty('--safe-bottom','" + bottom + "px');" +
-                          "document.documentElement.style.setProperty('--safe-left','" + left + "px');" +
-                          "document.documentElement.style.setProperty('--safe-right','" + right + "px');";
-                      webView.post(() -> webView.evaluateJavascript(js, null));
+                      sTop = Math.round(bars.top / density);
+                      sBottom = Math.round(bars.bottom / density);
+                      sLeft = Math.round(bars.left / density);
+                      sRight = Math.round(bars.right / density);
+                      applyInsets(webView);
                       return insets;
                   });
-
-                  // Make sure the listener fires once the WebView is attached.
                   ViewCompat.requestApplyInsets(webView);
+
+                  // The listener can fire BEFORE index.html finishes loading, and CSS vars
+                  // set then are lost once the page loads. Re-apply across the load window
+                  // so the values stick (this was the reason the first build still overlapped).
+                  Handler h = new Handler(getMainLooper());
+                  int[] delays = { 250, 600, 1200, 2000, 3000 };
+                  for (int d : delays) {
+                      h.postDelayed(() -> applyInsets(webView), d);
+                  }
+              }
+
+              private void applyInsets(WebView webView) {
+                  if (webView == null) return;
+                  final String js =
+                      "(function(){var s=document.documentElement.style;" +
+                      "s.setProperty('--safe-top','" + sTop + "px');" +
+                      "s.setProperty('--safe-bottom','" + sBottom + "px');" +
+                      "s.setProperty('--safe-left','" + sLeft + "px');" +
+                      "s.setProperty('--safe-right','" + sRight + "px');})();";
+                  webView.post(() -> webView.evaluateJavascript(js, null));
+              }
+
+              @Override
+              public void onResume() {
+                  super.onResume();
+                  WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+                  if (webView != null) applyInsets(webView);
               }
           }
           JAVAEOF
-          echo "MainActivity.java set to bridge real system insets into CSS --safe-* variables"
+          echo "MainActivity.java set to bridge real system insets into CSS --safe-* variables (with post-load re-apply)"
 
       - name: Sync web app to Android
         run: npx cap sync android

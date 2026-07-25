@@ -2117,21 +2117,31 @@ function drawCharts(){
   const loanAmt = Math.round(r.monthly||0);
   // الأقساط الأخرى النشطة (ليس هذا القرض)
   const otherLoansAmt = Math.round(r.existing||0);
-  const remAmt = Math.max(0, gross - expAmt - loanAmt - otherLoansAmt);
+  // قد يكون سالباً = عجز شهري (لا نقصّه إلى صفر — نطابق التقرير والرئيسية)
+  const remAmt = gross - expAmt - loanAmt - otherLoansAmt;
+  const idIsDeficit = remAmt < 0;
 
   // نسب دقيقة (عشري واحد) للبطاقات
   const expPctExact   = gross>0?parseFloat(((expAmt/gross)*100).toFixed(2)):0;
   const loanPctExact  = gross>0?parseFloat(((loanAmt/gross)*100).toFixed(2)):0;
   const otherPctExact = gross>0?parseFloat(((otherLoansAmt/gross)*100).toFixed(2)):0;
-  const remPctExact   = gross>0?parseFloat(((remAmt/gross)*100).toFixed(2)):0;
-  // نسب مقربة للشريط البصري فقط (أرقام صحيحة)
+  const remPctExact   = gross>0?parseFloat(((remAmt/gross)*100).toFixed(2)):0; // قد تكون سالبة
+  const spendPctExact = expPctExact + loanPctExact + otherPctExact;
+  // عرض أجزاء الشريط: عند التجاوز (>100%) نُقيّس الأجزاء لتملأ الشريط دون أن تفيض،
+  // ونحذف الجزء الأخضر (لا يوجد متبقٍّ). النِّسب داخل الأجزاء تبقى الحقيقية.
+  const barScale = spendPctExact > 100 ? 100/spendPctExact : 1;
+  const expW   = expPctExact*barScale;
+  const loanW  = loanPctExact*barScale;
+  const otherW = otherPctExact*barScale;
+  const remW   = spendPctExact >= 100 ? 0 : (100 - spendPctExact);
+  // النِّسب المعروضة كنص (أرقام صحيحة حقيقية غير مُقيّسة)
   const expPct   = Math.round(expPctExact);
   const loanPct  = Math.round(loanPctExact);
   const otherPct = Math.round(otherPctExact);
-  const remPct   = Math.max(0, 100 - expPct - loanPct - otherPct);
+  const remPct   = Math.round(remPctExact);
 
-  const segStyle=(pct,grad,minW=6)=>
-    `width:${Math.max(pct,minW)}%;background:${grad};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;position:relative;overflow:hidden`;
+  const segStyle=(w,grad,minW=0)=>
+    `width:${Math.max(w,minW)}%;background:${grad};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;position:relative;overflow:hidden`;
 
   // القيمة الرقمية بيضاء/داكنة محايدة (احترافية)؛ النقطة الملوّنة + النسبة الملوّنة تكفيان للتمييز
   const miniCard=(dot,lbl,val,pct,bg,border,valColor)=>`
@@ -2139,7 +2149,7 @@ function drawCharts(){
       <div style="width:8px;height:8px;border-radius:50%;background:${dot};margin-bottom:5px"></div>
       <div style="font-size:10px;color:${txtSub};font-weight:600;margin-bottom:3px">${lbl}</div>
       <div style="font-size:16px;font-weight:900;color:${txtMain}">${fmtAmt(val)}</div>
-      <div style="font-size:10px;font-weight:700;color:${dot};opacity:.85;margin-top:2px">${pct}% ${isAr?'من دخلك':lang==='es'?'de ingresos':'of income'}</div>
+      <div style="font-size:10px;font-weight:700;color:${dot};opacity:.85;margin-top:2px"><bdi dir="ltr">${pct}%</bdi> ${isAr?'من دخلك':lang==='es'?'de ingresos':'of income'}</div>
     </div>`;
 
   const hasOther = otherLoansAmt > 0;
@@ -2153,29 +2163,30 @@ function drawCharts(){
           <div style="font-size:20px;font-weight:900;color:${txtMain}">${fmtAmt(gross)}</div>
         </div>
         <div style="text-align:end">
-          <div style="font-size:11px;color:${txtSub};font-weight:600;margin-bottom:2px">${isAr?'يتبقى لك':isEs?'Te queda':'Remaining'}</div>
-          <div style="font-size:20px;font-weight:900;color:var(--txt)">${fmtAmt(remAmt)}</div>
+          <div style="font-size:11px;color:${txtSub};font-weight:600;margin-bottom:2px">${idIsDeficit?(isAr?'عجز شهري':isEs?'Déficit':'Deficit'):(isAr?'يتبقى لك':isEs?'Te queda':'Remaining')}</div>
+          <div style="font-size:20px;font-weight:900;color:${idIsDeficit?'var(--risk)':'var(--txt)'}">${fmtAmt(Math.abs(remAmt))}</div>
         </div>
       </div>
-      <!-- الشريط الرئيسي -->
-      <div style="height:46px;border-radius:13px;overflow:hidden;display:flex;gap:2px;margin-bottom:14px;box-shadow:0 0 0 1px ${isLight?'#d1d5db':'#1e293b'}">
-        <div style="${segStyle(expPct,'linear-gradient(135deg,#f59e0b,#fbbf24)')}">
+      <!-- الشريط الرئيسي (النسب داخل الأجزاء حقيقية؛ العرض مُقيّس عند التجاوز) -->
+      <div style="height:46px;border-radius:13px;overflow:hidden;display:flex;gap:2px;margin-bottom:${idIsDeficit?'8px':'14px'};box-shadow:0 0 0 1px ${isLight?'#d1d5db':'#1e293b'}">
+        <div style="${segStyle(expW,'linear-gradient(135deg,#f59e0b,#fbbf24)',6)}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${expPct>8?expPct+'%':''}</span>
         </div>
-        <div style="${segStyle(loanPct,'linear-gradient(135deg,var(--risk),var(--risk))')}">
+        <div style="${segStyle(loanW,'linear-gradient(135deg,var(--risk),var(--risk))',6)}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${loanPct>8?loanPct+'%':''}</span>
         </div>
-        ${hasOther?`<div style="${segStyle(otherPct,'linear-gradient(135deg,#6366f1,#818cf8)',4)}">
+        ${hasOther?`<div style="${segStyle(otherW,'linear-gradient(135deg,#6366f1,#818cf8)',4)}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${otherPct>6?otherPct+'%':''}</span>
         </div>`:''}
-        <div style="${segStyle(remPct,'linear-gradient(135deg,var(--safe),var(--safe))')}">
+        ${idIsDeficit?'':`<div style="${segStyle(remW,'linear-gradient(135deg,var(--safe),var(--safe))',6)}">
           <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(255,255,255,.15)"></div>
           <span style="position:relative;z-index:1">${remPct>5?remPct+'%':''}</span>
-        </div>
+        </div>`}
       </div>
+      ${idIsDeficit?`<div style="margin-bottom:14px;padding:7px 11px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid color-mix(in srgb,var(--risk) 35%,transparent);border-radius:9px;font-size:11px;font-weight:700;color:var(--risk);text-align:center">${isAr?'التزاماتك تتجاوز دخلك بـ':isEs?'Tus obligaciones superan tu ingreso en':'Your commitments exceed income by'} <bdi dir="ltr">${Math.round(spendPctExact-100)}%</bdi></div>`:''}
       <!-- البطاقات -->
       <div style="display:grid;grid-template-columns:${hasOther?'1fr 1fr':'1fr 1fr'};gap:9px">
         ${miniCard('#f59e0b',
@@ -2193,11 +2204,11 @@ function drawCharts(){
           otherLoansAmt,otherPctExact,
           isLight?'#eef2ff':'var(--bg3)',
           isLight?'#c7d2fe40':'var(--brd)','#818cf8'):''}
-        ${miniCard('var(--safe)',
-          isAr?'يتبقى لك شهرياً':isEs?'Te queda':'Remaining',
-          remAmt,remPctExact,
-          isLight?'#ecfdf5':'var(--bg3)',
-          isLight?'#a7f3d040':'var(--brd)','var(--safe)')}
+        ${miniCard(idIsDeficit?'var(--risk)':'var(--safe)',
+          idIsDeficit?(isAr?'عجز شهري':isEs?'Déficit':'Deficit'):(isAr?'يتبقى لك شهرياً':isEs?'Te queda':'Remaining'),
+          Math.abs(remAmt),remPctExact,
+          idIsDeficit?(isLight?'#fef2f2':'var(--bg3)'):(isLight?'#ecfdf5':'var(--bg3)'),
+          idIsDeficit?(isLight?'#fecaca40':'var(--brd)'):(isLight?'#a7f3d040':'var(--brd)'),idIsDeficit?'var(--risk)':'var(--safe)')}
       </div>
       <!-- ملاحظة: المتبقي يطابق رقم التقرير -->
       <div style="margin-top:11px;padding:9px 12px;background:var(--bg3);border-radius:10px;border:1px solid var(--brd);font-size:11px;color:${txtSub};line-height:1.6;display:flex;gap:7px;align-items:flex-start">
