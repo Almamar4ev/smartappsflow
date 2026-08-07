@@ -31,9 +31,9 @@ Read in this order, then you have the full picture:
      source of truth for continuing Smart Loan.
    - Smart Loan also has `smartloan/CHANGES_COMPLETED_AR.txt` and
      `smartloan/README_NEXT_STEPS_AR.txt` (older notes).
-3. **The app's `index.html`** — for Smart Loan **and currently Trade Log Pro** it is
-   the whole app (HTML+CSS+JS in one file); it is the single source of truth for
-   both web and store builds until a structure refactor lands.
+3. **The app shell** — Smart Loan remains a single `index.html`. Trade Log Pro
+   phase A splits to `index.html` + `css/app.css` + `js/app.js` (classic scripts;
+   still the source of truth for web and store builds).
 
 Working rules for an agent: work on a feature branch (never `main` directly),
 touch only the one app's folder, run `cd <app> && npm test` before/after changes,
@@ -94,28 +94,27 @@ to `main` as `51a3d72`):
 |-------|--------|--------|
 | **Self-contained folder + workflow** | ✅ | Reference layout for new apps |
 | **Baseline hardening** | ✅ | Sanitizer, Backup/Restore, analytics runtime guard |
-| **Test gate** | ✅ | 77 tests (`npm test`) gating CI |
-| **Web PWA** | ✅ Live on `main` | `smartappsflow.net/tradelogpro/` — SW cache **tradelogpro-v1** |
+| **Test gate** | ✅ | 79 tests (`npm test`) gating CI |
+| **Web PWA** | ✅ Live on `main` (pre-A); **v2 pending merge** | SW cache becomes **tradelogpro-v2** with phase A |
+| **Structure refactor A** | ✅ On branch | `css/app.css` + `js/app.js` literal extract |
+| **Structure refactor B** | ❌ After A is verified | Split `js/app.js` by responsibility |
 | **PWA icons** | ❌ Missing | Need dedicated `icon-192.png` / `icon-512.png` |
 | **Privacy policy file** | ❌ Missing | Required before Play publish |
-| **Structure refactor A** | ❌ Not started | Still monolithic `index.html` (~360 KB) |
-| **Structure refactor B** | ❌ After A | Split `js/app.js` by responsibility |
 | **Paid features / billing** | ⏸ Deferred | Details later; does not block refactor |
 
-**Milestone just completed** (docs branch / this archive step):
+**Milestone in progress** (branch `refactor/tradelogpro-structure`):
 
-1. Added [`tradelogpro/PROJECT_LOG_AR.md`](tradelogpro/PROJECT_LOG_AR.md) as the deep
-   log (same role as Smart Loan’s archive).
-2. Confirmed local `npm test`: 77 passed, 0 failed (financial / security / runtime /
-   pwa / display).
+1. Deep archive already on `docs/tradelogpro-project-log`.
+2. Phase A: literal CSS/JS extract; workflow copies `css/` + `js/`; SW **v2**;
+   tests read from `js/app.js` (runtime guard still from `index.html`).
+3. Local verification: **79 passed, 0 failed**.
 
 **Do next for Trade Log Pro** (each in its own focused session — details in
 `tradelogpro/PROJECT_LOG_AR.md` §4):
 
-1. **Refactor phase A:** extract CSS → `css/app.css`, JS → `js/app.js` (literal
-   move only; no ES modules; no behaviour changes); update workflow + SW assets.
-2. **Refactor phase B:** after A is verified on web + Android, split by domain
-   (finance / sanitize / storage / views / export / runtime / ui).
+1. Merge/verify phase A on web + Android Actions build.
+2. **Refactor phase B:** split `js/app.js` by domain (finance / sanitize /
+   storage / views / export / ui) after A is stable.
 3. Add Trade Log–specific PWA icons; restore manifest icons + apple-touch link.
 4. Add `tradelogpro/privacy-policy.html` before any Play upload.
 5. Later: Pro feature gates / Coming Soon UI, then Play Billing when ready.
@@ -215,7 +214,7 @@ Play Console when ready.
 ## 5. Known pending work (do each in its own focused session)
 
 ### Trade Log Pro (next sessions — see also `tradelogpro/PROJECT_LOG_AR.md` §4)
-- Structure refactor **A** then **B** (literal split first; behaviour-preserving).
+- Verify/merge structure refactor **A**, then **B** (split `js/app.js` by domain).
 - PWA icons (`icon-192` / `icon-512`) + manifest / apple-touch restore.
 - **Privacy policy**: create `tradelogpro/privacy-policy.html` before Play Store
   publishing.
