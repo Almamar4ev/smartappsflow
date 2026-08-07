@@ -6,6 +6,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 
 const html = readFileSync(join(root, 'index.html'), 'utf8');
+const appJs = readFileSync(join(root, 'js', 'app.js'), 'utf8');
+const shipped = html + '\n' + appJs;
 const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
 const sw = readFileSync(join(root, 'sw.js'), 'utf8');
 
@@ -19,11 +21,17 @@ console.log('TradeLog Pro — PWA / service-worker scope tests\n');
 
 // 1. Service worker is registered with the relative path ./sw.js
 assert("service worker is registered with relative path './sw.js'",
-  html.includes("navigator.serviceWorker.register('./sw.js')"));
+  shipped.includes("navigator.serviceWorker.register('./sw.js')"));
 
 // 1b. The old absolute /tradelog-pro/sw.js path is gone
 assert('legacy /tradelog-pro/sw.js registration is removed',
-  !html.includes('/tradelog-pro/sw.js'));
+  !shipped.includes('/tradelog-pro/sw.js'));
+
+// 1c. Shell loads extracted CSS/JS without ES modules
+assert('index.html links css/app.css', html.includes('href="css/app.css"'));
+assert('index.html loads js/app.js as classic script',
+  /<script\s+src="js\/app\.js"><\/script>/.test(html) &&
+  !/type\s*=\s*["']module["']/.test(html));
 
 // 2. manifest start_url and scope are exactly /tradelogpro/
 assert("manifest start_url is '/tradelogpro/'", manifest.start_url === '/tradelogpro/');

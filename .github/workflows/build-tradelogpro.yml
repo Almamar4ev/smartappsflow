@@ -55,8 +55,10 @@ jobs:
 
       - name: Prepare web folder
         run: |
-          mkdir -p www
+          mkdir -p www/css www/js
           cp index.html www/index.html
+          cp css/app.css www/css/app.css
+          cp js/app.js www/js/app.js
           # PWA assets: manifest.json and sw.js are required and must exist.
           cp manifest.json www/manifest.json
           cp sw.js www/sw.js
