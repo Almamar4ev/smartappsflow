@@ -1,6 +1,6 @@
 # Trade Log Pro — سجل المشروع والأرشيف الشامل
 > وثيقة مرجعية لكل ما أُنجز، وما تبقّى، وملاحظات فنية لأي مبرمج (أو مساعد ذكاء اصطناعي) يكمل العمل.
-> آخر تحديث: 7 أغسطس 2026 (المرحلة A: فصل CSS/JS حرفيًا؛ بدون تغيير سلوك).
+> آخر تحديث: 7 أغسطس 2026 (المرحلة B: تقسيم js إلى وحدات كلاسيكية؛ بدون تغيير سلوك).
 >
 > أرشيف المستودع العام (مراحل كل التطبيقات): [`../REPO_STRUCTURE.md`](../REPO_STRUCTURE.md) — خصوصًا §0c.
 >
@@ -14,12 +14,13 @@
 
 - **التطبيق:** Trade Log Pro — دفتر تداول + أداء (حسابات، صفقات، يوميات، حاسبات، تحليلات، تقارير).
 - **المستودع:** `smartappsflow` (متعدد التطبيقات). كل التطبيق داخل مجلد `tradelogpro/`.
-- **مصدر التطبيق بعد المرحلة A:**
-  - `index.html` — الهيكل + حارس Analytics المبكر (يبقى مضمَّنًا في `<head>`)
-  - `css/app.css` — كل الأنماط
-  - `js/app.js` — منطق التطبيق (كلاسيكي، بدون ES Modules)
-  الـ workflow ينسخ الثلاثة إلى `www/`؛ مكتبات XLSX / jsPDF / Chart.js تُحمَّل محليًا أو من CDN.
-- **الويب:** PWA على `smartappsflow.net/tradelogpro/` (يُنشر تلقائيًا عند الدمج إلى `main`) — كاش SW: `tradelogpro-v2`.
+- **مصدر التطبيق بعد المرحلة B:**
+  - `index.html` — الهيكل + حارس Analytics المبكر
+  - `css/app.css` — الأنماط
+  - `js/state.js` · `icons.js` · `storage.js` · `theme.js` · `finance.js` · `sanitize.js` · `app.js`
+    (سكربتات كلاسيكية بالترتيب؛ بدون ES Modules)
+  الـ workflow ينسخها إلى `www/`؛ مكتبات XLSX / jsPDF / Chart.js تُحمَّل محليًا أو من CDN.
+- **الويب:** PWA على `smartappsflow.net/tradelogpro/` — كاش SW: `tradelogpro-v3` (بعد دمج المرحلة B).
 - **المتجر:** Android AAB عبر `.github/workflows/build-tradelogpro.yml` (push إلى main مقيّد بالمسار، أو workflow_dispatch).
 - **معرّف الحزمة:** `com.tradelog.pro`.
 - **اللغة في الواجهة:** الإنجليزية (حاليًا).
@@ -36,8 +37,8 @@
 | ويب PWA | ✅ مباشر (بعد الدمج: `tradelogpro-v2`) |
 | أيقونات PWA (`icon-192` / `icon-512`) | ❌ مفقودة |
 | سياسة خصوصية داخل المجلد | ❌ مطلوبة قبل Play |
-| إعادة هيكلة CSS/JS (مرحلة A) | ✅ منقولة حرفيًا على فرع refactor |
-| تقسيم `app.js` حسب المسؤولية (مرحلة B) | ❌ التالي بعد نجاح A على الويب/Android |
+| إعادة هيكلة CSS/JS (مرحلة A) | ✅ مدموجة |
+| تقسيم JS حسب المسؤولية (مرحلة B) | ✅ على فرع refactor (وحدات كلاسيكية) |
 | إشعار تحديث PWA للمستخدم (مثل Smart Loan) | ❌ غير موجود (SW يستخدم `skipWaiting()` فورًا) |
 | ميزات مدفوعة / Play Billing | ⏸ مؤجّل — التفاصيل لاحقًا؛ لا تُعيق التجزئة |
 
@@ -52,9 +53,16 @@
 tradelogpro/
 ├── index.html                 ← الهيكل + حارس runtime المبكر
 ├── css/app.css                ← الأنماط (مرحلة A)
-├── js/app.js                  ← منطق التطبيق (مرحلة A؛ يُقسَّم لاحقًا في B)
+├── js/
+│   ├── state.js               ← متغيرات الحالة العامة
+│   ├── icons.js               ← نظام الأيقونات
+│   ├── storage.js             ← IndexedDB / localStorage helpers
+│   ├── theme.js               ← الثيمات
+│   ├── finance.js             ← محرك P&L
+│   ├── sanitize.js            ← تعقيم + تنسيق أرقام
+│   └── app.js                 ← العرض / الصفقات / التصدير / init
 ├── manifest.json              ← PWA (بدون icons بعد)
-├── sw.js                      ← service worker معزول على /tradelogpro/ (cache v2)
+├── sw.js                      ← service worker (cache v3)
 ├── package.json / package-lock.json
 ├── capacitor.config.json      ← appId: com.tradelog.pro
 ├── .gitignore                 ← node_modules/ www/ android/
@@ -63,11 +71,11 @@ tradelogpro/
 ├── README_NEXT_STEPS_AR.txt
 ├── PROJECT_LOG_AR.md          ← هذا الملف
 └── tests/
-    ├── financial-tests.mjs    ← يستخرج من js/app.js
-    ├── security-tests.mjs
-    ├── runtime-guard-tests.mjs← يستخرج detectTradeLogRuntime من index.html
+    ├── financial-tests.mjs    ← من js/finance.js
+    ├── security-tests.mjs     ← من js/sanitize.js
+    ├── runtime-guard-tests.mjs← من index.html
     ├── pwa-tests.mjs
-    └── display-tests.mjs
+    └── display-tests.mjs      ← من js/sanitize.js
 ```
 
 خارج المجلد:
@@ -75,17 +83,14 @@ tradelogpro/
 - أسرار التوقيع: `TRADELOG_KEYSTORE_BASE64` / `TRADELOG_KEYSTORE_PASSWORD` /
   `TRADELOG_KEY_ALIAS` / `TRADELOG_KEY_PASSWORD` — **لا تُشارك مع Smart Loan**.
 
-الهيكل الحالي بعد المرحلة A (مرحلة B تقسّم `js/app.js` لاحقًا):
+الهيكل الحالي بعد المرحلة B:
 
 ```
 tradelogpro/
   index.html
-  css/
-    app.css
-  js/
-    app.js
+  css/app.css
+  js/{state,icons,storage,theme,finance,sanitize,app}.js
   tests/…
-  …
 ```
 
 ---
@@ -119,6 +124,16 @@ tradelogpro/
 - رفع كاش SW إلى `tradelogpro-v2` وإضافة `css/app.css` و`js/app.js` إلى `ASSETS`.
 - توجيه اختبارات الاستخراج إلى `js/app.js` (ما عدا حارس runtime من HTML).
 - تحقق محلي: **79 passed, 0 failed** (+ اختباران لبنية CSS/JS).
+
+### هـ) إعادة الهيكلة — المرحلة B (7 أغسطس 2026)
+الفرع: `refactor/tradelogpro-modules`
+
+- تقسيم `js/app.js` إلى وحدات كلاسيكية بالترتيب:
+  `state` → `icons` → `storage` → `theme` → `finance` → `sanitize` → `app`.
+- بدون ES Modules وبدون تغيير سلوك؛ `app.js` ما زال يحمل العرض/الصفقات/التصدير/`initApp`.
+- رفع كاش SW إلى `tradelogpro-v3`؛ workflow ينسخ `js/*.js`.
+- الاختبارات تقرأ من الملف المختص (`finance.js` / `sanitize.js`).
+- تحقق محلي: **80 passed, 0 failed**. تحقق ويب سابق للمرحلة A نجح على `/tradelogpro/`.
 
 ---
 
@@ -167,20 +182,22 @@ tradelogpro/
 - [x] تحديث `build-tradelogpro.yml` لنسخ `css/` و`js/` إلى `www`
 - [x] تحديث `sw.js` `ASSETS` + كاش `tradelogpro-v2`
 - [x] `npm test` محليًا (79 passed)
-- [ ] تحقق ويب بعد الدمج إلى `main` + بناء Actions / APK عند الإمكان
+- [x] تحقق ويب بعد الدمج إلى `main` (CSS/JS/SW v2 يعملان على `/tradelogpro/`)
 
 ### المرحلة 2 — إعادة هيكلة B (تقسيم حسب المسؤولية)
-بعد نجاح A على الويب وAndroid فقط. اقتراح تقسيم أولي (يُراجع عند التنفيذ):
+الفرع: `refactor/tradelogpro-modules`
+
+- [x] تقسيم أولي: state / icons / storage / theme / finance / sanitize / app
+- [x] تحميل كلاسيكي بـ script tags بالترتيب
+- [x] تحديث workflow + SW v3 + tests
+- [x] `npm test` → 80 passed
+- [ ] تحقق ويب بعد الدمج + بناء Actions
+
+تقسيم أدق لاحقًا (اختياري، فرع مستقل) إن لزم:
 
 | وحدة | مسؤوليات تقريبية |
 |------|-------------------|
-| `finance` | `calcPnl`, partial/add-buy, fees, migrateBasis, BE |
-| `sanitize` | `_san*` / `sanitizeState` وكل ملحقات Backup |
-| `storage` | localStorage + IndexedDB + save/load |
-| `views` | dashboard / trades / calendar / journal / accounts / analytics / calculators |
-| `export` | Excel / PDF / backup / CSV import |
-| `runtime` | `detectTradeLogRuntime` + حارس التتبع |
-| `ui` | theme, drawer, toasts, icons, modals |
+| `views` / `trades` / `export` | ما زال داخل `js/app.js` ويمكن فصله لاحقًا |
 
 ### المرحلة 3 — نشر وتلميع (يمكن موازاتها جزئيًا بعد A)
 - [ ] توفير `icon-192.png` و`icon-512.png` الخاصين بـ Trade Log Pro (ليس من تطبيق آخر)
@@ -206,8 +223,8 @@ cd tradelogpro
 npm test
 ```
 
-نتيجة مرجعية بعد المرحلة A (7 أغسطس 2026): **79 passed, 0 failed**
-(18 financial + 28 security + 10 runtime + 11 pwa + 12 display).
+نتيجة مرجعية بعد المرحلة B (7 أغسطس 2026): **80 passed, 0 failed**
+(18 financial + 28 security + 10 runtime + 12 pwa + 12 display).
 
 ---
 
@@ -215,9 +232,15 @@ npm test
 
 | الملف | المحتوى |
 |-------|---------|
-| `index.html` | حارس runtime المبكر، روابط المكتبات، هيكل الصفحة والمودالات، `js/app.js` |
+| `index.html` | حارس runtime المبكر، روابط المكتبات، هيكل الصفحة، سكربتات `js/*` |
 | `css/app.css` | الخطوط + الثيمات + التخطيط + المكوّنات |
-| `js/app.js` | كل منطق التطبيق (التخزين، المحرك، العرض، التصدير، …) |
+| `js/state.js` | متغيرات الحالة العامة |
+| `js/icons.js` | SVG icons |
+| `js/storage.js` | IndexedDB / localStorage |
+| `js/theme.js` | الثيمات |
+| `js/finance.js` | محرك P&L |
+| `js/sanitize.js` | تعقيم النسخ الاحتياطي + تنسيق العرض |
+| `js/app.js` | العرض، الصفقات، الحاسبات، التصدير، analytics، `initApp` |
 
 ### مجموعات دوال مهمة (في `js/app.js`)
 
@@ -249,20 +272,17 @@ npm test
 
 ---
 
-## 8) رسالة جاهزة للجلسة التالية (إعادة الهيكلة B)
+## 8) رسالة جاهزة للجلسة التالية (تلميع / منتج)
 
 ```
-أنت تعمل داخل smartappsflow. المهمة: Trade Log Pro فقط — المرحلة B من إعادة الهيكلة.
+أنت تعمل داخل smartappsflow. المهمة: Trade Log Pro فقط.
 
-اقرأ tradelogpro/PROJECT_LOG_AR.md كاملًا وREPO_STRUCTURE.md §0c.
-تأكد أن المرحلة A مدموجة ومستقرة على الويب قبل التقسيم.
-لا تلمس Smart Loan أو باقي التطبيقات.
+اقرأ tradelogpro/PROJECT_LOG_AR.md وREPO_STRUCTURE.md §0c.
+المرحلتان A وB مكتملتان هيكليًا. لا تلمس Smart Loan.
 
-على فرع refactor/tradelogpro-modules (أو اسم مشابه):
-1) قسّم js/app.js حسب المسؤولية (finance / sanitize / storage / views / export / runtime / ui).
-2) أبقِ التحميل كلاسيكيًا (script tags بالترتيب) ما لم يُتفق على ES Modules صراحة.
-3) لا تغيّر سلوكًا ولا تصميمًا أثناء التقسيم.
-4) شغّل npm test قبل وبعد ويجب أن يبقى 79+ ناجحًا.
-
-اعرض الملخص والفرق قبل أي commit.
+جلسات مقترحة (فرع لكل واحدة):
+1) أيقونات PWA الخاصة بـ Trade Log Pro + تحديث manifest
+2) privacy-policy.html قبل Play
+3) تقسيم أدق لـ js/app.js (views/export) إن لزم
+4) لاحقًا: بوابات Pro / Coming Soon بدون Billing أولًا
 ```

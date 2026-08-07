@@ -94,27 +94,25 @@ to `main` as `51a3d72`):
 |-------|--------|--------|
 | **Self-contained folder + workflow** | ✅ | Reference layout for new apps |
 | **Baseline hardening** | ✅ | Sanitizer, Backup/Restore, analytics runtime guard |
-| **Test gate** | ✅ | 79 tests (`npm test`) gating CI |
-| **Web PWA** | ✅ Live on `main` (pre-A); **v2 pending merge** | SW cache becomes **tradelogpro-v2** with phase A |
-| **Structure refactor A** | ✅ On branch | `css/app.css` + `js/app.js` literal extract |
-| **Structure refactor B** | ❌ After A is verified | Split `js/app.js` by responsibility |
+| **Test gate** | ✅ | 80 tests (`npm test`) gating CI |
+| **Web PWA** | ✅ Live; **v3 pending merge** | Phase B bumps SW to **tradelogpro-v3** |
+| **Structure refactor A** | ✅ Merged (#7) | `css/app.css` + initial `js/app.js` |
+| **Structure refactor B** | ✅ On branch | Classic modules: state/icons/storage/theme/finance/sanitize/app |
 | **PWA icons** | ❌ Missing | Need dedicated `icon-192.png` / `icon-512.png` |
 | **Privacy policy file** | ❌ Missing | Required before Play publish |
 | **Paid features / billing** | ⏸ Deferred | Details later; does not block refactor |
 
-**Milestone in progress** (branch `refactor/tradelogpro-structure`):
+**Milestone in progress** (branch `refactor/tradelogpro-modules`):
 
-1. Deep archive already on `docs/tradelogpro-project-log`.
-2. Phase A: literal CSS/JS extract; workflow copies `css/` + `js/`; SW **v2**;
-   tests read from `js/app.js` (runtime guard still from `index.html`).
-3. Local verification: **79 passed, 0 failed**.
+1. Phase A merged (`#7`); live site verified for css/js + SW v2.
+2. Phase B: split into classic js modules; workflow copies `js/*.js`; SW **v3**.
+3. Local verification: **80 passed, 0 failed**.
 
 **Do next for Trade Log Pro** (each in its own focused session — details in
 `tradelogpro/PROJECT_LOG_AR.md` §4):
 
-1. Merge/verify phase A on web + Android Actions build.
-2. **Refactor phase B:** split `js/app.js` by domain (finance / sanitize /
-   storage / views / export / ui) after A is stable.
+1. Merge/verify phase B on web + Android Actions build.
+2. Optional deeper split of remaining `js/app.js` (views / export) later.
 3. Add Trade Log–specific PWA icons; restore manifest icons + apple-touch link.
 4. Add `tradelogpro/privacy-policy.html` before any Play upload.
 5. Later: Pro feature gates / Coming Soon UI, then Play Billing when ready.
@@ -214,7 +212,7 @@ Play Console when ready.
 ## 5. Known pending work (do each in its own focused session)
 
 ### Trade Log Pro (next sessions — see also `tradelogpro/PROJECT_LOG_AR.md` §4)
-- Verify/merge structure refactor **A**, then **B** (split `js/app.js` by domain).
+- Verify/merge structure refactor **B**, then optional deeper `app.js` splits.
 - PWA icons (`icon-192` / `icon-512`) + manifest / apple-touch restore.
 - **Privacy policy**: create `tradelogpro/privacy-policy.html` before Play Store
   publishing.
