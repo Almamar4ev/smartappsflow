@@ -16,9 +16,9 @@ import { dirname, join } from 'node:path';
 import vm from 'node:vm';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const html = readFileSync(join(__dirname, '..', 'js', 'app.js'), 'utf8');
+const html = readFileSync(join(__dirname, '..', 'js', 'finance.js'), 'utf8');
 
-// --- Pull the pure financial functions out of js/app.js by name ----------
+// --- Pull the pure financial functions out of js/finance.js by name ----------
 const NEEDED = [
   'calcAvgPrice',
   '_tradeEvents',
@@ -40,7 +40,7 @@ const NEEDED = [
 function extractFunction(src, name) {
   const marker = 'function ' + name + '(';
   const start = src.indexOf(marker);
-  if (start === -1) throw new Error('Function not found in js/app.js: ' + name);
+  if (start === -1) throw new Error('Function not found in js/finance.js: ' + name);
   // Walk braces from the first { after the signature to find the matching }.
   let i = src.indexOf('{', start);
   if (i === -1) throw new Error('Malformed function: ' + name);

@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import vm from 'node:vm';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const html = readFileSync(join(__dirname, '..', 'js', 'app.js'), 'utf8');
+const html = readFileSync(join(__dirname, '..', 'js', 'sanitize.js'), 'utf8');
 
 function extractFunction(src, name) {
   const marker = 'function ' + name + '(';

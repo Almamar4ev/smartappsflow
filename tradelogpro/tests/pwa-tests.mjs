@@ -7,7 +7,12 @@ const root = join(__dirname, '..');
 
 const html = readFileSync(join(root, 'index.html'), 'utf8');
 const appJs = readFileSync(join(root, 'js', 'app.js'), 'utf8');
-const shipped = html + '\n' + appJs;
+const shippedJs = [
+  'state.js', 'icons.js', 'storage.js', 'theme.js', 'finance.js', 'sanitize.js', 'app.js'
+].map(function (name) {
+  return readFileSync(join(root, 'js', name), 'utf8');
+}).join('\n');
+const shipped = html + '\n' + shippedJs;
 const manifest = JSON.parse(readFileSync(join(root, 'manifest.json'), 'utf8'));
 const sw = readFileSync(join(root, 'sw.js'), 'utf8');
 
@@ -29,9 +34,13 @@ assert('legacy /tradelog-pro/sw.js registration is removed',
 
 // 1c. Shell loads extracted CSS/JS without ES modules
 assert('index.html links css/app.css', html.includes('href="css/app.css"'));
-assert('index.html loads js/app.js as classic script',
-  /<script\s+src="js\/app\.js"><\/script>/.test(html) &&
+assert('index.html loads classic js modules in order',
+  /src="js\/state\.js"[\s\S]*src="js\/icons\.js"[\s\S]*src="js\/storage\.js"[\s\S]*src="js\/theme\.js"[\s\S]*src="js\/finance\.js"[\s\S]*src="js\/sanitize\.js"[\s\S]*src="js\/app\.js"/.test(html) &&
   !/type\s*=\s*["']module["']/.test(html));
+assert('phase-B domains are split across js files',
+  shippedJs.includes('function calcPnl') &&
+  shippedJs.includes('function sanitizeState') &&
+  appJs.includes('function initApp'));
 
 // 2. manifest start_url and scope are exactly /tradelogpro/
 assert("manifest start_url is '/tradelogpro/'", manifest.start_url === '/tradelogpro/');

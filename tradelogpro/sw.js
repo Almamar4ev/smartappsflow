@@ -15,7 +15,7 @@
 //   - Cache First for other static files inside /tradelogpro/ (fast, with a
 //     background network fallback that also refreshes the cache).
 
-const CACHE = 'tradelogpro-v2';
+const CACHE = 'tradelogpro-v3';
 
 // URLs are relative to /tradelogpro/, so they stay inside this app's scope.
 const ASSETS = [
@@ -23,6 +23,12 @@ const ASSETS = [
   './index.html',
   './manifest.json',
   './css/app.css',
+  './js/state.js',
+  './js/icons.js',
+  './js/storage.js',
+  './js/theme.js',
+  './js/finance.js',
+  './js/sanitize.js',
   './js/app.js'
 ];
 
