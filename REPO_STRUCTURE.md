@@ -7,7 +7,7 @@ from one domain (`smartappsflow.net`) and built by GitHub Actions.
 AI) follows the same plan and does not reorganize things in a way that breaks the
 established build/deploy pipeline.
 
-**Last archive update:** 25 July 2026.
+**Last archive update:** 7 August 2026.
 
 ---
 
@@ -19,6 +19,11 @@ Read in this order, then you have the full picture:
    model, milestones, and remaining work. Applies to every app.
 2. **The app's own deep log** — each app that has had real work keeps a detailed
    archive inside its folder. For the app you're touching, read it fully:
+   - **Trade Log Pro → [`tradelogpro/PROJECT_LOG_AR.md`](tradelogpro/PROJECT_LOG_AR.md)**
+     (Arabic): baseline hardening, storage map, test gate, remaining structure
+     refactor (phases A/B), store polish gaps, and the deferred paid track. This is
+     the single source of truth for continuing Trade Log Pro. Also see
+     `tradelogpro/CHANGES_COMPLETED_AR.txt` and `tradelogpro/README_NEXT_STEPS_AR.txt`.
    - **Smart Loan → [`smartloan/PROJECT_LOG_AR.md`](smartloan/PROJECT_LOG_AR.md)**
      (Arabic): everything done, what remains (TODOs), the safe-area history and
      final fix, the calc/precision rules, the PWA update notifier, the privacy-policy
@@ -26,8 +31,9 @@ Read in this order, then you have the full picture:
      source of truth for continuing Smart Loan.
    - Smart Loan also has `smartloan/CHANGES_COMPLETED_AR.txt` and
      `smartloan/README_NEXT_STEPS_AR.txt` (older notes).
-3. **The app's `index.html`** — for Smart Loan it is the whole app (HTML+CSS+JS in
-   one file); it is the single source of truth for both web and store builds.
+3. **The app's `index.html`** — for Smart Loan **and currently Trade Log Pro** it is
+   the whole app (HTML+CSS+JS in one file); it is the single source of truth for
+   both web and store builds until a structure refactor lands.
 
 Working rules for an agent: work on a feature branch (never `main` directly),
 touch only the one app's folder, run `cd <app> && npm test` before/after changes,
@@ -71,15 +77,48 @@ to `main` as `51a3d72`):
 4. Optional: tests for deficit / chart distribution display helpers.
 5. Later: paid features (PDF, reschedule, multi-loan compare) + Play Billing.
 
-### Next session reminder (developer / Cursor IDE — not app code)
+### Developer / Cursor IDE (not app code)
 
-- **Arabic RTL in Cursor chat:** the Agent/Chat panel still renders Arabic LTR
-  (known Cursor limitation). In the **next session**, set up a working RTL fix
-  for the chat UI (community extension or patch), e.g.:
-  - [cursor-chat-rtl-extension](https://github.com/yechielby/cursor-chat-rtl-extension)
-  - or [Cursor-RTL-Chat-Fix](https://github.com/WeZza2023/Cursor-RTL-Chat-Fix)
-  - Feature request to upvote: https://forum.cursor.com/t/add-rtl-right-to-left-support-for-chat-panel/151888
-  This is an **IDE workflow** task, not a change inside `smartloan/`.
+- **Arabic RTL in Cursor chat:** ✅ working automatically (1 Aug 2026). Installed
+  [`yechielby.cursor-chat-rtl` v0.1.8](https://github.com/yechielby/cursor-chat-rtl-extension)
+  and patched workbench assets so RTL applies by default in Agents UI (no toolbar
+  ⇄ required). After a Cursor app update, re-apply Activate / re-patch if LTR
+  returns. Upstream request:
+  https://forum.cursor.com/t/add-rtl-right-to-left-support-for-chat-panel/151888
+
+---
+
+## 0c. Trade Log Pro — current status (7 August 2026)
+
+| Track | Status | Notes |
+|-------|--------|--------|
+| **Self-contained folder + workflow** | ✅ | Reference layout for new apps |
+| **Baseline hardening** | ✅ | Sanitizer, Backup/Restore, analytics runtime guard |
+| **Test gate** | ✅ | 77 tests (`npm test`) gating CI |
+| **Web PWA** | ✅ Live on `main` | `smartappsflow.net/tradelogpro/` — SW cache **tradelogpro-v1** |
+| **PWA icons** | ❌ Missing | Need dedicated `icon-192.png` / `icon-512.png` |
+| **Privacy policy file** | ❌ Missing | Required before Play publish |
+| **Structure refactor A** | ❌ Not started | Still monolithic `index.html` (~360 KB) |
+| **Structure refactor B** | ❌ After A | Split `js/app.js` by responsibility |
+| **Paid features / billing** | ⏸ Deferred | Details later; does not block refactor |
+
+**Milestone just completed** (docs branch / this archive step):
+
+1. Added [`tradelogpro/PROJECT_LOG_AR.md`](tradelogpro/PROJECT_LOG_AR.md) as the deep
+   log (same role as Smart Loan’s archive).
+2. Confirmed local `npm test`: 77 passed, 0 failed (financial / security / runtime /
+   pwa / display).
+
+**Do next for Trade Log Pro** (each in its own focused session — details in
+`tradelogpro/PROJECT_LOG_AR.md` §4):
+
+1. **Refactor phase A:** extract CSS → `css/app.css`, JS → `js/app.js` (literal
+   move only; no ES modules; no behaviour changes); update workflow + SW assets.
+2. **Refactor phase B:** after A is verified on web + Android, split by domain
+   (finance / sanitize / storage / views / export / runtime / ui).
+3. Add Trade Log–specific PWA icons; restore manifest icons + apple-touch link.
+4. Add `tradelogpro/privacy-policy.html` before any Play upload.
+5. Later: Pro feature gates / Coming Soon UI, then Play Billing when ready.
 
 ---
 
@@ -119,7 +158,7 @@ smartappsflow/
 ├── .gitattributes        # line-ending rules (LF for app sources)
 ├── REPO_STRUCTURE.md     # this file (repo-wide archive + onboarding)
 │
-├── tradelogpro/          # ✅ fully self-contained (reference model)
+├── tradelogpro/          # ✅ fully self-contained (reference model); deep log: PROJECT_LOG_AR.md
 ├── smartloan/            # ✅ fully self-contained; deep log: PROJECT_LOG_AR.md
 ├── carmaintenance/       # PWA only (web)
 ├── compoundcalc/         # Flutter build output (web)
@@ -175,9 +214,12 @@ Play Console when ready.
 
 ## 5. Known pending work (do each in its own focused session)
 
-### Repo-wide / other apps
-- **TradeLog Pro privacy policy**: create `tradelogpro/privacy-policy.html`
-  before publishing to the Play Store.
+### Trade Log Pro (next sessions — see also `tradelogpro/PROJECT_LOG_AR.md` §4)
+- Structure refactor **A** then **B** (literal split first; behaviour-preserving).
+- PWA icons (`icon-192` / `icon-512`) + manifest / apple-touch restore.
+- **Privacy policy**: create `tradelogpro/privacy-policy.html` before Play Store
+  publishing.
+- Deferred: paid/Pro gates + Play Billing (details later).
 
 ### Smart Loan (next sessions — not blocking web)
 See also the checkbox list in [`smartloan/PROJECT_LOG_AR.md`](smartloan/PROJECT_LOG_AR.md) §4:
