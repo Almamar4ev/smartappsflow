@@ -199,8 +199,8 @@ tradelogpro/
 | `views` / `trades` / `export` | ما زال داخل `js/app.js` ويمكن فصله لاحقًا |
 
 ### المرحلة 3 — نشر وتلميع
-- [ ] توفير `icon-192.png` و`icon-512.png` الخاصين بـ Trade Log Pro (ليس من تطبيق آخر)
-- [ ] إعادة قسم icons في `manifest.json` ورابط apple-touch في `index.html`
+- [x] توفير `icon-192.png` و`icon-512.png` الخاصين بـ Trade Log Pro (الأيقونة الفاتحة المعتمدة)
+- [x] إعادة قسم icons في `manifest.json` ورابط apple-touch في `index.html`
 - [x] إنشاء `tradelogpro/privacy-policy.html` (8 أغسطس 2026)
 - [ ] (اختياري لاحقًا) إشعار تحديث PWA بموافقة المستخدم — على غرار Smart Loan — بدل `skipWaiting()` الفوري
 - [ ] اختبار يدوي على الجهاز (خصوصًا Partial→Add→Final و Backup/Restore) + نسخة keystore خارجية
