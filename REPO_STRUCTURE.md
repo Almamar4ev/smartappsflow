@@ -7,7 +7,7 @@ from one domain (`smartappsflow.net`) and built by GitHub Actions.
 AI) follows the same plan and does not reorganize things in a way that breaks the
 established build/deploy pipeline.
 
-**Last archive update:** 7 August 2026.
+**Last archive update:** 8 August 2026.
 
 ---
 
@@ -99,8 +99,8 @@ to `main` as `51a3d72`):
 | **Structure refactor A** | ✅ Merged (#7) | `css/app.css` + initial `js/app.js` |
 | **Structure refactor B** | ✅ On branch | Classic modules: state/icons/storage/theme/finance/sanitize/app |
 | **PWA icons** | ❌ Missing | Need dedicated `icon-192.png` / `icon-512.png` |
-| **Privacy policy file** | ❌ Missing | Required before Play publish |
-| **Paid features / billing** | ⏸ Deferred | Details later; does not block refactor |
+| **Privacy policy file** | ✅ Added | `tradelogpro/privacy-policy.html` (Aug 8, 2026) |
+| **Paid features / billing** | ⏸ Deferred | Free first; **no Coming Soon UI**; build Premium before billing |
 
 **Milestone in progress** (branch `refactor/tradelogpro-modules`):
 
@@ -111,11 +111,12 @@ to `main` as `51a3d72`):
 **Do next for Trade Log Pro** (each in its own focused session — details in
 `tradelogpro/PROJECT_LOG_AR.md` §4):
 
-1. Merge/verify phase B on web + Android Actions build.
+1. Merge/verify phase B on web + Android Actions build. ✅
 2. Optional deeper split of remaining `js/app.js` (views / export) later.
 3. Add Trade Log–specific PWA icons; restore manifest icons + apple-touch link.
-4. Add `tradelogpro/privacy-policy.html` before any Play upload.
-5. Later: Pro feature gates / Coming Soon UI, then Play Billing when ready.
+4. ✅ `tradelogpro/privacy-policy.html` added (register URL in Play when publishing).
+5. Later (per Claude handoff): phase C Vite; phase D sync/billing. **Do not** ship
+   Coming Soon / paywalls before Premium features exist.
 
 ---
 
@@ -212,11 +213,10 @@ Play Console when ready.
 ## 5. Known pending work (do each in its own focused session)
 
 ### Trade Log Pro (next sessions — see also `tradelogpro/PROJECT_LOG_AR.md` §4)
-- Verify/merge structure refactor **B**, then optional deeper `app.js` splits.
 - PWA icons (`icon-192` / `icon-512`) + manifest / apple-touch restore.
-- **Privacy policy**: create `tradelogpro/privacy-policy.html` before Play Store
-  publishing.
-- Deferred: paid/Pro gates + Play Billing (details later).
+- Device QA + Play listing when ready (privacy policy file is in-repo).
+- Optional: deeper `app.js` splits; later Vite (phase C) / sync+billing (phase D).
+- Deferred Premium: build real features first; **no Coming Soon** placeholders.
 
 ### Smart Loan (next sessions — not blocking web)
 See also the checkbox list in [`smartloan/PROJECT_LOG_AR.md`](smartloan/PROJECT_LOG_AR.md) §4:
