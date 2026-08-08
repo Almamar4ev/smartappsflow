@@ -98,7 +98,7 @@ to `main` as `51a3d72`):
 | **Web PWA** | ✅ Live; **v3 pending merge** | Phase B bumps SW to **tradelogpro-v3** |
 | **Structure refactor A** | ✅ Merged (#7) | `css/app.css` + initial `js/app.js` |
 | **Structure refactor B** | ✅ On branch | Classic modules: state/icons/storage/theme/finance/sanitize/app |
-| **PWA icons** | ❌ Missing | Need dedicated `icon-192.png` / `icon-512.png` |
+| **PWA icons** | ✅ Light TL mark | `icon-192.png` / `icon-512.png` (+ dark candidate kept in assets) |
 | **Privacy policy file** | ✅ Added | `tradelogpro/privacy-policy.html` (Aug 8, 2026) |
 | **Paid features / billing** | ⏸ Deferred | Free first; **no Coming Soon UI**; build Premium before billing |
 
@@ -113,7 +113,7 @@ to `main` as `51a3d72`):
 
 1. Merge/verify phase B on web + Android Actions build. ✅
 2. Optional deeper split of remaining `js/app.js` (views / export) later.
-3. Add Trade Log–specific PWA icons; restore manifest icons + apple-touch link.
+3. Add Trade Log–specific PWA icons; restore manifest icons + apple-touch link. ✅ (light TL)
 4. ✅ `tradelogpro/privacy-policy.html` added (register URL in Play when publishing).
 5. Later (per Claude handoff): phase C Vite; phase D sync/billing. **Do not** ship
    Coming Soon / paywalls before Premium features exist.

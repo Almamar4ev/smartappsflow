@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -46,9 +46,15 @@ assert('phase-B domains are split across js files',
 assert("manifest start_url is '/tradelogpro/'", manifest.start_url === '/tradelogpro/');
 assert("manifest scope is '/tradelogpro/'", manifest.scope === '/tradelogpro/');
 
-// 2b. manifest does not reference any (currently missing) icon files.
-assert('manifest has no icons referencing missing files',
-  !('icons' in manifest) || (Array.isArray(manifest.icons) && manifest.icons.length === 0));
+// 2b. PWA icons exist on disk and are referenced by the manifest + apple-touch
+assert('icon-192.png and icon-512.png exist',
+  existsSync(join(root, 'icon-192.png')) && existsSync(join(root, 'icon-512.png')));
+assert('manifest icons point at TradeLog icon files',
+  Array.isArray(manifest.icons) &&
+  manifest.icons.some(function (i) { return i.src === 'icon-192.png' && i.sizes === '192x192'; }) &&
+  manifest.icons.some(function (i) { return i.src === 'icon-512.png' && i.sizes === '512x512'; }));
+assert('index.html has apple-touch-icon for icon-192.png',
+  html.includes('rel="apple-touch-icon"') && html.includes('href="icon-192.png"'));
 
 // 3. Service worker must not claim the root scope '/'
 assert('service worker does not use root scope /',

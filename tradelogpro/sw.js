@@ -15,7 +15,7 @@
 //   - Cache First for other static files inside /tradelogpro/ (fast, with a
 //     background network fallback that also refreshes the cache).
 
-const CACHE = 'tradelogpro-v3';
+const CACHE = 'tradelogpro-v4';
 
 // URLs are relative to /tradelogpro/, so they stay inside this app's scope.
 const ASSETS = [
@@ -29,7 +29,9 @@ const ASSETS = [
   './js/theme.js',
   './js/finance.js',
   './js/sanitize.js',
-  './js/app.js'
+  './js/app.js',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', function (event) {
