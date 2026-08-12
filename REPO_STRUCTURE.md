@@ -43,7 +43,7 @@ status section in this file so the next developer stays in sync.
 
 ---
 
-## 0b. Smart Loan — current status (25 July 2026)
+## 0b. Smart Loan — current status (12 August 2026)
 
 | Track | Status | Notes |
 |-------|--------|--------|
@@ -52,11 +52,16 @@ status section in this file so the next developer stays in sync.
 | **Theme-matched system bars** | ✅ Verified on device | Native Capacitor plugin `SmartLoanSystemBars` |
 | **Calc / deficit / precision** | ✅ Merged | Exact values stored; round only at display |
 | **PWA update notifier** | ✅ Live (web only) | Banner + Settings card; gated by `!Capacitor` |
-| **Play Store upload of this build** | ⏳ Later | AAB/APK can be built anytime; store release deferred |
+| **Play Store upload of this build** | ✅ Live | Owner confirmed upload; store status excellent (12 Aug 2026) |
+| **Target API 36 (Play policy)** | 🔄 In progress | Branch `fix/smartloan-target-api-36` — deadline 31 Aug 2026 |
 | **Paid features / billing** | ⏸ Deferred | Coming Soon UI only — no Play Billing yet |
 
-**Milestone just completed** (branch `fix/smartloan-safearea-and-tweaks`, merged
-to `main` as `51a3d72`):
+**Keep sessions separate:** Smart Loan work stays under `smartloan/` (+ its
+workflow/secrets). Trade Log Pro stays under `tradelogpro/` — see §0c. Do not
+mix branches or edits across apps in one session.
+
+**Milestone completed** (branch `fix/smartloan-safearea-and-tweaks`, merged
+to `main` as `51a3d72`; Play upload confirmed later):
 
 1. Native safe-area: pad `android.R.id.content` (system bars + cutout + IME via
    `max`, not sum); CSS `--safe-*` forced to `0` only inside the Android shell
@@ -65,17 +70,20 @@ to `main` as `51a3d72`):
    regions and status/nav icon contrast; confirmed light + dark themes on device.
 3. Web release: bumped service worker to **v40** with user-facing CHANGELOG, then
    merged so GitHub Pages publishes the PWA.
+4. Play Console: this build uploaded; listing is live / satisfactory.
 
 **Do next for Smart Loan** (each in its own focused session — details in
 `smartloan/PROJECT_LOG_AR.md` §4):
 
-1. Before the next Play upload: bump `versionCode` 31 → 32 (and `versionName`) in
+1. Finish API 36 store release: Actions build → device APK QA → Production AAB
+   (`versionCode` **32** / `versionName` **3.2**, `targetSdk` **36**).
+2. Before *any later* Play upload after that: bump `versionCode` again in
    `build-smartloan.yml`.
-2. Play Console polish: listing name (e.g. «Loan Calculator: EMI & Mortgage»),
-   screenshots — not code.
-3. Privacy policy content updates, if needed, in repo `smart-apps-legal` (not here).
-4. Optional: tests for deficit / chart distribution display helpers.
-5. Later: paid features (PDF, reschedule, multi-loan compare) + Play Billing.
+3. Optional Play Console polish: listing name / screenshots (local refs in
+   `smartloan/store-graphics/` — not required for code).
+4. Privacy policy content updates, if needed, in repo `smart-apps-legal` (not here).
+5. Optional: tests for deficit / chart distribution display helpers.
+6. Later: paid features (PDF, reschedule, multi-loan compare) + Play Billing.
 
 ### Developer / Cursor IDE (not app code)
 
@@ -218,11 +226,12 @@ Play Console when ready.
 - Optional: deeper `app.js` splits; later Vite (phase C) / sync+billing (phase D).
 - Deferred Premium: build real features first; **no Coming Soon** placeholders.
 
-### Smart Loan (next sessions — not blocking web)
+### Smart Loan (next sessions — store already live)
 See also the checkbox list in [`smartloan/PROJECT_LOG_AR.md`](smartloan/PROJECT_LOG_AR.md) §4:
 
-- Bump store `versionCode` / `versionName` before the next Play upload.
-- Play Console: listing title + screenshots.
+- Finish Play policy fix: ship `targetSdk` **36** / version **3.2 (32)** to Production.
+- Bump store `versionCode` / `versionName` before any *later* Play upload.
+- Optional Play Console polish: listing title + screenshots.
 - Privacy policy content updates in **`smart-apps-legal`** when needed.
 - Optional display-helper tests (deficit, chart distribution).
 - Deferred product work: PDF, reschedule, multi-loan compare + Play Billing.
