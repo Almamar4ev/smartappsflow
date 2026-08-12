@@ -1,6 +1,6 @@
 {
   "name": "smart-loan-calculator",
-  "version": "3.0.0",
+  "version": "3.2.0",
   "description": "Smart Loan Calculator - estimate payments, compare loans, and see the real cost of borrowing.",
   "scripts": {
     "test": "node tests/financial-tests.mjs && node tests/pwa-tests.mjs"

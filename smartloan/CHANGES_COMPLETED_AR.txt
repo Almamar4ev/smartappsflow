@@ -80,3 +80,17 @@ Total: 26 passed, 0 failed
 - دمج الفرع fix/smartloan-safearea-and-tweaks إلى main (نشر PWA فورًا).
 - المتبقي لجلسات لاحقة: versionCode للمتجر، رفع Play، اسم/لقطات المتجر،
   ميزات مدفوعة. التفاصيل في PROJECT_LOG_AR.md §4 و REPO_STRUCTURE.md §0b.
+
+--------------------------------------------------------------
+ترقية Target API 36 (سياسة Play) — 12 أغسطس 2026
+--------------------------------------------------------------
+
+الفرع: fix/smartloan-target-api-36
+
+1. build-smartloan.yml: تثبيت platforms;android-36 + build-tools;36.0.0
+2. compileSdkVersion / targetSdkVersion = 36 (minSdk 23 كما هو)
+3. AGP 8.7.2 + Gradle 8.9 لدعم compileSdk 36
+4. versionCode 32 / versionName 3.2
+5. منطق MainActivity (safe-area الأصلي) لم يُمس — فقط تعليقات توضيحية
+
+المتبقي: بناء Actions → اختبار APK → رفع AAB لـ Production → اختفاء تحذير Policy.

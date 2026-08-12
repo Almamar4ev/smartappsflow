@@ -35,12 +35,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # The build targets compileSdkVersion 35, so the android-35 platform and
-      # its build-tools must be present in the SAME SDK root Gradle reads
-      # (/usr/local/lib/android/sdk). sdkmanager installs relative to its own
-      # location by default, which can land in a different root — so we force
-      # the target with --sdk_root and then hard-verify android.jar exists.
-      - name: Install Android SDK platform 35
+      # The build targets compileSdkVersion 36 (Play policy), so the android-36
+      # platform and its build-tools must be present in the SAME SDK root
+      # Gradle reads (/usr/local/lib/android/sdk). sdkmanager installs relative
+      # to its own location by default, which can land in a different root —
+      # so we force the target with --sdk_root and then hard-verify android.jar.
+      - name: Install Android SDK platform 36
         run: |
           set -e
           SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
@@ -53,13 +53,13 @@ jobs:
           done
           echo "Using sdkmanager: $SDKMGR"
           yes | "$SDKMGR" --sdk_root="$SDK_ROOT" --licenses >/dev/null 2>&1 || true
-          "$SDKMGR" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          "$SDKMGR" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
           echo "Platforms present:"; ls -1 "$SDK_ROOT/platforms" || true
-          if [ ! -f "$SDK_ROOT/platforms/android-35/android.jar" ]; then
-            echo "::error::android-35/android.jar missing after install at $SDK_ROOT"
+          if [ ! -f "$SDK_ROOT/platforms/android-36/android.jar" ]; then
+            echo "::error::android-36/android.jar missing after install at $SDK_ROOT"
             exit 1
           fi
-          echo "OK: $SDK_ROOT/platforms/android-35/android.jar present"
+          echo "OK: $SDK_ROOT/platforms/android-36/android.jar present"
 
       # Gate the build on the loan-math + PWA tests. These import only Node
       # built-ins, so no npm install is needed. If any test fails the whole
@@ -115,15 +115,14 @@ jobs:
         run: npx cap add android
 
       # The AGP that Capacitor 6 scaffolds is only tested up to compileSdk 33,
-      # so it cannot load the android-35 framework and the build fails with
-      # "failed to load include path .../android-35/android.jar". Bump the
-      # Android Gradle Plugin and the Gradle wrapper to versions that support
-      # compileSdk 35 (AGP 8.6.0 needs Gradle 8.7+, JDK 17 — already set up).
-      - name: Upgrade Android Gradle Plugin + Gradle for compileSdk 35
+      # so it cannot load a modern android-NN framework. Bump AGP + Gradle to
+      # versions that support compileSdk 36 (AGP 8.7.2 needs Gradle 8.9+,
+      # JDK 17 — already set up).
+      - name: Upgrade Android Gradle Plugin + Gradle for compileSdk 36
         run: |
           set -e
-          sed -i "s#com.android.tools.build:gradle:[0-9.]*#com.android.tools.build:gradle:8.6.0#" android/build.gradle
-          sed -i "s#gradle-[0-9.]*-\(all\|bin\).zip#gradle-8.7-\1.zip#" android/gradle/wrapper/gradle-wrapper.properties
+          sed -i "s#com.android.tools.build:gradle:[0-9.]*#com.android.tools.build:gradle:8.7.2#" android/build.gradle
+          sed -i "s#gradle-[0-9.]*-\(all\|bin\).zip#gradle-8.9-\1.zip#" android/gradle/wrapper/gradle-wrapper.properties
           echo "AGP:";    grep "com.android.tools.build:gradle" android/build.gradle
           echo "Gradle:"; grep distributionUrl android/gradle/wrapper/gradle-wrapper.properties
 
@@ -162,20 +161,28 @@ jobs:
             --splashBackgroundColor '#221B3E' \
             --splashBackgroundColorDark '#221B3E'
 
+      # Play requires targetSdk 36+ for updates after 31 Aug 2026. Keep minSdk
+      # unchanged. Print the files so CI logs prove the bump landed.
       - name: Update target SDK and version code
         run: |
+          set -e
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
-          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
-          sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
-          sed -i 's/versionCode .*/versionCode 31/' android/app/build.gradle
-          sed -i 's/versionName .*/versionName "3.1"/' android/app/build.gradle
+          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 36/' android/variables.gradle
+          sed -i 's/targetSdkVersion = .*/targetSdkVersion = 36/' android/variables.gradle
+          sed -i 's/versionCode .*/versionCode 32/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "3.2"/' android/app/build.gradle
+          echo "=== android/variables.gradle ==="
+          cat android/variables.gradle
+          echo "=== version lines in android/app/build.gradle ==="
+          grep -E 'versionCode|versionName' android/app/build.gradle
 
-      # On Android 15 / targetSdk 35 the app is forced edge-to-edge, and inside
-      # the WebView env(safe-area-inset-*) always resolves to 0 — so content
-      # slid under the status bar (clock/battery) and the navigation buttons.
-      # Fix: pad the Android content root with the REAL system-bar, cutout, and
-      # visible-IME insets. CSS safe-area values stay browser-only, preventing
-      # double padding. A narrow JS bridge also themes both bar regions/icons.
+      # On Android 15+ (targetSdk 35/36) the app is forced edge-to-edge, and
+      # inside the WebView env(safe-area-inset-*) always resolves to 0 — so
+      # content slid under the status bar (clock/battery) and the navigation
+      # buttons. Fix: pad the Android content root with the REAL system-bar,
+      # cutout, and visible-IME insets. CSS safe-area values stay browser-only,
+      # preventing double padding. A narrow JS bridge also themes both bar
+      # regions/icons. Raising targetSdk 35→36 does not change this model.
       - name: Set MainActivity that natively pads the WebView by system insets
         run: |
           MAIN_ACTIVITY=$(find android/app/src/main/java -name "MainActivity.java")
