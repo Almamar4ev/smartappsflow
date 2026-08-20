@@ -5,7 +5,7 @@ function setView(view, accountId) {
   if (accountId) { state.activeAccountId = accountId; save(); }
   if (view !== 'trades') { window._tradeFilter = 'all'; window._tradeSearch = ''; }
   currentView = view;
-  var titles = {dashboard:'Dashboard',trades:'Trade Log',calendar:'P&L Calendar',calculators:'Calculators',analytics:'Analytics',accounts:'Accounts',journal:'Daily Journal'};
+  var titles = {dashboard:'Dashboard',trades:'Trade Log',calendar:'Calendar',calculators:'Calculators',analytics:'Analytics',accounts:'Accounts',journal:'Daily Journal'};
   document.getElementById('topbarTitle').textContent = titles[view] || '';
   document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
   var ni = document.getElementById('nav-' + view); if (ni) ni.classList.add('active');
@@ -652,7 +652,7 @@ function renderDashboard() {
     statCard('Total Balance', (balance < 0 ? '-' : '') + currSym() + Math.abs(balance).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), 'Capital ' + (capital ? fmtMoney(capital) : 'not set'), balance < 0 ? 'var(--red)' : 'var(--purple)') +
     statCard('Net P&L', fmtPnl(netPnl), (netPnl >= 0 ? 'Profitable' : 'In drawdown') + (capital > 0 ? '  ' + (netPnl/capital*100 >= 0 ? '+' : '') + (netPnl/capital*100).toFixed(2) + '% of capital' : ''), pnlColor(netPnl)) +
     statCard('Win Rate', wr + '%', closed.length + ' closed trades', 'var(--blue)') +
-    statCard('Total Trades', trades.length, wins + ' wins · ' + losses + ' losses · ' + openCount + ' open', 'var(--blue)') +
+    statCard('Total Trades', trades.length, plural(wins,'win','wins') + ' · ' + plural(losses,'loss','losses') + ' · ' + openCount + ' open', 'var(--blue)') +
     statCard('Avg R:R', avgRr, 'Risk : Reward', 'var(--gold)') +
     statCard('Brokerage Fees', fmtMoney(calcTotalFees(trades)), closed.length + ' closed trades', 'var(--red)') +
   '</div>' +
@@ -1243,14 +1243,14 @@ function renderAccountsView() {
       '<div class="panel" style="padding:16px;cursor:pointer" onclick="backupData()">' +
         '<div style="margin-bottom:8px;color:var(--green)">' + icon('save', 26) + '</div>' +
         '<div style="font-weight:700;font-size:14px;color:var(--green)">Backup Data</div>' +
-        '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + totalTrades + ' trades</div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + plural(totalTrades,'trade','trades') + '</div>' +
         '<div style="font-size:10px;color:var(--text3);margin-top:6px">Tap to choose backup type</div>' +
       '</div>' +
       '<div class="panel" style="padding:16px;cursor:pointer" onclick="restoreData()">' +
         '<div style="margin-bottom:8px;color:var(--blue)">' + icon('folder', 26) + '</div>' +
         '<div style="font-weight:700;font-size:14px;color:var(--blue)">Restore Backup</div>' +
-        '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + state.accounts.length + ' accounts loaded</div>' +
-        '<div style="font-size:10px;color:var(--text3);margin-top:6px">Load a previously saved backup file</div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:3px">Load accounts and trades from a saved file</div>' +
+        '<div style="font-size:10px;color:var(--text3);margin-top:6px">' + plural(state.accounts.length,'account','accounts') + ' on device</div>' +
       '</div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px">' +
@@ -1262,7 +1262,6 @@ function renderAccountsView() {
             '<span style="background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold);border-radius:8px;font-size:9px;font-family:var(--mono);padding:1px 6px;font-weight:700">Trading 212 only</span>' +
           '</div>' +
           '<div style="font-size:11px;color:var(--text3);margin-top:3px">Import trades from Trading 212 export</div>' +
-          '<div style="font-size:10px;color:var(--text3);margin-top:4px">More platforms coming soon</div>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -1272,7 +1271,7 @@ function renderAccountsView() {
           '<div style="color:var(--purple);flex-shrink:0">' + icon('doc', 26) + '</div>' +
           '<div>' +
             '<div style="font-weight:700;font-size:14px;color:var(--text)">Export Report</div>' +
-            '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + totalTrades + ' trades ready &middot; Excel or PDF</div>' +
+            '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + plural(totalTrades,'trade','trades') + ' ready &middot; Excel or PDF</div>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -3147,7 +3146,7 @@ function renderAnalytics() {
   return '<div style="display:flex;flex-direction:column;gap:14px">' +
     // Summary stats
     '<div class="stats-row">' +
-      statCard('Win Rate', wr + '%', wins.length + ' wins · ' + losses.length + ' losses', pnlColor(totalPnl)) +
+      statCard('Win Rate', wr + '%', plural(wins.length,'win','wins') + ' · ' + plural(losses.length,'loss','losses'), pnlColor(totalPnl)) +
       statCard('Avg R:R', rr, 'Risk : Reward', 'var(--gold)') +
       statCard('ROI', (roi>=0?'+':'') + roi + '%', 'Return on invested', pnlColor(totalPnl)) +
       statCard('Profit Factor', pf, pf === '\u221e' ? 'No losses recorded' : (pf >= 1 ? 'Good: above 1.0' : 'Below 1.0'), pf === '\u221e' ? 'var(--green)' : (pf >= 1 ? 'var(--green)' : 'var(--red)')) +
@@ -3253,7 +3252,7 @@ function buildMonthChart(allMonthPnl, allYears, closed) {
   var lbl = document.getElementById('monthYearLabel');
   var sum = document.getElementById('monthYearSummary');
   if (lbl) lbl.textContent = String(yr);
-  if (sum) sum.innerHTML = (yearTotal>=0?'+':'') + fmtPnl(yearTotal) + ' &middot; ' + winMonths + ' up &middot; ' + lossMonths + ' down';
+  if (sum) sum.innerHTML = fmtPnl(yearTotal) + ' &middot; ' + winMonths + ' up &middot; ' + lossMonths + ' down';
   // Prev/next button states
   var prevBtn = document.getElementById('monthYearPrev');
   var nextBtn = document.getElementById('monthYearNext');
@@ -3608,7 +3607,7 @@ function importCSV() {
           }
         } else {
           // Unsupported platform — reject clearly
-          showToast('This file is not a Trading 212 CSV. Currently only Trading 212 exports are supported. More platforms coming soon.', 'error');
+          showToast('This file is not a Trading 212 CSV. Currently only Trading 212 exports are supported.', 'error');
           return;
         }
 

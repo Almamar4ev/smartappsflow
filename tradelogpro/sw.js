@@ -15,7 +15,7 @@
 //   - Cache First for other static files inside /tradelogpro/ (fast, with a
 //     background network fallback that also refreshes the cache).
 
-const CACHE = 'tradelogpro-v4';
+const CACHE = 'tradelogpro-v5';
 
 // URLs are relative to /tradelogpro/, so they stay inside this app's scope.
 const ASSETS = [

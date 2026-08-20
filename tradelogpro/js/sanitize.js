@@ -288,5 +288,8 @@ function fmtPnlCompact(n) {
   else s = Math.round(v).toLocaleString('en-US');
   return sign + currSym() + s;
 }
+function plural(n, one, many) {
+  return n + ' ' + (n === 1 ? one : many);
+}
 
 // ==========================================================================
