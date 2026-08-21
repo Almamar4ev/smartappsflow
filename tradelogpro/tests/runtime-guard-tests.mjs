@@ -23,11 +23,11 @@ function extractFunction(src, name) {
   return src.slice(start, i);
 }
 
-const code = extractFunction(html, 'detectTradeLogRuntime') + '\nthis.detectTradeLogRuntime=detectTradeLogRuntime;';
+const code = extractFunction(html, 'detectAppRuntime') + '\nthis.detectAppRuntime=detectAppRuntime;';
 const sandbox = {};
 vm.createContext(sandbox);
 vm.runInContext(code, sandbox);
-const detect = sandbox.detectTradeLogRuntime;
+const detect = sandbox.detectAppRuntime;
 
 let passed = 0, failed = 0;
 function assert(name, condition) {
@@ -35,7 +35,7 @@ function assert(name, condition) {
   else { failed++; console.log('  ✗ ' + name); }
 }
 
-console.log('TradeLog Pro — runtime analytics guard tests\n');
+console.log('TradeMory — runtime analytics guard tests\n');
 
 assert('custom-domain web build allows analytics',
   detect({protocol:'https:',hostname:'smartappsflow.net'}, null).analyticsAllowed === true);

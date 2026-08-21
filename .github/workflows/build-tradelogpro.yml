@@ -1,4 +1,4 @@
-name: Build TradeLog Pro AAB
+name: Build TradeMory AAB
 
 on:
   # Trusted signing runs happen only on push to main (and manual dispatch).
@@ -63,7 +63,7 @@ jobs:
           cp manifest.json www/manifest.json
           cp sw.js www/sw.js
           # Icons are optional for now: copy only if present so the build does
-          # not fail before a TradeLog Pro icon has been added.
+          # not fail before a TradeMory icon has been added.
           [ -f icon-192.png ] && cp icon-192.png www/icon-192.png || echo "icon-192.png not present yet — skipping"
           [ -f icon-512.png ] && cp icon-512.png www/icon-512.png || echo "icon-512.png not present yet — skipping"
           curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js -o www/xlsx.full.min.js
@@ -81,7 +81,7 @@ jobs:
 
       - name: Init Capacitor
         run: |
-          npx cap init "TradeLog Pro" "com.tradelog.pro" --web-dir www
+          npx cap init "TradeMory" "com.tradelog.pro" --web-dir www
 
       - name: Add Android platform
         run: npx cap add android
@@ -118,7 +118,7 @@ jobs:
       # SIGNING_KEY secret is unbound or blank. tr strips any CR/LF/spaces that
       # break DER length parsing, then base64 --decode writes the raw bytes.
       # The keystore path is exported via GITHUB_ENV for the later steps.
-      # NOTE: TradeLog Pro uses its OWN dedicated Actions secrets
+      # NOTE: TradeMory uses its OWN dedicated Actions secrets
       # (TRADELOG_KEYSTORE_BASE64 / TRADELOG_KEYSTORE_PASSWORD /
       # TRADELOG_KEY_ALIAS / TRADELOG_KEY_PASSWORD), separate from Smart Loan's
       # shared KEYSTORE_* / KEY_* secrets, so the two apps never collide.

@@ -4,6 +4,7 @@
 function openDB(callback) {
   if (_db) { callback(_db); return; }
   try {
+    // Legacy DB name — changing it wipes on-device journals. Keep stable.
     var req = indexedDB.open('TradeLogPro', 2);
     req.onupgradeneeded = function(e) {
       var db = e.target.result;
