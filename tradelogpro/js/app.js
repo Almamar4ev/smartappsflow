@@ -653,7 +653,7 @@ function renderDashboard() {
     statCard('Net P&L', fmtPnl(netPnl), (netPnl >= 0 ? 'Profitable' : 'In drawdown') + (capital > 0 ? '  ' + (netPnl/capital*100 >= 0 ? '+' : '') + (netPnl/capital*100).toFixed(2) + '% of capital' : ''), pnlColor(netPnl)) +
     statCard('Win Rate', wr + '%', closed.length + ' closed trades', 'var(--blue)') +
     statCard('Total Trades', trades.length, plural(wins,'win','wins') + ' · ' + plural(losses,'loss','losses') + ' · ' + openCount + ' open', 'var(--blue)') +
-    statCard('Avg R:R', avgRr, 'Risk : Reward', 'var(--gold)') +
+    statCard('Avg Win/Loss', avgRr, 'Realized · closed trades', 'var(--gold)') +
     statCard('Brokerage Fees', fmtMoney(calcTotalFees(trades)), closed.length + ' closed trades', 'var(--red)') +
   '</div>' +
   '<div class="charts-row">' +
@@ -2654,8 +2654,23 @@ function psOutcomeBox(bal, totalRisk, totalReward) {
 }
 
 // P&L Calculator
+var _pnlCalcSide = 'Long';
+
+function setPnlCalcSide(side) {
+  _pnlCalcSide = side === 'Short' ? 'Short' : 'Long';
+  var longBtn = document.getElementById('pnl_side_long');
+  var shortBtn = document.getElementById('pnl_side_short');
+  if (longBtn) longBtn.classList.toggle('active', _pnlCalcSide === 'Long');
+  if (shortBtn) shortBtn.classList.toggle('active', _pnlCalcSide === 'Short');
+  calcPnlCalc();
+}
+
 function renderPnlCalc() {
-  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">' +
+  return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">' +
+    '<button id="pnl_side_long" type="button" class="ps-mode-btn' + (_pnlCalcSide === 'Long' ? ' active' : '') + '" onclick="setPnlCalcSide(\'Long\')">Long</button>' +
+    '<button id="pnl_side_short" type="button" class="ps-mode-btn' + (_pnlCalcSide === 'Short' ? ' active' : '') + '" onclick="setPnlCalcSide(\'Short\')">Short</button>' +
+  '</div>' +
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">' +
     '<div class="field"><label>Entry Price</label><input id="cl_entry" type="number" step="0.0001" placeholder="100.00" oninput="calcPnlCalc()"></div>' +
     '<div class="field"><label>Exit Price</label><input id="cl_exit" type="number" step="0.0001" placeholder="120.00" oninput="calcPnlCalc()"></div>' +
     '<div class="field"><label>Quantity / Shares</label><input id="cl_qty" type="number" step="0.0001" placeholder="10" oninput="calcPnlCalc()"></div>' +
@@ -2670,10 +2685,12 @@ function calcPnlCalc() {
   if (isNaN(entry) || isNaN(exit) || isNaN(qty) || qty <= 0 || entry <= 0) {
     el.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:8px">Enter valid values above</div>'; return;
   }
-  var delta = exit - entry;
+  var dir = _pnlCalcSide === 'Short' ? -1 : 1;
+  var delta = (exit - entry) * dir;
   var pnl   = delta * qty;
   var pct   = delta / entry * 100;
   el.innerHTML =
+    calcResultRow('Side', _pnlCalcSide, '') +
     calcResultRow('Price Change', (delta>=0?'+':'') + fmtN(Math.abs(delta)), 'color:' + pnlColor(delta)) +
     calcResultRow('% Change', (pct>=0?'+':'') + pct.toFixed(2) + '%', 'color:' + pnlColor(pct)) +
     calcResultRow('P&L', fmtPnl(pnl), 'color:' + pnlColor(pnl) + ';font-size:18px;font-weight:800');
@@ -3147,9 +3164,9 @@ function renderAnalytics() {
     // Summary stats
     '<div class="stats-row">' +
       statCard('Win Rate', wr + '%', plural(wins.length,'win','wins') + ' · ' + plural(losses.length,'loss','losses'), pnlColor(totalPnl)) +
-      statCard('Avg R:R', rr, 'Risk : Reward', 'var(--gold)') +
-      statCard('ROI', (roi>=0?'+':'') + roi + '%', 'Return on invested', pnlColor(totalPnl)) +
-      statCard('Profit Factor', pf, pf === '\u221e' ? 'No losses recorded' : (pf >= 1 ? 'Good: above 1.0' : 'Below 1.0'), pf === '\u221e' ? 'var(--green)' : (pf >= 1 ? 'var(--green)' : 'var(--red)')) +
+      statCard('Avg Win/Loss', rr, 'Realized · closed trades', 'var(--gold)') +
+      statCard('ROI', (roi>=0?'+':'') + roi + '%', 'On invested trade value', pnlColor(totalPnl)) +
+      statCard('Profit Factor', pf, pf === '\u221e' ? 'No losses · closed only' : (pf >= 1 ? 'Closed trades · above 1.0 is good' : 'Closed trades · below 1.0'), pf === '\u221e' ? 'var(--green)' : (pf >= 1 ? 'var(--green)' : 'var(--red)')) +
       statCard('Avg Win', fmtPnl(avgWin), 'Per winning trade', 'var(--green)') +
       statCard('Avg Loss', (avgLoss > 0 ? '-' : '') + fmtMoney(avgLoss), 'Per losing trade', avgLoss > 0 ? 'var(--red)' : 'var(--text3)') +
       statCard('Brokerage Fees', fmtMoney(calcTotalFees(closed)), 'Total fees paid', 'var(--red)') +

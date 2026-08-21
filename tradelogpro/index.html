@@ -609,25 +609,25 @@ setTimeout(function(){
       <div class="formula-card">
         <div class="formula-name">Win Rate</div>
         <div class="formula-formula">Win Rate = (Winning Trades ÷ Total Closed Trades) × 100</div>
-        <div class="formula-desc">Percentage of your trades that were profitable. 50%+ is generally considered good, but must be evaluated alongside R:R.</div>
+        <div class="formula-desc">Percentage of closed trades that were profitable. Evaluate it together with Avg Win/Loss (realized), not alone.</div>
       </div>
 
       <div class="formula-card">
-        <div class="formula-name">Risk : Reward (R:R)</div>
-        <div class="formula-formula">R:R = Average Win ÷ Average Loss</div>
-        <div class="formula-desc">How much you gain vs how much you risk. A ratio of 2:1 means you make $2 for every $1 you risk. Even a 40% win rate can be profitable with a good R:R.</div>
+        <div class="formula-name">Avg Win/Loss (Realized)</div>
+        <div class="formula-formula">Avg Win/Loss = Average Win ÷ Average Loss</div>
+        <div class="formula-desc">From closed trades only: average winning P&amp;L divided by average losing P&amp;L (absolute). This is a realized outcome ratio — not the planned Risk:Reward from Entry / Stop / Target on a single trade. A value of 2 means your average win was about twice your average loss.</div>
       </div>
 
       <div class="formula-card">
         <div class="formula-name">Profit Factor</div>
         <div class="formula-formula">Profit Factor = Gross Profit ÷ Gross Loss</div>
-        <div class="formula-desc">Above 1.0 = profitable system. Above 1.5 = good. Above 2.0 = excellent. Below 1.0 = losing money overall.</div>
+        <div class="formula-desc">Closed trades only (realized). Gross Profit = sum of winning trade P&amp;L; Gross Loss = absolute sum of losing trade P&amp;L. Open/unrealized P&amp;L is excluded. Above 1.0 = net profitable sample; very high values usually mean few or tiny losses in the period.</div>
       </div>
 
       <div class="formula-card">
-        <div class="formula-name">ROI (Return on Investment)</div>
+        <div class="formula-name">ROI on Invested Trade Value</div>
         <div class="formula-formula">ROI = (Net P&amp;L ÷ Total Invested) × 100</div>
-        <div class="formula-desc">How much you earned relative to what you invested. Expressed as a percentage.</div>
+        <div class="formula-desc">Net P&amp;L of closed trades divided by the capital tied up in those trades (invested trade value). This is not the same as account return on deposits/withdrawals or starting capital shown on the Dashboard.</div>
       </div>
 
       <div class="formula-card">
@@ -653,8 +653,8 @@ setTimeout(function(){
 
       <div class="formula-card">
         <div class="formula-name">P&amp;L Calculator</div>
-        <div class="formula-formula">P&amp;L = (Exit − Entry) × Qty<br>% Change = ((Exit − Entry) ÷ Entry) × 100</div>
-        <div class="formula-desc">Quick profit/loss for a long position. For a short trade, swap the values (enter your sell price as Entry and buy-back price as Exit). Fees are not included here — see the trade's full Net P&amp;L in its details.</div>
+        <div class="formula-formula">Long: P&amp;L = (Exit − Entry) × Qty<br>Short: P&amp;L = (Entry − Exit) × Qty<br>% Change uses the same direction</div>
+        <div class="formula-desc">Quick profit/loss estimate. Choose Long or Short in the calculator. Fees are not included here — see a trade's full Net P&amp;L in its details.</div>
       </div>
 
       <div class="formula-card">

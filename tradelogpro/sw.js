@@ -7,7 +7,7 @@
 //   - Network First for navigations and index.html
 //   - Cache First for other static files inside /trademory/
 
-const CACHE = 'trademory-v1';
+const CACHE = 'trademory-v2';
 
 const ASSETS = [
   './',
