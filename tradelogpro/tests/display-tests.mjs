@@ -36,7 +36,7 @@ function assert(name, condition) {
   else { failed++; console.log('  ✗ ' + name); }
 }
 
-console.log('TradeMory — report display formatting tests\n');
+console.log('Edgeory — report display formatting tests\n');
 
 // fmtReportNum: thousands separators + 2 decimals, keeps sign
 assert('fmtReportNum(100000) => "100,000.00"', fmtReportNum(100000) === '100,000.00');

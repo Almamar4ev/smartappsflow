@@ -22,7 +22,7 @@ function assert(name, condition) {
   else { failed++; console.log('  ✗ ' + name); }
 }
 
-console.log('TradeMory — PWA / service-worker scope tests\n');
+console.log('Edgeory — PWA / service-worker scope tests\n');
 
 // 1. Service worker is registered with the relative path ./sw.js
 assert("service worker is registered with relative path './sw.js'",
@@ -49,7 +49,7 @@ assert("manifest scope is '/tradelogpro/'", manifest.scope === '/tradelogpro/');
 // 2b. PWA icons exist on disk and are referenced by the manifest + apple-touch
 assert('icon-192.png and icon-512.png exist',
   existsSync(join(root, 'icon-192.png')) && existsSync(join(root, 'icon-512.png')));
-assert('manifest icons point at TradeMory icon files',
+assert('manifest icons point at Edgeory icon files',
   Array.isArray(manifest.icons) &&
   manifest.icons.some(function (i) { return i.src === 'icon-192.png' && i.sizes === '192x192'; }) &&
   manifest.icons.some(function (i) { return i.src === 'icon-512.png' && i.sizes === '512x512'; }));
@@ -66,8 +66,10 @@ assert('service worker limits fetch handling to registration.scope',
   sw.includes('self.registration.scope'));
 
 // 3c. Service worker only clears its own caches (no cross-app cache deletion)
-assert("service worker deletes 'trademory-' caches (and legacy tradelogpro-)",
-  sw.includes("indexOf('trademory-')") && sw.includes("indexOf('tradelogpro-')"));
+assert("service worker deletes 'edgeory-' caches (and legacy trademory-/tradelogpro-)",
+  sw.includes("indexOf('edgeory-')") &&
+  sw.includes("indexOf('trademory-')") &&
+  sw.includes("indexOf('tradelogpro-')"));
 
 // 4. Navigation requests use Network First: a fetch() is attempted first and
 //    the cache is only consulted in the .catch() offline fallback.

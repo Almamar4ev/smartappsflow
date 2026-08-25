@@ -1,6 +1,6 @@
 {
-  "name": "TradeMory",
-  "short_name": "TradeMory",
+  "name": "Edgeory",
+  "short_name": "Edgeory",
   "description": "Trading journal and performance tracker.",
   "start_url": "/tradelogpro/",
   "scope": "/tradelogpro/",

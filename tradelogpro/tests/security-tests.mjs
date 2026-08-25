@@ -44,7 +44,7 @@ function assert(name, condition) {
   else { failed++; console.log('  ✗ ' + name); }
 }
 
-console.log('TradeMory — backup/security sanitizer tests\n');
+console.log('Edgeory — backup/security sanitizer tests\n');
 
 const rawState = {
   accounts: [{

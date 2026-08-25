@@ -1,10 +1,10 @@
 // ==========================================================================
 // BRAND (single source — keep in sync with manifest / Capacitor appName)
 // ==========================================================================
-var APP_NAME = 'TradeMory';
+var APP_NAME = 'Edgeory';
 var APP_TAGLINE = 'Your Trading Journal';
 var APP_VERSION = '1.0';
-var APP_STORE_TITLE = 'TradeMory: Trading Journal';
+var APP_STORE_TITLE = 'Edgeory: Trading Journal';
 var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 
 // ==========================================================================

@@ -35,7 +35,7 @@ function assert(name, condition) {
   else { failed++; console.log('  ✗ ' + name); }
 }
 
-console.log('TradeMory — runtime analytics guard tests\n');
+console.log('Edgeory — runtime analytics guard tests\n');
 
 assert('custom-domain web build allows analytics',
   detect({protocol:'https:',hostname:'smartappsflow.net'}, null).analyticsAllowed === true);

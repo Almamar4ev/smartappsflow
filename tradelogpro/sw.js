@@ -1,13 +1,13 @@
-// Service Worker — TradeMory ONLY.
+// Service Worker — Edgeory ONLY.
 //
-// Registered from ./sw.js inside /trademory/. Scope is that directory only.
+// Registered from ./sw.js inside /tradelogpro/. Scope is that directory only.
 // It must never cache or intercept the site root or other SmartAppsFlow apps.
 //
 // Caching strategy:
 //   - Network First for navigations and index.html
-//   - Cache First for other static files inside /trademory/
+//   - Cache First for other static files inside /tradelogpro/
 
-const CACHE = 'trademory-v2';
+const CACHE = 'edgeory-v1';
 
 const ASSETS = [
   './',
@@ -38,8 +38,11 @@ self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(keys.map(function (key) {
-        // Clear this app's caches + legacy TradeLog Pro cache prefix.
-        var isOurs = key.indexOf('trademory-') === 0 || key.indexOf('tradelogpro-') === 0;
+        // Clear this app's caches + legacy TradeMory / TradeLog Pro prefixes.
+        var isOurs =
+          key.indexOf('edgeory-') === 0 ||
+          key.indexOf('trademory-') === 0 ||
+          key.indexOf('tradelogpro-') === 0;
         if (isOurs && key !== CACHE) {
           return caches.delete(key);
         }

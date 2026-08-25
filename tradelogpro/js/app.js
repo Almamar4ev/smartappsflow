@@ -2335,7 +2335,7 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'Trades');
   var date = today();
   var b64 = XLSX.write(wb, {type:'base64', bookType:'xlsx'});
-  saveFileSmart('trademory-report-' + date + '.xlsx', b64, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  saveFileSmart('edgeory-report-' + date + '.xlsx', b64, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   closeModal('reportModal');
 }
 
@@ -2497,7 +2497,7 @@ function exportPDF() {
 
   var date = today();
   var b64 = doc.output('datauristring').split('base64,').pop();
-  saveFileSmart('trademory-report-' + date + '.pdf', b64, 'application/pdf');
+  saveFileSmart('edgeory-report-' + date + '.pdf', b64, 'application/pdf');
   closeModal('reportModal');
 }
 
@@ -2527,7 +2527,7 @@ function downloadBackup(includePhotos) {
     var json = JSON.stringify(backup, null, 2);
     var date = new Date().toISOString().split('T')[0];
     var b64 = btoa(unescape(encodeURIComponent(json)));
-    saveFileSmart('trademory-backup-' + (includePhotos?'full':'trades') + '-' + date + '.json', b64, 'application/json');
+    saveFileSmart('edgeory-backup-' + (includePhotos?'full':'trades') + '-' + date + '.json', b64, 'application/json');
   } catch(e) { showToast('Backup failed: ' + e.message, 'error'); }
 }
 function backupData() {

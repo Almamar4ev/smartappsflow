@@ -1,0 +1,54 @@
+Edgeory — Play Console listing copy (EN)
+========================================
+Canonical store text for Google Play. Update this file when the listing changes,
+then paste into Play Console (and keep store-graphics/play-listing in sync).
+
+App name (max 30)
+-----------------
+Edgeory: Trading Journal
+
+Short description (max 80)
+--------------------------
+Log trades, track P&L, and sharpen your edge with built-in trading calculators.
+
+Full description
+----------------
+Edgeory is an offline-first trading journal for serious traders.
+
+Track every trade across multiple accounts. See net P&L, win rate, average win/loss, profit factor, ROI, and equity curve in one place — without creating an account or sending your journal to the cloud.
+
+WHAT YOU GET
+• Trade log with wins, losses, and open positions
+• Dashboard KPIs: balance, net P&L, win rate, avg win/loss, fees
+• P&L calendar — green and red days at a glance
+• Analytics: streaks, best/worst trades, ROI, profit factor
+• Daily journal for emotions, notes, and discipline tags
+• Built-in trading calculators: P&L, position size, compound growth, stock average
+• Multi-account management with backup and restore
+• Export reports to Excel or PDF
+• Import trades from Trading 212 CSV
+
+BUILT FOR FOCUS
+Edgeory runs on your device. Your trades, notes, and photos stay local. Use it as a stock trade log for swing trading or day-to-day journaling — then review performance when the market is closed.
+
+IMPORTANT
+Edgeory is a personal journal and analytics tool only. It does not provide investment advice, trading signals, or brokerage services. Past performance metrics do not guarantee future results.
+
+Start logging. Know your edge. Trade with a clearer memory of what worked.
+
+Developer: SmartAppsFlow
+Support: smartappsflow@gmail.com
+Privacy: https://smartappsflow.net/tradelogpro/privacy-policy.html
+
+Website (Store settings)
+------------------------
+https://smartappsflow.net
+
+Privacy policy URL
+------------------
+https://smartappsflow.net/tradelogpro/privacy-policy.html
+
+Related assets
+--------------
+Graphics: store-graphics/play-listing/
+Copy mirror: store-graphics/play-listing/PLAY_LISTING_COPY.txt

@@ -1,5 +1,5 @@
 // ==========================================================================
-// TradeMory — automated financial engine tests
+// Edgeory — automated financial engine tests
 // ==========================================================================
 // This file loads the REAL financial functions out of ../js/app.js (so the
 // tests always run against shipped code, never a copy) and exercises the
@@ -96,7 +96,7 @@ function T(o) {
   }, o);
 }
 
-console.log('TradeMory — financial engine tests\n');
+console.log('Edgeory — financial engine tests\n');
 
 // 1) Simple long win.
 test('1. Long win: buy 10@100, sell 10@110, no fees',
