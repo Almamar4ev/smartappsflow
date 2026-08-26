@@ -77,7 +77,7 @@ function _sanTrade(t) {
   return {
     id: _sid(t.id, 'tr_'),
     accountId: _sid(t.accountId, 'acc_'),
-    ticker: _sstr(t.ticker, 20),
+    ticker: safeTicker(t.ticker),
     type: _schoice(t.type, ['', 'Day Trade', 'Swing Trade', 'Scalp', 'Position', 'Options', 'Futures', 'Crypto'], ''),
     direction: (t.direction === 'Short') ? 'Short' : 'Long',
     status: (t.status === 'closed') ? 'closed' : 'open',
@@ -128,18 +128,41 @@ function _sanAccount(a) {
 }
 function sanitizeState(loaded) {
   loaded = loaded || {};
+  var idMap = {};
+  var accounts = (Array.isArray(loaded.accounts) ? loaded.accounts : []).map(function(a){
+    var rawId = a && a.id != null ? String(a.id) : '';
+    var san = _sanAccount(a);
+    if (rawId && san.id !== rawId) idMap[rawId] = san.id;
+    return san;
+  }).slice(0, 1000);
+  var accIds = {};
+  accounts.forEach(function(a){ accIds[a.id] = 1; });
+  var trades = (Array.isArray(loaded.trades) ? loaded.trades : []).map(function(t){
+    var rawAcc = t && t.accountId != null ? String(t.accountId) : '';
+    var san = _sanTrade(t);
+    // Keep trade→account links if an unsafe account id was rewritten.
+    if (idMap[rawAcc]) san.accountId = idMap[rawAcc];
+    else if (accIds[rawAcc]) san.accountId = rawAcc;
+    else if (!accIds[san.accountId]) san.accountId = accounts.length ? accounts[0].id : san.accountId;
+    return san;
+  }).slice(0, 100000);
   var rawActiveId = _sstr(loaded.activeAccountId, 64);
+  if (idMap[rawActiveId]) rawActiveId = idMap[rawActiveId];
   var out = {
-    accounts: (Array.isArray(loaded.accounts) ? loaded.accounts : []).map(_sanAccount).slice(0, 1000),
-    trades: (Array.isArray(loaded.trades) ? loaded.trades : []).map(_sanTrade).slice(0, 100000),
-    activeAccountId: (ID_RE.test(rawActiveId) ? rawActiveId : ''),
+    accounts: accounts,
+    trades: trades,
+    activeAccountId: (ID_RE.test(rawActiveId) && accIds[rawActiveId]) ? rawActiveId : '',
     updatedAt: _siso(loaded.updatedAt)
   };
   if (loaded.schemaVersion != null) out.schemaVersion = _sstr(loaded.schemaVersion, 20);
-  // Keep activeAccountId valid; fall back to the first account.
-  var ids = {}; out.accounts.forEach(function(a){ ids[a.id] = 1; });
-  if (!ids[out.activeAccountId]) out.activeAccountId = out.accounts.length ? out.accounts[0].id : '';
+  if (!out.activeAccountId) out.activeAccountId = accounts.length ? accounts[0].id : '';
   return out;
+}
+
+/** Normalize ticker for storage/display: uppercase A–Z / 0–9 / . _ - only, max 20. */
+function safeTicker(v) {
+  var s = String(v == null ? '' : v).toUpperCase().replace(/[^A-Z0-9._-]/g, '');
+  return s.length > 20 ? s.slice(0, 20) : s;
 }
 
 function _sanPosCalc(e) {
@@ -184,7 +207,7 @@ function sanitizeTemplates(value) {
   return arr.map(function(t){
     t = t || {};
     return {
-      id: _sid(t.id, 'tpl_'), name: _sstr(t.name, 100), ticker: _sstr(t.ticker, 20),
+      id: _sid(t.id, 'tpl_'), name: _sstr(t.name, 100), ticker: safeTicker(t.ticker),
       type: _schoice(t.type, ['', 'Day Trade', 'Swing Trade', 'Scalp', 'Position', 'Options', 'Futures', 'Crypto'], ''),
       direction: (t.direction === 'Short') ? 'Short' : 'Long',
       fees: _sstr(t.fees, 20), fees_mode: (t.fees_mode === '$') ? '$' : '%', risk: _sstr(t.risk, 20)
@@ -227,9 +250,12 @@ function sanitizePrefs(value) {
   };
 }
 
-// Only allow app-generated data-URI images (blocks javascript:/http injections via tampered backups)
+// Only allow app-generated data-URI images (blocks javascript:/http injections via tampered backups).
+// Cap size so a hostile backup cannot fill storage (upload path already recompresses).
+var SAFE_PHOTO_MAX = 1200000; // ~1.2MB characters
 function safePhoto(src) {
-  return (typeof src === 'string' && /^data:image\/(jpeg|png|webp|gif);base64,/.test(src)) ? src : '';
+  if (typeof src !== 'string' || src.length > SAFE_PHOTO_MAX) return '';
+  return /^data:image\/(jpeg|png|webp|gif);base64,/.test(src) ? src : '';
 }
 function fmtMoney(n) {
   var abs = Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});

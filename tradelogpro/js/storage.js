@@ -37,10 +37,31 @@ function save() {
   });
 }
 
+function applyLoadedState(parsed) {
+  if (!parsed || typeof parsed !== 'object') return false;
+  var cleaned = sanitizeState(parsed);
+  if (!cleaned.accounts || !cleaned.accounts.length) return false;
+  state = cleaned;
+  state.trades = state.trades || [];
+  state.accounts = state.accounts || [];
+  state.activeAccountId = state.activeAccountId || (state.accounts[0] && state.accounts[0].id) || null;
+  state.trades.forEach(function(t){
+    if (!t.fees_mode) t.fees_mode = '%';
+    if (!t.original_qty) t.original_qty = t.qty;
+    if (!t.add_buys) t.add_buys = [];
+    if (!t.partial_closes) t.partial_closes = [];
+    migrateBasis(t);
+  });
+  return true;
+}
+
 function loadFromDB(callback) {
   openDB(function(db) {
     if (!db) {
-      try { var ls = localStorage.getItem('tl_v3'); if (ls) state = JSON.parse(ls) || state; } catch(e) {}
+      try {
+        var ls = localStorage.getItem('tl_v3');
+        if (ls) applyLoadedState(JSON.parse(ls));
+      } catch(e) {}
       callback(); return;
     }
     try {
@@ -55,12 +76,14 @@ function loadFromDB(callback) {
         // immediately mirror the winner into BOTH stores so they can't
         // drift until the next manual save.
         var needSync = false;
+        var winner = null;
         if (idb && lsv) {
           var lsStamp = lsv.updatedAt || '', idbStamp = idb.updatedAt || '';
-          state = (lsStamp > idbStamp) ? lsv : idb;
+          winner = (lsStamp > idbStamp) ? lsv : idb;
           if (lsStamp !== idbStamp) needSync = true;
-        } else if (idb) { state = idb; needSync = true; }
-        else if (lsv) { state = lsv; needSync = true; }
+        } else if (idb) { winner = idb; needSync = true; }
+        else if (lsv) { winner = lsv; needSync = true; }
+        if (winner) applyLoadedState(winner);
         if (needSync) save();
         callback();
       };

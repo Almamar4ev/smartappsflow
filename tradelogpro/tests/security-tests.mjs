@@ -25,12 +25,12 @@ function extractFunction(src, name) {
 
 const names = [
   '_sid','_sstr','_snum','_sdate','_siso','_schoice','_parseMaybeJson',
+  'safeTicker','safePhoto',
   '_sanEvent','_sanTrade','_sanAccount','sanitizeState',
   '_sanPosCalc','_sanCompCalc','_sanAvgCalc','sanitizeSavedCalcs',
-  'sanitizeTemplates','sanitizeJournals','sanitizeProfile','sanitizeBenchmark','sanitizePrefs',
-  'safePhoto'
+  'sanitizeTemplates','sanitizeJournals','sanitizeProfile','sanitizeBenchmark','sanitizePrefs'
 ];
-let code = 'var ID_RE = /^[A-Za-z0-9_.-]+$/;\n';
+let code = 'var ID_RE = /^[A-Za-z0-9_.-]+$/;\nvar SAFE_PHOTO_MAX = 1200000;\n';
 for (const name of names) code += extractFunction(html, name) + '\n';
 code += '\nthis.api={' + names.join(',') + '};';
 const sandbox = {};
@@ -112,6 +112,32 @@ assert('invalid benchmark is rejected', api.sanitizeBenchmark({basePrice:'<x>'})
 assert('valid benchmark is retained', api.sanitizeBenchmark({basePrice:5000,savedAt:'2026-07-17T00:00:00.000Z'}).basePrice === 5000);
 assert('preferences are restricted to allowed values', api.sanitizePrefs({theme:'evil',showCurrency:'evil'}).theme === 'dark' && api.sanitizePrefs({theme:'evil',showCurrency:'evil'}).showCurrency === 'on');
 assert('profile fields are clamped', api.sanitizeProfile({name:'x'.repeat(100)}).name.length === 80);
+
+assert('safeTicker strips markup and lowercases', api.safeTicker(' aa<img> ') === 'AAIMG');
+assert('safeTicker clamps length', api.safeTicker('ABCDEFGHIJKLMNOPQRSTUVWXYZ').length === 20);
+assert('safePhoto rejects oversized data URI', api.safePhoto('data:image/png;base64,' + 'A'.repeat(1300000)) === '');
+
+const remap = api.sanitizeState({
+  accounts:[{id:"acc';alert(1)//", name:'Poison', startingCapital:100, transactions:[]}],
+  trades:[{id:'tr_ok', accountId:"acc';alert(1)//", ticker:'BRK.B', type:'Swing Trade', direction:'Long', status:'open',
+    entry:10, qty:1, original_qty:1, entry_date:'2026-01-01', fees:'0', fees_mode:'$', notes:'', photos:[], add_buys:[], partial_closes:[]}],
+  activeAccountId:"acc';alert(1)//"
+});
+assert('unsafe account id remapped to safe id', /^[A-Za-z0-9_.-]+$/.test(remap.accounts[0].id) && remap.accounts[0].id.indexOf("'") < 0);
+assert('trade accountId follows remapped account', remap.trades[0].accountId === remap.accounts[0].id);
+assert('activeAccountId follows remapped account', remap.activeAccountId === remap.accounts[0].id);
+assert('legitimate BRK.B ticker preserved', remap.trades[0].ticker === 'BRK.B');
+
+const keep = api.sanitizeState({
+  accounts:[{id:'acc_1730000000000', name:'Main', startingCapital:1000, transactions:[{id:'1730000000001', type:'deposit', amount:100, date:'2026-01-01'}]}],
+  trades:[{id:'tr_1730000000002', accountId:'acc_1730000000000', ticker:'AAPL', type:'Day Trade', direction:'Long', status:'open',
+    entry:100, qty:5, original_qty:5, entry_date:'2026-01-02', fees:'1', fees_mode:'%', notes:'hello', photos:[], add_buys:[], partial_closes:[], createdAt:'2026-01-02T00:00:00.000Z'}],
+  activeAccountId:'acc_1730000000000', updatedAt:'2026-01-02T00:00:00.000Z', schemaVersion:3
+});
+assert('normal account id preserved on load sanitize', keep.accounts[0].id === 'acc_1730000000000');
+assert('normal trade id preserved on load sanitize', keep.trades[0].id === 'tr_1730000000002');
+assert('normal trade→account link preserved', keep.trades[0].accountId === 'acc_1730000000000');
+assert('trade notes preserved', keep.trades[0].notes === 'hello');
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);

@@ -1647,7 +1647,7 @@ function onTickerInput(input) {
   if (!_tickerMatches.length) { hideTickerSuggest(); return; }
   var html = '';
   _tickerMatches.forEach(function(s, i){
-    html += '<div class="ticker-chip" onmousedown="event.preventDefault()" onclick="pickTickerSuggest(' + i + ')">' + s + '</div>';
+    html += '<div class="ticker-chip" onmousedown="event.preventDefault()" onclick="pickTickerSuggest(' + i + ')">' + esc(s) + '</div>';
   });
   box.innerHTML = html;
   box.style.display = 'flex';
@@ -1778,7 +1778,7 @@ function removePendingPhoto(idx) {
 }
 
 function saveTradeModal() {
-  var ticker = document.getElementById('f_ticker').value.trim().toUpperCase();
+  var ticker = safeTicker(document.getElementById('f_ticker').value);
   var entry = parseFloat(document.getElementById('f_entry').value);
   var qty = parseFloat(document.getElementById('f_qty').value);
   if (!ticker) { showToast('Please enter a symbol/ticker', 'error'); return; }
@@ -2567,11 +2567,7 @@ function restoreData() {
         if (!raw || !Array.isArray(raw.accounts) || !Array.isArray(raw.trades)) { showToast('Invalid backup file', 'error'); return; }
         var loaded = sanitizeState(raw);
         if (!window.confirm('This will replace ALL current data. Continue?')) return;
-        state = loaded;
-        state.trades.forEach(function(t){
-          if (!t.original_qty) t.original_qty = t.qty;
-          migrateBasis(t);
-        });
+        if (!applyLoadedState(loaded)) { showToast('Invalid backup file', 'error'); return; }
         if (backup.savedCalcs) {
           var cleanCalcs = sanitizeSavedCalcs(backup.savedCalcs);
           try { localStorage.setItem('tl_pos_calcs', JSON.stringify(cleanCalcs.pos)); } catch(e) {}
@@ -3383,12 +3379,12 @@ function renderDurationStats(closed) {
         '<div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center">' +
           '<div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;white-space:nowrap">LONGEST</div>' +
           '<div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--gold)">' + fmtDuration(maxDays) + '</div>' +
-          '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (longestTrade ? longestTrade.ticker : '') + '</div>' +
+          '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (longestTrade ? esc(longestTrade.ticker) : '') + '</div>' +
         '</div>' +
         '<div style="background:var(--surface2);border-radius:8px;padding:12px;text-align:center;display:flex;flex-direction:column;align-items:center">' +
           '<div style="font-size:9px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;white-space:nowrap">SHORTEST</div>' +
           '<div style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--green)">' + fmtDuration(minDays) + '</div>' +
-          '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (shortestTrade ? shortestTrade.ticker : '') + '</div>' +
+          '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (shortestTrade ? esc(shortestTrade.ticker) : '') + '</div>' +
         '</div>' +
       '</div>' +
     '</div></div>';
@@ -3523,11 +3519,13 @@ function importCSV() {
   input.type = 'file'; input.accept = '.csv';
   input.onchange = function(e) {
     var file = e.target.files[0]; if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { showToast('CSV file too large (max 8MB)', 'error'); return; }
     var reader = new FileReader();
     reader.onload = function(ev) {
       try {
         var lines = ev.target.result.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
         if (lines.length < 2) { showToast('CSV appears empty', 'error'); return; }
+        if (lines.length > 20001) { showToast('CSV too many rows (max 20,000 trades)', 'error'); return; }
 
         function parseCSVLine(line) {
           var result = [], cur = '', inQ = false;
@@ -3582,7 +3580,7 @@ function importCSV() {
             var row = parseCSVLine(lines[i]);
             if (!row || row.length < 4) continue;
             var action  = getCol(row, ['action']).toLowerCase();
-            var ticker  = getCol(row, ['ticker']).toUpperCase();
+            var ticker  = safeTicker(getCol(row, ['ticker']));
             var shares  = parseFloat(getCol(row, ['no. of shares']));
             var price   = parseFloat(getCol(row, ['price / share', 'price/share', 'price per share']));
             var dateStr = normDate(getCol(row, ['time', 'date', 'datetime']));
@@ -3705,7 +3703,7 @@ function confirmCSVImport() {
   parsed.forEach(function(t, i) {
     state.trades.unshift({
       id:'tr_csv_'+Date.now()+'_'+i, accountId:accId,
-      ticker:t.ticker, direction:t.dir, type:'', status:t.status,
+      ticker:safeTicker(t.ticker), direction:t.dir, type:'', status:t.status,
       entry_date:t.entryDate, exit_date:t.exitDate,
       entry:t.entry, exit:t.exit, qty:t.qty, original_qty:t.qty,
       fees:t.fees, fees_mode:'$', notes:'Imported from CSV',
@@ -3898,27 +3896,14 @@ function initApp() {
   // Apply theme
   try { applyTheme(localStorage.getItem('tl_theme') || 'dark'); } catch(e) {}
 
-  // Load state from localStorage synchronously
+  // Load state from localStorage synchronously (always sanitize — IDs flow into onclick).
   try {
     var keys = ['tl_v3', 'tl_state_v2', 'tl_state'];
     for (var k = 0; k < keys.length; k++) {
       var saved = localStorage.getItem(keys[k]);
       if (saved) {
         var parsed = JSON.parse(saved);
-        if (parsed && parsed.accounts && parsed.accounts.length) {
-          state = parsed;
-          state.trades = state.trades || [];
-          state.accounts = state.accounts || [];
-          state.activeAccountId = state.activeAccountId || (state.accounts[0] && state.accounts[0].id) || null;
-          state.trades.forEach(function(t){
-            if (!t.fees_mode) t.fees_mode = '%';
-            if (!t.original_qty) t.original_qty = t.qty;
-            if (!t.add_buys) t.add_buys = [];
-            if (!t.partial_closes) t.partial_closes = [];
-            migrateBasis(t);
-          });
-          break;
-        }
+        if (applyLoadedState(parsed)) break;
       }
     }
   } catch(e) {}
