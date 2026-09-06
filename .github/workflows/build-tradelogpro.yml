@@ -79,20 +79,64 @@ jobs:
           curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-600-normal.woff2 -o www/fonts/dm-sans-600.woff2
           curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-700-normal.woff2 -o www/fonts/dm-sans-700.woff2
 
+      # Force a single JSON Capacitor config (same pattern as Smart Loan).
+      # Play Console app is registered as com.tradelog.pro — any mismatch
+      # rejects the AAB with "needs to have the package name com.tradelog.pro".
       - name: Init Capacitor
         run: |
-          npx cap init "Edgeory" "com.tradelog.pro" --web-dir www
+          npx cap init "Edgeory" "com.tradelog.pro" --web-dir www || true
+          rm -f capacitor.config.ts capacitor.config.js
+          cat > capacitor.config.json <<'CFGEOF'
+          {
+            "appId": "com.tradelog.pro",
+            "appName": "Edgeory",
+            "webDir": "www",
+            "android": {
+              "backgroundColor": "#0c0f1a"
+            },
+            "plugins": {
+              "SplashScreen": {
+                "launchShowDuration": 1500,
+                "backgroundColor": "#0c0f1a",
+                "showSpinner": false
+              }
+            }
+          }
+          CFGEOF
 
       - name: Add Android platform
         run: npx cap add android
 
-      - name: Update SDK and version
+      # Capacitor 6's default AGP cannot compile against android-36.
+      # Same bump as Smart Loan: AGP 8.7.2 + Gradle 8.9.
+      - name: Upgrade Android Gradle Plugin + Gradle for compileSdk 36
         run: |
+          set -e
+          sed -i "s#com.android.tools.build:gradle:[0-9.]*#com.android.tools.build:gradle:8.7.2#" android/build.gradle
+          sed -i "s#gradle-[0-9.]*-\(all\|bin\).zip#gradle-8.9-\1.zip#" android/gradle/wrapper/gradle-wrapper.properties
+          echo "AGP:";    grep "com.android.tools.build:gradle" android/build.gradle
+          echo "Gradle:"; grep distributionUrl android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Update SDK, version, and lock package name
+        run: |
+          set -e
           sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
-          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 35/' android/variables.gradle
-          sed -i 's/targetSdkVersion = .*/targetSdkVersion = 35/' android/variables.gradle
+          # Play Console (as of 2026) requires targetSdk >= 36 for new releases.
+          sed -i 's/compileSdkVersion = .*/compileSdkVersion = 36/' android/variables.gradle
+          sed -i 's/targetSdkVersion = .*/targetSdkVersion = 36/' android/variables.gradle
           sed -i "s/versionCode .*/versionCode ${GITHUB_RUN_NUMBER}/" android/app/build.gradle
           sed -i "s/versionName .*/versionName \"1.0.${GITHUB_RUN_NUMBER}\"/" android/app/build.gradle
+          # Capacitor usually sets these from appId; pin them explicitly so a
+          # wrong scaffold never reaches Play Console.
+          sed -i 's/applicationId .*/applicationId "com.tradelog.pro"/' android/app/build.gradle
+          sed -i 's/namespace .*/namespace "com.tradelog.pro"/' android/app/build.gradle
+          echo "=== SDK / applicationId / namespace ==="
+          grep -E 'minSdkVersion|compileSdkVersion|targetSdkVersion' android/variables.gradle
+          grep -E 'applicationId|namespace' android/app/build.gradle
+          grep -q 'compileSdkVersion = 36' android/variables.gradle
+          grep -q 'targetSdkVersion = 36' android/variables.gradle
+          grep -q 'applicationId "com.tradelog.pro"' android/app/build.gradle
+          grep -q 'namespace "com.tradelog.pro"' android/app/build.gradle
 
       - name: Copy web assets
         run: npx cap sync android
@@ -102,6 +146,10 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew bundleRelease assembleRelease
+          echo "=== package from merged manifest ==="
+          grep -o 'package="[^"]*"' app/build/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml \
+            || grep -o 'package="[^"]*"' app/build/intermediates/merged_manifest/release/AndroidManifest.xml \
+            || true
 
       # -------------------------------------------------------------------
       # Signing section. Runs ONLY on trusted events (push / workflow_dispatch),

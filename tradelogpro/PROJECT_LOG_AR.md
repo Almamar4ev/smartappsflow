@@ -1,6 +1,6 @@
 # Trade Log Pro — سجل المشروع والأرشيف الشامل
 > وثيقة مرجعية لكل ما أُنجز، وما تبقّى، وملاحظات فنية لأي مبرمج (أو مساعد ذكاء اصطناعي) يكمل العمل.
-> آخر تحديث: 8 أغسطس 2026 (مواءمة مع ملف تسليم Claude + إضافة privacy-policy.html).
+> آخر تحديث: 6 سبتمبر 2026 (Play يقبل التوقيع؛ مطلوب targetSdk 36 في CI).
 >
 > أرشيف المستودع العام (مراحل كل التطبيقات): [`../REPO_STRUCTURE.md`](../REPO_STRUCTURE.md) — خصوصًا §0c.
 >
@@ -12,7 +12,7 @@
 
 ## 0) نظرة عامة سريعة
 
-- **التطبيق:** Trade Log Pro — دفتر تداول + أداء (حسابات، صفقات، يوميات، حاسبات، تحليلات، تقارير).
+- **التطبيق (العلامة):** Edgeory: Trading Journal — دفتر تداول + أداء (حسابات، صفقات، يوميات، حاسبات، تحليلات، تقارير). المجلد التقني ما زال `tradelogpro/`.
 - **المستودع:** `smartappsflow` (متعدد التطبيقات). كل التطبيق داخل مجلد `tradelogpro/`.
 - **مصدر التطبيق بعد المرحلة B:**
   - `index.html` — الهيكل + حارس Analytics المبكر
@@ -20,12 +20,22 @@
   - `js/state.js` · `icons.js` · `storage.js` · `theme.js` · `finance.js` · `sanitize.js` · `app.js`
     (سكربتات كلاسيكية بالترتيب؛ بدون ES Modules)
   الـ workflow ينسخها إلى `www/`؛ مكتبات XLSX / jsPDF / Chart.js تُحمَّل محليًا أو من CDN.
-- **الويب:** PWA على `smartappsflow.net/tradelogpro/` — كاش SW: `tradelogpro-v3` (بعد دمج المرحلة B).
-- **المتجر:** Android AAB عبر `.github/workflows/build-tradelogpro.yml` (push إلى main مقيّد بالمسار، أو workflow_dispatch).
-- **معرّف الحزمة:** `com.tradelog.pro`.
+- **الويب:** PWA على `smartappsflow.net/tradelogpro/` — كاش SW: `edgeory-v3` (بعد إعادة التسمية).
+- **المتجر:** Android AAB عبر `.github/workflows/build-tradelogpro.yml` (artifact: `Edgeory-release`).
+- **معرّف الحزمة:** `com.tradelog.pro` — **ثابت للأبد**.
 - **اللغة في الواجهة:** الإنجليزية (حاليًا).
 - **الثيمات:** dark (افتراضي)، light، green — مفتاح `tl_theme`.
 - **نموذج البنية في المستودع:** `tradelogpro/` هو الشكل المرجعي لأي تطبيق جديد (انظر `REPO_STRUCTURE.md` §1).
+
+### حالة التوقيع والنشر (6 سبتمبر 2026)
+
+- Upload key reset: **تم اعتماده** — الرفع بمفتاح `4F` / `my-key-alias` مقبول الآن.
+- Internal testing: الـ AAB (versionCode 29, targetSdk **35**) رُفض لأن Play يطلب **targetSdk ≥ 36**.
+- إصلاح CI: `compileSdkVersion` / `targetSdkVersion` → **36** + ترقية AGP 8.7.2 / Gradle 8.9 (مثل Smart Loan) في `build-tradelogpro.yml`.
+- بعد push لـ `main`: نزّل AAB جديد من artifact **`Edgeory-release`** وارفعه Internal testing.
+- الـ keystore: `signing.keystore` / alias `my-key-alias`؛ نسخة احتياطية على Google Drive (خارج git).
+- لاحقًا: Closed testing ≥12 مجرّب × 14 يوم قبل Production على الحساب الشخصي.
+- معلّق منتجًا: بيانات ديمو للقطات، إصلاحات لقطات، 5 تعديلات privacy، إكمال بقايا اسم TradeLog Pro → Edgeory.
 
 ### حالة المرحلة الحالية (7 أغسطس 2026)
 
