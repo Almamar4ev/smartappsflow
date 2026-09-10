@@ -2555,18 +2555,33 @@ function backupData() {
   openModal('backupModal');
 }
 function restoreData() {
-  var input = document.createElement('input'); input.type = 'file'; input.accept = '.json';
+  // Keep the <input> in the DOM until onchange fires. Removing it immediately
+  // after click() breaks file picking on Android WebView/Capacitor (silent no-op).
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json,text/json,text/plain';
+  input.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;opacity:0';
+  var cleanup = function() {
+    if (input.parentNode) input.parentNode.removeChild(input);
+  };
   input.onchange = function(e) {
-    var file = e.target.files[0]; if (!file) return;
+    var file = e.target.files && e.target.files[0];
+    cleanup();
+    if (!file) { showToast('No backup file selected', 'error'); return; }
     if (file.size > 60 * 1024 * 1024) { showToast('Backup file too large (max 60MB)', 'error'); return; }
+    showToast('Reading backup…', 'info');
     var reader = new FileReader();
+    reader.onerror = function() { showToast('Could not read backup file', 'error'); };
     reader.onload = function(ev) {
       try {
         var backup = JSON.parse(ev.target.result);
         var raw = backup.state || backup;
         if (!raw || !Array.isArray(raw.accounts) || !Array.isArray(raw.trades)) { showToast('Invalid backup file', 'error'); return; }
         var loaded = sanitizeState(raw);
-        if (!window.confirm('This will replace ALL current data. Continue?')) return;
+        if (!window.confirm('This will replace ALL current data. Continue?')) {
+          showToast('Restore cancelled', 'info');
+          return;
+        }
         if (!applyLoadedState(loaded)) { showToast('Invalid backup file', 'error'); return; }
         if (backup.savedCalcs) {
           var cleanCalcs = sanitizeSavedCalcs(backup.savedCalcs);
@@ -2594,7 +2609,8 @@ function restoreData() {
     };
     reader.readAsText(file);
   };
-  document.body.appendChild(input); input.click(); document.body.removeChild(input);
+  document.body.appendChild(input);
+  setTimeout(function(){ try { input.click(); } catch(err) { cleanup(); showToast('Could not open file picker', 'error'); } }, 0);
 }
 
 // ==========================================================================
@@ -3638,7 +3654,20 @@ function importCSV() {
     };
     reader.readAsText(file);
   };
-  document.body.appendChild(input); input.click(); document.body.removeChild(input);
+  input.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;opacity:0';
+  document.body.appendChild(input);
+  setTimeout(function(){
+    try { input.click(); }
+    catch(err) {
+      if (input.parentNode) input.parentNode.removeChild(input);
+      showToast('Could not open file picker', 'error');
+    }
+  }, 0);
+  // Do not removeChild here — Android WebView cancels the picker if input is detached early.
+  input.addEventListener('change', function once() {
+    input.removeEventListener('change', once);
+    setTimeout(function(){ if (input.parentNode) input.parentNode.removeChild(input); }, 0);
+  });
 }
 
 function showCSVPreview(parsed) {
