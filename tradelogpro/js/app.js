@@ -2554,6 +2554,58 @@ function backupData() {
     '</div><p style="font-size:11px;color:var(--text3);margin-top:14px;text-align:center">Save to Google Drive or send via WhatsApp</p>';
   openModal('backupModal');
 }
+function _readErrText(e) {
+  if (!e) return 'unknown';
+  if (e.message) return String(e.message);
+  if (e.name) return String(e.name);
+  return String(e);
+}
+
+// Android's system picker hands back content:// URIs that one reader can reject
+// while another succeeds, so every available path is tried before failing and
+// the collected errors are reported instead of a generic message.
+function readTextFromFile(file, onDone, onFail) {
+  var errors = [];
+  var step = 0;
+  var next = function() { step++; run(); };
+  var decode = function(res) {
+    return (typeof res === 'string') ? res : new TextDecoder('utf-8').decode(res);
+  };
+  var run = function() {
+    var current = step;
+    try {
+      if (current === 0) {
+        if (!file.arrayBuffer) return next();
+        file.arrayBuffer().then(function(buf) { onDone(decode(buf)); })
+          .catch(function(err) { errors.push('buffer: ' + _readErrText(err)); next(); });
+        return;
+      }
+      if (current === 1 || current === 2) {
+        var reader = new FileReader();
+        reader.onerror = function() {
+          errors.push((current === 1 ? 'text: ' : 'bytes: ') + _readErrText(reader.error));
+          next();
+        };
+        reader.onload = function(ev) { onDone(decode(ev.target.result)); };
+        if (current === 1) reader.readAsText(file); else reader.readAsArrayBuffer(file);
+        return;
+      }
+      if (current === 3) {
+        var url = URL.createObjectURL(file);
+        fetch(url).then(function(resp) { return resp.text(); })
+          .then(function(text) { URL.revokeObjectURL(url); onDone(text); })
+          .catch(function(err) { URL.revokeObjectURL(url); errors.push('blob: ' + _readErrText(err)); next(); });
+        return;
+      }
+      onFail(errors.join(' | ') || 'unknown');
+    } catch (err) {
+      errors.push('throw: ' + _readErrText(err));
+      if (current >= 3) onFail(errors.join(' | ')); else next();
+    }
+  };
+  run();
+}
+
 function restoreData() {
   // Android WebView/Capacitor: (1) do not detach <input> before click returns a file,
   // (2) do not detach before the File bytes are copied — removing early makes FileReader fail.
@@ -2603,19 +2655,15 @@ function restoreData() {
     var file = e.target.files && e.target.files[0];
     if (!file) { cleanup(); showToast('No backup file selected', 'error'); return; }
     if (file.size > 60 * 1024 * 1024) { cleanup(); showToast('Backup file too large (max 60MB)', 'error'); return; }
-    showToast('Reading backup…', 'info');
-    var finish = function(text) { cleanup(); applyBackupText(text); };
-    var failRead = function() { cleanup(); showToast('Could not read backup file', 'error'); };
-    if (file.arrayBuffer) {
-      file.arrayBuffer().then(function(buf) {
-        finish(new TextDecoder('utf-8').decode(buf));
-      }).catch(failRead);
-      return;
-    }
-    var reader = new FileReader();
-    reader.onerror = failRead;
-    reader.onload = function(ev) { finish(ev.target.result); };
-    reader.readAsText(file);
+    if (file.size === 0) { cleanup(); showToast('That file is empty (0 KB) — re-save the backup and try again', 'error'); return; }
+    showToast('Reading backup… (' + Math.round(file.size / 1024) + ' KB)', 'info');
+    readTextFromFile(file, function(text) {
+      cleanup();
+      applyBackupText(text);
+    }, function(details) {
+      cleanup();
+      showToast('Could not read backup file — ' + details, 'error');
+    });
   };
   document.body.appendChild(input);
   setTimeout(function(){ try { input.click(); } catch(err) { cleanup(); showToast('Could not open file picker', 'error'); } }, 0);
@@ -3959,10 +4007,44 @@ function initApp() {
     }
   } catch(e) {}
 
-  // Service worker
-  if ('serviceWorker' in navigator && window.location.protocol === 'https:') {
-    try { navigator.serviceWorker.register('./sw.js').catch(function(){}); } catch(e) {}
+  // Service worker — web only. Inside the native app the assets already ship
+  // with the APK, and a cached copy keeps serving the previous version's JS
+  // after an update, so any existing registration is removed there instead.
+  var isNativeApp = !!(window.Capacitor && (
+    (typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform()) ||
+    window.Capacitor.isNative
+  ));
+  if ('serviceWorker' in navigator) {
+    if (isNativeApp) {
+      try { purgeServiceWorkerInNativeApp(); } catch(e) {}
+    } else if (window.location.protocol === 'https:') {
+      try { navigator.serviceWorker.register('./sw.js').catch(function(){}); } catch(e) {}
+    }
   }
+}
+
+// Unregisters the web service worker and drops its caches inside the native
+// app, then reloads once so the current session stops running cached JS.
+function purgeServiceWorkerInNativeApp() {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    var had = regs.length > 0;
+    return Promise.all(regs.map(function(r){ return r.unregister(); })).then(function() {
+      if (!window.caches || !caches.keys) return had;
+      return caches.keys().then(function(keys) {
+        var ours = keys.filter(function(k) {
+          return k.indexOf('edgeory-') === 0 || k.indexOf('trademory-') === 0 || k.indexOf('tradelogpro-') === 0;
+        });
+        return Promise.all(ours.map(function(k){ return caches.delete(k); })).then(function() {
+          return had || ours.length > 0;
+        });
+      });
+    });
+  }).then(function(purged) {
+    if (!purged) return;
+    if (localStorage.getItem('tl_sw_purged') === '1') return;
+    localStorage.setItem('tl_sw_purged', '1');
+    window.location.reload();
+  }).catch(function(){});
 }
 
 if (document.readyState === 'loading') {
