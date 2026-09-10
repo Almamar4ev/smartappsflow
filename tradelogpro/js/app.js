@@ -2555,58 +2555,66 @@ function backupData() {
   openModal('backupModal');
 }
 function restoreData() {
-  // Keep the <input> in the DOM until onchange fires. Removing it immediately
-  // after click() breaks file picking on Android WebView/Capacitor (silent no-op).
+  // Android WebView/Capacitor: (1) do not detach <input> before click returns a file,
+  // (2) do not detach before the File bytes are copied — removing early makes FileReader fail.
   var input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.json,application/json,text/json,text/plain';
+  input.accept = '.json,application/json,text/json,text/plain,*/*';
   input.style.cssText = 'position:fixed;left:-9999px;width:1px;height:1px;opacity:0';
   var cleanup = function() {
     if (input.parentNode) input.parentNode.removeChild(input);
   };
+  var applyBackupText = function(text) {
+    try {
+      var backup = JSON.parse(text);
+      var raw = backup.state || backup;
+      if (!raw || !Array.isArray(raw.accounts) || !Array.isArray(raw.trades)) { showToast('Invalid backup file', 'error'); return; }
+      var loaded = sanitizeState(raw);
+      if (!window.confirm('This will replace ALL current data. Continue?')) {
+        showToast('Restore cancelled', 'info');
+        return;
+      }
+      if (!applyLoadedState(loaded)) { showToast('Invalid backup file', 'error'); return; }
+      if (backup.savedCalcs) {
+        var cleanCalcs = sanitizeSavedCalcs(backup.savedCalcs);
+        try { localStorage.setItem('tl_pos_calcs', JSON.stringify(cleanCalcs.pos)); } catch(e) {}
+        try { localStorage.setItem('tl_comp_calcs', JSON.stringify(cleanCalcs.comp)); } catch(e) {}
+        try { localStorage.setItem('tl_avg_calcs', JSON.stringify(cleanCalcs.avg)); } catch(e) {}
+      }
+      var lsPutJson = function(k,v){ if (v == null) return; try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+      if (backup.journals != null)  lsPutJson('tl_journals', sanitizeJournals(backup.journals));
+      if (backup.templates != null) lsPutJson('tl_templates', sanitizeTemplates(backup.templates));
+      if (backup.profile != null)   lsPutJson('tl_profile', sanitizeProfile(backup.profile));
+      if (backup.benchmark != null) {
+        var cleanBenchmark = sanitizeBenchmark(backup.benchmark);
+        if (cleanBenchmark) lsPutJson('tl_benchmark', cleanBenchmark);
+        else localStorage.removeItem('tl_benchmark');
+      }
+      if (backup.prefs) {
+        var cleanPrefs = sanitizePrefs(backup.prefs);
+        localStorage.setItem('tl_theme', cleanPrefs.theme);
+        localStorage.setItem('tl_show_currency', cleanPrefs.showCurrency);
+      }
+      save(); renderSidebar(); renderMain();
+      showToast('Backup restored successfully!', 'success');
+    } catch(err) { showToast('Restore failed: ' + err.message, 'error'); }
+  };
   input.onchange = function(e) {
     var file = e.target.files && e.target.files[0];
-    cleanup();
-    if (!file) { showToast('No backup file selected', 'error'); return; }
-    if (file.size > 60 * 1024 * 1024) { showToast('Backup file too large (max 60MB)', 'error'); return; }
+    if (!file) { cleanup(); showToast('No backup file selected', 'error'); return; }
+    if (file.size > 60 * 1024 * 1024) { cleanup(); showToast('Backup file too large (max 60MB)', 'error'); return; }
     showToast('Reading backup…', 'info');
+    var finish = function(text) { cleanup(); applyBackupText(text); };
+    var failRead = function() { cleanup(); showToast('Could not read backup file', 'error'); };
+    if (file.arrayBuffer) {
+      file.arrayBuffer().then(function(buf) {
+        finish(new TextDecoder('utf-8').decode(buf));
+      }).catch(failRead);
+      return;
+    }
     var reader = new FileReader();
-    reader.onerror = function() { showToast('Could not read backup file', 'error'); };
-    reader.onload = function(ev) {
-      try {
-        var backup = JSON.parse(ev.target.result);
-        var raw = backup.state || backup;
-        if (!raw || !Array.isArray(raw.accounts) || !Array.isArray(raw.trades)) { showToast('Invalid backup file', 'error'); return; }
-        var loaded = sanitizeState(raw);
-        if (!window.confirm('This will replace ALL current data. Continue?')) {
-          showToast('Restore cancelled', 'info');
-          return;
-        }
-        if (!applyLoadedState(loaded)) { showToast('Invalid backup file', 'error'); return; }
-        if (backup.savedCalcs) {
-          var cleanCalcs = sanitizeSavedCalcs(backup.savedCalcs);
-          try { localStorage.setItem('tl_pos_calcs', JSON.stringify(cleanCalcs.pos)); } catch(e) {}
-          try { localStorage.setItem('tl_comp_calcs', JSON.stringify(cleanCalcs.comp)); } catch(e) {}
-          try { localStorage.setItem('tl_avg_calcs', JSON.stringify(cleanCalcs.avg)); } catch(e) {}
-        }
-        var lsPutJson = function(k,v){ if (v == null) return; try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
-        if (backup.journals != null)  lsPutJson('tl_journals', sanitizeJournals(backup.journals));
-        if (backup.templates != null) lsPutJson('tl_templates', sanitizeTemplates(backup.templates));
-        if (backup.profile != null)   lsPutJson('tl_profile', sanitizeProfile(backup.profile));
-        if (backup.benchmark != null) {
-          var cleanBenchmark = sanitizeBenchmark(backup.benchmark);
-          if (cleanBenchmark) lsPutJson('tl_benchmark', cleanBenchmark);
-          else localStorage.removeItem('tl_benchmark');
-        }
-        if (backup.prefs) {
-          var cleanPrefs = sanitizePrefs(backup.prefs);
-          localStorage.setItem('tl_theme', cleanPrefs.theme);
-          localStorage.setItem('tl_show_currency', cleanPrefs.showCurrency);
-        }
-        save(); renderSidebar(); renderMain();
-        showToast('Backup restored successfully!', 'success');
-      } catch(err) { showToast('Restore failed: ' + err.message, 'error'); }
-    };
+    reader.onerror = failRead;
+    reader.onload = function(ev) { finish(ev.target.result); };
     reader.readAsText(file);
   };
   document.body.appendChild(input);
