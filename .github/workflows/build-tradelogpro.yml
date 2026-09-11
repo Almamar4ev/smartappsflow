@@ -144,9 +144,9 @@ jobs:
 
       # Without this the AAB ships Capacitor's placeholder launcher icon and
       # splash. icon-512.png is a full-bleed rounded square drawn on opaque
-      # black, so the black outside the rounded edge is flood-filled away
-      # first; the flat blue behind it matches the artwork edge so the system
-      # mask shows no seam.
+      # black, so the black outside the rounded edge is masked away first; the
+      # flat blue behind it matches the artwork edge so the system mask shows
+      # no seam.
       - name: Generate Android launcher icons and splash from icon-512.png
         run: |
           set -e
@@ -155,17 +155,16 @@ jobs:
           RES=android/app/src/main/res
           BG='#045DF1'
           test -f "$SRC"
-          # Flood-fill from the four corners only, so the pure black inside the
-          # artwork (the binder rings) is kept.
-          convert "$SRC" -resize 512x512! -alpha set -fuzz 20% -fill none \
-            -draw 'alpha 0,0 floodfill' \
-            -draw 'alpha 511,0 floodfill' \
-            -draw 'alpha 0,511 floodfill' \
-            -draw 'alpha 511,511 floodfill' \
-            logo.png
-          # Fail loudly rather than shipping a black-cornered icon.
-          test "$(convert logo.png -format '%[fx:round(p{0,0}.a)]' info:)" = "0"
-          test "$(convert logo.png -format '%[fx:round(p{256,256}.a)]' info:)" = "1"
+          # Cut the black outside the artwork with a mask matching its own
+          # corner radius (~100/512). Drawn at 4x and scaled down so the curve
+          # stays anti-aliased. A colour-keyed removal is not usable here: the
+          # binder rings inside the artwork are pure black too.
+          convert -size 2048x2048 xc:black -fill white \
+            -draw 'roundrectangle 0,0 2047,2047 400,400' \
+            -resize 512x512 mask.png
+          convert "$SRC" -resize 512x512! mask.png \
+            -alpha off -compose CopyOpacity -composite logo.png
+          identify logo.png
           # density: legacy ic_launcher size, adaptive layer size (108dp)
           for entry in "mdpi 48 108" "hdpi 72 162" "xhdpi 96 216" "xxhdpi 144 324" "xxxhdpi 192 432"; do
             set -- $entry
@@ -229,7 +228,7 @@ jobs:
           </resources>
           XMLEOF
           convert logo.png -resize 540x540 -background none -gravity center -extent 1152x1152 "$RES/drawable/splash_icon.png"
-          rm -f logo.png
+          rm -f logo.png mask.png
           echo "=== generated launcher icons and splash ==="
           identify "$RES/mipmap-xxxhdpi/ic_launcher.png" "$RES/mipmap-xxxhdpi/ic_launcher_foreground.png"
           identify "$RES/drawable/splash.png" "$RES/drawable/splash_icon.png"
