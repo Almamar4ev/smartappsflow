@@ -138,6 +138,56 @@ jobs:
           grep -q 'applicationId "com.tradelog.pro"' android/app/build.gradle
           grep -q 'namespace "com.tradelog.pro"' android/app/build.gradle
 
+      # Without this the AAB ships Capacitor's placeholder launcher icon.
+      # icon-512.png is a full-bleed square, so it is used directly for the
+      # legacy icons and as the adaptive foreground; the flat blue behind it
+      # matches the artwork edge so the system mask shows no seam.
+      - name: Generate Android launcher icons from icon-512.png
+        run: |
+          set -e
+          sudo apt-get update && sudo apt-get install -y imagemagick
+          SRC=icon-512.png
+          RES=android/app/src/main/res
+          test -f "$SRC"
+          # density: legacy ic_launcher size, adaptive foreground size (108dp)
+          for entry in "mdpi 48 108" "hdpi 72 162" "xhdpi 96 216" "xxhdpi 144 324" "xxxhdpi 192 432"; do
+            set -- $entry
+            dir="$RES/mipmap-$1"
+            mkdir -p "$dir"
+            convert "$SRC" -resize "${2}x${2}" "$dir/ic_launcher.png"
+            convert "$SRC" -resize "${2}x${2}" "$dir/ic_launcher_round.png"
+            convert "$SRC" -resize "${3}x${3}" "$dir/ic_launcher_foreground.png"
+            # Capacitor's placeholder background layer is unused once the
+            # adaptive icon points at @color/ic_launcher_background.
+            rm -f "$dir/ic_launcher_background.png"
+          done
+          mkdir -p "$RES/mipmap-anydpi-v26" "$RES/values"
+          for name in ic_launcher ic_launcher_round; do
+            cat > "$RES/mipmap-anydpi-v26/$name.xml" <<'XMLEOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@color/ic_launcher_background"/>
+              <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+          </adaptive-icon>
+          XMLEOF
+          done
+          # Drop any template-supplied definition first; two colors with the
+          # same name in values/ would fail the resource merge.
+          for f in "$RES"/values*/*.xml; do
+            [ -f "$f" ] || continue
+            case "$f" in */ic_launcher_background.xml) continue;; esac
+            sed -i '/name="ic_launcher_background"/d' "$f"
+          done
+          cat > "$RES/values/ic_launcher_background.xml" <<'XMLEOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="ic_launcher_background">#045DF1</color>
+          </resources>
+          XMLEOF
+          echo "=== generated launcher icons ==="
+          identify "$RES/mipmap-xxxhdpi/ic_launcher.png" "$RES/mipmap-xxxhdpi/ic_launcher_foreground.png"
+          grep -q 'ic_launcher_background' "$RES/mipmap-anydpi-v26/ic_launcher.xml"
+
       - name: Copy web assets
         run: npx cap sync android
 
