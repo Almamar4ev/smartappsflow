@@ -97,8 +97,12 @@ jobs:
             "plugins": {
               "SplashScreen": {
                 "launchShowDuration": 1500,
+                "launchAutoHide": true,
                 "backgroundColor": "#0c0f1a",
-                "showSpinner": false
+                "androidScaleType": "CENTER_CROP",
+                "showSpinner": false,
+                "splashFullScreen": true,
+                "splashImmersive": true
               }
             }
           }
@@ -138,11 +142,11 @@ jobs:
           grep -q 'applicationId "com.tradelog.pro"' android/app/build.gradle
           grep -q 'namespace "com.tradelog.pro"' android/app/build.gradle
 
-      # Without this the AAB ships Capacitor's placeholder launcher icon.
-      # icon-512.png is a full-bleed square, so it is used directly for the
-      # legacy icons and as the adaptive foreground; the flat blue behind it
+      # Without this the AAB ships Capacitor's placeholder launcher icon and
+      # splash. icon-512.png is a full-bleed square, so it is used directly for
+      # the legacy icons and as the adaptive foreground; the flat blue behind it
       # matches the artwork edge so the system mask shows no seam.
-      - name: Generate Android launcher icons from icon-512.png
+      - name: Generate Android launcher icons and splash from icon-512.png
         run: |
           set -e
           sudo apt-get update && sudo apt-get install -y imagemagick
@@ -184,9 +188,33 @@ jobs:
               <color name="ic_launcher_background">#045DF1</color>
           </resources>
           XMLEOF
-          echo "=== generated launcher icons ==="
+          # Splash used before Android 12 (the launch theme's windowBackground,
+          # held by @capacitor/splash-screen). CENTER_CROP in capacitor.config
+          # keeps the logo undistorted on every aspect ratio.
+          mkdir -p "$RES/drawable"
+          convert -size 2732x2732 xc:'#0c0f1a' \
+            \( "$SRC" -resize 760x760 \) -gravity center -composite \
+            "$RES/drawable/splash.png"
+          # Overwrite the density-specific defaults the template ships too.
+          find "$RES" -name 'splash.png' -not -path "$RES/drawable/splash.png" -exec cp "$RES/drawable/splash.png" {} \;
+          # Android 12+ draws its own system splash from the launch theme: flat
+          # background plus a 1152px canvas whose icon sits in the safe 540px.
+          mkdir -p "$RES/values-v31"
+          cat > "$RES/values-v31/styles.xml" <<'XMLEOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="AppTheme.NoActionBarLaunch" parent="AppTheme.NoActionBar">
+                  <item name="android:windowSplashScreenBackground">#0c0f1a</item>
+                  <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+              </style>
+          </resources>
+          XMLEOF
+          convert "$SRC" -resize 540x540 -background none -gravity center -extent 1152x1152 "$RES/drawable/splash_icon.png"
+          echo "=== generated launcher icons and splash ==="
           identify "$RES/mipmap-xxxhdpi/ic_launcher.png" "$RES/mipmap-xxxhdpi/ic_launcher_foreground.png"
+          identify "$RES/drawable/splash.png" "$RES/drawable/splash_icon.png"
           grep -q 'ic_launcher_background' "$RES/mipmap-anydpi-v26/ic_launcher.xml"
+          grep -q 'windowSplashScreenAnimatedIcon' "$RES/values-v31/styles.xml"
 
       - name: Copy web assets
         run: npx cap sync android
