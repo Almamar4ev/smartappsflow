@@ -143,24 +143,43 @@ jobs:
           grep -q 'namespace "com.tradelog.pro"' android/app/build.gradle
 
       # Without this the AAB ships Capacitor's placeholder launcher icon and
-      # splash. icon-512.png is a full-bleed square, so it is used directly for
-      # the legacy icons and as the adaptive foreground; the flat blue behind it
-      # matches the artwork edge so the system mask shows no seam.
+      # splash. icon-512.png is a full-bleed rounded square drawn on opaque
+      # black, so the black outside the rounded edge is flood-filled away
+      # first; the flat blue behind it matches the artwork edge so the system
+      # mask shows no seam.
       - name: Generate Android launcher icons and splash from icon-512.png
         run: |
           set -e
           sudo apt-get update && sudo apt-get install -y imagemagick
           SRC=icon-512.png
           RES=android/app/src/main/res
+          BG='#045DF1'
           test -f "$SRC"
-          # density: legacy ic_launcher size, adaptive foreground size (108dp)
+          # Flood-fill from the four corners only, so the pure black inside the
+          # artwork (the binder rings) is kept.
+          convert "$SRC" -resize 512x512! -alpha set -fuzz 20% -fill none \
+            -draw 'alpha 0,0 floodfill' \
+            -draw 'alpha 511,0 floodfill' \
+            -draw 'alpha 0,511 floodfill' \
+            -draw 'alpha 511,511 floodfill' \
+            logo.png
+          # Fail loudly rather than shipping a black-cornered icon.
+          test "$(convert logo.png -format '%[fx:round(p{0,0}.a)]' info:)" = "0"
+          test "$(convert logo.png -format '%[fx:round(p{256,256}.a)]' info:)" = "1"
+          # density: legacy ic_launcher size, adaptive layer size (108dp)
           for entry in "mdpi 48 108" "hdpi 72 162" "xhdpi 96 216" "xxhdpi 144 324" "xxxhdpi 192 432"; do
             set -- $entry
             dir="$RES/mipmap-$1"
             mkdir -p "$dir"
-            convert "$SRC" -resize "${2}x${2}" "$dir/ic_launcher.png"
-            convert "$SRC" -resize "${2}x${2}" "$dir/ic_launcher_round.png"
-            convert "$SRC" -resize "${3}x${3}" "$dir/ic_launcher_foreground.png"
+            # Legacy icons (API <= 25) are flattened onto the brand blue.
+            convert logo.png -resize "${2}x${2}" -background "$BG" -flatten "$dir/ic_launcher.png"
+            cp "$dir/ic_launcher.png" "$dir/ic_launcher_round.png"
+            # Only the middle 72dp of an adaptive layer is ever shown, so the
+            # artwork is scaled to that viewport and padded out to 108dp.
+            fg=$(( $3 * 2 / 3 ))
+            convert logo.png -resize "${fg}x${fg}" \
+              -background none -gravity center -extent "${3}x${3}" \
+              "$dir/ic_launcher_foreground.png"
             # Capacitor's placeholder background layer is unused once the
             # adaptive icon points at @color/ic_launcher_background.
             rm -f "$dir/ic_launcher_background.png"
@@ -193,7 +212,7 @@ jobs:
           # keeps the logo undistorted on every aspect ratio.
           mkdir -p "$RES/drawable"
           convert -size 2732x2732 xc:'#0c0f1a' \
-            \( "$SRC" -resize 760x760 \) -gravity center -composite \
+            \( logo.png -resize 760x760 \) -gravity center -composite \
             "$RES/drawable/splash.png"
           # Overwrite the density-specific defaults the template ships too.
           find "$RES" -name 'splash.png' -not -path "$RES/drawable/splash.png" -exec cp "$RES/drawable/splash.png" {} \;
@@ -209,7 +228,8 @@ jobs:
               </style>
           </resources>
           XMLEOF
-          convert "$SRC" -resize 540x540 -background none -gravity center -extent 1152x1152 "$RES/drawable/splash_icon.png"
+          convert logo.png -resize 540x540 -background none -gravity center -extent 1152x1152 "$RES/drawable/splash_icon.png"
+          rm -f logo.png
           echo "=== generated launcher icons and splash ==="
           identify "$RES/mipmap-xxxhdpi/ic_launcher.png" "$RES/mipmap-xxxhdpi/ic_launcher_foreground.png"
           identify "$RES/drawable/splash.png" "$RES/drawable/splash_icon.png"
