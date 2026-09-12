@@ -216,6 +216,48 @@ trusted `push`/`workflow_dispatch` events, never on pull_request.**
 → Run workflow (choose branch) → download AAB/APK artifacts → upload AAB in
 Play Console when ready.
 
+### 4a. Version numbering — applies to every app, current and future
+
+Two numbers, two different jobs. Never derive one from the other.
+
+| | Who sets it | Value | Who sees it |
+|---|---|---|---|
+| `versionCode` | the workflow, automatically | `${GITHUB_RUN_NUMBER}` | nobody — Play uses it only to order builds |
+| `versionName` | **you**, by hand | `version` field of the app's `package.json` | users, and every Play Console report |
+
+Play requires only one thing: `versionCode` must always increase and can never
+be reused. The run number satisfies that for free, so no build ever needs a
+manual bump to be uploadable.
+
+`versionName` is a deliberate decision, never a counter. Deriving it from the
+run number (the old `1.0.${GITHUB_RUN_NUMBER}` pattern, fixed in Edgeory on
+12 September 2026) makes the first public release look like `1.0.37`, skips
+numbers whenever a run fails, and splits one release into many names in the
+crash and statistics reports.
+
+Bump `versionName` as `MAJOR.MINOR.PATCH`, resetting everything to the right of
+the number you raise:
+
+- **PATCH** — bug fixes only, no new feature: `1.0.0` → `1.0.1`
+- **MINOR** — a new feature that breaks nothing: `1.0.2` → `1.1.0`
+- **MAJOR** — redesign, forced migration, or a break in stored data: `1.2.0` → `2.0.0`
+
+So a feature shipped after `1.1.1` becomes `1.2.0`, not `1.2.1`.
+
+How to bump, from inside the app folder:
+
+```bash
+npm version patch --no-git-tag-version   # or minor / major
+```
+
+Forgetting to bump breaks nothing: the build just carries the same
+`versionName` with a new `versionCode`, which is exactly what you want for a
+string of fix builds inside one test round.
+
+**Play Console release name:** always `versionName (versionCode)` — e.g.
+`1.0.0 (38)`. The name is internal, and Play reports crashes per `versionCode`,
+so keeping the code in the name links a release to its reports instantly.
+
 ---
 
 ## 5. Known pending work (do each in its own focused session)
@@ -256,3 +298,6 @@ convenience copy of the same content — it is not the registered store URL.
    secrets + `.gitattributes` line + privacy policy).
 6. After finishing a milestone, update **this file** (§0b / §5) and the app's
    deep log so the next session can resume without rediscovering history.
+7. Follow §4a for version numbers in every app: `versionCode` stays automatic,
+   `versionName` is bumped by hand in `package.json`, and a workflow must never
+   build `versionName` out of the run number.
