@@ -254,9 +254,11 @@ Forgetting to bump breaks nothing: the build just carries the same
 `versionName` with a new `versionCode`, which is exactly what you want for a
 string of fix builds inside one test round.
 
-**Play Console release name:** always `versionName (versionCode)` — e.g.
-`1.0.0 (38)`. The name is internal, and Play reports crashes per `versionCode`,
-so keeping the code in the name links a release to its reports instantly.
+**Play Console release name:** keep the name Play auto-fills, which is
+`versionCode (versionName)` — e.g. `38 (1.0.0)`. The name is internal and free
+text; what matters is that *both* numbers appear, because Play reports crashes
+per `versionCode`, so the code in the name links a release to its reports
+instantly. Accepting the default also removes any chance of a typo.
 
 ---
 

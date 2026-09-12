@@ -75,7 +75,7 @@
 - كان `versionName` يُشتق من رقم تشغيل CI (`1.0.${GITHUB_RUN_NUMBER}`)، فكان أول إصدار عام سيُسمّى `1.0.37`.
   صار يُقرأ من `version` في `package.json` (الآن `1.0.0`)، و`versionCode` وحده يبقى رقم التشغيل.
 - الرفع يدوي بـ `npm version patch|minor|major --no-git-tag-version`. نسيانه لا يكسر شيئًا.
-- اسم الإصدار في Play Console دائمًا `versionName (versionCode)` — مثل `1.0.0 (38)`.
+- اسم الإصدار في Play Console: اترك ما يعبّئه Play تلقائيًا `versionCode (versionName)` — مثل `38 (1.0.0)`.
 - أول حزمة Closed testing: **run #38** (`1.0.0`، versionCode 38). لا ترفع #37 (اسمها `1.0.37`).
 
 ### حالة المرحلة الحالية (7 أغسطس 2026)
