@@ -128,8 +128,13 @@ jobs:
           # Play Console (as of 2026) requires targetSdk >= 36 for new releases.
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 36/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 36/' android/variables.gradle
+          # versionCode only has to be unique and increasing, so it tracks the
+          # CI run number. versionName is the version users and Play Console
+          # reports show, so it comes from package.json: bump it there once and
+          # every build of that release carries the same name.
+          APP_VERSION="$(node -p "require('./package.json').version")"
           sed -i "s/versionCode .*/versionCode ${GITHUB_RUN_NUMBER}/" android/app/build.gradle
-          sed -i "s/versionName .*/versionName \"1.0.${GITHUB_RUN_NUMBER}\"/" android/app/build.gradle
+          sed -i "s/versionName .*/versionName \"${APP_VERSION}\"/" android/app/build.gradle
           # Capacitor usually sets these from appId; pin them explicitly so a
           # wrong scaffold never reaches Play Console.
           sed -i 's/applicationId .*/applicationId "com.tradelog.pro"/' android/app/build.gradle
@@ -141,6 +146,7 @@ jobs:
           grep -q 'targetSdkVersion = 36' android/variables.gradle
           grep -q 'applicationId "com.tradelog.pro"' android/app/build.gradle
           grep -q 'namespace "com.tradelog.pro"' android/app/build.gradle
+          grep -q "versionName \"${APP_VERSION}\"" android/app/build.gradle
 
       # Without this the AAB ships Capacitor's placeholder launcher icon and
       # splash. icon-512.png is a full-bleed rounded square drawn on opaque
