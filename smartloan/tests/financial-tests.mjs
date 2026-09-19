@@ -22,7 +22,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(__dirname, '..', 'index.html'), 'utf8');
 
 // --- Pull the pure calculation functions out of index.html by name --------
-const NEEDED = ['calcLoan', 'maxPrincipal', 'termForPayment'];
+const NEEDED = ['calcLoan', 'maxPrincipal', 'termForPayment', 'impliedRate'];
 
 function extractFunction(src, name) {
   const marker = 'function ' + name + '(';
@@ -56,7 +56,7 @@ for (const name of NEEDED) code += extractFunction(html, name) + '\n';
 const sandbox = {};
 vm.createContext(sandbox);
 vm.runInContext(code + '\nthis.__api = {' + NEEDED.join(',') + '};', sandbox);
-const { calcLoan, maxPrincipal, termForPayment } = sandbox.__api;
+const { calcLoan, maxPrincipal, termForPayment, impliedRate } = sandbox.__api;
 
 // --- Tiny assertion helpers ----------------------------------------------
 let passed = 0, failed = 0;
@@ -138,6 +138,37 @@ test('9. termForPayment 0% = principal/payment',
 // Guards: non-positive payment or principal returns null.
 assert('11. termForPayment with 0 payment = null', termForPayment(10000, 0, 0.1) === null);
 assert('11b. termForPayment with 0 principal = null', termForPayment(0, 500, 0.1) === null);
+
+// --- impliedRate: the rate a given bank payment really charges ------------
+// Inverse of calcLoan on the rate axis: 1028.61 on 100k x360 implies 12%/yr.
+test('12. impliedRate(100k, 1028.61, 360) = 12%',
+  impliedRate(100000, 1028.61, 360) * 100, 12, 0.02);
+
+// Round-trip on a different shape: a 5% loan must be recovered as 5%.
+{
+  const m = calcLoan(50000, 0.05, 84).monthly;
+  test('12b.  round-trips a 5% / 84-month loan', impliedRate(50000, m, 84) * 100, 5, 0.02);
+}
+
+// A payment that only repays the principal implies a 0% rate.
+assert('13. impliedRate = 0 when the payment only covers principal',
+  impliedRate(12000, 500, 24) === 0);
+
+// A payment below principal/months can never imply a positive rate.
+assert('13b. impliedRate = 0 when the payment is below principal/months',
+  impliedRate(12000, 400, 24) === 0);
+
+// Guards: non-positive inputs return 0, never NaN.
+assert('14. impliedRate guards non-positive inputs',
+  impliedRate(0, 500, 24) === 0 && impliedRate(10000, 0, 24) === 0 && impliedRate(10000, 500, 0) === 0);
+
+// A payment far above the amortized one implies a higher rate, and stays bounded
+// by the search ceiling instead of running away to Infinity.
+{
+  const eff = impliedRate(100000, 2000, 192);
+  assert('15. a heavier payment implies a higher rate, capped at the ceiling',
+    eff > 0.0475 && eff <= 0.60);
+}
 
 console.log('\n----------------------------------------');
 console.log('  Passed: ' + passed + '   Failed: ' + failed);

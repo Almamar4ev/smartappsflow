@@ -56,7 +56,9 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .screen{display:none;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;animation:pgIn .28s ease}
 .screen.active{display:flex}
 @keyframes pgIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
-[dir="rtl"] @keyframes pgIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+/* لا يمكن تقييد @keyframes بمحدد؛ نعرّف حركة مستقلة للعربية ونبدّل اسمها */
+@keyframes pgInRtl{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+[dir="rtl"] .screen{animation-name:pgInRtl}
 
 .glow{position:absolute;top:12%;left:50%;transform:translateX(-50%);width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,var(--glow) 0%,transparent 70%);pointer-events:none;z-index:0}
 
@@ -188,9 +190,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .option-btn.active{background:color-mix(in srgb,var(--acc) 12%,transparent);border-color:var(--acc);color:var(--acc);font-weight:700}
 .risk-col{display:flex;flex-direction:column;gap:9px}
 .risk-btn{padding:13px 15px;border-radius:12px;background:var(--bg2);border:1.5px solid var(--brd);color:var(--txt2);font-size:16px;cursor:pointer;text-align:start;transition:all .2s;width:100%}
-.risk-btn.low.active{background:var(--safe)15;border-color:var(--safe);color:var(--safe);font-weight:700}
+.risk-btn.low.active{background:color-mix(in srgb,var(--safe) 8%,transparent);border-color:var(--safe);color:var(--safe);font-weight:700}
 .risk-btn.medium.active{background:#f59e0b15;border-color:#f59e0b;color:#f59e0b;font-weight:700}
-.risk-btn.high.active{background:var(--risk)15;border-color:var(--risk);color:var(--risk);font-weight:700}
+.risk-btn.high.active{background:color-mix(in srgb,var(--risk) 8%,transparent);border-color:var(--risk);color:var(--risk);font-weight:700}
 /* btn-footer: always at bottom, solid color, never obscured */
 .btn-footer{
   padding:10px 20px calc(16px + var(--safe-bottom));
@@ -303,10 +305,10 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .saved-lbl{color:var(--txt2);font-size:14px;font-weight:600}
 .saved-val{color:var(--txt);font-size:14px;font-weight:700}
 .empty-state{text-align:center;color:var(--txt2);font-size:15px;padding:24px 0;line-height:1.7}
-.clear-btn{padding:11px;border-radius:10px;background:var(--bg2);border:1px solid var(--risk)50;color:var(--risk);font-size:14px;font-weight:700;cursor:pointer;width:100%}
+.clear-btn{padding:11px;border-radius:10px;background:var(--bg2);border:1px solid color-mix(in srgb,var(--risk) 31%,transparent);color:var(--risk);font-size:14px;font-weight:700;cursor:pointer;width:100%}
 /* SETTINGS */
 #settings-screen{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh;min-height:100dvh}
-.pdf-btn{width:100%;padding:13px;border-radius:14px;background:color-mix(in srgb,var(--safe) 14%,transparent);border:1.5px solid var(--safe)70;color:var(--safe);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:inherit;transition:all .2s}
+.pdf-btn{width:100%;padding:13px;border-radius:14px;background:color-mix(in srgb,var(--safe) 14%,transparent);border:1.5px solid color-mix(in srgb,var(--safe) 44%,transparent);color:var(--safe);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:inherit;transition:all .2s}
 .pdf-btn:active{opacity:.8;transform:scale(.98)}
 .settings-hdr{display:flex;align-items:center;gap:12px;padding:calc(18px + var(--safe-top)) 20px 0}
 .settings-title{font-size:20px;font-weight:800;color:var(--txt)}
@@ -575,7 +577,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ RESULTS ══ -->
 <div class="screen" id="results-screen">
   <div class="results-header">
-    <button class="back-btn" onclick="goHome()" id="res-back">←</button>
+    <button class="back-btn" onclick="resultsBack()" id="res-back">←</button>
     <span class="results-title" id="res-title">Your Report</span>
     <button class="lang-toggle" onclick="toggleLang()">EN/AR</button>
   </div>
@@ -593,6 +595,8 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <!-- بطاقة السيناريو — تظهر فقط عند فتح تفاصيل سيناريو -->
     <div id="scenario-replace-banner" style="display:none"></div>
     <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="card" id="bankpay-card" style="padding-top:16px"></div>
+    <div class="card" id="bankcmp-card" style="padding-top:16px"></div>
     <div class="basis-card"><p class="card-label" id="lbl-basis">HOW YOUR LOAN IS CALCULATED</p><div id="basis-rows"></div></div>
     <div class="card" id="banklimit-card" style="padding-top:16px"></div>
     <div class="card"><p class="card-label" id="lbl-rec">ESTIMATED LOAN</p><p class="card-big" id="rec-loan"></p><p class="card-sub" id="rec-range"></p><p class="card-sub" id="rec-range-hint" style="margin-top:6px;font-size:12px;opacity:.7"></p></div>
@@ -757,6 +761,17 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       </div>
       <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importBackup(this)">
     </div>
+    <div class="set-section">
+      <div class="set-section-hd">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span class="card-label" id="lbl-feedback-set" style="margin:0">FEEDBACK &amp; SUPPORT</span>
+      </div>
+      <p id="lbl-feedback-hint" style="font-size:12.5px;color:var(--txt2);margin:0 0 12px;line-height:1.5"></p>
+      <button onclick="sendFeedback()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 10px;border-radius:13px;border:1.5px solid var(--brd);background:var(--bg2);color:var(--txt);font:inherit;font-size:14px;font-weight:700;cursor:pointer">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
+        <span id="lbl-feedback-btn">Send feedback</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -839,6 +854,25 @@ function fmtAmt(n){
   if(lang==='en'&&before.includes(sym)) return sym+' '+num;
   return num+' '+sym;
 }
+// إلحاق رمز العملة بنص رقمي جاهز بنفس قاعدة fmtAmt
+function withCurrency(num){
+  const sym=getCurrencySymbol();
+  if(!sym) return num;
+  if(lang==='en'&&sym==='$') return sym+' '+num;
+  return num+' '+sym;
+}
+// مثل fmtAmt لكن بخانتين عشريتين — تُستخدم في مقارنة قسط البنك فقط، لأن الفرق بين
+// قسطنا وقسط البنك أصغر من وحدة واحدة عادةً فيختفي لو قُرِّب. الملخص يبقى مقرّباً.
+function fmtAmtDec(n,dec){
+  const d=(dec==null)?2:dec;
+  return withCurrency(Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}));
+}
+// نطاق «من – إلى» برمز عملة واحد في الطرف؛ تكرار الرمز مع كل رقم يطيل النص
+// فينكسر إلى سطرين على شاشة الجوال
+function fmtRangeDec(a,b){
+  const num=x=>Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return withCurrency(num(a)+' – '+num(b));
+}
 
 // ── الملف المالي (يُحفظ دائماً، لا يُمسح بين القروض) ──────────────────────────
 let profile={salary:'',income:'0',expenses:'',variable:'',existing:'0',employment:'full',risk:'medium',bankLimit:'40',limitBasis:'gross'};
@@ -880,7 +914,8 @@ function applyStatusBar(id){
       // Fallback for a native shell without the dedicated Android bridge.
       SB.setOverlaysWebView({overlay:true});
       SB.setBackgroundColor({color:color});
-      SB.setStyle({style: light ? 'DARK' : 'LIGHT'});
+      // Capacitor: Style.Light = خلفية فاتحة وأيقونات داكنة، Style.Dark = العكس
+      SB.setStyle({style: light ? 'LIGHT' : 'DARK'});
     }
   }catch(e){}
 }
@@ -963,6 +998,39 @@ const T={
     riskInfoTitle:'What is Debt-to-Income (DTI)?',
     riskInfoBody:'Debt-to-Income (DTI) is the share of your monthly income that goes toward loan payments. The lower this ratio, the more breathing room you have in your budget and the easier the installment is to carry.\n\nFor the actual verdict on how much you can borrow, see the “Maximum Installment Limit (Bank)” card.',
     riskInfoClose:'Got it',
+    bpChip:'Estimate',
+    bpTitle:'Your bank’s actual payment',
+    bpSub:'Calculated with the standard reducing-balance formula banks start from',
+    bpStatusT:'This payment is an estimate',
+    bpStatusD:'Your bank’s payment may be slightly higher or lower due to insurance, fees, or the day-count method',
+    bpRange:'Expected bank payment range',
+    bpWhy:'Why might the bank’s payment differ?',
+    bpCmpTitle:'Compare with a bank offer',
+    bpCmpSub:'Have an offer or an active loan? Enter the bank payment to see the difference and its likely cause',
+    bpCmpLabel:'Payment your bank quoted',
+    bpAppPay:'App payment',
+    bpDiffM:'Monthly difference',
+    bpDiffT:'Full-term difference',
+    bpImplied:'Effective rate of bank payment',
+    bpErr:'Enter a number above zero',
+    bpOkT:'Small, normal difference',
+    bpOkD:'Usually from rounding or the day-count method',
+    bpHiT:'Noticeably higher',
+    bpHiD:'Ask about fees and insurance added to the payment',
+    bpLoT:'Lower than expected',
+    bpLoD:'Check the term, the rate, and any large final payment',
+    bpSheetTitle:'Why might the bank’s payment differ?',
+    bpSheetIntro:'The app uses the same formula banks start from, but a bank may add:',
+    bpReasons:['Life or loan insurance','Admin fees added to the principal','Daily interest (365/360)','A grace period before the first payment','Rounding the payment up'],
+    bpExTitle:'Example with your current loan',
+    bpExApp:'App calculation',
+    bpExBank:'Bank with insurance and fees',
+    bpGotIt:'Got it',
+    fbSet:'FEEDBACK & SUPPORT',
+    fbHint:'Found something off, or have an idea? Send us a note — your email app opens with the message ready.',
+    fbBtn:'Send feedback',
+    fbSubject:'Smart Loan Calculator — feedback',
+    fbBodyHint:'Write your feedback here:',
   },
   ar:{
     appName:'حاسبة القروض الذكية',appTagline:'أداة حساب وتقدير القروض',
@@ -1010,6 +1078,39 @@ const T={
     riskInfoTitle:'ما هي نسبة الدين إلى الدخل (DTI)؟',
     riskInfoBody:'نسبة الدين إلى الدخل (DTI) هي نسبة دخلك الشهري التي تذهب لسداد أقساط القروض. كلما انخفضت هذه النسبة، زادت المرونة في ميزانيتك وسهُل تحمّل القسط.\n\nأمّا الحكم الفعلي على قدرتك على الاقتراض فتجده في بطاقة «الحد الأقصى للقسط حسب بنكك».',
     riskInfoClose:'حسناً',
+    bpChip:'تقديري',
+    bpTitle:'قسط البنك الفعلي',
+    bpSub:'هذه الحسبة بالمعادلة العالمية التي تبدأ منها البنوك (الرصيد المتناقص)',
+    bpStatusT:'قسطك رقم تقديري',
+    bpStatusD:'قد يختلف قسط البنك بفرق بسيط أعلى أو أقل، بسبب التأمين أو الرسوم أو طريقة احتساب الأيام',
+    bpRange:'النطاق المتوقع لقسط البنك',
+    bpWhy:'لماذا قد يختلف قسط البنك؟',
+    bpCmpTitle:'قارن مع عرض البنك',
+    bpCmpSub:'عندك عرض أو قرض فعلي؟ أدخل قسط البنك لمعرفة الفرق وسببه المحتمل',
+    bpCmpLabel:'القسط الذي أعطاك إياه البنك',
+    bpAppPay:'قسط التطبيق',
+    bpDiffM:'الفرق الشهري',
+    bpDiffT:'الفرق على كامل المدة',
+    bpImplied:'النسبة الفعلية لقسط البنك',
+    bpErr:'أدخل رقماً أكبر من صفر',
+    bpOkT:'الفرق بسيط وطبيعي',
+    bpOkD:'غالباً بسبب التقريب أو طريقة احتساب الأيام',
+    bpHiT:'قسط البنك أعلى بشكل ملحوظ',
+    bpHiD:'اسأل البنك عن الرسوم والتأمين المضافة إلى القسط',
+    bpLoT:'قسط البنك أقل من المتوقع',
+    bpLoD:'تأكد من المدة والنسبة، وهل توجد دفعة أخيرة كبيرة',
+    bpSheetTitle:'لماذا قد يختلف قسط البنك؟',
+    bpSheetIntro:'التطبيق يستخدم نفس المعادلة التي تبدأ منها البنوك، لكن البنك قد يضيف:',
+    bpReasons:['تأمين على الحياة أو القرض','رسوم إدارية تُضاف إلى أصل القرض','احتساب الفائدة يومياً (365/360)','فترة سماح قبل أول قسط','تقريب القسط للأعلى'],
+    bpExTitle:'مثال على قرضك الحالي',
+    bpExApp:'حسبة التطبيق',
+    bpExBank:'بنك مع تأمين ورسوم',
+    bpGotIt:'فهمت',
+    fbSet:'الملاحظات والدعم',
+    fbHint:'لاحظت خطأً أو عندك اقتراح؟ أرسل لنا ملاحظتك — سيفتح تطبيق البريد والرسالة جاهزة.',
+    fbBtn:'إرسال ملاحظة',
+    fbSubject:'حاسبة القروض الذكية — ملاحظة',
+    fbBodyHint:'اكتب ملاحظتك هنا:',
   },
   es:{
     appName:'Calculadora de Préstamos',appTagline:'Herramienta de cálculo de préstamos',
@@ -1045,6 +1146,39 @@ const T={
     riskInfoTitle:'¿Qué es la relación deuda-ingreso (DTI)?',
     riskInfoBody:'La relación deuda-ingreso (DTI) es la parte de tu ingreso mensual que se destina a pagos de préstamos. Cuanto menor sea esta relación, más margen tendrás en tu presupuesto y más fácil será asumir la cuota.\n\nPara el veredicto real sobre cuánto puedes pedir prestado, consulta la tarjeta «Límite máximo de cuota (banco)».',
     riskInfoClose:'Entendido',
+    bpChip:'Estimado',
+    bpTitle:'La cuota real de tu banco',
+    bpSub:'Calculada con la fórmula estándar de saldo decreciente con la que empiezan los bancos',
+    bpStatusT:'Esta cuota es una estimación',
+    bpStatusD:'La cuota de tu banco puede ser algo mayor o menor por seguros, comisiones o el método de conteo de días',
+    bpRange:'Rango previsto de la cuota del banco',
+    bpWhy:'¿Por qué puede diferir la cuota del banco?',
+    bpCmpTitle:'Compara con la oferta del banco',
+    bpCmpSub:'¿Tienes una oferta o un préstamo activo? Introduce la cuota del banco para ver la diferencia y su causa probable',
+    bpCmpLabel:'Cuota que te indicó el banco',
+    bpAppPay:'Cuota de la app',
+    bpDiffM:'Diferencia mensual',
+    bpDiffT:'Diferencia en todo el plazo',
+    bpImplied:'Tasa efectiva de la cuota del banco',
+    bpErr:'Introduce un número mayor que cero',
+    bpOkT:'Diferencia pequeña y normal',
+    bpOkD:'Suele ser por redondeo o el método de conteo de días',
+    bpHiT:'Notablemente más alta',
+    bpHiD:'Pregunta por comisiones y seguros añadidos a la cuota',
+    bpLoT:'Más baja de lo previsto',
+    bpLoD:'Revisa el plazo, la tasa y si hay una última cuota grande',
+    bpSheetTitle:'¿Por qué puede diferir la cuota del banco?',
+    bpSheetIntro:'La app usa la misma fórmula con la que empiezan los bancos, pero el banco puede añadir:',
+    bpReasons:['Seguro de vida o del préstamo','Comisiones de gestión sumadas al capital','Interés diario (365/360)','Un período de gracia antes de la primera cuota','Redondeo de la cuota al alza'],
+    bpExTitle:'Ejemplo con tu préstamo actual',
+    bpExApp:'Cálculo de la app',
+    bpExBank:'Banco con seguro y comisiones',
+    bpGotIt:'Entendido',
+    fbSet:'COMENTARIOS Y SOPORTE',
+    fbHint:'¿Viste algo raro o tienes una idea? Envíanos tu comentario — se abrirá tu app de correo con el mensaje listo.',
+    fbBtn:'Enviar comentario',
+    fbSubject:'Smart Loan Calculator — comentario',
+    fbBodyHint:'Escribe aquí tu comentario:',
   },
 };
 const t=()=>{const base=T[lang]||T['en'];return{...base,currency:getCurrencySymbol()||base.currency};};
@@ -1071,6 +1205,97 @@ function termForPayment(P,M,annualRate){
   if(r===0)return P/M;
   if(P*r>=M)return null; // الفائدة وحدها تتجاوز القسط المسموح
   return -Math.log(1-P*r/M)/Math.log(1+r);
+}
+// النسبة السنوية الفعلية (decimal) التي ينتج عنها قسط M لمبلغ P على n شهراً — بالتنصيف
+function impliedRate(P,M,months){
+  if(!(P>0)||!(M>0)||!(months>0))return 0;
+  if(M<=P/months)return 0;              // القسط لا يغطي الأصل ⇒ لا فائدة فعلية
+  let lo=0,hi=0.60;                     // 60% سنوياً سقف كافٍ لأي عرض واقعي
+  for(let i=0;i<80;i++){
+    const mid=(lo+hi)/2;
+    if(calcLoan(P,mid,months).monthly>M) hi=mid; else lo=mid;
+  }
+  return (lo+hi)/2;
+}
+// ── توضيح فرق قسط البنك ────────────────────────────────────────────────────────
+// قسط البنك المُدخل للمقارنة: جلسة فقط، لا يُحفظ مع القرض. يُصفَّر عند تغيّر القرض.
+let _bankOffer='',_bankOfferSig='';
+const BP_ICON={
+  info:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 11v6M12 7.5h.01"/></svg>',
+  ok:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  warn:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 7v6M12 16.5h.01"/></svg>'
+};
+// صندوق حالة بنفس شكل صندوق بطاقة حد البنك
+function bpStatusBox(color,icon,title,desc){
+  return `<div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;margin-top:11px;background:color-mix(in srgb,${color} 12%,transparent)">
+      <div style="width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;background:${color}">${icon}</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:800;line-height:1.35;color:${color}">${title}</div>
+      <div style="font-size:11px;color:var(--txt3);margin-top:2px;font-weight:600;line-height:1.55">${desc}</div></div></div>`;
+}
+// بطاقة «قسط البنك الفعلي»: تنبيه أن القسط تقديري + النطاق المتوقع ±1%
+function renderBankNoteCard(r){
+  const el=document.getElementById('bankpay-card');
+  if(!el)return;
+  const tc=t(),isAr=lang==='ar';
+  const range=fmtRangeDec(r.monthly*0.99,r.monthly*1.01);
+  el.innerHTML=`
+    <p class="card-label" style="margin:0;line-height:1.3">${tc.bpTitle}</p>
+    <p style="font-size:11px;color:var(--txt3);margin:2px 0 0;line-height:1.45">${tc.bpSub}</p>
+    ${bpStatusBox('var(--mod)',BP_ICON.info,tc.bpStatusT,tc.bpStatusD)}
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:14px;padding:0 2px">
+      <span style="font-size:12px;color:var(--txt3);font-weight:600">${tc.bpRange}</span>
+      <span style="font-size:15px;font-weight:900;color:var(--acc);white-space:nowrap"><bdi dir="ltr">${range}</bdi></span>
+    </div>
+    <a onclick="showBankPayInfo()" style="display:block;text-align:${isAr?'left':'right'};margin-top:13px;font-size:12px;color:var(--acc);font-weight:700;text-decoration:none;cursor:pointer">${tc.bpWhy} ${isAr?'←':'→'}</a>`;
+}
+// بطاقة «قارن مع عرض البنك»
+function renderBankCompareCard(r){
+  const el=document.getElementById('bankcmp-card');
+  if(!el)return;
+  const tc=t(),isAr=lang==='ar',sym=getCurrencySymbol();
+  const sig=[form.amount,form.period,form.rate,currency].join('|');
+  if(sig!==_bankOfferSig){_bankOfferSig=sig;_bankOffer='';}
+  el.innerHTML=`
+    <p class="card-label" style="margin:0;line-height:1.3">${tc.bpCmpTitle}</p>
+    <p style="font-size:11px;color:var(--txt3);margin:2px 0 0;line-height:1.45">${tc.bpCmpSub}</p>
+    <label for="bank-offer-inp" style="display:block;font-size:12.5px;color:var(--txt2);font-weight:700;margin:13px 0 6px">${tc.bpCmpLabel}</label>
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:1.5px solid var(--brd);border-radius:13px;padding:0 13px">
+      ${sym?`<span style="font-size:13px;font-weight:800;color:var(--txt3);direction:ltr;flex:none">${sym}</span>`:''}
+      <input id="bank-offer-inp" type="number" inputmode="decimal" step="0.01" min="0" value="${String(_bankOffer).replace(/[^0-9.eE+-]/g,'')}" oninput="onBankOfferInput(this.value)" style="flex:1;min-width:0;background:none;border:0;outline:0;color:var(--txt);font:inherit;font-size:16px;font-weight:800;padding:13px 0;direction:ltr;text-align:${isAr?'right':'left'}">
+    </div>
+    <p id="bank-offer-err" style="color:var(--risk);font-size:11.5px;font-weight:700;margin:6px 0 0;min-height:16px"></p>
+    <div id="bank-offer-out"></div>`;
+  renderBankOfferResult();
+}
+function onBankOfferInput(v){_bankOffer=v;renderBankOfferResult();}
+// نتيجة المقارنة — تُرسم وحدها كي لا يفقد حقل الإدخال تركيزه أثناء الكتابة
+function renderBankOfferResult(){
+  const out=document.getElementById('bank-offer-out'),errEl=document.getElementById('bank-offer-err');
+  if(!out||!errEl||!results)return;
+  const tc=t(),r=results;
+  const raw=String(_bankOffer||'').trim();
+  if(!raw){errEl.textContent='';out.innerHTML='';return;}
+  const bank=parseFloat(raw);
+  if(!(bank>0)){errEl.textContent=tc.bpErr;out.innerHTML='';return;}
+  errEl.textContent='';
+  const P=+form.amount||0,n=+form.period||36,m=r.monthly;
+  const diff=bank-m;
+  const eff=impliedRate(P,bank,n)*100;
+  const same=Math.abs(diff)<0.005;
+  const diffColor=same?'var(--txt)':diff>0?'var(--risk)':'var(--safe)';
+  const signed=x=>(x>=0?'+':'−')+fmtAmtDec(Math.abs(x));
+  let st;
+  if(Math.abs(diff)/m<=0.01) st={c:'var(--safe)',ic:BP_ICON.ok,  t:tc.bpOkT,d:tc.bpOkD};
+  else if(diff>0)            st={c:'var(--risk)',ic:BP_ICON.warn,t:tc.bpHiT,d:tc.bpHiD};
+  else                       st={c:'var(--mod)', ic:BP_ICON.info,t:tc.bpLoT,d:tc.bpLoD};
+  out.innerHTML=`
+    <div style="margin-top:4px">
+      <div class="basis-row"><span class="basis-lbl">${tc.bpAppPay}</span><span class="basis-val"><bdi dir="ltr">${fmtAmtDec(m)}</bdi></span></div>
+      <div class="basis-row"><span class="basis-lbl">${tc.bpDiffM}</span><span class="basis-val" style="color:${diffColor}"><bdi dir="ltr">${same?fmtAmtDec(0):signed(diff)}</bdi></span></div>
+      <div class="basis-row"><span class="basis-lbl">${tc.bpDiffT}</span><span class="basis-val" style="color:${diffColor}"><bdi dir="ltr">${same?fmtAmtDec(0):signed(diff*n)}</bdi></span></div>
+      <div class="basis-row"><span class="basis-lbl">${tc.bpImplied}</span><span class="basis-hi" style="color:var(--acc)"><bdi dir="ltr">${eff>=59.9?'> 60%':eff.toFixed(2)+'%'}</bdi></span></div>
+    </div>
+    ${bpStatusBox(st.c,st.ic,st.t,st.d)}`;
 }
 // ── بطاقة الحد الأقصى للقسط حسب بنكك ───────────────────────────────────────────
 function renderBankLimitCard(r){
@@ -1132,7 +1357,8 @@ function renderBankLimitCard(r){
         <span style="font-size:17px;font-weight:900;color:var(--acc)">${fmtAmt(maxLoan)}</span></div>`;
 
     const nNeeded=termForPayment(reqAmt,maxPayAvail,rate);
-    if(nNeeded===null){
+    // لا نقترح مدة تتجاوز سقف التطبيق (360 شهراً) — نعرض بدلها نصيحة تقليل المبلغ
+    if(nNeeded===null||Math.ceil(nNeeded)>360){
       const msg=isAr?`هذا المبلغ لا يمكن تمويله ضمن حدّك مهما زادت المدة. قلّل المبلغ إلى <b style="color:var(--txt)">${fmtAmt(maxLoan)}</b> أو أقل.`
         :isEs?`Este monto no se puede financiar dentro de tu límite. Redúcelo a <b style="color:var(--txt)">${fmtAmt(maxLoan)}</b> o menos.`
         :`This amount can't be financed within your limit. Reduce it to <b style="color:var(--txt)">${fmtAmt(maxLoan)}</b> or less.`;
@@ -1321,7 +1547,11 @@ document.addEventListener('click',function(ev){
   const dd=document.getElementById('lang-dd');
   if(dd && !dd.contains(ev.target)) closeLangMenu();
 });
-function applyDir(){document.getElementById('app').dir=lang==='ar'?'rtl':'ltr';}
+function applyDir(){
+  document.getElementById('app').dir=lang==='ar'?'rtl':'ltr';
+  // زر تبديل اللغة يدور بين ثلاث لغات؛ نُظهر الحالية بدل نص «EN/AR» الثابت
+  document.querySelectorAll('.lang-toggle').forEach(b=>{b.textContent=lang.toUpperCase();});
+}
 function rerenderAll(){
   const a=document.querySelector('.screen.active')?.id;
   renderHome();
@@ -1361,6 +1591,9 @@ function startForm(){
   // Reset only loan fields, keep profile
   form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
   extraLoans=[];
+  // الأقساط القائمة تُحسب دائماً من القروض النشطة الفعلية. شاشة تفاصيل/تعديل قرض محفوظ
+  // تستثني ذلك القرض مؤقتاً، وإن خرج المستخدم بسهم الرأس بقيت القيمة الناقصة هنا
+  profile.existing=String(saved.filter(x=>x.type!=='scenario').reduce((sum,x)=>sum+(+x.loanMonthly||0),0));
   renderStepLabels();
   renderStep3Dynamic();
   renderStep4Dynamic();
@@ -1553,9 +1786,13 @@ function renderHome(){
 
   renderHomeSaved();
 }
-function confirmDeleteLoan(i,name){
+function confirmDeleteLoan(i){
+  const s=saved[i]; if(!s) return;
+  // الاسم يُحسب هنا لا يُمرَّر عبر سمة onclick — كي لا يكسر اسم غريب من نسخة مستوردة السمة
+  const name=savedLoanDisplayName(s);
   const isAr=lang==='ar';
   const msg=isAr?`هل تريد حذف قرض "${name}"؟\nلا يمكن التراجع عن هذا الإجراء.`
+                 :lang==='es'?`¿Eliminar el préstamo "${name}"?\nEsta acción no se puede deshacer.`
                  :`Delete loan "${name}"?\nThis cannot be undone.`;
   if(confirm(msg)){
     saved.splice(i,1);
@@ -1614,15 +1851,15 @@ function renderHomeSaved(){
         </div>
         <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
           <button onclick="event.stopPropagation();openSavedDetail(${i})"
-            style="flex:1;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid var(--acc)50;color:var(--acc);font-size:12px;font-weight:700;cursor:pointer">
+            style="flex:1;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 31%,transparent);color:var(--acc);font-size:12px;font-weight:700;cursor:pointer">
             ${isAr?'التفاصيل':isEs?'Detalles':'Details'}
           </button>
           <button onclick="event.stopPropagation();editSavedLoan(${i})"
             style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,#f59e0b 10%,transparent);border:1px solid #f59e0b50;color:#f59e0b;font-size:12px;font-weight:700;cursor:pointer">
             ${isAr?'تعديل':isEs?'Editar':'Edit'}
           </button>
-          <button onclick="event.stopPropagation();confirmDeleteLoan(${i},'${displayName.replace(/'/g,"\\'")}')"
-            style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid var(--risk)50;color:var(--risk);font-size:12px;font-weight:700;cursor:pointer">
+          <button onclick="event.stopPropagation();confirmDeleteLoan(${i})"
+            style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid color-mix(in srgb,var(--risk) 31%,transparent);color:var(--risk);font-size:12px;font-weight:700;cursor:pointer">
             ${isAr?'حذف':isEs?'Eliminar':'Delete'}
           </button>
         </div>
@@ -1654,11 +1891,11 @@ function renderHomeSaved(){
         </div>
         <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
           <button onclick="event.stopPropagation();confirmActivate(${i})"
-            style="flex:1;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--safe) 12%,transparent);border:1px solid var(--safe)50;color:var(--safe);font-size:12px;font-weight:700;cursor:pointer">
+            style="flex:1;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--safe) 12%,transparent);border:1px solid color-mix(in srgb,var(--safe) 31%,transparent);color:var(--safe);font-size:12px;font-weight:700;cursor:pointer">
             ${isAr?'تفعيل هذا السيناريو':isEs?'Activar':'Activate Scenario'}
           </button>
-          <button onclick="event.stopPropagation();confirmDeleteLoan(${i},'${displayName.replace(/'/g,"\\'")}')"
-            style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid var(--risk)50;color:var(--risk);font-size:12px;font-weight:700;cursor:pointer">
+          <button onclick="event.stopPropagation();confirmDeleteLoan(${i})"
+            style="padding:6px 12px;border-radius:8px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid color-mix(in srgb,var(--risk) 31%,transparent);color:var(--risk);font-size:12px;font-weight:700;cursor:pointer">
             ${isAr?'حذف':isEs?'Eliminar':'Delete'}
           </button>
         </div>
@@ -1702,6 +1939,7 @@ function confirmActivate(i){
   const s=saved[i];
   const isAr=lang==='ar';
   const msg=isAr?`تفعيل سيناريو "${savedLoanDisplayName(s)}"؟\nسيصبح هذا القرض نشطاً والأصلي سيُحفظ للمقارنة.`
+    :lang==='es'?`¿Activar el escenario "${savedLoanDisplayName(s)}"?\nPasará a estar activo y el original se guardará para comparar.`
     :`Activate scenario "${savedLoanDisplayName(s)}"?\nThis will become active and the original saved for comparison.`;
   if(confirm(msg)) activateScenario(i);
 }
@@ -1948,6 +2186,12 @@ function selectRisk(r){profile.risk=r;document.querySelectorAll('#risk-options .
 
 // ── CALCULATE ─────────────────────────────────────────────────────────────────
 function calculate(){
+  // بدون مبلغ كانت analyse تفترض 10,000 بينما الجدول وبقية البطاقات تفترض 0 ⇒ تقرير متناقض
+  if(!(+form.amount>0)){
+    showToast(lang==='ar'?'أدخل مبلغ القرض أولاً':lang==='es'?'Introduce el monto del préstamo':'Enter the loan amount first');
+    const a=document.getElementById('inp-amount'); if(a) a.focus();
+    return;
+  }
   results=analyse();extraLoans=[];
   renderResults();showScreen('results-screen');
 }
@@ -1983,12 +2227,15 @@ function renderResults(){
   const remainingColor=remaining>0?'var(--safe)':'var(--risk)';
   const remainingVal=fmtAmt(Math.abs(remaining));
   // القيم بيضاء (احترافية)؛ الحافة العلوية الملوّنة تكفي للتمييز. الدلالة (أحمر للفائدة، أخضر/أحمر للمتبقي) تبقى على القيمة
+  // شارة «تقديري» على بطاقة القسط وحدها — تفتح شرح فرق قسط البنك
+  const estChip=`<button onclick="showBankPayInfo()" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:color-mix(in srgb,var(--mod) 14%,transparent);color:var(--mod);border:0;border-radius:999px;padding:3px 9px 3px 7px;font:inherit;font-size:10.5px;font-weight:800;cursor:pointer">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1.3px solid currentColor;font-size:9px;flex:none">i</span>${tc.bpChip}</button>`;
   document.getElementById('kpi-grid').innerHTML=[
-    {label:tc.monthlyInstallment, val:fmtAmt(r.monthly),  edge:'var(--acc)',  vc:'var(--txt)'},
+    {label:tc.monthlyInstallment, val:fmtAmt(r.monthly),  edge:'var(--acc)',  vc:'var(--txt)', extra:estChip},
     {label:tc.totalCost,          val:fmtAmt(r.total),    edge:'var(--acc2)', vc:'var(--txt)'},
     {label:tc.totalInterest,      val:fmtAmt(r.interest), edge:'var(--risk)', vc:'var(--txt)'},
     {label:remainingLabel,        val:remainingVal,       edge:remainingColor, vc:isDeficit?'var(--risk)':'var(--txt)'},
-  ].map(k=>`<div class="kpi-card" style="border-top-color:${k.edge}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.vc}">${k.val}</p></div>`).join('');
+  ].map(k=>`<div class="kpi-card" style="border-top-color:${k.edge}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.vc}">${k.val}</p>${k.extra||''}</div>`).join('');
   document.getElementById('lbl-basis').textContent=tc.basisTitle;
   // calculate expected end date
   const months=+form.period||36;
@@ -2017,6 +2264,9 @@ function renderResults(){
     ?'Estimación general basada en el 35% de tu ingreso neto como regla general (distinto del límite real de tu banco arriba)'
     :'A general estimate based on 35% of your net income as a rule of thumb (different from your actual bank limit above)';
   try{ renderBankLimitCard(r); }catch(e){ const _b=document.getElementById('banklimit-card'); if(_b)_b.style.display='none'; }
+  try{ renderBankNoteCard(r); renderBankCompareCard(r); }catch(e){
+    ['bankpay-card','bankcmp-card'].forEach(id=>{const _c=document.getElementById(id); if(_c)_c.style.display='none';});
+  }
   document.getElementById('lbl-advice').textContent=tc.advice;
   // Merge smart rec as first item in advice
   const smartRec=tc['rec_'+r.riskLevel];
@@ -2503,7 +2753,7 @@ function renderSchedule(){
         background:var(--safe);color:#fff;border-radius:10px;
         padding:7px 12px;font-size:12px;font-weight:700;
         z-index:20;white-space:nowrap;
-        box-shadow:0 4px 16px var(--safe)50;pointer-events:none;
+        box-shadow:0 4px 16px color-mix(in srgb,var(--safe) 31%,transparent);pointer-events:none;
       }
       .sched-current-tooltip::before{
         content:'';position:absolute;top:-5px;inset-inline-end:14px;
@@ -2619,7 +2869,7 @@ function renderMultiLoans(){
     </div>`;
   }).join('');
   const totalMonthly=r.monthly+extraLoans.reduce((s,el)=>s+(el.amount&&el.period?calcLoan(+el.amount,safeRate(el.rate)/100,+el.period).monthly:0),0);
-  const pG=(totalMonthly/r.grossIncome)*100,pN=r.netIncome>0?(totalMonthly/r.netIncome)*100:100;
+  const pG=r.grossIncome>0?(totalMonthly/r.grossIncome)*100:100,pN=r.netIncome>0?(totalMonthly/r.netIncome)*100:100;
   const tc2=pG<35?'var(--safe)':pG<50?'#f59e0b':'var(--risk)';
   const totalCard=extraLoans.length?`<div class="total-block">
     <p class="card-label">${lang==='ar'?'ملخص كل القروض':lang==='es'?'Resumen de préstamos':'All Loans Summary'}</p>
@@ -2748,6 +2998,7 @@ function activateScenario(i){
 function clearSaved(){
   const isAr=lang==='ar';
   const msg=isAr?'هل تريد مسح جميع القروض المحفوظة؟\nلا يمكن التراجع عن هذا الإجراء.'
+                :lang==='es'?'¿Eliminar todos los préstamos guardados?\nEsta acción no se puede deshacer.'
                 :'Delete all saved loans?\nThis cannot be undone.';
   if(!confirm(msg)) return;
   saved=[];
@@ -2782,7 +3033,7 @@ function renderSavedTab(){
         <button onclick="openSavedDetail(${i})" style="flex:1;padding:9px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;cursor:pointer">
           ${lang==='ar'?'عرض التفاصيل':lang==='es'?'Ver detalles':'View Details'}
         </button>
-        <button onclick="confirmDeleteSavedFromTab(${i})" style="padding:9px 14px;border-radius:10px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1.5px solid var(--risk)60;color:var(--risk);font-size:13px;font-weight:700;cursor:pointer"></button>
+        <button onclick="confirmDeleteSavedFromTab(${i})" style="padding:9px 14px;border-radius:10px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1.5px solid color-mix(in srgb,var(--risk) 38%,transparent);color:var(--risk);font-size:13px;font-weight:700;cursor:pointer"></button>
       </div>
     </div>`;
   }).join('');
@@ -2792,7 +3043,7 @@ function confirmDeleteSavedFromTab(i){
   const s=saved[i];
   const isAr=lang==='ar';
   const displayName=savedLoanDisplayName(s);
-  const msg=isAr?`هل تريد حذف "${displayName}"؟`:`Delete "${displayName}"?`;
+  const msg=isAr?`هل تريد حذف "${displayName}"؟`:lang==='es'?`¿Eliminar "${displayName}"?`:`Delete "${displayName}"?`;
   if(confirm(msg)){
     saved.splice(i,1);
     const totalExisting=saved.filter(s=>s.type!=='scenario').reduce((sum,s)=>sum+s.loanMonthly,0);
@@ -2843,7 +3094,7 @@ function openSavedDetail(i){
   results.existing=currentExisting;
   const totalDebt=results.monthly+currentExisting;
   results.dtiGross=curGross>0?(totalDebt/curGross)*100:0;
-  results.dtiNet  =curNetInc>0?(totalDebt/curNetInc)*100:0;
+  results.dtiNet  =curNetInc>0?(totalDebt/curNetInc)*100:100; // نفس قاعدة analyse: لا صافي ⇒ 100%
   results.remaining=curNetInc-results.monthly-currentExisting; // قد يكون سالباً = عجز
   // نحفظ بيانات السيناريو لعرض بطاقة المقارنة
   results._isScenario=isScenario;
@@ -2912,6 +3163,12 @@ function openSavedDetail(i){
   showScreen('results-screen');
 }
 
+// سهم الرأس في شاشة النتائج: إن كنا في عرض قرض محفوظ نستعيد الحالة السابقة كما يفعل زر «رجوع للرئيسية»
+function resultsBack(){
+  const b=document.getElementById('btn-go-home');
+  if(b&&typeof b._savedDetailBack==='function') b._savedDetailBack(); else goHome();
+}
+
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
 function chooseLangFromSettings(l){lang=l;applyDir();persistState();rerenderAll();settingsBack();}
 function renderSettings(){
@@ -2924,6 +3181,13 @@ function renderSettings(){
   const currLbl=document.getElementById('lbl-currency-set');
   if(currLbl) currLbl.textContent=isAr?'العملة':isEs?'MONEDA':'CURRENCY';
   document.getElementById('settings-back-btn').textContent=isAr?'→':'←';
+  // feedback labels
+  const fbSet=document.getElementById('lbl-feedback-set');
+  const fbHint=document.getElementById('lbl-feedback-hint');
+  const fbBtn=document.getElementById('lbl-feedback-btn');
+  if(fbSet) fbSet.textContent=tc.fbSet;
+  if(fbHint) fbHint.textContent=tc.fbHint;
+  if(fbBtn) fbBtn.textContent=tc.fbBtn;
   // backup labels
   const bkSet=document.getElementById('lbl-backup-set');
   const bkHint=document.getElementById('lbl-backup-hint');
@@ -3211,6 +3475,57 @@ function hideRiskInfo(e){
   }
 }
 
+// ── نافذة «لماذا قد يختلف قسط البنك؟» ─────────────────────────────────────────
+function showBankPayInfo(){
+  const tc=t(),r=results;
+  const ov=document.getElementById('bankpay-overlay');
+  if(!ov)return;
+  ov.dir=lang==='ar'?'rtl':'ltr';
+  document.getElementById('bankpay-title').textContent=tc.bpSheetTitle;
+  document.getElementById('bankpay-intro').textContent=tc.bpSheetIntro;
+  document.getElementById('bankpay-reasons').innerHTML=(tc.bpReasons||[]).map((x,i)=>
+    `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--brd)">
+       <span style="flex:none;width:24px;height:24px;border-radius:8px;background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800">${i+1}</span>
+       <span style="font-size:13.5px;color:var(--txt2);font-weight:600;line-height:1.5">${x}</span>
+     </div>`).join('');
+  // المثال يحتاج قرضاً مفتوحاً — يُخفى إن لم توجد نتائج
+  const exWrap=document.getElementById('bankpay-example-wrap');
+  if(r){
+    document.getElementById('bankpay-ex-title').textContent=tc.bpExTitle;
+    document.getElementById('bankpay-example').innerHTML=`
+      <div class="basis-row"><span class="basis-lbl">${tc.bpExApp}</span><span class="basis-val"><bdi dir="ltr">${fmtAmtDec(r.monthly)}</bdi></span></div>
+      <div class="basis-row"><span class="basis-lbl">${tc.bpExBank}</span><span class="basis-val"><bdi dir="ltr">${fmtAmtDec(r.monthly*1.008)}</bdi></span></div>`;
+    exWrap.style.display='';
+  }else{
+    exWrap.style.display='none';
+  }
+  document.getElementById('bankpay-close').textContent=tc.bpGotIt;
+  ov.style.display='flex';
+  ov.style.alignItems='flex-end';
+}
+function hideBankPayInfo(e){
+  const ov=document.getElementById('bankpay-overlay');
+  if(!e||e.target===ov) ov.style.display='none';
+}
+
+// ── إرسال ملاحظة: يفتح بريد المستخدم برسالة جاهزة ─────────────────────────────
+const FEEDBACK_EMAIL='smartappsflow@gmail.com';
+function sendFeedback(){
+  const tc=t();
+  const platform=window.Capacitor?'Android app':'Web';
+  const themeName=(THEMES.find(x=>x.id===currentTheme)||{}).name||currentTheme;
+  const body=tc.fbBodyHint+'\n\n\n\n----------\nSmart Loan Calculator\n'
+    +'Language: '+lang+' | Theme: '+themeName+' | Platform: '+platform;
+  const href='mailto:'+FEEDBACK_EMAIL
+    +'?subject='+encodeURIComponent(tc.fbSubject)
+    +'&body='+encodeURIComponent(body);
+  const a=document.createElement('a');
+  a.href=href;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
 function canSave(){
   if(isPremium) return true;
   const editingIdx=_editingLoanIdx;
@@ -3238,7 +3553,7 @@ function exportPDF(){
   const months=+form.period||36;
   const endDate=getStartDate();
   endDate.setMonth(endDate.getMonth()+months);
-  const endStr=endDate.toLocaleDateString(isAr?'ar-u-ca-gregory':'en-US',{year:'numeric',month:'long'});
+  const endStr=endDate.toLocaleDateString(isAr?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long'});
   const loanTypeName=T[lang]['lt_'+form.loanType]||form.loanType;
   const advs=r.riskLevel==='risky'?[tc.adv_avoid,tc.adv_reduce]
             :r.riskLevel==='moderate'?[tc.adv_moderate,tc.adv_down,tc.adv_extend]
@@ -3311,6 +3626,8 @@ function exportPDF(){
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>${tc.appName} — ${loanTypeName}</title>
 <style>
+  /* التقرير مستقل عن ثيم التطبيق: نعرّف المتغيرات التي تستعملها الصفوف حتى لا تطبع بالأسود */
+  :root{--safe:#10b981;--risk:#ef4444;--mod:#f59e0b;--acc:#6366f1;--txt:#111;--txt2:#374151;--txt3:#6b7280;--brd:#e5e7eb}
   *{box-sizing:border-box;margin:0;padding:0}
   @media print{.no-print{display:none!important}}
 body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:20px;max-width:680px;margin:0 auto;font-size:13px}
@@ -3342,7 +3659,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
   <div class="header">
     <div>
       <h1>${tc.appName}</h1>
-      <div style="font-size:11px;color:#6b7280;margin-top:3px">${new Date().toLocaleDateString(isAr?'ar-u-ca-gregory':'en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:3px">${new Date().toLocaleDateString(isAr?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
       <span class="loan-tag">${loanTypeName} · ${fmtAmt(+form.amount)}</span>
     </div>
     <span class="badge" style="color:${color};border-color:${color};background:${color}15">${tc.riskLevel}: ${tc['risk_'+r.riskLevel]}</span>
@@ -3548,19 +3865,27 @@ function importBackup(input){
           : 'Restore this backup? Current data will be replaced.'
       );
       if(!ok){ input.value=''; return; }
-      if(s.lang)         lang=s.lang;
-      if(s.currency)     currency=s.currency;
-      // ملاحظة: لا نغيّر الثيم عند الاستيراد — الثيم تفضيل عرض حالي ويبقى كما اختاره المستخدم
-      if(s.profile)      profile={...profile,...s.profile};
-      if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
-      if(Array.isArray(s.saved)) saved=s.saved;
-      if(s.form)         form={...form,...s.form};
-      persistState();
-      applyTheme(currentTheme);
-      applyDir();
-      rerenderAll();
-      showScreen('home');
-      renderHome();
+      // لقطة للحالة الحالية: إن فشل الرسم بالبيانات الجديدة نرجع إليها بدل أن نبقى على تطبيق فارغ
+      const snap={currency,profile:{...profile},profileSaved,saved,form:{...form}};
+      try{
+        // ملاحظة: لا نغيّر اللغة ولا الثيم عند الاستيراد — كلاهما تفضيل عرض للجهاز الحالي
+        // ويبقى كما اختاره المستخدم، بينما العملة جزء من بيانات القرض فتُستورد
+        if(isKnownCurrency(s.currency)) currency=s.currency;
+        if(s.profile&&typeof s.profile==='object') profile={...profile,...s.profile};
+        if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
+        if(Array.isArray(s.saved)) saved=sanitizeSaved(s.saved);
+        if(s.form&&typeof s.form==='object') form={...form,...s.form};
+        applyTheme(currentTheme);
+        applyDir();
+        rerenderAll();
+        showScreen('home');
+        renderHome();
+      }catch(renderErr){
+        ({currency,profileSaved,saved}=snap); profile=snap.profile; form=snap.form;
+        rerenderAll(); showScreen('home'); renderHome();
+        throw renderErr;
+      }
+      persistState(); // لا نكتب في التخزين إلا بعد أن نجح الرسم بالبيانات الجديدة
       showToast(lang==='ar'?'✅ تمت الاستعادة بنجاح':lang==='es'?'✅ Datos restaurados':'✅ Backup restored successfully');
     }catch(err){
       showToast(lang==='ar'?'❌ الملف غير صالح':lang==='es'?'❌ Archivo inválido':'❌ Invalid backup file');
@@ -3586,6 +3911,26 @@ function persistState(){
   }catch(e){/* storage unavailable */}
 }
 
+// ── تنقية البيانات القادمة من التخزين أو من ملف نسخة احتياطية ──────────────
+// قرض محفوظ واحد تالف كان يُسقط رسم الرئيسية كلها فيظهر التطبيق فارغاً. نقبل فقط
+// المدخلات السليمة ونُطبّق ترحيل loanMonthly (مصدر دقيق واحد) في المكانين معاً.
+const RISK_LEVELS=['safe','moderate','risky'];
+function sanitizeSaved(arr){
+  if(!Array.isArray(arr)) return [];
+  return arr.filter(x=>x&&typeof x==='object'&&x.results&&typeof x.results.monthly==='number'&&isFinite(x.results.monthly)&&x.form&&typeof x.form==='object')
+    .map(x=>{
+      if(!RISK_LEVELS.includes(x.results.riskLevel)) x.results.riskLevel='safe';
+      const lt=x.loanType||x.form.loanType;
+      if(!T.en['lt_'+lt]){ x.loanType='personal'; x.form.loanType='personal'; }
+      if(typeof x.name!=='undefined'&&typeof x.name!=='string') delete x.name;
+      x.loanMonthly=x.results.monthly;
+      return x;
+    });
+}
+function isKnownLang(l){return !!(l&&T[l]);}
+function isKnownCurrency(c){return CURRENCIES.some(x=>x.id===c);}
+function isKnownTheme(th){return THEMES.some(x=>x.id===th);}
+
 function loadState(){
   // مسح isPremium القديم إذا كان محفوظاً بـ true من نسخة سابقة
   try{
@@ -3596,20 +3941,13 @@ function loadState(){
     const raw=localStorage.getItem(STORAGE_KEY);
     if(!raw) return false;
     const s=JSON.parse(raw);
-    if(s.lang)         lang=s.lang;
-    if(s.currency)     currency=s.currency;
-    if(s.currentTheme) currentTheme=s.currentTheme;
-    if(s.profile)      profile={...profile,...s.profile};
+    if(isKnownLang(s.lang))         lang=s.lang;
+    if(isKnownCurrency(s.currency)) currency=s.currency;
+    if(isKnownTheme(s.currentTheme)) currentTheme=s.currentTheme;
+    if(s.profile&&typeof s.profile==='object') profile={...profile,...s.profile};
     if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
-    if(Array.isArray(s.saved)){
-      saved=s.saved;
-      // ترحيل: القروض المحفوظة في نسخ قديمة خزّنت loanMonthly مقرّباً. نعيده إلى
-      // القيمة الدقيقة (results.monthly) حتى تتطابق كل الصفحات للسنت (مصدر دقيق واحد).
-      saved.forEach(function(x){
-        if(x && x.results && typeof x.results.monthly==='number') x.loanMonthly=x.results.monthly;
-      });
-    }
-    if(s.form)         form={...form,...s.form};
+    if(Array.isArray(s.saved)) saved=sanitizeSaved(s.saved);
+    if(s.form&&typeof s.form==='object') form={...form,...s.form};
     // isPremium لا يُحمل من localStorage — يبقى false حتى يدفع المستخدم
     return true;
   }catch(e){ return false; }
@@ -3659,7 +3997,7 @@ function showIosInstallIfNeeded(){
   if(window.Capacitor) return;                 // not inside the Android app
   if(!_isIOS()) return;                         // iPhone/iPad only
   if(_isStandalone()) return;                   // already installed → skip
-  if(localStorage.getItem('sla_ios_install_dismissed')==='1') return;
+  try{ if(localStorage.getItem('sla_ios_install_dismissed')==='1') return; }catch(e){} // Safari الخاص قد يمنع التخزين
   const bar=document.getElementById('ios-install-bar');
   if(!bar) return;
   const isAr=lang==='ar', isEs=lang==='es';
@@ -3680,7 +4018,7 @@ function showIosInstallIfNeeded(){
 function dismissIosInstall(){
   const bar=document.getElementById('ios-install-bar');
   if(bar) bar.style.display='none';
-  localStorage.setItem('sla_ios_install_dismissed','1');
+  try{ localStorage.setItem('sla_ios_install_dismissed','1'); }catch(e){}
 }
 
 // ── PWA service worker + in-app update notifier — web only (skipped in the Android app) ──
@@ -3899,6 +4237,23 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
     <p id="risk-info-title" style="text-align:center;font-size:19px;font-weight:900;color:var(--txt);margin-bottom:14px"></p>
     <p id="risk-info-body" style="font-size:14px;color:var(--txt2);margin-bottom:20px;line-height:1.7;white-space:pre-line"></p>
     <button onclick="hideRiskInfo()" id="risk-info-close" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit"></button>
+  </div>
+</div>
+<!-- نافذة توضيح فرق قسط البنك -->
+<div id="bankpay-overlay" onclick="hideBankPayInfo(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
+  <div onclick="event.stopPropagation()" style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(36px + var(--safe-bottom));border-top:1px solid var(--brd);max-height:90vh;overflow-y:auto">
+    <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
+    <div style="width:60px;height:60px;background:linear-gradient(135deg,var(--acc),var(--acc2));border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:#fff">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
+    </div>
+    <p id="bankpay-title" style="text-align:center;font-size:19px;font-weight:900;color:var(--txt);margin-bottom:10px"></p>
+    <p id="bankpay-intro" style="font-size:13.5px;color:var(--txt2);margin-bottom:10px;line-height:1.7"></p>
+    <div id="bankpay-reasons" style="margin-bottom:16px"></div>
+    <div id="bankpay-example-wrap">
+      <p id="bankpay-ex-title" style="font-size:13px;font-weight:800;color:var(--txt);margin:0 0 6px"></p>
+      <div id="bankpay-example" style="background:var(--bg3);border:1px solid var(--brd);border-radius:14px;padding:4px 14px;margin-bottom:6px"></div>
+    </div>
+    <button onclick="hideBankPayInfo()" id="bankpay-close" style="width:100%;margin-top:18px;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit"></button>
   </div>
 </div>
 <div id="premium-overlay" onclick="hidePremiumSheet(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
