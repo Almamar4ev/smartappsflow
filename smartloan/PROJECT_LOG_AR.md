@@ -13,13 +13,13 @@
 - **المستودع:** `smartappsflow` (متعدد التطبيقات). كل التطبيق داخل مجلد `smartloan/`.
 - **المصدر الوحيد للحقيقة:** `smartloan/index.html` — ملف واحد يحوي كل الـ HTML/CSS/JS.
   الـ workflow ينسخه إلى `www/index.html` عند بناء المتجر.
-- **الويب:** PWA على `smartappsflow.net/smartloan/` (يُنشر تلقائيًا عند الدمج إلى `main`) — مباشر (v40)، و**v41 بانتظار الدمج**.
+- **الويب:** PWA على `smartappsflow.net/smartloan/` (يُنشر تلقائيًا عند الدمج إلى `main`) — **مباشر (v41)**.
 - **المتجر:** Android AAB عبر `.github/workflows/build-smartloan.yml` — **رُفع إلى Play ووضعه ممتاز**
   (المحاذاة والثيمات مؤكَّدة على الجهاز سابقًا). **جلسة 12 أغسطس 2026:** ترقية Target API 35→**36**
   (سياسة Play قبل 31 أغسطس) + versionCode **32** / versionName **3.2**.
 - **معرّف الحزمة:** `com.smartapps.smartloanadvisor`.
-- **الإصدار الحالي في ملف البناء:** versionCode 32 / versionName 3.2.
-- **كاش الـ service worker الحالي:** `smartloan-v41` (المنشور على `main` لا يزال v40 حتى الدمج).
+- **الإصدار الحالي في ملف البناء:** versionCode 33 / versionName 3.3.
+- **كاش الـ service worker الحالي:** `smartloan-v41` (منشور على `main` بعد دمج PR #12).
 - **اللغات:** العربية، الإنجليزية، الإسبانية (كائن `T` في index.html).
 - **الثيمات:** light (الافتراضي)، black، indigo (default)، emerald.
 - **هاتف الاختبار:** Samsung S25 Ultra — Android 15 / One UI 7 (مهم: edge-to-edge مفروض).
@@ -35,7 +35,7 @@
 | إشعار تحديث PWA | ✅ يعمل على الويب فقط |
 | رفع هذه النسخة إلى Play | ✅ تم الرفع — الوضع ممتاز |
 | Target API 36 (سياسة Play) | 🔄 جاري — فرع `fix/smartloan-target-api-36` (قبل مهلة 31 أغسطس 2026) |
-| توضيح فرق قسط البنك + إرسال ملاحظة | 🔄 فرع `feat/smartloan-bank-payment-note-and-feedback` (كاش v41، بانتظار الدمج) |
+| توضيح فرق قسط البنك + إرسال ملاحظة | ✅ دُمج PR #12 — كاش v41 / versionCode 33 |
 | ميزات مدفوعة / Billing | ⏸ مؤجَّل |
 
 **معلم الويب/الجهاز (يوليو):** `fix/smartloan-safearea-and-tweaks` → دُمج إلى `main`
