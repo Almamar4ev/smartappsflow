@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
-<title>Smart Loan Calculator | حاسبة القروض الذكية</title>
+<title>emiGo: EMI &amp; Loan | حاسبة القروض الذكية</title>
 
 <!-- PWA / Add to Home Screen (web + iPhone) -->
 <link rel="manifest" href="manifest.json"/>
@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
-<meta name="apple-mobile-web-app-title" content="Smart Loan"/>
+<meta name="apple-mobile-web-app-title" content="emiGo"/>
 <link rel="apple-touch-icon" href="icon-192.png"/>
 <script>
 // The Android store shell applies safe-area insets as native View padding.
@@ -1029,7 +1029,7 @@ const T={
     fbSet:'FEEDBACK & SUPPORT',
     fbHint:'Found something off, or have an idea? Send us a note — your email app opens with the message ready.',
     fbBtn:'Send feedback',
-    fbSubject:'Smart Loan Calculator — feedback',
+    fbSubject:'emiGo — feedback',
     fbBodyHint:'Write your feedback here:',
   },
   ar:{
@@ -1109,7 +1109,7 @@ const T={
     fbSet:'الملاحظات والدعم',
     fbHint:'لاحظت خطأً أو عندك اقتراح؟ أرسل لنا ملاحظتك — سيفتح تطبيق البريد والرسالة جاهزة.',
     fbBtn:'إرسال ملاحظة',
-    fbSubject:'حاسبة القروض الذكية — ملاحظة',
+    fbSubject:'emiGo — ملاحظة',
     fbBodyHint:'اكتب ملاحظتك هنا:',
   },
   es:{
@@ -1177,7 +1177,7 @@ const T={
     fbSet:'COMENTARIOS Y SOPORTE',
     fbHint:'¿Viste algo raro o tienes una idea? Envíanos tu comentario — se abrirá tu app de correo con el mensaje listo.',
     fbBtn:'Enviar comentario',
-    fbSubject:'Smart Loan Calculator — comentario',
+    fbSubject:'emiGo — comentario',
     fbBodyHint:'Escribe aquí tu comentario:',
   },
 };
@@ -3514,7 +3514,7 @@ function sendFeedback(){
   const tc=t();
   const platform=window.Capacitor?'Android app':'Web';
   const themeName=(THEMES.find(x=>x.id===currentTheme)||{}).name||currentTheme;
-  const body=tc.fbBodyHint+'\n\n\n\n----------\nSmart Loan Calculator\n'
+  const body=tc.fbBodyHint+'\n\n\n\n----------\nemiGo: EMI & Loan\n'
     +'Language: '+lang+' | Theme: '+themeName+' | Platform: '+platform;
   const href='mailto:'+FEEDBACK_EMAIL
     +'?subject='+encodeURIComponent(tc.fbSubject)
@@ -3784,11 +3784,11 @@ function exportBackup(){
       saved, form,
       _backup_version:1,
       _backup_date: new Date().toISOString(),
-      _app:'SmartLoanCalculator'
+      _app:'emiGo'
     };
     const json=JSON.stringify(state,null,2);
     const dateStr=new Date().toISOString().slice(0,10);
-    const filename=`SmartLoan_backup_${dateStr}.json`;
+    const filename=`emiGo_backup_${dateStr}.json`;
     const bytes=new Blob([json]).size;
     const sizeStr=bytes<1024?bytes+' B':(bytes/1024).toFixed(1)+' KB';
     _pendingBackup={json, filename, sizeStr};
@@ -3822,7 +3822,7 @@ async function doExportShare(){
       try{
         await Filesystem.writeFile({path:filename, data:json, directory:'CACHE', encoding:'utf8'});
         const {uri}=await Filesystem.getUri({path:filename, directory:'CACHE'});
-        await Share.share({title:'Smart Loan backup', files:[uri],
+        await Share.share({title:'emiGo backup', files:[uri],
           dialogTitle:(lang==='ar'?'احفظ أو شارك النسخة':lang==='es'?'Guardar o compartir':'Save or share your backup')});
         showToast(okMsg);
       }catch(err){ /* user dismissed the share sheet — file already saved in app storage */ }
@@ -3832,7 +3832,7 @@ async function doExportShare(){
     try{
       const file=new File([json],filename,{type:'application/json'});
       if(navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({files:[file], title:'Smart Loan backup'});
+        await navigator.share({files:[file], title:'emiGo backup'});
         return;
       }
     }catch(shareErr){
@@ -3856,7 +3856,8 @@ function importBackup(input){
   reader.onload=function(e){
     try{
       const s=JSON.parse(e.target.result);
-      if(s._app!=='SmartLoanCalculator') throw new Error('wrong app');
+      // تقبل النسخ القديمة (SmartLoanCalculator) والجديدة (emiGo) حتى لا تنكسر استعادة المستخدمين
+      if(s._app!=='emiGo' && s._app!=='SmartLoanCalculator') throw new Error('wrong app');
       const ok=confirm(
         lang==='ar'
           ? 'هل تريد استعادة البيانات؟ سيتم استبدال البيانات الحالية.'
@@ -4184,7 +4185,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       </div>
       <div style="flex:1;min-width:0">
-        <div id="export-file-name" style="font-size:13px;font-weight:800;color:var(--txt);word-break:break-all;line-height:1.3">SmartLoan_backup.json</div>
+        <div id="export-file-name" style="font-size:13px;font-weight:800;color:var(--txt);word-break:break-all;line-height:1.3">emiGo_backup.json</div>
         <div id="export-file-meta" style="font-size:12px;color:var(--txt2);margin-top:3px">— KB</div>
       </div>
     </div>

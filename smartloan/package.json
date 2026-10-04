@@ -1,7 +1,7 @@
 {
   "name": "smart-loan-calculator",
   "version": "3.2.0",
-  "description": "Smart Loan Calculator - estimate payments, compare loans, and see the real cost of borrowing.",
+  "description": "emiGo: EMI & Loan — EMI, loan & mortgage calculator with bank comparison & payment schedule.",
   "scripts": {
     "test": "node tests/financial-tests.mjs && node tests/pwa-tests.mjs"
   },

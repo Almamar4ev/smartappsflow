@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>معاينة emiGo — قبل التنفيذ</title>
+<style>
+  :root{ --bg:#3A1D7A; --page:#0f0a1a; --card:#1a1230; --txt:#f4f0ff; --muted:#b8a8d8; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:var(--page);color:var(--txt);padding:20px 16px 48px;line-height:1.55}
+  h1{font-size:22px;font-weight:900;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:22px}
+  .note{background:#2a1a4a;border:1px solid #5a3a9a;border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);margin-bottom:22px}
+  .note b{color:#fff}
+  section{margin-bottom:28px}
+  h2{font-size:15px;font-weight:800;color:#c4b0f0;margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em}
+  .row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+  .icon-card{text-align:center}
+  .icon-card img{display:block;border-radius:22%;width:96px;height:96px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  .icon-card.sm img{width:64px;height:64px;border-radius:18%}
+  .icon-card .lbl{margin-top:8px;font-size:12px;font-weight:700}
+  .icon-card .cap{font-size:11px;color:var(--muted)}
+
+  /* Phone splash mock */
+  .phone{width:220px;height:440px;border-radius:36px;background:var(--bg);padding:10px;box-shadow:0 16px 40px rgba(0,0,0,.5);position:relative}
+  .phone-inner{width:100%;height:100%;border-radius:28px;background:var(--bg);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .phone-inner img{width:88px;height:88px;border-radius:22%}
+  .phone-notch{position:absolute;top:18px;left:50%;transform:translateX(-50%);width:70px;height:8px;background:#0a0614;border-radius:4px}
+
+  /* Play listing mock */
+  .play{background:#fff;color:#202124;border-radius:16px;padding:16px;max-width:420px}
+  .play-top{display:flex;gap:14px;align-items:center}
+  .play-top img{width:72px;height:72px;border-radius:16px}
+  .play-name{font-size:18px;font-weight:700;line-height:1.25}
+  .play-dev{font-size:13px;color:#01875f;font-weight:600;margin-top:2px}
+  .play-desc{font-size:13px;color:#5f6368;margin-top:14px;line-height:1.45;border-top:1px solid #e8eaed;padding-top:12px}
+
+  /* Home screen mock: icons under label */
+  .homescreen{background:linear-gradient(160deg,#1a0f35,#2d1858);border-radius:20px;padding:24px 18px 18px;max-width:320px}
+  .hs-row{display:flex;gap:22px;justify-content:center}
+  .hs-app{text-align:center;width:72px}
+  .hs-app img{width:56px;height:56px;border-radius:14px;display:block;margin:0 auto}
+  .hs-app span{display:block;margin-top:6px;font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border-radius:12px;overflow:hidden}
+  td,th{padding:10px 12px;border-bottom:1px solid #2e2148;text-align:right}
+  th{color:var(--muted);font-weight:600;width:38%}
+  tr:last-child td,tr:last-child th{border-bottom:0}
+  .ok{color:#7dffa0;font-weight:700}
+  .keep{color:#ffd27a}
+</style>
+</head>
+<body>
+  <h1>معاينة emiGo</h1>
+  <p class="sub">هذه صفحة معاينة فقط — ملفات التطبيق الأصلية لم تُغيَّر بعد.</p>
+  <div class="note">
+    <b>ماذا تعني «المعاينة»؟</b>
+    قبل التنفيذ أعرض لك الشكل النهائي (الأيقونة، الاسم تحتها، شاشة الإقلاع، بطاقة المتجر).
+    إذا وافقت، أنسخ الصور إلى مجلد التطبيق وأحدّث الأسماء، ثم تفتح التطبيق على جوالك كما نفعل عادةً.
+  </div>
+
+  <section>
+    <h2>١. الأيقونة (متجر / ويب)</h2>
+    <div class="row">
+      <div class="icon-card"><img src="out/icon-512.png" alt="512"/><div class="lbl">512</div><div class="cap">المتجر والويب</div></div>
+      <div class="icon-card sm"><img src="out/icon-192.png" alt="192"/><div class="lbl">192</div><div class="cap">PWA صغير</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>٢. الاسم تحت الأيقونة على الشاشة الرئيسية</h2>
+    <div class="homescreen">
+      <div class="hs-row">
+        <div class="hs-app"><img src="out/icon-512.png" alt=""/><span>emiGo</span></div>
+        <div class="hs-app"><img src="out/icon-512.png" alt="" style="opacity:.35"/><span style="opacity:.45">…</span></div>
+        <div class="hs-app"><img src="out/icon-512.png" alt="" style="opacity:.35"/><span style="opacity:.45">…</span></div>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:10px">أندرويد يقطع الأسماء الطويلة — لذلك تحت الأيقونة: <b style="color:#fff">emiGo</b> فقط.</p>
+  </section>
+
+  <section>
+    <h2>٣. شاشة الإقلاع (Splash)</h2>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-inner"><img src="out/icon-512.png" alt="splash"/></div>
+    </div>
+    <p class="sub" style="margin-top:10px">الخلفية <b style="color:#fff">#3A1D7A</b> — بنفسجي غامق متناسق مع الأيقونة.</p>
+  </section>
+
+  <section>
+    <h2>٤. بطاقة متجر Google Play</h2>
+    <div class="play" dir="ltr" style="text-align:left">
+      <div class="play-top">
+        <img src="out/icon-512.png" alt=""/>
+        <div>
+          <div class="play-name">emiGo: EMI &amp; Loan</div>
+          <div class="play-dev">Smart Apps Flow</div>
+        </div>
+      </div>
+      <div class="play-desc">EMI, loan &amp; mortgage calculator with bank comparison &amp; payment schedule</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>٥. ماذا سيتغيّر عند التنفيذ؟</h2>
+    <table>
+      <tr><th>اسم المتجر</th><td class="ok">emiGo: EMI &amp; Loan</td></tr>
+      <tr><th>تحت الأيقونة</th><td class="ok">emiGo</td></tr>
+      <tr><th>وصف قصير (Play)</th><td class="ok">النص أعلاه — تكتبه أنت في Console</td></tr>
+      <tr><th>أيقونة + إقلاع</th><td class="ok">الصور الجديدة</td></tr>
+      <tr><th>داخل التطبيق (عر/إن/إس)</th><td class="keep">بدون تغيير الآن — للمراجعة لاحقاً</td></tr>
+      <tr><th>معرّف الحزمة</th><td class="keep">بدون تغيير (نفس التطبيق في Play)</td></tr>
+      <tr><th>ملفات النسخ الاحتياطية</th><td class="keep">بدون تغيير (الاستيراد يبقى يعمل)</td></tr>
+    </table>
+  </section>
+
+  <div class="note">
+    إذا أعجبتك هذه المعاينة، اكتب في المحادثة: <b>نفّذ</b>
+  </div>
+</body>
+</html>

@@ -1,15 +1,15 @@
 {
   "appId": "com.smartapps.smartloanadvisor",
-  "appName": "Smart Loan Calculator",
+  "appName": "emiGo",
   "webDir": "www",
   "android": {
-    "backgroundColor": "#221B3E"
+    "backgroundColor": "#3A1D7A"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1500,
       "launchAutoHide": true,
-      "backgroundColor": "#221B3E",
+      "backgroundColor": "#3A1D7A",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
       "splashFullScreen": true,
