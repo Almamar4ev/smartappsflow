@@ -3,13 +3,13 @@
   "appName": "emiGo",
   "webDir": "www",
   "android": {
-    "backgroundColor": "#3A1D7A"
+    "backgroundColor": "#221B3E"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 1500,
       "launchAutoHide": true,
-      "backgroundColor": "#3A1D7A",
+      "backgroundColor": "#221B3E",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
       "splashFullScreen": true,
