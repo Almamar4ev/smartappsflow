@@ -1,14 +1,14 @@
-/* Smart Loan Calculator — service worker
+/* emiGo: EMI & Loan — service worker
    On every new release: bump VERSION and rewrite CHANGELOG. Those two consts are
    the "control panel" for the in-app update notification — nothing else here
    needs to change per release. */
-const VERSION = 'v41';
+const VERSION = 'v42';
 
 // Short, user-facing "what changed" shown in the in-app update banner.
 const CHANGELOG = {
-  ar: 'شرح سبب اختلاف قسط البنك عن الحسبة، مقارنة قسطك مع عرض البنك، وزر إرسال ملاحظة.',
-  en: 'Why your bank’s payment may differ, compare your payment with a bank offer, and a send-feedback button.',
-  es: 'Por qué la cuota del banco puede diferir, compara tu cuota con una oferta bancaria y botón de comentarios.'
+  ar: 'اسم جديد: emiGo، وأيقونة وشاشة إقلاع محدَّثة.',
+  en: 'New name: emiGo, with an updated icon and splash screen.',
+  es: 'Nuevo nombre: emiGo, con icono y pantalla de inicio actualizados.'
 };
 
 const CACHE = 'smartloan-' + VERSION;
