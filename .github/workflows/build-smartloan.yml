@@ -161,12 +161,13 @@ jobs:
             --splashBackgroundColor '#221B3E' \
             --splashBackgroundColorDark '#221B3E'
 
-      # Play requires targetSdk 36+ for updates after 31 Aug 2026. Keep minSdk
-      # unchanged. Print the files so CI logs prove the bump landed.
+      # Play requires targetSdk 36+ for updates after 31 Aug 2026.
+      # Play Automatic Protection requires minSdk 24+ (Android 7). Print the
+      # files so CI logs prove the bump landed.
       - name: Update target SDK and version code
         run: |
           set -e
-          sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
+          sed -i 's/minSdkVersion = .*/minSdkVersion = 24/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 36/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 36/' android/variables.gradle
           sed -i 's/versionCode .*/versionCode 36/' android/app/build.gradle
