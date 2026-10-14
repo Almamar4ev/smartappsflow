@@ -54,6 +54,103 @@
   </script>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <!--
+    Installed copies keep the previous app in a service worker and the
+    browser cache. This waits for app_build.txt, drops that copy when the
+    published build changes, then starts Flutter.
+  -->
+  <script>
+    (function () {
+      var BUILD_FILE = 'app_build.txt';
+      var STORAGE_KEY = 'compoundcalc_build';
+
+      function startApp() {
+        if (document.getElementById('flutter-bootstrap')) return;
+        var script = document.createElement('script');
+        script.id = 'flutter-bootstrap';
+        script.async = true;
+        script.src = 'flutter_bootstrap.js?v=20261014045007';
+        document.body.appendChild(script);
+      }
+
+      function remember(buildId) {
+        try { localStorage.setItem(STORAGE_KEY, buildId); } catch (e) {}
+      }
+
+      function readStored() {
+        try { return localStorage.getItem(STORAGE_KEY) || ''; } catch (e) { return ''; }
+      }
+
+      function alreadyReloaded(buildId) {
+        try { return sessionStorage.getItem('compoundcalc_reloaded') === buildId; }
+        catch (e) { return false; }
+      }
+
+      function markReloaded(buildId) {
+        try { sessionStorage.setItem('compoundcalc_reloaded', buildId); } catch (e) {}
+      }
+
+      function clearInstalledCopy() {
+        var tasks = [];
+        if ('serviceWorker' in navigator) {
+          tasks.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+            return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+          }));
+        }
+        if ('caches' in window) {
+          tasks.push(caches.keys().then(function (keys) {
+            return Promise.all(keys.map(function (key) { return caches.delete(key); }));
+          }));
+        }
+        ['index.html', 'flutter_bootstrap.js', 'main.dart.js', 'manifest.json'].forEach(function (file) {
+          tasks.push(fetch(file, { cache: 'reload' }).catch(function () {}));
+        });
+        return Promise.all(tasks);
+      }
+
+      fetch(BUILD_FILE + '?ts=' + Date.now(), { cache: 'no-store' })
+        .then(function (res) { return res.ok ? res.text() : ''; })
+        .then(function (text) {
+          var buildId = (text || '').trim();
+          if (!buildId) {
+            startApp();
+            return;
+          }
+          var params = new URLSearchParams(window.location.search);
+          if (params.get('v') === buildId || alreadyReloaded(buildId)) {
+            remember(buildId);
+            startApp();
+            return;
+          }
+          var stored = readStored();
+          var checks = [];
+          if ('serviceWorker' in navigator) {
+            checks.push(navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return regs.length > 0;
+            }));
+          }
+          if ('caches' in window) {
+            checks.push(caches.keys().then(function (keys) { return keys.length > 0; }));
+          }
+          return Promise.all(checks).then(function (flags) {
+            var installed = flags.some(Boolean);
+            var publishedUpdate = stored !== '' && stored !== buildId;
+            if (!installed && !publishedUpdate) {
+              remember(buildId);
+              startApp();
+              return;
+            }
+            markReloaded(buildId);
+            remember(buildId);
+            return clearInstalledCopy().then(function () {
+              var url = new URL(window.location.href);
+              url.searchParams.set('v', buildId);
+              window.location.replace(url.toString());
+            });
+          });
+        })
+        .catch(function () { startApp(); });
+    })();
+  </script>
 </body>
 </html>
