@@ -42,6 +42,6 @@ _flutter.loader.load({
     canvasKitBaseUrl: "https://www.gstatic.com/flutter-canvaskit/a10d8ac38de835021c8d2f920dbf50a920ccc030/",
   },
   serviceWorkerSettings: {
-    serviceWorkerVersion: "2441545100" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */,
+    serviceWorkerVersion: "2803555316" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */,
   },
 });
