@@ -44804,7 +44804,7 @@ return A.Q($async$ti,r)},
 H(a){var s,r,q,p,o=this,n=null
 if(o.a.d){s=A.I(a)
 r=A.bn(a,B.fG,t.w).w
-q=o.a.c.a?"\u0627\u0644\u062d\u0633\u0627\u0628\u0627\u062a \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629":"Load calculation"
+q=o.a.c.a?"\u0627\u0644\u062d\u0633\u0627\u0628\u0627\u062a \u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0629":"Saved calculations"
 p=s.ok.w
 return A.qG(!0,new A.bv(n,r.a.b*0.72,new A.bg(B.HI,A.dK(A.b([A.aA(q,n,n,n,p==null?n:p.mN(B.bc),n,n),B.bd,A.fM(o.a64(s))],t.p),B.aZ,B.A,B.T),n),n),B.a3,!0)}return o.a6f(a)},
 a6f(a){var s,r,q,p=this,o=null,n=A.I(a),m=p.a.c.a?"\u062d\u0641\u0638 \u0627\u0644\u062d\u0633\u0627\u0628":"Save this calculation",l=n.ok,k=l.w
@@ -44883,38 +44883,36 @@ A.atD.prototype={
 $0(){return this.a.ti(this.b)},
 $S:0}
 A.xh.prototype={
-H(a4){var s,r,q,p,o,n,m,l,k,j,i=this,h=null,g=A.I(a4),f=g.ax,e=i.d,d=e.e,c=i.c,b=c.a,a=b?"\u0627\u0644\u0642\u064a\u0645\u0629 \u0627\u0644\u0623\u0648\u0644\u064a\u0629:":"Initial value:",a0=d.Q,a1=A.aBo(A.xG(d.a),a0),a2=b?"\u0645\u0639\u062f\u0644 \u0627\u0644\u0641\u0627\u0626\u062f\u0629:":"Interest rate:",a3="\u2066"+(A.xG(d.f)+"%")+"\u2069"
-a3=b?a3+" (\u0633\u0646\u0648\u064a)":a3+" (Annual)"
-s=b?"\u0627\u0644\u0645\u062f\u0629:":"Duration:"
-c=c.a_w(d.e)
-r=b?"\u0627\u0644\u0625\u064a\u062f\u0627\u0639 \u0627\u0644\u0634\u0647\u0631\u064a:":"Monthly deposit:"
-q=A.aBo(A.xG(d.b),a0)
-p=b?"\u0631\u0633\u0648\u0645 \u0627\u0644\u0635\u0646\u062f\u0648\u0642 / \u0627\u0644\u0625\u062f\u0627\u0631\u0629":"Fund / management fees"
-o=A.xG(d.r)
-n=b?"\u0645\u0639\u062f\u0644 \u0627\u0644\u062a\u0636\u062e\u0645":"Inflation rate"
-m=A.xG(d.w)
-l=b?"\u062a\u0643\u0631\u0627\u0631 \u0627\u0644\u0641\u0627\u0626\u062f\u0629 \u0627\u0644\u0645\u0631\u0643\u0628\u0629:":"Compounding frequency:"
-k=b?"\u0634\u0647\u0631\u064a":"Monthly"
-k=A.b([new A.a1(a,a1),new A.a1(a2,a3),new A.a1(s,c),new A.a1(r,q),new A.a1(p,"\u2066"+(o+"%")+"\u2069"),new A.a1(n,"\u2066"+(m+"%")+"\u2069"),new A.a1(l,k)],t.Wy)
-if(e.d===B.cY){c=b?"\u0647\u062f\u0641 \u0627\u0644\u0627\u062f\u062e\u0627\u0631":"Savings goal"
-k.push(new A.a1(c,A.aBo(A.xG(d.c),a0)))}if(d.d){c=b?"\u0627\u0644\u0647\u062f\u0641 \u0628\u0642\u0648\u0629 \u0634\u0631\u0627\u0621 \u0627\u0644\u064a\u0648\u0645":"Goal in today\u2019s purchasing power"
-k.push(new A.a1(c,b?"\u0646\u0639\u0645":"Yes"))}if(d.x){c=b?"\u0646\u0633\u0628\u0629 \u0627\u0644\u0632\u064a\u0627\u062f\u0629 \u0627\u0644\u0633\u0646\u0648\u064a\u0629 \u0644\u0644\u0645\u0633\u0627\u0647\u0645\u0629":"Annual deposit increase %"
-k.push(new A.a1(c,"\u2066"+(A.xG(d.y)+"%")+"\u2069"))}if(d.z){c=b?"\u062a\u0648\u0642\u064a\u062a \u0627\u0644\u0645\u0633\u0627\u0647\u0645\u0629 \u0627\u0644\u0634\u0647\u0631\u064a\u0629":"Monthly deposit timing"
-k.push(new A.a1(c,b?"\u0628\u062f\u0627\u064a\u0629 \u0627\u0644\u0634\u0647\u0631":"Beginning of month"))}if(a0!=="USD")k.push(new A.a1(b?"\u0627\u0644\u0639\u0645\u0644\u0629":"Currency",a0))
-c=f.RG
-c=(c==null?f.k2:c).cO(0.55)
+H(a4){var s,r,q,p,o,n,m,l,k,j=this,i=null,h=A.I(a4),g=h.ax,f=j.d,e=f.e,d=j.c,c=d.a,b=c?"\u0631\u0623\u0633 \u0627\u0644\u0645\u0627\u0644 \u0627\u0644\u062d\u0627\u0644\u064a":"Starting amount",a=e.Q,a0=A.aBo(A.xG(e.a),a),a1=c?"\u0627\u0644\u0639\u0627\u0626\u062f \u0627\u0644\u0633\u0646\u0648\u064a \u0627\u0644\u0645\u062a\u0648\u0642\u0639":"Expected annual return",a2=A.xG(e.f),a3=c?"\u0645\u062f\u0629 \u0627\u0644\u0627\u0633\u062a\u062b\u0645\u0627\u0631 (\u0633\u0646\u0648\u0627\u062a)":"Investment period (years)"
+d=d.a_w(e.e)
+s=c?"\u0627\u0644\u0645\u0633\u0627\u0647\u0645\u0629 \u0627\u0644\u0634\u0647\u0631\u064a\u0629":"Monthly deposit"
+r=A.aBo(A.xG(e.b),a)
+q=c?"\u0631\u0633\u0648\u0645 \u0627\u0644\u0635\u0646\u062f\u0648\u0642 / \u0627\u0644\u0625\u062f\u0627\u0631\u0629":"Fund / management fees"
+p=A.xG(e.r)
+o=c?"\u0645\u0639\u062f\u0644 \u0627\u0644\u062a\u0636\u062e\u0645":"Inflation rate"
+n=A.xG(e.w)
+m=c?"\u062a\u0643\u0631\u0627\u0631 \u0627\u0644\u0641\u0627\u0626\u062f\u0629 \u0627\u0644\u0645\u0631\u0643\u0628\u0629":"Compounding frequency"
+l=c?"\u0634\u0647\u0631\u064a":"Monthly"
+l=A.b([new A.a1(b,a0),new A.a1(a1,"\u2066"+(a2+"%")+"\u2069"),new A.a1(a3,d),new A.a1(s,r),new A.a1(q,"\u2066"+(p+"%")+"\u2069"),new A.a1(o,"\u2066"+(n+"%")+"\u2069"),new A.a1(m,l)],t.Wy)
+if(f.d===B.cY){d=c?"\u0647\u062f\u0641 \u0627\u0644\u0627\u062f\u062e\u0627\u0631":"Savings goal"
+l.push(new A.a1(d,A.aBo(A.xG(e.c),a)))}if(e.d){d=c?"\u0627\u0644\u0647\u062f\u0641 \u0628\u0642\u0648\u0629 \u0634\u0631\u0627\u0621 \u0627\u0644\u064a\u0648\u0645":"Goal in today\u2019s purchasing power"
+l.push(new A.a1(d,c?"\u0646\u0639\u0645":"Yes"))}if(e.x){d=c?"\u0646\u0633\u0628\u0629 \u0627\u0644\u0632\u064a\u0627\u062f\u0629 \u0627\u0644\u0633\u0646\u0648\u064a\u0629 \u0644\u0644\u0645\u0633\u0627\u0647\u0645\u0629":"Annual deposit increase %"
+l.push(new A.a1(d,"\u2066"+(A.xG(e.y)+"%")+"\u2069"))}if(e.z){d=c?"\u062a\u0648\u0642\u064a\u062a \u0627\u0644\u0645\u0633\u0627\u0647\u0645\u0629 \u0627\u0644\u0634\u0647\u0631\u064a\u0629":"Monthly deposit timing"
+l.push(new A.a1(d,c?"\u0628\u062f\u0627\u064a\u0629 \u0627\u0644\u0634\u0647\u0631":"Beginning of month"))}if(a!=="USD")l.push(new A.a1(c?"\u0627\u0644\u0639\u0645\u0644\u0629":"Currency",a))
+d=g.RG
+d=(d==null?g.k2:d).cO(0.55)
+b=A.dh(16)
 a=A.dh(16)
-a0=A.dh(16)
-a1=g.ok.x
-a1=a1==null?h:a1.mN(B.bc)
-a1=A.fM(A.aA(e.b,h,h,h,a1,h,h))
-e=b?"\u062d\u0630\u0641":"Delete"
-b=t.p
-e=A.b([A.dc(A.b([a1,A.MK(h,h,h,B.IB,h,h,i.f,h,h,h,e)],b),B.R,B.A,B.T,0)],b)
-for(j=0;j<k.length;j+=2){a1=i.O8(g,k[j])
-a2=j+1
-a2=a2<k.length?i.O8(g,k[a2]):B.a7
-e.push(new A.bg(B.Hp,A.dc(A.b([new A.pb(1,B.eQ,a1,h),B.Ax,new A.pb(1,B.eQ,a2,h)],b),B.bs,B.A,B.T,0),h))}return A.f7(!1,B.I,!0,a,A.uf(!1,a0,!0,new A.bg(B.HC,A.dK(e,B.aZ,B.A,B.T),h),h,!0,h,h,h,h,h,h,h,h,i.e,h,h,h,h,h),B.w,c,0,h,h,h,h,h,B.bZ)},
+a0=h.ok.x
+a0=a0==null?i:a0.mN(B.bc)
+a0=A.fM(A.aA(f.b,i,i,i,a0,i,i))
+f=c?"\u062d\u0630\u0641":"Delete"
+c=t.p
+f=A.b([A.dc(A.b([a0,A.MK(i,i,i,B.IB,i,i,j.f,i,i,i,f)],c),B.R,B.A,B.T,0)],c)
+for(k=0;k<l.length;k+=2){a0=j.O8(h,l[k])
+a1=k+1
+a1=a1<l.length?j.O8(h,l[a1]):B.a7
+f.push(new A.bg(B.Hp,A.dc(A.b([new A.pb(1,B.eQ,a0,i),B.Ax,new A.pb(1,B.eQ,a1,i)],c),B.bs,B.A,B.T,0),i))}return A.f7(!1,B.I,!0,b,A.uf(!1,a,!0,new A.bg(B.HC,A.dK(f,B.aZ,B.A,B.T),i),i,!0,i,i,i,i,i,i,i,i,j.e,i,i,i,i,i),B.w,d,0,i,i,i,i,i,B.bZ)},
 O8(a,b){var s=null,r=a.ok,q=A.aA(b.a,s,s,s,r.Q,s,s)
 r=r.z
 r=r==null?s:r.mN(B.ax)

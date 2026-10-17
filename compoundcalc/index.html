@@ -18,7 +18,23 @@
 
   <link rel="icon" type="image/png" href="favicon.png"/>
   <title>حاسبة الفائدة المركبة</title>
-  <link rel="manifest" href="manifest.json">
+  <script>
+    (function () {
+      var lang = (navigator.language || 'ar').toLowerCase();
+      var arabic = lang.indexOf('ar') === 0;
+      var title = arabic ? 'حاسبة الفائدة المركبة' : 'Compound Interest Calculator';
+      var shortTitle = arabic ? 'حاسبة الاستثمار' : 'Compound Calc';
+      document.documentElement.lang = arabic ? 'ar' : 'en';
+      document.documentElement.dir = arabic ? 'rtl' : 'ltr';
+      document.title = title;
+      var apple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+      if (apple) apple.setAttribute('content', shortTitle);
+      var link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = arabic ? 'manifest.json' : 'manifest-en.json';
+      document.head.appendChild(link);
+    })();
+  </script>
 
   <!--
     Web analytics guard — tracks web/PWA visitors only, not Play Store app users.
@@ -69,7 +85,7 @@
         var script = document.createElement('script');
         script.id = 'flutter-bootstrap';
         script.async = true;
-        script.src = 'flutter_bootstrap.js?v=20261017115215';
+        script.src = 'flutter_bootstrap.js?v=20261017121620';
         document.body.appendChild(script);
       }
 
@@ -119,7 +135,7 @@
             }));
           }));
         }
-        ['index.html', 'flutter_bootstrap.js', 'main.dart.js', 'manifest.json'].forEach(function (file) {
+        ['index.html', 'flutter_bootstrap.js', 'main.dart.js', 'manifest.json', 'manifest-en.json'].forEach(function (file) {
           tasks.push(fetch(file, { cache: 'reload' }).catch(function () {}));
         });
         return Promise.all(tasks);
