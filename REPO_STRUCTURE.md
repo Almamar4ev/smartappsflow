@@ -264,7 +264,11 @@ instantly. Accepting the default also removes any chance of a typo.
 
 ## 5. Known pending work (do each in its own focused session)
 
-### Trade Log Pro (next sessions — see also `tradelogpro/PROJECT_LOG_AR.md` §4)
+### Edgeory (Play production is live — October 2026)
+
+The 12-tester closed test finished and the app was published on Google Play several days before 18 October 2026. Later AABs go to the **Production** track. See `tradelogpro/PROJECT_LOG_AR.md`.
+
+### Trade Log Pro (older notes — see also `tradelogpro/PROJECT_LOG_AR.md` §4)
 - PWA icons (`icon-192` / `icon-512`) + manifest / apple-touch restore.
 - Device QA + Play listing when ready (privacy policy file is in-repo).
 - Optional: deeper `app.js` splits; later Vite (phase C) / sync+billing (phase D).
