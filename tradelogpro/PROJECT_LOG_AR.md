@@ -94,7 +94,7 @@ https://smartappsflow.net/tradelogpro/
 
 على التطبيق الأصلي تُستخدم إضافة Capacitor Share؛ على الويب `navigator.share`؛ وإن لم يتوفرا تُنسخ الرسالة. الكاش: `edgeory-v8`. الويب نُشر وتأكد المستخدم منه.
 
-زر **Rate App** في القائمة يفتح صفحة Edgeory في Google Play (`PLAY_STORE_URL`) عبر `@capacitor/browser` داخل التطبيق، و`window.open` على الويب. لا نافذة تقييم تلقائية. يُرفع مع تحديث المشاركة في حزمة واحدة على **Production**، بعد رفع الحد إلى minSdk 24. #41 و#43 بلا هذا الزر.
+زر **Rate App** في القائمة يفتح صفحة Edgeory في Google Play (`PLAY_STORE_URL`) عبر `@capacitor/browser` داخل التطبيق، و`window.open` على الويب. لا نافذة تقييم تلقائية. يُرفع مع تحديث المشاركة في حزمة واحدة على **Production**، بعد رفع الحد إلى minSdk 24. #41 و#43 بلا هذا الزر. Play يستهلك `versionCode` عند أول رفع حتى لو حُذفت الحزمة من المسودة، لذلك 44 محجوز والحزمة التالية هي التي تُرفع.
 
 ### النشر في الإنتاج (أكتوبر 2026)
 
