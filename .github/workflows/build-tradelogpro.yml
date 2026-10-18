@@ -124,7 +124,8 @@ jobs:
       - name: Update SDK, version, and lock package name
         run: |
           set -e
-          sed -i 's/minSdkVersion = .*/minSdkVersion = 23/' android/variables.gradle
+          # Play Automatic Protection rejects minSdk 23. Same requirement as Smart Loan.
+          sed -i 's/minSdkVersion = .*/minSdkVersion = 24/' android/variables.gradle
           # Play Console (as of 2026) requires targetSdk >= 36 for new releases.
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 36/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 36/' android/variables.gradle
@@ -142,6 +143,7 @@ jobs:
           echo "=== SDK / applicationId / namespace ==="
           grep -E 'minSdkVersion|compileSdkVersion|targetSdkVersion' android/variables.gradle
           grep -E 'applicationId|namespace' android/app/build.gradle
+          grep -q 'minSdkVersion = 24' android/variables.gradle
           grep -q 'compileSdkVersion = 36' android/variables.gradle
           grep -q 'targetSdkVersion = 36' android/variables.gradle
           grep -q 'applicationId "com.tradelog.pro"' android/app/build.gradle

@@ -99,6 +99,7 @@ https://smartappsflow.net/tradelogpro/
 - شرط الحساب الشخصي اكتمل: **12 مختبرًا** في Closed testing، ثم نُشر Edgeory **رسميًا على Google Play** قبل 18 أكتوبر 2026 بعدة أيام.
 - أي حزمة بعد ذلك تُرفع على مسار **Production**، لا على Closed testing ولا Internal testing.
 - رقم الإصدار المنشور في المتجر لم يُسجَّل هنا؛ لا تفترض أنه 38 إلا إذا أكدته Play Console.
+- **18 أكتوبر 2026:** رفع تحديث المشاركة على Production رُفض لأن Play Automatic Protection تشترط **minSdk ≥ 24** والحزمة كانت 23. CI صار يثبّت `minSdkVersion = 24` (مثل Smart Loan). أعد الرفع من الحزمة الجديدة، لا من #41.
 
 ### حالة المرحلة الحالية (7 أغسطس 2026)
 
