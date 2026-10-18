@@ -78,6 +78,22 @@
 - اسم الإصدار في Play Console: اترك ما يعبّئه Play تلقائيًا `versionCode (versionName)` — مثل `38 (1.0.0)`.
 - أول حزمة Closed testing: **run #38** (`1.0.0`، versionCode 38). لا ترفع #37 (اسمها `1.0.37`).
 
+### مشاركة التطبيق (18 أكتوبر 2026)
+
+زر **Share App** في القائمة يفتح ورقة المشاركة في النظام (نفس شاشة الهاتف في emiGo)، والرسالة فيها الرابطان معًا داخل النص — بدون حقل `url` منفصل، وإلا يعرض أندرويد بطاقة رابط ويسقط باقي الرسالة:
+
+```
+Try Edgeory to log trades and track your P&L.
+
+Android — Google Play:
+https://play.google.com/store/apps/details?id=com.tradelog.pro
+
+iPhone & browser:
+https://smartappsflow.net/tradelogpro/
+```
+
+على التطبيق الأصلي تُستخدم إضافة Capacitor Share؛ على الويب `navigator.share`؛ وإن لم يتوفرا تُنسخ الرسالة. الكاش: `edgeory-v7`. جرّب على الويب أولًا، ثم ارفع حزمة المتجر لاحقًا.
+
 ### حالة المرحلة الحالية (7 أغسطس 2026)
 
 | المسار | الحالة |
