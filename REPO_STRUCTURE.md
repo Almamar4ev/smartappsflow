@@ -266,7 +266,7 @@ instantly. Accepting the default also removes any chance of a typo.
 
 ### Edgeory (Play production is live — October 2026)
 
-The 12-tester closed test finished and the app was published on Google Play several days before 18 October 2026. Later AABs go to the **Production** track. See `tradelogpro/PROJECT_LOG_AR.md`.
+The 12-tester closed test finished and the app was first published on 12 October 2026 (version **38**). On 18 October 2026, production update **45 (1.0.0)** was sent for review (share links, Rate App, minSdk 24). Do not upload a newer AAB unless asked. See `tradelogpro/PROJECT_LOG_AR.md`.
 
 ### Trade Log Pro (older notes — see also `tradelogpro/PROJECT_LOG_AR.md` §4)
 - PWA icons (`icon-192` / `icon-512`) + manifest / apple-touch restore.
