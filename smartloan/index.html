@@ -152,8 +152,10 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
   overflow:hidden;
   background:var(--bg);
 }
-.step-header{display:flex;align-items:center;justify-content:space-between;padding:calc(14px + var(--safe-top)) 20px 0;flex-shrink:0}
-.back-btn{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;color:var(--txt2);font-size:26px;font-weight:800;padding:8px 18px;cursor:pointer;line-height:1}
+.step-header{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;padding:calc(14px + var(--safe-top)) 20px 0;flex-shrink:0}
+.back-btn{width:42px;height:42px;padding:0;background:var(--bg2);border:1px solid var(--brd);border-radius:12px;color:var(--txt);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.back-btn svg{width:22px;height:22px;display:block}
+#app[dir="rtl"] .back-btn svg{transform:scaleX(-1)}
 .step-indicator{color:var(--txt2);font-size:15px;font-weight:600}
 .lang-toggle{padding:7px 13px;border-radius:8px;background:var(--bg2);border:1px solid var(--brd);color:var(--txt2);font-size:13px;font-weight:700;cursor:pointer}
 .step-progress{height:5px;background:var(--bg3);margin:10px 20px 0;border-radius:2px;flex-shrink:0}
@@ -205,7 +207,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 
 /* ── RESULTS ── */
 #results-screen{overflow-y:auto;flex-shrink:0;height:auto;min-height:100vh;min-height:100dvh}
-.results-header{display:flex;align-items:center;justify-content:space-between;padding:calc(16px + var(--safe-top)) 20px 0;flex-shrink:0}
+.results-header{display:grid;grid-template-columns:42px 1fr 42px;align-items:center;padding:calc(16px + var(--safe-top)) 20px 0;flex-shrink:0}
+.results-title{text-align:center}
+.step-indicator{text-align:center}
 .results-title{color:var(--txt);font-size:19px;font-weight:800}
 .risk-banner{display:flex;align-items:center;gap:10px;margin:14px 20px 0;padding:13px 16px;border-radius:14px;border:1.5px solid}
 .risk-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
@@ -317,6 +321,14 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .set-section{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:15px}
 .set-section-hd{display:flex;align-items:center;gap:9px;margin-bottom:13px;color:var(--lbl)}
 .set-section-hd .ic{width:18px;height:18px;flex-shrink:0}
+.set-row{display:flex;align-items:center;gap:12px;width:100%;padding:11px 2px;border:none;background:transparent;color:var(--txt);font:inherit;font-size:15px;font-weight:700;cursor:pointer;text-align:start}
+.set-row+.set-row{border-top:1px solid var(--brd)}
+.set-ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
+.set-ic svg{width:18px;height:18px;display:block}
+.set-row-label{flex:1;min-width:0}
+.set-row-sub{display:block;font-size:12px;font-weight:500;color:var(--txt3);margin-top:2px}
+.set-chev{width:16px;height:16px;flex-shrink:0;opacity:.4}
+#app[dir="rtl"] .set-chev{transform:scaleX(-1)}
 .theme-light .set-section{background:#fff}
 .currency-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .cur-search-wrap{position:relative;margin-bottom:12px}
@@ -398,6 +410,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
             <button onclick="pickLang('ar')" data-l="ar"><span>🇸🇦</span><span>العربية</span></button>
           </div>
         </div>
+        <button class="icon-btn icon-btn-sq" onclick="shareApp()" id="home-share-btn" aria-label="Share">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
+        </button>
         <button class="icon-btn icon-btn-sq" onclick="openSettings()" aria-label="Settings">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
@@ -445,11 +460,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ STEP 1 ══ -->
 <div class="screen step-screen" id="step1">
   <div class="step-header">
-    <button class="back-btn" onclick="goHome()" id="s1-back">←</button>
-    <span class="step-indicator" id="s1-ind">Step 1 of 4</span>
-    <button class="lang-toggle" onclick="toggleLang()">EN/AR</button>
+    <button class="back-btn" onclick="goHome()" id="s1-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+    <span class="step-indicator" id="s1-ind">Step 1 of 3</span>
+    <span></span>
   </div>
-  <div class="step-progress"><div class="step-progress-fill" style="width:25%"></div></div>
+  <div class="step-progress"><div class="step-progress-fill" style="width:33%"></div></div>
   <div class="step-body">
     <h2 class="step-title" id="s1-title">Income Details</h2>
     <div class="field-wrap">
@@ -467,11 +482,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ STEP 2 ══ -->
 <div class="screen step-screen" id="step2">
   <div class="step-header">
-    <button class="back-btn" onclick="goStep(1)" id="s2-back">←</button>
-    <span class="step-indicator" id="s2-ind">Step 2 of 4</span>
-    <button class="lang-toggle" onclick="toggleLang()">EN/AR</button>
+    <button class="back-btn" onclick="goStep(1)" id="s2-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+    <span class="step-indicator" id="s2-ind">Step 2 of 3</span>
+    <span></span>
   </div>
-  <div class="step-progress"><div class="step-progress-fill" style="width:50%"></div></div>
+  <div class="step-progress"><div class="step-progress-fill" style="width:66%"></div></div>
   <div class="step-body">
     <h2 class="step-title" id="s2-title">Monthly Expenses</h2>
     <div class="field-wrap">
@@ -503,11 +518,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ STEP 3 ══ -->
 <div class="screen step-screen" id="step3">
   <div class="step-header">
-    <button class="back-btn" onclick="goStep(2)" id="s3-back">←</button>
-    <span class="step-indicator" id="s3-ind">Step 3 of 4</span>
-    <button class="lang-toggle" onclick="toggleLang()">EN/AR</button>
+    <button class="back-btn" onclick="goStep(2)" id="s3-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+    <span class="step-indicator" id="s3-ind">Step 3 of 3</span>
+    <span></span>
   </div>
-  <div class="step-progress"><div class="step-progress-fill" style="width:75%"></div></div>
+  <div class="step-progress"><div class="step-progress-fill" style="width:100%"></div></div>
   <div class="step-body">
     <h2 class="step-title" id="s3-title">Loan Details</h2>
     <div class="field-wrap">
@@ -555,31 +570,15 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <p style="font-size:11px;color:var(--txt3);margin-top:6px" id="lbl-start-hint">Default is current month — change if loan already started or will start later</p>
     </div>
   </div>
-  <div class="btn-footer"><button class="primary-btn" id="s3-next" onclick="goStep(4)">Next →</button></div>
-</div>
-
-<!-- ══ STEP 4 ══ -->
-<div class="screen step-screen" id="step4">
-  <div class="step-header">
-    <button class="back-btn" onclick="goStep(3)" id="s4-back">←</button>
-    <span class="step-indicator" id="s4-ind">Step 4 of 4</span>
-    <button class="lang-toggle" onclick="toggleLang()">EN/AR</button>
-  </div>
-  <div class="step-progress"><div class="step-progress-fill" style="width:100%"></div></div>
-  <div class="step-body">
-    <h2 class="step-title" id="s4-title">Your Profile</h2>
-    <div class="field-wrap"><label class="lbl" id="lbl-emp">EMPLOYMENT STATUS</label><div id="emp-options"></div></div>
-    <div class="field-wrap"><label class="lbl" id="lbl-risk">RISK TOLERANCE</label><div class="risk-col" id="risk-options"></div></div>
-  </div>
-  <div class="btn-footer"><button class="primary-btn" id="s4-calc" onclick="calculate()">Calculate My Loan →</button></div>
+  <div class="btn-footer"><button class="primary-btn" id="s3-next" onclick="calculate()">Calculate My Loan →</button></div>
 </div>
 
 <!-- ══ RESULTS ══ -->
 <div class="screen" id="results-screen">
   <div class="results-header">
-    <button class="back-btn" onclick="resultsBack()" id="res-back">←</button>
+    <button class="back-btn" onclick="resultsBack()" id="res-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
     <span class="results-title" id="res-title">Your Report</span>
-    <button class="lang-toggle" onclick="toggleLang()">EN/AR</button>
+    <span></span>
   </div>
   <div class="risk-banner" id="risk-banner"><div class="risk-dot" id="risk-dot"></div><span class="risk-banner-text" id="risk-banner-text"></span><span style="color:var(--txt2);font-size:12px" id="risk-score-txt"></span><button class="risk-info-btn" id="risk-info-btn" onclick="showRiskInfo()" aria-label="Risk info">?</button></div>
   <div class="tab-row">
@@ -600,7 +599,6 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="basis-card"><p class="card-label" id="lbl-basis">HOW YOUR LOAN IS CALCULATED</p><div id="basis-rows"></div></div>
     <div class="card" id="banklimit-card" style="padding-top:16px"></div>
     <div class="card"><p class="card-label" id="lbl-rec">ESTIMATED LOAN</p><p class="card-big" id="rec-loan"></p><p class="card-sub" id="rec-range"></p><p class="card-sub" id="rec-range-hint" style="margin-top:6px;font-size:12px;opacity:.7"></p></div>
-    <div class="card"><p class="card-label" id="lbl-advice">THINGS TO CONSIDER</p><div id="advice-list"></div></div>
     <div class="action-row">
       <button class="save-btn" onclick="saveScenario()" id="btn-save">Save Scenario</button>
       <button class="home-btn" onclick="goHome()" id="btn-go-home">Home</button>
@@ -710,7 +708,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ SAVED DETAIL ══ -->
 <div class="screen" id="saved-detail">
   <div class="detail-header">
-    <button class="back-btn" onclick="goHome()" id="detail-back">←</button>
+    <button class="back-btn" onclick="goHome()" id="detail-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
     <span class="detail-title" id="detail-title">Saved Scenario</span>
   </div>
   <div class="detail-body" id="detail-body"></div>
@@ -719,7 +717,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ SETTINGS ══ -->
 <div class="screen" id="settings-screen">
   <div class="settings-hdr">
-    <button class="back-btn" onclick="settingsBack()" id="settings-back-btn">←</button>
+    <button class="back-btn" onclick="settingsBack()" id="settings-back-btn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
     <span class="settings-title" id="settings-title">Settings</span>
   </div>
   <div class="settings-body" style="overflow-y:auto;padding-bottom:calc(30px + var(--safe-bottom))">
@@ -761,15 +759,16 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       </div>
       <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importBackup(this)">
     </div>
-    <div class="set-section">
-      <div class="set-section-hd">
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span class="card-label" id="lbl-feedback-set" style="margin:0">FEEDBACK &amp; SUPPORT</span>
-      </div>
-      <p id="lbl-feedback-hint" style="font-size:12.5px;color:var(--txt2);margin:0 0 12px;line-height:1.5"></p>
-      <button onclick="sendFeedback()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 10px;border-radius:13px;border:1.5px solid var(--brd);background:var(--bg2);color:var(--txt);font:inherit;font-size:14px;font-weight:700;cursor:pointer">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><polyline points="3 7 12 13 21 7"/></svg>
-        <span id="lbl-feedback-btn">Send feedback</span>
+    <div class="set-section" style="padding-top:6px;padding-bottom:6px">
+      <button type="button" class="set-row" onclick="shareApp()">
+        <span class="set-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg></span>
+        <span class="set-row-label"><span id="lbl-share-btn">Share emiGo</span><span class="set-row-sub" id="lbl-share-hint">Send the app to a friend</span></span>
+        <svg class="set-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+      </button>
+      <button type="button" class="set-row" onclick="sendFeedback()">
+        <span class="set-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+        <span class="set-row-label"><span id="lbl-feedback-set">Feedback &amp; support</span><span class="set-row-sub" id="lbl-feedback-hint"></span></span>
+        <svg class="set-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
       </button>
     </div>
   </div>
@@ -778,7 +777,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ COMPARE ══ -->
 <div class="screen" id="compare-screen" style="height:auto;min-height:100vh;min-height:100dvh;overflow-y:auto">
   <div style="display:flex;align-items:center;gap:12px;padding:18px 20px 0;flex-shrink:0">
-    <button class="back-btn" onclick="goHome()" id="compare-back">←</button>
+    <button class="back-btn" onclick="goHome()" id="compare-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
     <span style="font-size:19px;font-weight:800;color:var(--txt)" id="compare-title">Compare Loans</span>
   </div>
   <div id="compare-body" style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;padding-bottom:30px"></div>
@@ -787,6 +786,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 </div><!-- #app -->
 <script>
 let lang='en',results=null,saved=[],extraLoans=[],settingsPrev='home',currentTheme='light',_editingLoanIdx=null;
+let _viewingSavedLoan=false,_savedSnap=null;
 let currency=''; // set on first launch by user
 let isPremium=false; // false=free, true=premium
 let _lastSaveClick=0; // debounce حماية من الضغط المزدوج على زر الحفظ
@@ -1557,7 +1557,6 @@ function rerenderAll(){
   renderHome();
   renderStepLabels();
   renderStep3Dynamic();
-  renderStep4Dynamic();
   if(a==='results-screen'&&results)renderResults();
   if(a==='settings-screen')renderSettings();
   // تحديث أزرار التبويبات بالترجمة الصحيحة
@@ -1596,7 +1595,6 @@ function startForm(){
   profile.existing=String(saved.filter(x=>x.type!=='scenario').reduce((sum,x)=>sum+(+x.loanMonthly||0),0));
   renderStepLabels();
   renderStep3Dynamic();
-  renderStep4Dynamic();
   if(profileSaved){
     // Profile already filled — skip directly to loan details (step 3)
     // Update back button of step 3 to return home
@@ -1678,7 +1676,6 @@ function goStep(n){
   }
   renderStepLabels();
   if(n===3){renderStep3Dynamic();}
-  if(n===4){renderStep4Dynamic();}
   // Update step 3 back button: if came from profile edit → go to step2, if skipped → go home
   const s3back=document.getElementById('s3-back');
   if(s3back){
@@ -1964,16 +1961,12 @@ function renderBasisToggle(){
 }
 function renderStepLabels(){
   const tc=t();
-  const isRtl=lang==='ar';
-  const bk=isRtl?'→':'←';
-  for(let i=1;i<=4;i++){
-    const bi=document.getElementById('s'+i+'-back');if(bi)bi.textContent=bk;
-    const si=document.getElementById('s'+i+'-ind');if(si)si.textContent=tc.step+' '+i+' '+tc.of+' 4';
+  for(let i=1;i<=3;i++){
+    const si=document.getElementById('s'+i+'-ind');if(si)si.textContent=tc.step+' '+i+' '+tc.of+' 3';
   }
   document.getElementById('s1-title').textContent=tc.s1;
   document.getElementById('s2-title').textContent=tc.s2;
   document.getElementById('s3-title').textContent=tc.s3;
-  document.getElementById('s4-title').textContent=tc.s4;
   document.getElementById('lbl-salary').textContent=tc.q_salary;
   document.getElementById('lbl-income').textContent=tc.q_income;
   document.getElementById('lbl-exp').textContent=tc.q_expenses;
@@ -1994,13 +1987,10 @@ function renderStepLabels(){
   document.getElementById('lbl-amount').textContent=tc.q_amount;
   document.getElementById('lbl-period').textContent=lang==='ar'?'مدة السداد':lang==='es'?'PERÍODO DE PAGO':'REPAYMENT PERIOD';
   document.getElementById('lbl-rate').textContent=lang==='ar'?'معدل الفائدة السنوي':lang==='es'?'TASA DE INTERÉS ANUAL':'ANNUAL INTEREST RATE';
-  document.getElementById('lbl-emp').textContent=tc.q_employment;
-  document.getElementById('lbl-risk').textContent=tc.q_risk;
   ['pfx1','pfx2','pfx3','pfx4','pfx5','pfx6'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=getCurrencySymbol();});
   document.getElementById('s1-next').textContent=tc.next;
   document.getElementById('s2-next').textContent=tc.next;
-  document.getElementById('s3-next').textContent=tc.next;
-  document.getElementById('s4-calc').textContent=tc.calculate;
+  document.getElementById('s3-next').textContent=tc.calculate;
   // period unit options
   document.getElementById('form-opt-months').textContent=lang==='ar'?'شهر':lang==='es'?'Meses':'Months';
   document.getElementById('form-opt-years').textContent=lang==='ar'?'سنة':lang==='es'?'Años':'Years';
@@ -2100,14 +2090,6 @@ function getStartDate(){
   const y=form.startYear??now.getFullYear();
   return new Date(y,m,1);
 }
-function renderStep4Dynamic(){
-  const tc=t();
-  document.getElementById('emp-options').innerHTML=['full','part','self','retired','none'].map(e=>
-    `<button class="option-btn${profile.employment===e?' active':''}" onclick="selectEmp('${e}')">${tc['emp_'+e]}</button>`).join('');
-  document.getElementById('risk-options').innerHTML=['low','medium','high'].map(r=>
-    `<button class="risk-btn ${r}${profile.risk===r?' active':''}" onclick="selectRisk('${r}')">${tc['risk_'+r]}</button>`).join('');
-}
-
 // ── FORM INPUTS ───────────────────────────────────────────────────────────────
 const PROFILE_KEYS=['salary','income','expenses','variable','existing','employment','risk'];
 function updateForm(k,v){
@@ -2181,11 +2163,10 @@ function selectLoanType(lt){
     if(idx>-1 && chips[idx]) chips[idx].classList.add('active');
   }
 }
-function selectEmp(e){profile.employment=e;document.querySelectorAll('#emp-options .option-btn').forEach(b=>b.classList.remove('active'));if(event&&event.currentTarget)event.currentTarget.classList.add('active');}
-function selectRisk(r){profile.risk=r;document.querySelectorAll('#risk-options .risk-btn').forEach(b=>b.classList.remove('active'));if(event&&event.currentTarget)event.currentTarget.classList.add('active');}
-
 // ── CALCULATE ─────────────────────────────────────────────────────────────────
 function calculate(){
+  _viewingSavedLoan=false;
+  _savedSnap=null;
   // بدون مبلغ كانت analyse تفترض 10,000 بينما الجدول وبقية البطاقات تفترض 0 ⇒ تقرير متناقض
   if(!(+form.amount>0)){
     showToast(lang==='ar'?'أدخل مبلغ القرض أولاً':lang==='es'?'Introduce el monto del préstamo':'Enter the loan amount first');
@@ -2200,9 +2181,8 @@ function calculate(){
 function dtiColor(pct){return pct<35?'var(--safe)':pct<=50?'var(--mod)':'var(--risk)';}
 // ── RESULTS ───────────────────────────────────────────────────────────────────
 function renderResults(){
-  const tc=t(),r=results,color=rc(r.riskLevel);
+  const tc=t(),r=results;
   document.getElementById('res-title').textContent=tc.results;
-  document.getElementById('res-back').textContent=lang==='ar'?'→':'←';
   const banner=document.getElementById('risk-banner');
   if(banner) banner.style.display='none';
   ['report','charts','schedule','simulate','restructure'].forEach(tb=>{
@@ -2267,16 +2247,6 @@ function renderResults(){
   try{ renderBankNoteCard(r); renderBankCompareCard(r); }catch(e){
     ['bankpay-card','bankcmp-card'].forEach(id=>{const _c=document.getElementById(id); if(_c)_c.style.display='none';});
   }
-  document.getElementById('lbl-advice').textContent=tc.advice;
-  // Merge smart rec as first item in advice
-  const smartRec=tc['rec_'+r.riskLevel];
-  const advs=r.riskLevel==='risky'?[tc.adv_avoid,tc.adv_reduce]:r.riskLevel==='moderate'?[tc.adv_moderate,tc.adv_down,tc.adv_extend]:[tc.adv_great];
-  document.getElementById('advice-list').innerHTML=
-    `<p class="advice-item" style="font-weight:700;color:${color};margin-bottom:10px">${smartRec}</p>`+
-    advs.map(a=>`<p class="advice-item">${a}</p>`).join('');
-  document.getElementById('btn-save').textContent=tc.saveScenario;
-  document.getElementById('btn-save').style.display='';
-  document.getElementById('btn-go-home').textContent=tc.goHome;
   document.getElementById('btn-restart').textContent=tc.restart;
   const pdfBtn=document.getElementById('btn-pdf');
   if(pdfBtn){
@@ -2340,12 +2310,13 @@ function renderResults(){
   }
   simUpdate();renderSavedTab();renderMultiLoans();
   // إذا كنا في وضع تعديل قرض محفوظ — نُظهر زر الحفظ دائماً
-  if(_editingLoanIdx!==null){
+  if(_editingLoanIdx!==null && !_viewingSavedLoan){
     const bs=document.getElementById('btn-save');
     if(bs){bs.style.display='';bs.textContent=t().saveScenario;}
     const br=document.getElementById('btn-restart');
     if(br) br.style.display='';
   }
+  applyResultsActions();
   setTimeout(drawCharts,80);
   switchTab('report',document.getElementById('tab-report'));
 }
@@ -3120,53 +3091,50 @@ function openSavedDetail(i){
     limitBasis:prevProfile.limitBasis||'gross'
   };
 
+  _savedSnap={results:prevResults,form:prevForm,profile:prevProfile};
+  _viewingSavedLoan=true;
   renderResults();
+  showScreen('results-screen');
+}
 
-  // إخفاء أزرار غير مناسبة في وضع العرض
-  const isAr=lang==='ar';
+function leaveSavedDetail(){
+  if(_savedSnap){
+    results=_savedSnap.results;
+    form=_savedSnap.form;
+    profile=_savedSnap.profile;
+    _savedSnap=null;
+  }
+  _viewingSavedLoan=false;
+  goHome();
+}
+function applyResultsActions(){
   const tc=t();
   const btnSave=document.getElementById('btn-save');
   const btnRestart=document.getElementById('btn-restart');
   const btnHome=document.getElementById('btn-go-home');
-  const btnPdf=document.getElementById('btn-pdf');
-
-  if(btnSave) btnSave.style.display='none';
-  if(btnRestart) btnRestart.style.display='none';
-  if(btnPdf) btnPdf.textContent=isAr?'تصدير PDF':lang==='es'?'Exportar PDF':'Export PDF';
-
-  // زر الرجوع
-  if(btnHome){
-    btnHome.style.flex='unset';
-    btnHome.style.width='100%';
-    btnHome.textContent=isAr?'→ رجوع للرئيسية':'← Back to Home';
-    // استخدم دالة مسماة بدل closure لتجنب التشابك
-    btnHome._savedDetailBack=()=>{
-      // استعادة الحالة السابقة
-      results=prevResults;
-      form=prevForm;
-      profile=prevProfile;
-      // إعادة الأزرار لوضعها الطبيعي
-      if(btnSave){btnSave.style.display='';btnSave.textContent=tc.saveScenario;}
-      if(btnRestart){btnRestart.style.display='';btnRestart.textContent=tc.restart;}
-      if(btnHome){
-        btnHome.style.flex='1';
-        btnHome.style.width='';
-        btnHome.textContent=tc.goHome;
-        btnHome.onclick=()=>goHome();
-        delete btnHome._savedDetailBack;
-      }
-      goHome();
-    };
-    btnHome.onclick=btnHome._savedDetailBack;
+  if(_viewingSavedLoan){
+    if(btnSave) btnSave.style.display='none';
+    if(btnRestart) btnRestart.style.display='none';
+    if(btnHome){
+      btnHome.style.flex='unset';
+      btnHome.style.width='100%';
+      btnHome.textContent=lang==='ar'?'رجوع للرئيسية':lang==='es'?'Volver al inicio':'Back to Home';
+      btnHome.onclick=leaveSavedDetail;
+    }
+  }else{
+    if(btnSave){btnSave.style.display='';btnSave.textContent=tc.saveScenario;}
+    if(btnRestart){btnRestart.style.display='';btnRestart.textContent=tc.restart;}
+    if(btnHome){
+      btnHome.style.flex='1';
+      btnHome.style.width='';
+      btnHome.textContent=tc.goHome;
+      btnHome.onclick=()=>goHome();
+    }
   }
-
-  showScreen('results-screen');
 }
 
-// سهم الرأس في شاشة النتائج: إن كنا في عرض قرض محفوظ نستعيد الحالة السابقة كما يفعل زر «رجوع للرئيسية»
 function resultsBack(){
-  const b=document.getElementById('btn-go-home');
-  if(b&&typeof b._savedDetailBack==='function') b._savedDetailBack(); else goHome();
+  if(_viewingSavedLoan) leaveSavedDetail(); else goHome();
 }
 
 // ── SETTINGS ──────────────────────────────────────────────────────────────────
@@ -3180,14 +3148,14 @@ function renderSettings(){
   if(langSetEl) langSetEl.textContent=tc.langSet;
   const currLbl=document.getElementById('lbl-currency-set');
   if(currLbl) currLbl.textContent=isAr?'العملة':isEs?'MONEDA':'CURRENCY';
-  document.getElementById('settings-back-btn').textContent=isAr?'→':'←';
-  // feedback labels
   const fbSet=document.getElementById('lbl-feedback-set');
   const fbHint=document.getElementById('lbl-feedback-hint');
-  const fbBtn=document.getElementById('lbl-feedback-btn');
   if(fbSet) fbSet.textContent=tc.fbSet;
   if(fbHint) fbHint.textContent=tc.fbHint;
-  if(fbBtn) fbBtn.textContent=tc.fbBtn;
+  const shBtn=document.getElementById('lbl-share-btn');
+  const shHint=document.getElementById('lbl-share-hint');
+  if(shBtn) shBtn.textContent=isAr?'مشاركة emiGo':isEs?'Compartir emiGo':'Share emiGo';
+  if(shHint) shHint.textContent=isAr?'أرسل التطبيق لصديق':isEs?'Envía la app a un amigo':'Send the app to a friend';
   // backup labels
   const bkSet=document.getElementById('lbl-backup-set');
   const bkHint=document.getElementById('lbl-backup-hint');
@@ -3209,7 +3177,6 @@ function renderSettings(){
 // ── COMPARE ───────────────────────────────────────────────────────────────────
 function openCompare(){
   const tc=t();
-  document.getElementById('compare-back').textContent=lang==='ar'?'→':'←';
   document.getElementById('compare-title').textContent=tc.compareTitle;
   renderCompare();
   showScreen('compare-screen');
@@ -3510,6 +3477,34 @@ function hideBankPayInfo(e){
 
 // ── إرسال ملاحظة: يفتح بريد المستخدم برسالة جاهزة ─────────────────────────────
 const FEEDBACK_EMAIL='smartappsflow@gmail.com';
+const PLAY_URL='https://play.google.com/store/apps/details?id=com.smartapps.smartloanadvisor';
+const WEB_URL='https://smartappsflow.net/smartloan/';
+async function shareApp(){
+  const isAr=lang==='ar', isEs=lang==='es';
+  const title='emiGo: EMI & Loan';
+  const text=isAr
+    ?'جرّب emiGo لحساب الأقساط والقروض.\n\nأندرويد — Google Play:\n'+PLAY_URL+'\n\nآيفون والمتصفح:\n'+WEB_URL
+    :isEs
+    ?'Prueba emiGo para calcular cuotas y préstamos.\n\nAndroid — Google Play:\n'+PLAY_URL+'\n\niPhone y navegador:\n'+WEB_URL
+    :'Try emiGo for EMI, loan and mortgage estimates.\n\nAndroid — Google Play:\n'+PLAY_URL+'\n\niPhone & browser:\n'+WEB_URL;
+  try{
+    const Cap=window.Capacitor;
+    if(Cap&&Cap.isNativePlatform&&Cap.isNativePlatform()&&Cap.Plugins&&Cap.Plugins.Share){
+      await Cap.Plugins.Share.share({title,text,dialogTitle:isAr?'مشاركة التطبيق':isEs?'Compartir aplicación':'Share app'});
+      return;
+    }
+    if(navigator.share){ await navigator.share({title,text}); return; }
+  }catch(err){
+    if(err&&(err.name==='AbortError'||err.message==='Share canceled')) return;
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast(isAr?'تم نسخ رسالة المشاركة':isEs?'Mensaje de compartir copiado':'Share message copied');
+  }catch(_){
+    showToast(text);
+  }
+}
+
 function sendFeedback(){
   const tc=t();
   const platform=window.Capacitor?'Android app':'Web';
@@ -3555,10 +3550,6 @@ function exportPDF(){
   endDate.setMonth(endDate.getMonth()+months);
   const endStr=endDate.toLocaleDateString(isAr?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long'});
   const loanTypeName=T[lang]['lt_'+form.loanType]||form.loanType;
-  const advs=r.riskLevel==='risky'?[tc.adv_avoid,tc.adv_reduce]
-            :r.riskLevel==='moderate'?[tc.adv_moderate,tc.adv_down,tc.adv_extend]
-            :[tc.adv_great];
-  const smartRec=tc['rec_'+r.riskLevel];
 
   // ── Full amortization — ALL months ──────────────────────────
   const rate=r.rate/12; // r.rate already decimal (e.g. 0.05)
@@ -3685,17 +3676,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
     <table><tbody>${rows}</tbody></table>
   </div>
 
-  <div class="grid2">
-    <div class="section">
-      <div class="section-title">${tc.recommended}</div>
-      <div style="font-size:17px;font-weight:900;margin-bottom:5px">${loanTypeName}</div>
-      <div style="font-size:11px;color:#6b7280">${tc.suggestedRange}:<br>${fmtAmt(r.safeMax*0.8)} – ${fmtAmt(r.safeMax)}</div>
-    </div>
-    <div class="section" style="border:1px solid ${color}40;background:${color}08">
-      <div class="section-title">${tc.advice}</div>
-      <div style="font-size:12px;font-weight:700;color:${color};margin-bottom:6px">${smartRec}</div>
-      ${advs.map(a=>`<div style="font-size:11px;color:#374151;margin-top:4px">${a}</div>`).join('')}
-    </div>
+  <div class="section">
+    <div class="section-title">${tc.recommended}</div>
+    <div style="font-size:17px;font-weight:900;margin-bottom:5px">${loanTypeName}</div>
+    <div style="font-size:11px;color:#6b7280">${tc.suggestedRange}: ${fmtAmt(r.safeMax*0.8)} – ${fmtAmt(r.safeMax)}</div>
   </div>
 
   <div class="section">
