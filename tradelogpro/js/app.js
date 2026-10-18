@@ -3950,20 +3950,59 @@ function submitFeedback() {
 // ==========================================================================
 // SHARE APP
 // ==========================================================================
-function shareApp() {
-  var url = 'https://play.google.com/store/apps/details?id=' + APP_PACKAGE_ID;
-  if (navigator.share) {
-    navigator.share({title:APP_NAME, text:'Check out ' + APP_STORE_TITLE + ' — offline trading journal with P&L and calculators.', url:url});
-  } else {
-    // Fallback - copy to clipboard
-    try {
-      var ta = document.createElement('textarea');
-      ta.value = url; document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
-      showToast('App link copied to clipboard!', 'success');
-    } catch(e) { showToast('Share: ' + url, 'success'); }
+// Both links live inside the text. A separate `url` field makes Android share
+// a link card and drop the rest of the message (emiGo does the same).
+var PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=' + APP_PACKAGE_ID;
+var WEB_APP_URL = 'https://smartappsflow.net/tradelogpro/';
+
+function shareAppText() {
+  return 'Try ' + APP_NAME + ' to log trades and track your P&L.\n\n'
+    + 'Android — Google Play:\n' + PLAY_STORE_URL + '\n\n'
+    + 'iPhone & browser:\n' + WEB_APP_URL;
+}
+
+function copyShareText(text) {
+  var copied = function() { showToast('Share message copied', 'success'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(copied).catch(function() { showToast(text, 'success'); });
+    return;
   }
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    copied();
+  } catch (e) {
+    showToast(text, 'success');
+  }
+}
+
+function shareApp() {
   closeDrawer();
+  var title = APP_STORE_TITLE;
+  var text = shareAppText();
+  var Cap = window.Capacitor;
+  var native = !!(Cap && (
+    (typeof Cap.isNativePlatform === 'function' && Cap.isNativePlatform()) ||
+    Cap.isNative
+  ));
+  var onFail = function(err) {
+    var msg = String((err && (err.message || err.name)) || '').toLowerCase();
+    if (msg.indexOf('cancel') !== -1 || msg.indexOf('abort') !== -1 || msg.indexOf('dismiss') !== -1) return;
+    copyShareText(text);
+  };
+  if (native && Cap.Plugins && Cap.Plugins.Share) {
+    Cap.Plugins.Share.share({ title: title, text: text, dialogTitle: 'Share app' }).catch(onFail);
+    return;
+  }
+  if (navigator.share) {
+    navigator.share({ title: title, text: text }).catch(onFail);
+    return;
+  }
+  copyShareText(text);
 }
 
 function openFormulasModal() { openModal('formulasModal'); }
