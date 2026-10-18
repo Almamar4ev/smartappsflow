@@ -4005,6 +4005,23 @@ function shareApp() {
   copyShareText(text);
 }
 
+function rateApp() {
+  closeDrawer();
+  var url = PLAY_STORE_URL;
+  var Cap = window.Capacitor;
+  var native = !!(Cap && (
+    (typeof Cap.isNativePlatform === 'function' && Cap.isNativePlatform()) ||
+    Cap.isNative
+  ));
+  if (native && Cap.Plugins && Cap.Plugins.Browser) {
+    Cap.Plugins.Browser.open({ url: url }).catch(function() {
+      window.open(url, '_blank', 'noopener');
+    });
+    return;
+  }
+  window.open(url, '_blank', 'noopener');
+}
+
 function openFormulasModal() { openModal('formulasModal'); }
 
 function hideLoader() {

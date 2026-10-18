@@ -7,7 +7,7 @@
 //   - Network First for navigations and index.html
 //   - Cache First for other static files inside /tradelogpro/
 
-const CACHE = 'edgeory-v7';
+const CACHE = 'edgeory-v8';
 
 const ASSETS = [
   './',
