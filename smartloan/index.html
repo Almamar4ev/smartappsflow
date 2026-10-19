@@ -3182,7 +3182,7 @@ function renderSettings(){
   const demoHint=document.getElementById('lbl-demo-hint');
   const demoRow=document.getElementById('settings-demo-row');
   if(demoBtn) demoBtn.textContent=isAr?'وضع العرض':isEs?'Modo demo':'Demo mode';
-  if(demoHint) demoHint.textContent=isAr?'جرّب التطبيق بأرقام تجريبية دون عرض ملفك':isEs?'Prueba la app con números de ejemplo sin mostrar tu archivo':'Try the app with sample numbers without showing your file';
+  if(demoHint) demoHint.textContent=isAr?'أرقام تجريبية ثابتة بالدولار، دون عرض ملفك المالي':isEs?'Números fijos en dólares, sin mostrar tu archivo financiero':'Fixed sample numbers in US dollars, without showing your financial file';
   if(demoRow) demoRow.style.display=isDemoMode()?'none':'';
   const bkSec=document.getElementById('backup-section');
   if(bkSec) bkSec.style.display=isDemoMode()?'none':'';
@@ -4037,7 +4037,7 @@ async function authenticateForExit(){
   }catch(err){ return authErrorKind(err); }
 }
 function buildDemoBundle(prefs){
-  const salary=DEMO_SALARY[prefs.currency]||DEMO_SALARY.USD;
+  const salary=DEMO_SALARY.USD;
   const expenses=Math.round(salary*0.28);
   const variable=Math.round(salary*0.12);
   const profileSnap={salary:String(salary),income:'0',expenses:String(expenses),variable:String(variable),existing:'0',employment:'full',risk:'medium',bankLimit:'40',limitBasis:'gross'};
@@ -4056,11 +4056,11 @@ function buildDemoBundle(prefs){
   pushLoan('car', salary*8, 48, 5.5);
   pushLoan('personal', salary*2, 36, 8);
   profileSnap.existing=String(savedLoans.reduce((sum,l)=>sum+(+l.loanMonthly||0),0));
-  return {lang:prefs.lang, currency:prefs.currency||'USD', currentTheme:prefs.currentTheme, profile:profileSnap, profileSaved:true, saved:savedLoans, form:savedLoans[0].form};
+  return {lang:prefs.lang, currency:'USD', currentTheme:prefs.currentTheme, profile:profileSnap, profileSaved:true, saved:savedLoans, form:savedLoans[0].form};
 }
 async function enterDemoMode(){
   if(isDemoMode()) return;
-  const prefs={lang, currency:currency||'USD', currentTheme};
+  const prefs={lang, currency:'USD', currentTheme};
   let available=false;
   try{ available=await deviceAuthAvailable(); }catch(e){ available=false; }
   if(!available){

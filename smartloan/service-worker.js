@@ -2,13 +2,13 @@
    On every new release: bump VERSION and rewrite CHANGELOG. Those two consts are
    the "control panel" for the in-app update notification — nothing else here
    needs to change per release. */
-const VERSION = 'v46';
+const VERSION = 'v47';
 
 // Short, user-facing "what changed" shown in the in-app update banner.
 const CHANGELOG = {
-  ar: 'وضع عرض ببيانات تجريبية لمشاركة التطبيق دون إظهار ملفك.',
-  en: 'Demo mode with sample numbers, so you can share the app without showing your file.',
-  es: 'Modo demo con datos de ejemplo para compartir la app sin mostrar tu archivo.'
+  ar: 'وضع العرض يتيح لك مشاركة التطبيق أو تسليم هاتفك للتجربة بأرقام تجريبية ثابتة بالدولار، دون إظهار ملفك المالي ودون المساس ببياناتك المالية الخاصة. ملفك الحقيقي يبقى مغلقاً حتى تعود إليه. حجم التحديث حوالي 300 ك.ب.',
+  en: 'Demo mode lets you share the app or hand over your phone with fixed sample numbers in US dollars, without showing your financial file or touching your private financial data. Your real file stays closed until you return to it. Update size is about 300 KB.',
+  es: 'El modo demo permite compartir la app o entregar el teléfono con números de ejemplo fijos en dólares, sin mostrar tu archivo financiero ni tocar tus datos financieros privados. Tu archivo real permanece cerrado hasta que vuelvas a él. La actualización pesa unos 300 KB.'
 };
 
 const CACHE = 'smartloan-' + VERSION;
