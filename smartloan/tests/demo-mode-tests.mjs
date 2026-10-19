@@ -43,6 +43,7 @@ const persist = functionSource('persistState');
 const finish = functionSource('finishExitDemo');
 const load = functionSource('loadState');
 const auth = functionSource('authenticateForExit');
+const enter = functionSource('enterDemoMode');
 
 check('demo session has an in-memory active latch',
   /let\s+_demoSessionActive\s*=\s*false/.test(html));
@@ -57,6 +58,8 @@ check('demo persistence restores markers before choosing the storage key',
   /activeStorageKey\(\)/.test(persist));
 check('direct calls cannot finish a demo exit without authorization',
   /!_demoSessionActive\s*\|\|\s*!_demoExitAuthorized/.test(finish));
+check('native bridge errors abort entry instead of creating an unprotected demo',
+  /authStatus==='error'/.test(enter) && /Demo mode did not start/.test(enter));
 check('missing or corrupt demo data is rebuilt without falling through to sla_v1',
   /missing or corrupt demo blob/.test(load) &&
   /buildDemoBundle/.test(load));
@@ -64,11 +67,18 @@ check('native exit uses device credentials as a supported fallback',
   /allowDeviceCredential\s*:\s*true/.test(auth));
 check('Android biometric plugin is pinned for Capacitor 6',
   pkg.dependencies?.['@aparajita/capacitor-biometric-auth'] === '8.0.2');
-check('Android CI installs the pinned biometric plugin',
-  /@aparajita\/capacitor-biometric-auth@8\.0\.2/.test(workflow));
+check('Android runtime includes the patched Capacitor release',
+  pkg.dependencies?.['@capacitor/android'] === '6.2.2');
+check('Android CI installs only locked dependencies',
+  /npm ci/.test(workflow) && /smartloan\/package-lock\.json/.test(workflow));
+check('API 36 uses a supported AGP and Gradle pair',
+  /gradle:8\.9\.1/.test(workflow) && /gradle-8\.11\.1/.test(workflow));
 check('Android release excludes WebView financial data from backup and transfer',
   /allowBackup",\s*"false"/.test(workflow) &&
   /data_extraction_rules/.test(workflow));
+check('signing secrets are passed through quoted environment variables',
+  /KEYSTORE_PASSWORD_VALUE/.test(workflow) &&
+  /store\.password=\$KEYSTORE_PASSWORD_VALUE"/.test(workflow));
 check('backup import is blocked during demo mode',
   /function importBackup\(input\)\{\s*if\(isDemoMode\(\)\)/.test(html));
 check('backup export is blocked during demo mode',

@@ -744,7 +744,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       </div>
       <div class="theme-grid" id="theme-grid"></div>
     </div>
-    <div class="set-section">
+    <div class="set-section" id="settings-currency-section">
       <div class="set-section-hd">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2 0 0 0-2.5-1.5c-1.4 0-2.5.8-2.5 2s1.1 1.7 2.5 2 2.5.9 2.5 2-1.1 2-2.5 2A2.5 2 0 0 1 9.5 16"/><path d="M12 6v1.5M12 16.5V18"/></svg>
         <span class="card-label" id="lbl-currency-set" style="margin:0">CURRENCY</span>
@@ -1545,6 +1545,10 @@ function renderLangRows(){
     <span class="lang-flag">${l.flag}</span><span class="lang-name">${l.name}</span>${check}</button>`).join('');
 }
 function setCurrencyFromSettings(id){
+  if(isDemoMode()){
+    showToast(lang==='ar'?'الأرقام التجريبية ثابتة بالدولار':lang==='es'?'Los datos de ejemplo están fijados en dólares':'Sample data is fixed in US dollars');
+    return;
+  }
   currency=id;
   persistState();
   renderCurrencyGrid();
@@ -4006,20 +4010,23 @@ function bufFromB64(b64){
   return a;
 }
 function randomBytes(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); return a; }
-async function deviceAuthAvailable(){
+async function deviceAuthStatus(){
   if(isNativeApp()){
     const p=window.Capacitor.Plugins && window.Capacitor.Plugins.BiometricAuth;
-    if(!p || !p.checkBiometry) return false;
+    if(!p || !p.checkBiometry) return 'error';
     try{
       const r=await p.checkBiometry();
-      return !!(r && (r.deviceIsSecure || r.isAvailable));
-    }catch(e){ return false; }
+      if(r && (r.deviceIsSecure || r.isAvailable)) return 'available';
+      if(r && r.deviceIsSecure===false && r.isAvailable===false) return 'unavailable';
+      return 'error';
+    }catch(e){ return 'error'; }
   }
   try{
-    if(!window.isSecureContext || !window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) return false;
-    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-  }catch(e){ return false; }
+    if(!window.isSecureContext || !window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) return 'unavailable';
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()?'available':'unavailable';
+  }catch(e){ return 'unavailable'; }
 }
+async function deviceAuthAvailable(){ return (await deviceAuthStatus())==='available'; }
 async function ensureWebAuthn(){
   const existing=localStorage.getItem(WEBAUTHN_ID_KEY);
   if(existing) return existing;
@@ -4108,8 +4115,12 @@ function buildDemoBundle(prefs){
 async function enterDemoMode(){
   if(isDemoMode()) return;
   const prefs={lang, currency:'USD', currentTheme};
-  let available=false;
-  try{ available=await deviceAuthAvailable(); }catch(e){ available=false; }
+  const authStatus=await deviceAuthStatus();
+  if(authStatus==='error'){
+    showToast(lang==='ar'?'تعذر فحص حماية الجهاز. لم يبدأ وضع العرض.':lang==='es'?'No se pudo comprobar la protección del dispositivo. El modo demo no empezó.':'Device protection could not be checked. Demo mode did not start.');
+    return;
+  }
+  const available=authStatus==='available';
   if(!available){
     const ok=confirm(lang==='ar'
       ?'هذا الهاتف بلا قفل شاشة، لذلك يمكن الخروج من وضع العرض بدون بصمة. لا تسلّم هاتفك لغيرك إن كنت لا تريد أن يرى ملفك.'
@@ -4203,6 +4214,8 @@ function updateDemoChrome(){
   if(demoRow) demoRow.style.display=on?'none':'';
   const bk=document.getElementById('backup-section');
   if(bk) bk.style.display=on?'none':'';
+  const currencySection=document.getElementById('settings-currency-section');
+  if(currencySection) currencySection.style.display=on?'none':'';
 }
 
 function persistState(){

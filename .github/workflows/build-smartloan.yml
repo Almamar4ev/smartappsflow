@@ -61,21 +61,20 @@ jobs:
           fi
           echo "OK: $SDK_ROOT/platforms/android-36/android.jar present"
 
-      # Gate the build on the loan-math + PWA tests. These import only Node
+      # Gate the build on the loan-math, PWA, and Demo Mode tests. They import only Node
       # built-ins, so no npm install is needed. If any test fails the whole
       # workflow stops here and no APK/AAB is produced.
       - name: Run loan-math and PWA tests
         working-directory: smartloan
         run: npm test
 
-      # Pin every Capacitor package to the v6 line (matching smartloan/package.json).
-      # Leaving @capacitor/core / @capacitor/android unpinned pulls Capacitor 7,
-      # which conflicts with the ^6 plugins and fails npm's peer resolution (ERESOLVE).
-      - name: Install Capacitor
+      # Build from the reviewed Smart Loan lockfile while keeping Capacitor's
+      # generated Android project at the repository root.
+      - name: Install locked Capacitor dependencies
         run: |
-          npm install -g @capacitor/cli@6.2.1
-          npm install @capacitor/core@6.2.1 @capacitor/android@6.2.1 @capacitor/splash-screen@6.0.3 @capacitor/filesystem@6.0.4 @capacitor/share@6.0.4 @capacitor/status-bar@6.0.3 @aparajita/capacitor-biometric-auth@8.0.2
-          npm install -D @capacitor/assets@3.0.5
+          cp smartloan/package.json package.json
+          cp smartloan/package-lock.json package-lock.json
+          npm ci
 
       - name: Prepare web folder
         run: |
@@ -114,15 +113,12 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
-      # The AGP that Capacitor 6 scaffolds is only tested up to compileSdk 33,
-      # so it cannot load a modern android-NN framework. Bump AGP + Gradle to
-      # versions that support compileSdk 36 (AGP 8.7.2 needs Gradle 8.9+,
-      # JDK 17 — already set up).
+      # API 36 requires AGP 8.9.1+ and Gradle 8.11.1+. JDK 17 is configured above.
       - name: Upgrade Android Gradle Plugin + Gradle for compileSdk 36
         run: |
           set -e
-          sed -i "s#com.android.tools.build:gradle:[0-9.]*#com.android.tools.build:gradle:8.7.2#" android/build.gradle
-          sed -i "s#gradle-[0-9.]*-\(all\|bin\).zip#gradle-8.9-\1.zip#" android/gradle/wrapper/gradle-wrapper.properties
+          sed -i "s#com.android.tools.build:gradle:[0-9.]*#com.android.tools.build:gradle:8.9.1#" android/build.gradle
+          sed -i "s#gradle-[0-9.]*-\(all\|bin\).zip#gradle-8.11.1-\1.zip#" android/gradle/wrapper/gradle-wrapper.properties
           echo "AGP:";    grep "com.android.tools.build:gradle" android/build.gradle
           echo "Gradle:"; grep distributionUrl android/gradle/wrapper/gradle-wrapper.properties
 
@@ -170,7 +166,8 @@ jobs:
           sed -i 's/minSdkVersion = .*/minSdkVersion = 24/' android/variables.gradle
           sed -i 's/compileSdkVersion = .*/compileSdkVersion = 36/' android/variables.gradle
           sed -i 's/targetSdkVersion = .*/targetSdkVersion = 36/' android/variables.gradle
-          sed -i 's/versionCode .*/versionCode 38/' android/app/build.gradle
+          VERSION_CODE=$((380000 + GITHUB_RUN_NUMBER))
+          sed -i "s/versionCode .*/versionCode $VERSION_CODE/" android/app/build.gradle
           sed -i 's/versionName .*/versionName "3.8"/' android/app/build.gradle
           echo "=== android/variables.gradle ==="
           cat android/variables.gradle
@@ -391,22 +388,31 @@ jobs:
       # -------------------------------------------------------------------
       - name: Decode Keystore
         if: github.event_name != 'pull_request'
+        env:
+          KEYSTORE_BASE64_VALUE: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/smartloan.keystore
+          printf '%s' "$KEYSTORE_BASE64_VALUE" | base64 -d > android/app/smartloan.keystore
 
       - name: Print SHA-256 fingerprint
         if: github.event_name != 'pull_request'
-        run: keytool -list -v -keystore android/app/smartloan.keystore -alias ${{ secrets.KEY_ALIAS }} -storepass ${{ secrets.KEYSTORE_PASSWORD }} | grep SHA256
+        env:
+          KEY_ALIAS_VALUE: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASSWORD_VALUE: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: keytool -list -v -keystore android/app/smartloan.keystore -alias "$KEY_ALIAS_VALUE" -storepass "$KEYSTORE_PASSWORD_VALUE" | grep SHA256
 
       - name: Build Release AAB
         if: github.event_name != 'pull_request'
+        env:
+          KEY_ALIAS_VALUE: ${{ secrets.KEY_ALIAS }}
+          KEYSTORE_PASSWORD_VALUE: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD_VALUE: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd android
           ./gradlew bundleRelease --no-daemon \
-            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/smartloan.keystore \
-            -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+            "-Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/smartloan.keystore" \
+            "-Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD_VALUE" \
+            "-Pandroid.injected.signing.key.alias=$KEY_ALIAS_VALUE" \
+            "-Pandroid.injected.signing.key.password=$KEY_PASSWORD_VALUE"
 
       - name: Build Debug APK for testing
         if: github.event_name != 'pull_request'
