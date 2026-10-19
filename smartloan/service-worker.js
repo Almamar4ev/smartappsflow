@@ -1,8 +1,7 @@
 /* emiGo: EMI & Loan — service worker
-   On every new release: bump VERSION and rewrite CHANGELOG. Those two consts are
-   the "control panel" for the in-app update notification — nothing else here
-   needs to change per release. */
-const VERSION = 'v50';
+   On a real release: bump VERSION (1.0, 1.1, 1.2…) and rewrite CHANGELOG.
+   VERSION is shown to users, so it is a product release, not a running fix counter. */
+const VERSION = '1.0';
 
 // Short, user-facing "what changed" shown in the in-app update banner.
 const CHANGELOG = {

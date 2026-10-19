@@ -4291,6 +4291,13 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
     };
     return (S[L]||S.en)[key];
   }
+  function versionLabel(v){
+    if(!v) return '';
+    var L = (typeof lang !== 'undefined' && lang) ? lang : 'en';
+    if(L==='ar') return ' · الإصدار '+v;
+    if(L==='es') return ' · versión '+v;
+    return ' · version '+v;
+  }
   function changelogText(cl){
     if(!cl) return uT('generic');
     var L = (typeof lang !== 'undefined' && lang) ? lang : 'en';
@@ -4314,7 +4321,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
       body.insertBefore(box, body.firstChild);
     }
     var desc = changelogText(pendingUpdateInfo && pendingUpdateInfo.changelog);
-    var ver = (pendingUpdateInfo && pendingUpdateInfo.version) ? ' ('+pendingUpdateInfo.version+')' : '';
+    var ver = versionLabel(pendingUpdateInfo && pendingUpdateInfo.version);
     box.innerHTML =
       '<div class="card" style="border:1.5px solid var(--acc);padding:14px 16px">'
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
@@ -4384,7 +4391,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
         if (e.data && e.data.type === 'VERSION_INFO') {
           pendingUpdateInfo = { version: e.data.version, changelog: e.data.changelog };
           desc.textContent = changelogText(e.data.changelog);
-          head.textContent = uT('avail') + (e.data.version ? ' ('+e.data.version+')' : '');
+          head.textContent = uT('avail') + versionLabel(e.data.version);
           markUpdateAvailable();
           navigator.serviceWorker.removeEventListener('message', onMsg);
         }
