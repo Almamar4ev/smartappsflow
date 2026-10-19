@@ -4,10 +4,13 @@
 const VERSION = '1.1';
 
 // Short, user-facing "what changed" shown in the in-app update banner.
+// The size is one left-to-right unit: isolates keep it on one side, and the
+// word joiner stops the number and KB from wrapping apart in Arabic.
+const UPDATE_SIZE = '\u2066300\u2060KB\u2069';
 const CHANGELOG = {
-  ar: 'تعزيز حماية وضع العرض وعزل الملف المالي، مع إصلاحات تقنية وتجهيز حماية الجهاز لنسخة المتجر. حجم التحديث 300\u00A0KB.',
-  en: 'Stronger Demo Mode isolation and financial-file protection, plus technical fixes and device protection for the store app. Update size: 300\u00A0KB.',
-  es: 'Mayor aislamiento del modo demo y protección del archivo financiero, además de correcciones técnicas y protección del dispositivo para la app de la tienda. Tamaño: 300\u00A0KB.'
+  ar: 'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار، دون إظهار ملفك المالي أو تعديله. على الهاتف المقفل لا تعود إلى ملفك إلا بالبصمة أو رمز الجهاز، وصفحات القرض الخمس تعمل كالمعتاد. حجم التحديث ' + UPDATE_SIZE + '.',
+  en: 'Demo Mode shares the app with fixed US-dollar samples, without showing or changing your financial file. On a locked phone you return only with biometrics or the device passcode, and all five loan pages work as usual. Update size: ' + UPDATE_SIZE + '.',
+  es: 'El modo demo comparte la app con números fijos en dólares, sin mostrar ni cambiar tu archivo financiero. En un teléfono bloqueado vuelves solo con biometría o el código del dispositivo, y las cinco páginas del préstamo funcionan como siempre. Tamaño: ' + UPDATE_SIZE + '.'
 };
 
 const CACHE = 'smartloan-' + VERSION;
