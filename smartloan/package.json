@@ -1,9 +1,9 @@
 {
   "name": "smart-loan-calculator",
-  "version": "3.2.0",
+  "version": "3.8.0",
   "description": "emiGo: EMI & Loan — EMI, loan & mortgage calculator with bank comparison & payment schedule.",
   "scripts": {
-    "test": "node tests/financial-tests.mjs && node tests/pwa-tests.mjs"
+    "test": "node tests/financial-tests.mjs && node tests/pwa-tests.mjs && node tests/demo-mode-tests.mjs"
   },
   "dependencies": {
     "@capacitor/android": "6.2.1",
@@ -11,7 +11,8 @@
     "@capacitor/splash-screen": "6.0.3",
     "@capacitor/filesystem": "6.0.4",
     "@capacitor/share": "6.0.4",
-    "@capacitor/status-bar": "6.0.3"
+    "@capacitor/status-bar": "6.0.3",
+    "@aparajita/capacitor-biometric-auth": "8.0.2"
   },
   "devDependencies": {
     "@capacitor/assets": "3.0.5",

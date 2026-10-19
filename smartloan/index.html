@@ -1835,6 +1835,11 @@ function savedLoanDisplayName(s){
   const amt=s.loanAmount||+s.form?.amount||0;
   return lt+(amt?' — '+fmtAmt(amt):'');
 }
+function escapeHtml(value){
+  return String(value??'').replace(/[&<>"']/g,ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  })[ch]);
+}
 
 function renderHomeSaved(){
   const tc=t();
@@ -1854,12 +1859,13 @@ function renderHomeSaved(){
     html+=saved.map((s,i)=>{
       if(s.type==='scenario') return '';
       const color=rc(s.results.riskLevel);
-      const displayName=savedLoanDisplayName(s);
+      const displayName=escapeHtml(savedLoanDisplayName(s));
+      const savedTime=escapeHtml(s.time||'');
       return`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:#6366f140">
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
-            <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
+            <div class="saved-mini-sub">${savedTime} · ${tc['risk_'+s.results.riskLevel]} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
             ${(function(){var bl=Math.min(100,Math.max(1,+profile.bankLimit||40));var gross=(+profile.salary||0)+(+profile.income||0);var base=(profile.limitBasis==='net')?Math.max(0,gross-((+profile.expenses||0)+(+profile.variable||0))):gross;var otherEx=saved.filter(function(x){return x.type!=='scenario'&&x!==s;}).reduce(function(sm,x){return sm+(x.loanMonthly||0);},0);var mpa=Math.max(0,base*bl/100-otherEx);var over=(s.results.monthly||0)>mpa+0.5;return over?`<span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--risk) 13%,transparent);color:var(--risk);border:1px solid color-mix(in srgb,var(--risk) 38%,transparent);margin-top:4px">${isAr?'⚠ يتجاوز حد البنك':isEs?'⚠ Supera el límite del banco':'⚠ Exceeds bank limit'}</span>`:`<span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--safe) 16%,transparent);color:var(--safe);border:1px solid color-mix(in srgb,var(--safe) 40%,transparent);margin-top:4px">${isAr?'نشط':isEs?'Activo':'Active'}</span>`;})()}
           </div>
           <div class="saved-mini-right">
@@ -1894,12 +1900,13 @@ function renderHomeSaved(){
     html+=saved.map((s,i)=>{
       if(s.type!=='scenario') return '';
       const color=rc(s.results.riskLevel);
-      const displayName=savedLoanDisplayName(s);
+      const displayName=escapeHtml(savedLoanDisplayName(s));
+      const savedTime=escapeHtml(s.time||'');
       return`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:#f59e0b30;opacity:.9">
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
-            <div class="saved-mini-sub">${s.time||''} · ${tc['risk_'+s.results.riskLevel]} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
+            <div class="saved-mini-sub">${savedTime} · ${tc['risk_'+s.results.riskLevel]} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
             <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#f59e0b15;color:#f59e0b;border:1px solid #f59e0b30;margin-top:4px">${isAr?'سيناريو مقارنة':isEs?'Escenario':'Comparison'}</span>
           </div>
           <div class="saved-mini-right">
@@ -3012,11 +3019,12 @@ function renderSavedTab(){
   clearBtn.style.display='block';clearBtn.textContent=tc.clearAll;
   listEl.innerHTML=saved.map((s,i)=>{
     const color=rc(s.results.riskLevel);
-    const displayName=savedLoanDisplayName(s);
+    const displayName=escapeHtml(savedLoanDisplayName(s));
+    const savedTime=escapeHtml(s.time||'');
     return`<div class="saved-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
         <p class="saved-name" style="margin:0">${displayName}</p>
-        <span style="color:var(--txt2);font-size:12px">${s.time||''}</span>
+        <span style="color:var(--txt2);font-size:12px">${savedTime}</span>
       </div>
       <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:15px">${fmtAmt(s.results.monthly)}</span></div>
       <div class="saved-row"><span class="saved-lbl">${tc.totalInterest}</span><span class="saved-val" style="color:var(--risk)">${fmtAmt(s.results.interest)}</span></div>
@@ -3265,8 +3273,8 @@ function renderCompare(){
       ? `<div style="font-size:10px;color:#f59e0b;font-weight:700;margin-top:3px">${isAr?'يستبدل':lang==='es'?'Reemplaza':'Replaces'} ${T[lang]['lt_'+repL.loanType]||''}</div>`
       : '';
     return `<th style="text-align:center;color:var(--acc);padding:12px 8px;font-size:14px;font-weight:800;border-bottom:2px solid var(--brd)">
-      ${savedLoanDisplayName(s).split('—')[0].trim()}
-      <br><span style="color:var(--txt2);font-weight:500;font-size:12px">${s.time||''}</span>
+      ${escapeHtml(savedLoanDisplayName(s).split('—')[0].trim())}
+      <br><span style="color:var(--txt2);font-weight:500;font-size:12px">${escapeHtml(s.time||'')}</span>
       ${repLabel}
     </th>`;
   }).join('');
@@ -3308,7 +3316,7 @@ function renderCompare(){
   const winner=saved[bestIdx];
   html+=`<div class="card" style="border-inline-start:4px solid var(--safe)">
     <p class="card-label" style="color:var(--safe)">${lang==='ar'?'الأفضل بأقل قسط شهري':lang==='es'?'Mejor por cuota mensual más baja':'Best by Lowest Monthly Payment'}</p>
-    <p style="font-size:19px;font-weight:800;color:var(--txt)">${savedLoanDisplayName(winner)}</p>
+    <p style="font-size:19px;font-weight:800;color:var(--txt)">${escapeHtml(savedLoanDisplayName(winner))}</p>
     <p style="font-size:16px;color:var(--txt2);margin-top:5px;font-weight:600">${fmtAmt(winner.results.monthly)} / ${tc.months}</p>
   </div>`;
   // بطاقة "ماذا لو فعّلت سيناريو؟"
@@ -3871,6 +3879,11 @@ async function doExportShare(){
 function importBackup(input){
   if(isDemoMode()){ if(input) input.value=''; showToast(lang==='ar'?'الاستيراد غير متاح في وضع العرض':lang==='es'?'La importación no está disponible en el modo demo':'Import is unavailable in demo mode'); return; }
   const file=input.files[0]; if(!file) return;
+  if(file.size>2*1024*1024){
+    showToast(lang==='ar'?'❌ ملف النسخة الاحتياطية كبير جداً':lang==='es'?'❌ El archivo es demasiado grande':'❌ Backup file is too large');
+    input.value='';
+    return;
+  }
   const reader=new FileReader();
   reader.onload=function(e){
     try{
@@ -3922,19 +3935,47 @@ const MODE_KEY='emigo_mode';
 const DEMO_LOCK_KEY='emigo_demo_protected';
 const DEMO_GUARD_KEY='emigo_demo_guard';
 const WEBAUTHN_ID_KEY='emigo_webauthn_id';
+let _demoSessionActive=false;
+let _demoSessionProtected=false;
+let _demoExitAuthorized=false;
 
-function isDemoMode(){
+function restoreDemoMarkers(){
+  if(!_demoSessionActive) return;
   try{
-    if(localStorage.getItem(MODE_KEY)==='demo') return true;
-    if(localStorage.getItem(DEMO_GUARD_KEY)==='1'){
-      localStorage.setItem(MODE_KEY,'demo');
-      return true;
-    }
+    localStorage.setItem(MODE_KEY,'demo');
+    localStorage.setItem(DEMO_LOCK_KEY,_demoSessionProtected?'1':'0');
+    if(_demoSessionProtected) localStorage.setItem(DEMO_GUARD_KEY,'1');
+    else localStorage.removeItem(DEMO_GUARD_KEY);
   }catch(e){}
-  return false;
 }
+function hydrateDemoSession(){
+  if(_demoSessionActive) return true;
+  try{
+    const mode=localStorage.getItem(MODE_KEY);
+    const lock=localStorage.getItem(DEMO_LOCK_KEY);
+    const guard=localStorage.getItem(DEMO_GUARD_KEY);
+    const demoRaw=localStorage.getItem(DEMO_STORAGE_KEY);
+    if(mode!=='demo' && guard!=='1' && lock===null && demoRaw===null) return false;
+    let bundleProtection=null;
+    if(demoRaw){
+      try{
+        const bundle=JSON.parse(demoRaw);
+        if(typeof bundle._demoProtected==='boolean') bundleProtection=bundle._demoProtected;
+      }catch(e){}
+    }
+    _demoSessionActive=true;
+    // Any incomplete or contradictory persisted session is protected by default.
+    _demoSessionProtected=
+      guard==='1' || lock==='1' || bundleProtection===true ||
+      (bundleProtection===null ? lock!=='0' : bundleProtection);
+    restoreDemoMarkers();
+    return true;
+  }catch(e){ return _demoSessionActive; }
+}
+function isDemoMode(){ return _demoSessionActive || hydrateDemoSession(); }
 function demoIsProtected(){
-  try{ return localStorage.getItem(DEMO_LOCK_KEY)==='1' || localStorage.getItem(DEMO_GUARD_KEY)==='1'; }catch(e){ return false; }
+  if(!isDemoMode()) return false;
+  return _demoSessionProtected;
 }
 function isNativeApp(){
   const Cap=window.Capacitor;
@@ -3953,7 +3994,7 @@ function resetWorkingMemory(){
   _viewingSavedLoan=false;
   _savedSnap=null;
 }
-function activeStorageKey(){ return isDemoMode()?DEMO_STORAGE_KEY:STORAGE_KEY; }
+function activeStorageKey(){ return (_demoSessionActive||isDemoMode())?DEMO_STORAGE_KEY:STORAGE_KEY; }
 function b64FromBuf(buf){
   const bytes=new Uint8Array(buf); let s='';
   for(let i=0;i<bytes.length;i++) s+=String.fromCharCode(bytes[i]);
@@ -4041,6 +4082,8 @@ function buildDemoBundle(prefs){
   const variable=300;
   const profileSnap={salary:String(salary),income:'0',expenses:String(expenses),variable:String(variable),existing:'0',employment:'full',risk:'medium',bankLimit:'40',limitBasis:'gross'};
   const savedLoans=[];
+  const realProfile=profile;
+  const realForm=form;
   function pushLoan(type, amount, months, ratePct){
     profile={...profileSnap};
     form={loanType:type, amount:String(Math.round(amount)), period:String(months), rate:String(ratePct), startMonth:new Date().getMonth(), startYear:new Date().getFullYear()};
@@ -4052,8 +4095,13 @@ function buildDemoBundle(prefs){
     });
     profileSnap.existing=String(savedLoans.reduce((sum,l)=>sum+(+l.loanMonthly||0),0));
   }
-  pushLoan('car', 12000, 48, 5.5);
-  pushLoan('personal', 3000, 36, 8);
+  try{
+    pushLoan('car', 12000, 48, 5.5);
+    pushLoan('personal', 3000, 36, 8);
+  }finally{
+    profile=realProfile;
+    form=realForm;
+  }
   profileSnap.existing=String(savedLoans.reduce((sum,l)=>sum+(+l.loanMonthly||0),0));
   return {lang:prefs.lang, currency:'USD', currentTheme:prefs.currentTheme, profile:profileSnap, profileSaved:true, saved:savedLoans, form:savedLoans[0].form};
 }
@@ -4074,13 +4122,26 @@ async function enterDemoMode(){
     catch(e){ showToast(lang==='ar'?'تعذر تجهيز التحقق. لم يبدأ وضع العرض.':lang==='es'?'No se pudo preparar la verificación. El modo demo no empezó.':'Could not prepare verification. Demo mode did not start.'); return; }
   }
   const demo=buildDemoBundle(prefs);
+  demo._demoProtected=available;
   try{
     localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(demo));
     localStorage.setItem(DEMO_LOCK_KEY, available?'1':'0');
     if(available) localStorage.setItem(DEMO_GUARD_KEY,'1');
     else localStorage.removeItem(DEMO_GUARD_KEY);
     localStorage.setItem(MODE_KEY,'demo');
-  }catch(e){ showToast(lang==='ar'?'تعذر بدء وضع العرض':lang==='es'?'No se pudo iniciar el modo demo':'Could not start demo mode'); return; }
+  }catch(e){
+    try{
+      localStorage.removeItem(DEMO_STORAGE_KEY);
+      localStorage.removeItem(MODE_KEY);
+      localStorage.removeItem(DEMO_LOCK_KEY);
+      localStorage.removeItem(DEMO_GUARD_KEY);
+    }catch(_){}
+    showToast(lang==='ar'?'تعذر بدء وضع العرض':lang==='es'?'No se pudo iniciar el modo demo':'Could not start demo mode');
+    return;
+  }
+  _demoSessionActive=true;
+  _demoSessionProtected=available;
+  _demoExitAuthorized=false;
   applyLoadedState(demo);
   results=null; extraLoans=[]; _viewingSavedLoan=false; _savedSnap=null;
   applyDir(); applyTheme(currentTheme);
@@ -4091,16 +4152,19 @@ async function requestExitDemo(){
   if(!demoIsProtected()){
     const ok=confirm(lang==='ar'?'العودة إلى ملفك؟':lang==='es'?'¿Volver a tu archivo?':'Return to your file?');
     if(!ok) return;
+    _demoExitAuthorized=true;
     finishExitDemo();
     return;
   }
   const result=await authenticateForExit();
-  if(result==='success'){ finishExitDemo(); return; }
+  if(result==='success'){ _demoExitAuthorized=true; finishExitDemo(); return; }
   showToast(result==='unavailable'
     ?(lang==='ar'?'تعذر التحقق الآن. وضع العرض يبقى حتى ينجح تحقق الجهاز.':lang==='es'?'La verificación no está disponible. El modo demo sigue hasta que el dispositivo la apruebe.':'Verification is unavailable. Demo mode stays on until the device approves it.')
     :(lang==='ar'?'لم يتم التحقق. وضع العرض ما زال مفعّلاً.':lang==='es'?'Verificación cancelada. El modo demo sigue activo.':'Verification was not completed. Demo mode is still on.'));
 }
 function finishExitDemo(){
+  if(!_demoSessionActive || !_demoExitAuthorized) return;
+  _demoExitAuthorized=false;
   let raw=null;
   try{ raw=localStorage.getItem(STORAGE_KEY); }catch(e){}
   try{
@@ -4109,6 +4173,8 @@ function finishExitDemo(){
     localStorage.removeItem(DEMO_LOCK_KEY);
     localStorage.removeItem(DEMO_GUARD_KEY);
   }catch(e){}
+  _demoSessionActive=false;
+  _demoSessionProtected=false;
   resetWorkingMemory();
   if(raw){
     try{ applyLoadedState(JSON.parse(raw)); }catch(e){}
@@ -4148,6 +4214,7 @@ function persistState(){
       form,
         // isPremium not persisted
     };
+    if(_demoSessionActive) restoreDemoMarkers();
     localStorage.setItem(activeStorageKey(), JSON.stringify(state));
   }catch(e){/* storage unavailable */}
 }
@@ -4158,12 +4225,18 @@ function persistState(){
 const RISK_LEVELS=['safe','moderate','risky'];
 function sanitizeSaved(arr){
   if(!Array.isArray(arr)) return [];
-  return arr.filter(x=>x&&typeof x==='object'&&x.results&&typeof x.results.monthly==='number'&&isFinite(x.results.monthly)&&x.form&&typeof x.form==='object')
+  return arr.slice(0,200).filter(x=>x&&typeof x==='object'&&x.results&&typeof x.results.monthly==='number'&&isFinite(x.results.monthly)&&x.form&&typeof x.form==='object')
     .map(x=>{
       if(!RISK_LEVELS.includes(x.results.riskLevel)) x.results.riskLevel='safe';
+      ['monthly','total','interest','dtiGross','dtiNet','affordability','safeMax','grossIncome','netIncome','rate','existing','expenses','variable','remaining'].forEach(k=>{
+        const n=Number(x.results[k]);
+        x.results[k]=Number.isFinite(n)?n:0;
+      });
       const lt=x.loanType||x.form.loanType;
       if(!T.en['lt_'+lt]){ x.loanType='personal'; x.form.loanType='personal'; }
-      if(typeof x.name!=='undefined'&&typeof x.name!=='string') delete x.name;
+      if(typeof x.name!=='string') delete x.name;
+      else x.name=x.name.slice(0,120);
+      x.time=typeof x.time==='string'?x.time.slice(0,80):'';
       x.loanMonthly=x.results.monthly;
       return x;
     });
@@ -4191,16 +4264,25 @@ function loadState(){
       if(raw){const s=JSON.parse(raw);if(s.isPremium){delete s.isPremium;localStorage.setItem(STORAGE_KEY,JSON.stringify(s));}}
     }catch(e){}
   }
+  if(!demo){
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      return raw?applyLoadedState(JSON.parse(raw)):false;
+    }catch(e){ return false; }
+  }
   try{
-    const raw=localStorage.getItem(demo?DEMO_STORAGE_KEY:STORAGE_KEY);
-    if(!raw){
-      if(!demo) return false;
-      const rebuilt=buildDemoBundle({lang, currency:currency||'USD', currentTheme});
-      try{ localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(rebuilt)); }catch(e){}
-      return applyLoadedState(rebuilt);
+    const raw=localStorage.getItem(DEMO_STORAGE_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      if(applyLoadedState(parsed)) return true;
     }
-    return applyLoadedState(JSON.parse(raw));
-  }catch(e){ return false; }
+  }catch(e){}
+  // A missing or corrupt demo blob never falls through to the real file.
+  const rebuilt=buildDemoBundle({lang, currency:'USD', currentTheme});
+  rebuilt._demoProtected=_demoSessionProtected;
+  try{ localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(rebuilt)); }catch(e){}
+  restoreDemoMarkers();
+  return applyLoadedState(rebuilt);
 }
 
 // ── APP INIT ──────────────────────────────────────────────────────────────────

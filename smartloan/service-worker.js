@@ -1,13 +1,13 @@
 /* emiGo: EMI & Loan — service worker
    On a real release: bump VERSION (1.0, 1.1, 1.2…) and rewrite CHANGELOG.
    VERSION is shown to users, so it is a product release, not a running fix counter. */
-const VERSION = '1.0';
+const VERSION = '1.1';
 
 // Short, user-facing "what changed" shown in the in-app update banner.
 const CHANGELOG = {
-  ar: 'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار. ملفك المالي يبقى مغلقاً في ملف منفصل: لا يُعرض ولا يُعدَّل أثناء التجربة، والعودة إليه على الهاتف المقفل لا تتم إلا بعد البصمة أو رمز الجهاز. صفحات تفاصيل القرض الخمس تعمل كما في الاستخدام العادي. حجم التحديث 300\u00A0KB.',
-  en: 'Demo mode shares the app with fixed sample numbers in US dollars. Your financial file stays closed in a separate file: it is not shown or changed during the trial, and on a locked phone you can return to it only after biometrics or the device passcode. All five loan pages work as in normal use. Update size: 300\u00A0KB.',
-  es: 'El modo demo comparte la app con números de ejemplo fijos en dólares. Tu archivo financiero queda cerrado en un archivo aparte: no se muestra ni se modifica durante la prueba, y en un teléfono bloqueado solo vuelves a él tras la biometría o el código del dispositivo. Las cinco páginas del préstamo funcionan como en el uso normal. Tamaño: 300\u00A0KB.'
+  ar: 'تعزيز حماية وضع العرض وعزل الملف المالي، مع إصلاحات تقنية وتجهيز حماية الجهاز لنسخة المتجر. حجم التحديث 300\u00A0KB.',
+  en: 'Stronger Demo Mode isolation and financial-file protection, plus technical fixes and device protection for the store app. Update size: 300\u00A0KB.',
+  es: 'Mayor aislamiento del modo demo y protección del archivo financiero, además de correcciones técnicas y protección del dispositivo para la app de la tienda. Tamaño: 300\u00A0KB.'
 };
 
 const CACHE = 'smartloan-' + VERSION;
