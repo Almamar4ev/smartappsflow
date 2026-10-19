@@ -94,12 +94,10 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .home-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .home-app-name{font-size:17px;font-weight:800;color:var(--txt)}
 .home-actions{display:flex;gap:8px;align-items:center}
-#demo-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:5000;align-items:center;justify-content:space-between;gap:10px;padding:calc(8px + var(--safe-top)) 14px 8px;background:#f5e6b8;color:#5c4813;font-size:13px;font-weight:800;box-shadow:0 1px 0 rgba(92,72,19,.15)}
+#demo-banner{display:none;position:relative;flex-shrink:0;z-index:5;align-items:center;justify-content:space-between;gap:10px;padding:calc(8px + var(--safe-top)) 14px 8px;background:#f5e6b8;color:#5c4813;font-size:13px;font-weight:800;box-shadow:0 1px 0 rgba(92,72,19,.15)}
 #demo-banner button{background:#fff;color:#5c4813;border:1px solid rgba(92,72,19,.25);border-radius:10px;padding:7px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
-html.demo-on,html.demo-on body{height:100%;overflow:hidden}
-#app.demo-on{box-sizing:border-box;height:100dvh;max-height:100dvh;min-height:0;overflow:hidden;padding-top:var(--demo-bar,46px)}
-#app.demo-on .screen{height:100%!important;min-height:0!important;max-height:100%!important;flex:1 1 auto;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch}
-#app.demo-on .step-screen{overflow:hidden}
+#app.demo-on{height:auto;max-height:none;min-height:100dvh;overflow:visible;padding-top:0}
+#app.demo-on .step-screen{height:calc(100dvh - var(--demo-bar,46px))!important;max-height:calc(100dvh - var(--demo-bar,46px))!important}
 #app.demo-on .home-top{padding-top:20px}
 #app.demo-on .step-header{padding-top:14px}
 #app.demo-on .results-header{padding-top:16px}
@@ -227,7 +225,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .risk-banner-text{font-size:15px;font-weight:700;flex:1}
 .risk-info-btn{width:24px;height:24px;flex-shrink:0;border-radius:50%;background:transparent;border:1.5px solid currentColor;color:var(--txt2);font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;opacity:.9;transition:opacity .2s}
 .risk-info-btn:active{opacity:1}
-.tab-row{display:flex;gap:6px;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none}
+.tab-row{display:flex;gap:6px;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .tab-row::-webkit-scrollbar{display:none}
 .tab-btn{display:inline-flex;align-items:center;padding:8px 12px;border-radius:9px;background:var(--bg2);border:1.5px solid var(--brd);color:var(--txt2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
 .tab-btn.active{background:color-mix(in srgb,var(--acc) 12%,transparent);border-color:var(--acc);color:var(--acc)}
@@ -2498,7 +2496,7 @@ function drawCharts(){
 // ── TABS ──────────────────────────────────────────────────────────────────────
 function switchTab(id,btn){
   // تحقق Premium قبل فتح إعادة الجدولة
-  if(id==='restructure'&&!isPremium&&!isDemoMode()){
+  if(id==='restructure'&&!isPremium){
     showUpgradeDialog('إعادة الجدولة','Loan Restructuring','احسب توفيرك عند تغيير نسبة الفائدة أو القسط','Calculate your savings by changing the interest rate or payment');
     return;
   }
@@ -2551,7 +2549,7 @@ function rstRow(label,val,color){
 }
 
 function calcRestructure(){
-  if(!isPremium&&!isDemoMode()){ showUpgradeDialog('إعادة الجدولة','Loan Restructuring','احسب توفيرك عند تغيير نسبة الفائدة أو القسط','Calculate your savings by changing the interest rate or payment'); return; }
+  if(!isPremium){ showUpgradeDialog('إعادة الجدولة','Loan Restructuring','احسب توفيرك عند تغيير نسبة الفائدة أو القسط','Calculate your savings by changing the interest rate or payment'); return; }
   const r=results; if(!r) return;
   const isAr=lang==='ar', isEs=lang==='es';
   const cur=getCurrencySymbol();
