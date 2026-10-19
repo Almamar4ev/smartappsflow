@@ -3922,7 +3922,6 @@ const MODE_KEY='emigo_mode';
 const DEMO_LOCK_KEY='emigo_demo_protected';
 const DEMO_GUARD_KEY='emigo_demo_guard';
 const WEBAUTHN_ID_KEY='emigo_webauthn_id';
-const DEMO_SALARY={NONE:5000,USD:5000,EUR:4500,GBP:4000,CAD:6500,AUD:7500,SAR:18000,AED:18000,QAR:18000,OMR:1800,KWD:1500,BHD:1900,EGP:20000,INR:80000,PKR:150000,TRY:40000,BDT:60000,IDR:8000000};
 
 function isDemoMode(){
   try{
@@ -4037,9 +4036,9 @@ async function authenticateForExit(){
   }catch(err){ return authErrorKind(err); }
 }
 function buildDemoBundle(prefs){
-  const salary=DEMO_SALARY.USD;
-  const expenses=Math.round(salary*0.28);
-  const variable=Math.round(salary*0.12);
+  const salary=2600;
+  const expenses=300;
+  const variable=300;
   const profileSnap={salary:String(salary),income:'0',expenses:String(expenses),variable:String(variable),existing:'0',employment:'full',risk:'medium',bankLimit:'40',limitBasis:'gross'};
   const savedLoans=[];
   function pushLoan(type, amount, months, ratePct){
@@ -4053,8 +4052,8 @@ function buildDemoBundle(prefs){
     });
     profileSnap.existing=String(savedLoans.reduce((sum,l)=>sum+(+l.loanMonthly||0),0));
   }
-  pushLoan('car', salary*8, 48, 5.5);
-  pushLoan('personal', salary*2, 36, 8);
+  pushLoan('car', 12000, 48, 5.5);
+  pushLoan('personal', 3000, 36, 8);
   profileSnap.existing=String(savedLoans.reduce((sum,l)=>sum+(+l.loanMonthly||0),0));
   return {lang:prefs.lang, currency:'USD', currentTheme:prefs.currentTheme, profile:profileSnap, profileSaved:true, saved:savedLoans, form:savedLoans[0].form};
 }
