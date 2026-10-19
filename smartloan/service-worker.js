@@ -2,13 +2,13 @@
    On every new release: bump VERSION and rewrite CHANGELOG. Those two consts are
    the "control panel" for the in-app update notification — nothing else here
    needs to change per release. */
-const VERSION = 'v48';
+const VERSION = 'v49';
 
 // Short, user-facing "what changed" shown in the in-app update banner.
 const CHANGELOG = {
-  ar: 'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار. ملفك المالي يبقى مغلقاً في ملف منفصل: لا يُعرض ولا يُعدَّل أثناء التجربة، والعودة إليه على الهاتف المقفل لا تتم إلا بعد البصمة أو رمز الجهاز. حجم التحديث 300 KB.',
-  en: 'Demo mode shares the app with fixed sample numbers in US dollars. Your financial file stays closed in a separate file: it is not shown or changed during the trial, and on a locked phone you can return to it only after biometrics or the device passcode. Update size: 300 KB.',
-  es: 'El modo demo comparte la app con números de ejemplo fijos en dólares. Tu archivo financiero queda cerrado en un archivo aparte: no se muestra ni se modifica durante la prueba, y en un teléfono bloqueado solo vuelves a él tras la biometría o el código del dispositivo. Tamaño: 300 KB.'
+  ar: 'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار. ملفك المالي يبقى مغلقاً في ملف منفصل: لا يُعرض ولا يُعدَّل أثناء التجربة، والعودة إليه على الهاتف المقفل لا تتم إلا بعد البصمة أو رمز الجهاز. صفحات تفاصيل القرض تظهر كاملة. حجم التحديث 300 KB.',
+  en: 'Demo mode shares the app with fixed sample numbers in US dollars. Your financial file stays closed in a separate file: it is not shown or changed during the trial, and on a locked phone you can return to it only after biometrics or the device passcode. Loan detail pages are shown in full. Update size: 300 KB.',
+  es: 'El modo demo comparte la app con números de ejemplo fijos en dólares. Tu archivo financiero queda cerrado en un archivo aparte: no se muestra ni se modifica durante la prueba, y en un teléfono bloqueado solo vuelves a él tras la biometría o el código del dispositivo. Las páginas de detalle del préstamo se ven completas. Tamaño: 300 KB.'
 };
 
 const CACHE = 'smartloan-' + VERSION;
