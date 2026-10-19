@@ -4,13 +4,12 @@
 const VERSION = '1.1';
 
 // Short, user-facing "what changed" shown in the in-app update banner.
-// The size is one left-to-right unit: isolates keep it on one side, and the
-// word joiner stops the number and KB from wrapping apart in Arabic.
-const UPDATE_SIZE = '\u2066300\u2060KB\u2069';
+// Arabic sentences end with an RTL mark so the period stays with its sentence.
+// The size is Arabic too, so it does not jump to the other side of the line.
 const CHANGELOG = {
-  ar: 'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار، دون إظهار ملفك المالي أو تعديله. على الهاتف المقفل لا تعود إلى ملفك إلا بالبصمة أو رمز الجهاز، وصفحات القرض الخمس تعمل كالمعتاد. حجم التحديث ' + UPDATE_SIZE + '.',
-  en: 'Demo Mode shares the app with fixed US-dollar samples, without showing or changing your financial file. On a locked phone you return only with biometrics or the device passcode, and all five loan pages work as usual. Update size: ' + UPDATE_SIZE + '.',
-  es: 'El modo demo comparte la app con números fijos en dólares, sin mostrar ni cambiar tu archivo financiero. En un teléfono bloqueado vuelves solo con biometría o el código del dispositivo, y las cinco páginas del préstamo funcionan como siempre. Tamaño: ' + UPDATE_SIZE + '.'
+  ar: 'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار.\u200F ملفك المالي لا يظهر ولا يتغير.\u200F على الهاتف المقفل تعود إليه بالبصمة أو رمز الجهاز فقط.\u200F صفحات القرض الخمس تعمل كالمعتاد.\u200F حجم التحديث ٣٠٠\u2060كيلوبايت.',
+  en: 'Demo Mode shares the app with fixed US-dollar samples. Your financial file is not shown or changed. On a locked phone you return only with biometrics or the device passcode. All five loan pages work as usual. Update size: 300 KB.',
+  es: 'El modo demo comparte la app con números fijos en dólares. Tu archivo financiero no se muestra ni se cambia. En un teléfono bloqueado vuelves solo con biometría o el código del dispositivo. Las cinco páginas del préstamo funcionan como siempre. Tamaño: 300 KB.'
 };
 
 const CACHE = 'smartloan-' + VERSION;
