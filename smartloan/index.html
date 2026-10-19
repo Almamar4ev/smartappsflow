@@ -4422,7 +4422,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
       + '<span style="font-size:15px">✨</span>'
       + '<span style="font-size:14px;font-weight:800;color:var(--acc)">'+uT('ready')+ver+'</span></div>'
-      + '<p style="font-size:12.5px;color:var(--txt2);line-height:1.7;margin-bottom:12px">'+desc+'</p>'
+      + '<p style="font-size:12.5px;color:var(--txt2);line-height:1.7;margin-bottom:12px;white-space:pre-line;text-align:start">'+desc+'</p>'
       + '<button onclick="applyPendingUpdate()" style="width:100%;background:var(--acc);color:#fff;border:none;border-radius:10px;padding:11px;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer">'+uT('now')+'</button></div>';
     box.style.display = 'block';
   }
@@ -4451,7 +4451,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
     head.textContent = uT('avail');
 
     var desc = document.createElement('div');
-    desc.style.cssText = 'font-size:12.5px;font-weight:500;line-height:1.7;color:var(--txt2)';
+    desc.style.cssText = 'font-size:12.5px;font-weight:500;line-height:1.7;color:var(--txt2);white-space:pre-line;text-align:start';
     desc.textContent = changelogText(pendingUpdateInfo && pendingUpdateInfo.changelog);
 
     var row = document.createElement('div');

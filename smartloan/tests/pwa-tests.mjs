@@ -77,13 +77,17 @@ assert('skipWaiting is user-triggered only (single call, gated by SKIP_WAITING)'
 assert('service worker answers GET_VERSION_INFO with VERSION_INFO',
   /GET_VERSION_INFO/.test(sw) && /VERSION_INFO/.test(sw) &&
   /const\s+VERSION\s*=/.test(sw) && /const\s+CHANGELOG\s*=/.test(sw));
-assert('Arabic update sentences keep their periods and the size stays together',
+assert('Arabic update sentences stay on separate lines with their periods',
+  /function updateNote\(lines\)\{ return lines\.join\('\\u2028'\); \}/.test(sw) &&
   /بالدولار\.\\u200F/.test(sw) &&
   /لا يتغير\.\\u200F/.test(sw) &&
   /فقط\.\\u200F/.test(sw) &&
   /كالمعتاد\.\\u200F/.test(sw) &&
-  /٣٠٠\\u2060كيلوبايت/.test(sw) &&
+  /٣٠٠\\u2060كيلوبايت\.\\u200F/.test(sw) &&
   !/\\u2066/.test(sw));
+assert('update banner preserves one sentence per line',
+  /updateBanner[\s\S]{0,1200}white-space:pre-line/.test(html) &&
+  /settingsUpdateBox[\s\S]{0,900}white-space:pre-line/.test(html));
 
 // 4d. The page side wires up the notifier: a waiting worker + a Settings entry.
 assert('page shows an update banner and a Settings update card',
