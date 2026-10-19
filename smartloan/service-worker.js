@@ -2,13 +2,13 @@
    On every new release: bump VERSION and rewrite CHANGELOG. Those two consts are
    the "control panel" for the in-app update notification — nothing else here
    needs to change per release. */
-const VERSION = 'v45';
+const VERSION = 'v46';
 
 // Short, user-facing "what changed" shown in the in-app update banner.
 const CHANGELOG = {
-  ar: 'تطوير في الواجهة، وزر جديد لمشاركة التطبيق.',
-  en: 'Interface updates, and a new button to share the app.',
-  es: 'Mejoras en la interfaz y un botón nuevo para compartir la app.'
+  ar: 'وضع عرض ببيانات تجريبية لمشاركة التطبيق دون إظهار ملفك.',
+  en: 'Demo mode with sample numbers, so you can share the app without showing your file.',
+  es: 'Modo demo con datos de ejemplo para compartir la app sin mostrar tu archivo.'
 };
 
 const CACHE = 'smartloan-' + VERSION;

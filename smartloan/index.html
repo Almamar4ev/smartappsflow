@@ -94,6 +94,15 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .home-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .home-app-name{font-size:17px;font-weight:800;color:var(--txt)}
 .home-actions{display:flex;gap:8px;align-items:center}
+#demo-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:5000;align-items:center;justify-content:space-between;gap:10px;padding:calc(8px + var(--safe-top)) 14px 8px;background:#f5e6b8;color:#5c4813;font-size:13px;font-weight:800;box-shadow:0 1px 0 rgba(92,72,19,.15)}
+#demo-banner button{background:#fff;color:#5c4813;border:1px solid rgba(92,72,19,.25);border-radius:10px;padding:7px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+#app.demo-on{padding-top:var(--demo-bar,46px)}
+#app.demo-on .screen{height:calc(100vh - var(--demo-bar,46px));height:calc(100dvh - var(--demo-bar,46px))}
+#app.demo-on .home-top{padding-top:20px}
+#app.demo-on .step-header{padding-top:14px}
+#app.demo-on .results-header{padding-top:16px}
+#app.demo-on .settings-hdr{padding-top:18px}
+#app.demo-on .detail-header{padding-top:16px}
 .icon-btn{padding:7px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--brd);color:var(--txt2);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px}
 .icon-btn .ic{width:18px;height:18px;display:block;flex-shrink:0}
 .icon-btn .ic-chev{width:14px;height:14px;display:block;opacity:.7}
@@ -370,6 +379,10 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 </head>
 <body>
 <div id="app">
+<div id="demo-banner">
+  <span id="demo-banner-text">Demo mode • Sample data</span>
+  <button type="button" id="demo-exit-btn" onclick="requestExitDemo()">Back to my file</button>
+</div>
 
 <!-- ══ SPLASH ══ -->
 <div class="screen active" id="splash">
@@ -410,6 +423,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
             <button onclick="pickLang('ar')" data-l="ar"><span>🇸🇦</span><span>العربية</span></button>
           </div>
         </div>
+        <button class="icon-btn icon-btn-sq" onclick="enterDemoMode()" id="home-demo-btn" aria-label="Demo mode">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+        </button>
         <button class="icon-btn icon-btn-sq" onclick="shareApp()" id="home-share-btn" aria-label="Share">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
         </button>
@@ -741,7 +757,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <button id="cur-showall" class="cur-showall" onclick="toggleCurExpand()"></button>
       <div id="cur-noresult" class="cur-noresult" style="display:none"></div>
     </div>
-    <div class="set-section">
+    <div class="set-section" id="backup-section">
       <div class="set-section-hd">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span class="card-label" id="lbl-backup-set" style="margin:0">DATA BACKUP</span>
@@ -760,6 +776,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <input type="file" id="import-file-input" accept=".json" style="display:none" onchange="importBackup(this)">
     </div>
     <div class="set-section" style="padding-top:6px;padding-bottom:6px">
+      <button type="button" class="set-row" id="settings-demo-row" onclick="enterDemoMode()">
+        <span class="set-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></span>
+        <span class="set-row-label"><span id="lbl-demo-btn">Demo mode</span><span class="set-row-sub" id="lbl-demo-hint">Try the app with sample numbers</span></span>
+        <svg class="set-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+      </button>
       <button type="button" class="set-row" onclick="shareApp()">
         <span class="set-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg></span>
         <span class="set-row-label"><span id="lbl-share-btn">Share emiGo</span><span class="set-row-sub" id="lbl-share-hint">Send the app to a friend</span></span>
@@ -919,7 +940,7 @@ function applyStatusBar(id){
     }
   }catch(e){}
 }
-function applyTheme(id){currentTheme=id;var _cls=id==='default'?'':'theme-'+id;document.getElementById('app').className=_cls;document.body.className=_cls;applyStatusBar(id);renderThemeGrid();persistState();}
+function applyTheme(id){currentTheme=id;var _cls=id==='default'?'':'theme-'+id;if(typeof isDemoMode==='function'&&isDemoMode()) _cls=(_cls+' demo-on').trim();document.getElementById('app').className=_cls;document.body.className=_cls;applyStatusBar(id);renderThemeGrid();persistState();}
 function getThemeName(th){
   if(lang==='ar') return th.nameAr;
   if(lang==='es') return th.nameEs;
@@ -1559,6 +1580,7 @@ function rerenderAll(){
   renderStep3Dynamic();
   if(a==='results-screen'&&results)renderResults();
   if(a==='settings-screen')renderSettings();
+  updateDemoChrome();
   // تحديث أزرار التبويبات بالترجمة الصحيحة
   const tc=t();
   const tabMap={
@@ -3156,6 +3178,15 @@ function renderSettings(){
   const shHint=document.getElementById('lbl-share-hint');
   if(shBtn) shBtn.textContent=isAr?'مشاركة emiGo':isEs?'Compartir emiGo':'Share emiGo';
   if(shHint) shHint.textContent=isAr?'أرسل التطبيق لصديق':isEs?'Envía la app a un amigo':'Send the app to a friend';
+  const demoBtn=document.getElementById('lbl-demo-btn');
+  const demoHint=document.getElementById('lbl-demo-hint');
+  const demoRow=document.getElementById('settings-demo-row');
+  if(demoBtn) demoBtn.textContent=isAr?'وضع العرض':isEs?'Modo demo':'Demo mode';
+  if(demoHint) demoHint.textContent=isAr?'جرّب التطبيق بأرقام تجريبية دون عرض ملفك':isEs?'Prueba la app con números de ejemplo sin mostrar tu archivo':'Try the app with sample numbers without showing your file';
+  if(demoRow) demoRow.style.display=isDemoMode()?'none':'';
+  const bkSec=document.getElementById('backup-section');
+  if(bkSec) bkSec.style.display=isDemoMode()?'none':'';
+  updateDemoChrome();
   // backup labels
   const bkSet=document.getElementById('lbl-backup-set');
   const bkHint=document.getElementById('lbl-backup-hint');
@@ -3650,6 +3681,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
   <div class="header">
     <div>
       <h1>${tc.appName}</h1>
+      ${isDemoMode()?'<div style="font-size:12px;font-weight:800;color:#b45309;margin-top:6px">'+(isAr?'بيانات تجريبية':lang==='es'?'Datos de demostración':'Demo data')+'</div>':''}
       <div style="font-size:11px;color:#6b7280;margin-top:3px">${new Date().toLocaleDateString(isAr?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
       <span class="loan-tag">${loanTypeName} · ${fmtAmt(+form.amount)}</span>
     </div>
@@ -3723,6 +3755,7 @@ function restart(){
 
 // ── BACKUP BANNER ─────────────────────────────────────────────────────────────
 function showBackupBannerIfNeeded(){
+  if(isDemoMode()) return;
   if(localStorage.getItem('sla_backup_banner_dismissed')==='1') return;
   if(!saved.length) return;
   const el=document.getElementById('backup-banner');
@@ -3761,6 +3794,7 @@ function showToast(msg){
 
 let _pendingBackup=null;
 function exportBackup(){
+  if(isDemoMode()){ showToast(lang==='ar'?'النسخ الاحتياطي غير متاح في وضع العرض':lang==='es'?'La copia no está disponible en el modo demo':'Backup is unavailable in demo mode'); return; }
   try{
     const state={
       lang, currency, currentTheme,
@@ -3835,6 +3869,7 @@ async function doExportShare(){
 }
 
 function importBackup(input){
+  if(isDemoMode()){ if(input) input.value=''; showToast(lang==='ar'?'الاستيراد غير متاح في وضع العرض':lang==='es'?'La importación no está disponible en el modo demo':'Import is unavailable in demo mode'); return; }
   const file=input.files[0]; if(!file) return;
   const reader=new FileReader();
   reader.onload=function(e){
@@ -3882,6 +3917,227 @@ function importBackup(input){
 
 // ── PERSISTENCE — localStorage ────────────────────────────────────────────────
 const STORAGE_KEY='sla_v1';
+const DEMO_STORAGE_KEY='sla_demo_v1';
+const MODE_KEY='emigo_mode';
+const DEMO_LOCK_KEY='emigo_demo_protected';
+const DEMO_GUARD_KEY='emigo_demo_guard';
+const WEBAUTHN_ID_KEY='emigo_webauthn_id';
+const DEMO_SALARY={NONE:5000,USD:5000,EUR:4500,GBP:4000,CAD:6500,AUD:7500,SAR:18000,AED:18000,QAR:18000,OMR:1800,KWD:1500,BHD:1900,EGP:20000,INR:80000,PKR:150000,TRY:40000,BDT:60000,IDR:8000000};
+
+function isDemoMode(){
+  try{
+    if(localStorage.getItem(MODE_KEY)==='demo') return true;
+    if(localStorage.getItem(DEMO_GUARD_KEY)==='1'){
+      localStorage.setItem(MODE_KEY,'demo');
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+function demoIsProtected(){
+  try{ return localStorage.getItem(DEMO_LOCK_KEY)==='1' || localStorage.getItem(DEMO_GUARD_KEY)==='1'; }catch(e){ return false; }
+}
+function isNativeApp(){
+  const Cap=window.Capacitor;
+  return !!(Cap && Cap.isNativePlatform && Cap.isNativePlatform());
+}
+function blankProfile(){
+  return {salary:'',income:'0',expenses:'',variable:'',existing:'0',employment:'full',risk:'medium',bankLimit:'40',limitBasis:'gross'};
+}
+function resetWorkingMemory(){
+  profile=blankProfile();
+  profileSaved=false;
+  saved=[];
+  form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
+  results=null;
+  extraLoans=[];
+  _viewingSavedLoan=false;
+  _savedSnap=null;
+}
+function activeStorageKey(){ return isDemoMode()?DEMO_STORAGE_KEY:STORAGE_KEY; }
+function b64FromBuf(buf){
+  const bytes=new Uint8Array(buf); let s='';
+  for(let i=0;i<bytes.length;i++) s+=String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+function bufFromB64(b64){
+  const s=atob(b64); const a=new Uint8Array(s.length);
+  for(let i=0;i<s.length;i++) a[i]=s.charCodeAt(i);
+  return a;
+}
+function randomBytes(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); return a; }
+async function deviceAuthAvailable(){
+  if(isNativeApp()){
+    const p=window.Capacitor.Plugins && window.Capacitor.Plugins.BiometricAuth;
+    if(!p || !p.checkBiometry) return false;
+    try{
+      const r=await p.checkBiometry();
+      return !!(r && (r.deviceIsSecure || r.isAvailable));
+    }catch(e){ return false; }
+  }
+  try{
+    if(!window.isSecureContext || !window.PublicKeyCredential || !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) return false;
+    return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  }catch(e){ return false; }
+}
+async function ensureWebAuthn(){
+  const existing=localStorage.getItem(WEBAUTHN_ID_KEY);
+  if(existing) return existing;
+  const cred=await navigator.credentials.create({publicKey:{
+    challenge:randomBytes(32),
+    rp:{name:'emiGo', id:location.hostname},
+    user:{id:randomBytes(16), name:'emigo-owner', displayName:'emiGo'},
+    pubKeyCredParams:[{type:'public-key', alg:-7},{type:'public-key', alg:-257}],
+    authenticatorSelection:{authenticatorAttachment:'platform', userVerification:'required', residentKey:'preferred'},
+    timeout:60000,
+    attestation:'none'
+  }});
+  if(!cred) throw new Error('cancelled');
+  const id=b64FromBuf(cred.rawId);
+  localStorage.setItem(WEBAUTHN_ID_KEY, id);
+  return id;
+}
+async function verifyWebAuthn(){
+  const id=localStorage.getItem(WEBAUTHN_ID_KEY);
+  if(!id) return false;
+  const cred=await navigator.credentials.get({publicKey:{
+    challenge:randomBytes(32),
+    timeout:60000,
+    userVerification:'required',
+    rpId:location.hostname,
+    allowCredentials:[{type:'public-key', id:bufFromB64(id)}]
+  }});
+  return !!cred;
+}
+function authErrorKind(err){
+  const code=String((err&&(err.code||err.name))||'')+' '+String((err&&err.message)||'');
+  if(/biometryNotAvailable|biometryNotEnrolled|noDeviceCredential|passcodeNotSet|NotSupportedError/i.test(code)) return 'unavailable';
+  return 'fail';
+}
+async function authenticateForExit(){
+  if(isNativeApp()){
+    const p=window.Capacitor.Plugins && window.Capacitor.Plugins.BiometricAuth;
+    if(!p || !p.authenticate) return 'unavailable';
+    try{
+      await p.authenticate({
+        reason: lang==='ar'?'للعودة إلى ملفك':lang==='es'?'Para volver a tu archivo':'To return to your file',
+        cancelTitle: lang==='ar'?'إلغاء':lang==='es'?'Cancelar':'Cancel',
+        allowDeviceCredential:true,
+        androidTitle:'emiGo',
+        androidSubtitle: lang==='ar'?'العودة إلى ملفي':lang==='es'?'Volver a mi archivo':'Back to my file'
+      });
+      return 'success';
+    }catch(err){ return authErrorKind(err); }
+  }
+  try{
+    const avail=await deviceAuthAvailable();
+    if(!avail) return 'unavailable';
+    const ok=await verifyWebAuthn();
+    return ok?'success':'fail';
+  }catch(err){ return authErrorKind(err); }
+}
+function buildDemoBundle(prefs){
+  const salary=DEMO_SALARY[prefs.currency]||DEMO_SALARY.USD;
+  const expenses=Math.round(salary*0.28);
+  const variable=Math.round(salary*0.12);
+  const profileSnap={salary:String(salary),income:'0',expenses:String(expenses),variable:String(variable),existing:'0',employment:'full',risk:'medium',bankLimit:'40',limitBasis:'gross'};
+  const savedLoans=[];
+  function pushLoan(type, amount, months, ratePct){
+    profile={...profileSnap};
+    form={loanType:type, amount:String(Math.round(amount)), period:String(months), rate:String(ratePct), startMonth:new Date().getMonth(), startYear:new Date().getFullYear()};
+    const results=analyse();
+    savedLoans.push({
+      loanType:type, loanAmount:Math.round(amount), loanMonthly:results.monthly,
+      name:(T[prefs.lang]&&T[prefs.lang]['lt_'+type])||type,
+      results, form:{...profileSnap, ...form}, lang:prefs.lang, type:'active', time:''
+    });
+    profileSnap.existing=String(savedLoans.reduce((sum,l)=>sum+(+l.loanMonthly||0),0));
+  }
+  pushLoan('car', salary*8, 48, 5.5);
+  pushLoan('personal', salary*2, 36, 8);
+  profileSnap.existing=String(savedLoans.reduce((sum,l)=>sum+(+l.loanMonthly||0),0));
+  return {lang:prefs.lang, currency:prefs.currency||'USD', currentTheme:prefs.currentTheme, profile:profileSnap, profileSaved:true, saved:savedLoans, form:savedLoans[0].form};
+}
+async function enterDemoMode(){
+  if(isDemoMode()) return;
+  const prefs={lang, currency:currency||'USD', currentTheme};
+  let available=false;
+  try{ available=await deviceAuthAvailable(); }catch(e){ available=false; }
+  if(!available){
+    const ok=confirm(lang==='ar'
+      ?'هذا الهاتف بلا قفل شاشة، لذلك يمكن الخروج من وضع العرض بدون بصمة. لا تسلّم هاتفك لغيرك إن كنت لا تريد أن يرى ملفك.'
+      :lang==='es'
+      ?'Este teléfono no tiene bloqueo de pantalla, así que se puede salir del modo demo sin biometría. No entregues el teléfono si no quieres que vean tu archivo.'
+      :'This phone has no screen lock, so Demo Mode can be left without biometrics. Do not hand over your phone if you do not want someone to see your file.');
+    if(!ok) return;
+  }else if(!isNativeApp()){
+    try{ await ensureWebAuthn(); }
+    catch(e){ showToast(lang==='ar'?'تعذر تجهيز التحقق. لم يبدأ وضع العرض.':lang==='es'?'No se pudo preparar la verificación. El modo demo no empezó.':'Could not prepare verification. Demo mode did not start.'); return; }
+  }
+  const demo=buildDemoBundle(prefs);
+  try{
+    localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(demo));
+    localStorage.setItem(DEMO_LOCK_KEY, available?'1':'0');
+    if(available) localStorage.setItem(DEMO_GUARD_KEY,'1');
+    else localStorage.removeItem(DEMO_GUARD_KEY);
+    localStorage.setItem(MODE_KEY,'demo');
+  }catch(e){ showToast(lang==='ar'?'تعذر بدء وضع العرض':lang==='es'?'No se pudo iniciar el modo demo':'Could not start demo mode'); return; }
+  applyLoadedState(demo);
+  results=null; extraLoans=[]; _viewingSavedLoan=false; _savedSnap=null;
+  applyDir(); applyTheme(currentTheme);
+  rerenderAll(); showScreen('home'); renderHome();
+}
+async function requestExitDemo(){
+  if(!isDemoMode()) return;
+  if(!demoIsProtected()){
+    const ok=confirm(lang==='ar'?'العودة إلى ملفك؟':lang==='es'?'¿Volver a tu archivo?':'Return to your file?');
+    if(!ok) return;
+    finishExitDemo();
+    return;
+  }
+  const result=await authenticateForExit();
+  if(result==='success'){ finishExitDemo(); return; }
+  showToast(result==='unavailable'
+    ?(lang==='ar'?'تعذر التحقق الآن. وضع العرض يبقى حتى ينجح تحقق الجهاز.':lang==='es'?'La verificación no está disponible. El modo demo sigue hasta que el dispositivo la apruebe.':'Verification is unavailable. Demo mode stays on until the device approves it.')
+    :(lang==='ar'?'لم يتم التحقق. وضع العرض ما زال مفعّلاً.':lang==='es'?'Verificación cancelada. El modo demo sigue activo.':'Verification was not completed. Demo mode is still on.'));
+}
+function finishExitDemo(){
+  let raw=null;
+  try{ raw=localStorage.getItem(STORAGE_KEY); }catch(e){}
+  try{
+    localStorage.removeItem(DEMO_STORAGE_KEY);
+    localStorage.removeItem(MODE_KEY);
+    localStorage.removeItem(DEMO_LOCK_KEY);
+    localStorage.removeItem(DEMO_GUARD_KEY);
+  }catch(e){}
+  resetWorkingMemory();
+  if(raw){
+    try{ applyLoadedState(JSON.parse(raw)); }catch(e){}
+  }
+  applyDir(); applyTheme(currentTheme);
+  rerenderAll(); showScreen('home'); renderHome();
+}
+function updateDemoChrome(){
+  const on=isDemoMode();
+  const app=document.getElementById('app');
+  if(app) app.classList.toggle('demo-on', on);
+  const bar=document.getElementById('demo-banner');
+  if(bar) bar.style.display=on?'flex':'none';
+  if(on&&bar) document.documentElement.style.setProperty('--demo-bar', Math.ceil(bar.getBoundingClientRect().height)+'px');
+  const label=document.getElementById('demo-banner-text');
+  const exitBtn=document.getElementById('demo-exit-btn');
+  if(label) label.textContent=lang==='ar'?'وضع العرض • بيانات تجريبية':lang==='es'?'Modo demo • Datos de ejemplo':'Demo mode • Sample data';
+  if(exitBtn) exitBtn.textContent=lang==='ar'?'العودة إلى ملفي':lang==='es'?'Volver a mi archivo':'Back to my file';
+  const homeBtn=document.getElementById('home-demo-btn');
+  if(homeBtn){
+    homeBtn.style.display=on?'none':'';
+    homeBtn.setAttribute('aria-label', lang==='ar'?'وضع العرض':lang==='es'?'Modo demo':'Demo mode');
+  }
+  const demoRow=document.getElementById('settings-demo-row');
+  if(demoRow) demoRow.style.display=on?'none':'';
+  const bk=document.getElementById('backup-section');
+  if(bk) bk.style.display=on?'none':'';
+}
 
 function persistState(){
   try{
@@ -3892,7 +4148,7 @@ function persistState(){
       form,
         // isPremium not persisted
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(activeStorageKey(), JSON.stringify(state));
   }catch(e){/* storage unavailable */}
 }
 
@@ -3916,25 +4172,34 @@ function isKnownLang(l){return !!(l&&T[l]);}
 function isKnownCurrency(c){return CURRENCIES.some(x=>x.id===c);}
 function isKnownTheme(th){return THEMES.some(x=>x.id===th);}
 
+function applyLoadedState(s){
+  if(!s||typeof s!=='object') return false;
+  if(isKnownLang(s.lang))         lang=s.lang;
+  if(isKnownCurrency(s.currency)) currency=s.currency;
+  if(isKnownTheme(s.currentTheme)) currentTheme=s.currentTheme;
+  if(s.profile&&typeof s.profile==='object') profile={...blankProfile(),...s.profile};
+  if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
+  if(Array.isArray(s.saved)) saved=sanitizeSaved(s.saved);
+  if(s.form&&typeof s.form==='object') form={...form,...s.form};
+  return true;
+}
 function loadState(){
-  // مسح isPremium القديم إذا كان محفوظاً بـ true من نسخة سابقة
+  const demo=isDemoMode();
+  if(!demo){
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      if(raw){const s=JSON.parse(raw);if(s.isPremium){delete s.isPremium;localStorage.setItem(STORAGE_KEY,JSON.stringify(s));}}
+    }catch(e){}
+  }
   try{
-    const raw=localStorage.getItem(STORAGE_KEY);
-    if(raw){const s=JSON.parse(raw);if(s.isPremium){delete s.isPremium;localStorage.setItem(STORAGE_KEY,JSON.stringify(s));}}
-  }catch(e){}
-  try{
-    const raw=localStorage.getItem(STORAGE_KEY);
-    if(!raw) return false;
-    const s=JSON.parse(raw);
-    if(isKnownLang(s.lang))         lang=s.lang;
-    if(isKnownCurrency(s.currency)) currency=s.currency;
-    if(isKnownTheme(s.currentTheme)) currentTheme=s.currentTheme;
-    if(s.profile&&typeof s.profile==='object') profile={...profile,...s.profile};
-    if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
-    if(Array.isArray(s.saved)) saved=sanitizeSaved(s.saved);
-    if(s.form&&typeof s.form==='object') form={...form,...s.form};
-    // isPremium لا يُحمل من localStorage — يبقى false حتى يدفع المستخدم
-    return true;
+    const raw=localStorage.getItem(demo?DEMO_STORAGE_KEY:STORAGE_KEY);
+    if(!raw){
+      if(!demo) return false;
+      const rebuilt=buildDemoBundle({lang, currency:currency||'USD', currentTheme});
+      try{ localStorage.setItem(DEMO_STORAGE_KEY, JSON.stringify(rebuilt)); }catch(e){}
+      return applyLoadedState(rebuilt);
+    }
+    return applyLoadedState(JSON.parse(raw));
   }catch(e){ return false; }
 }
 
@@ -3951,6 +4216,7 @@ function initApp(){
   const hadState=loadState();
   applyDir();
   applyTheme(currentTheme);
+  updateDemoChrome();
   if(hadState && currency){
     // مستخدم عائد — ابدأ مباشرة من الرئيسية
     rerenderAll();
