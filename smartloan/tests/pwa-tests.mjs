@@ -77,6 +77,9 @@ assert('skipWaiting is user-triggered only (single call, gated by SKIP_WAITING)'
 assert('service worker answers GET_VERSION_INFO with VERSION_INFO',
   /GET_VERSION_INFO/.test(sw) && /VERSION_INFO/.test(sw) &&
   /const\s+VERSION\s*=/.test(sw) && /const\s+CHANGELOG\s*=/.test(sw));
+assert('update size stays one unbreakable left-to-right unit',
+  /const UPDATE_SIZE = '\\u2066300\\u2060KB\\u2069'/.test(sw) &&
+  (sw.match(/UPDATE_SIZE/g) || []).length >= 4);
 
 // 4d. The page side wires up the notifier: a waiting worker + a Settings entry.
 assert('page shows an update banner and a Settings update card',
