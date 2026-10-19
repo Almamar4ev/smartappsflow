@@ -75,6 +75,17 @@ jobs:
           cp smartloan/package.json package.json
           cp smartloan/package-lock.json package-lock.json
           npm ci
+          # Capacitor 6 imports node-tar as a default export. Patched node-tar 7
+          # exposes named CommonJS exports, so adapt that one generated CLI line.
+          node - <<'NODE'
+          const fs = require('fs');
+          const file = 'node_modules/@capacitor/cli/dist/util/template.js';
+          const oldLine = 'const tar_1 = tslib_1.__importDefault(require("tar"));';
+          const newLine = 'const tar_1 = { default: require("tar") };';
+          const source = fs.readFileSync(file, 'utf8');
+          if (!source.includes(oldLine)) throw new Error('Capacitor tar compatibility line not found');
+          fs.writeFileSync(file, source.replace(oldLine, newLine));
+          NODE
 
       - name: Prepare web folder
         run: |
