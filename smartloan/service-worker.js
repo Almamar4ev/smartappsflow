@@ -3,13 +3,31 @@
    VERSION is shown to users, so it is a product release, not a running fix counter. */
 const VERSION = '1.1';
 
-// Short, user-facing "what changed" shown in the in-app update banner.
-// Arabic sentences end with an RTL mark so the period stays with its sentence.
-// The size is Arabic too, so it does not jump to the other side of the line.
+// Each sentence is its own line. U+2028 breaks the line even in the current
+// banner, and the RTL mark keeps every Arabic period with its sentence.
+function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
-  ar: 'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار.\u200F ملفك المالي لا يظهر ولا يتغير.\u200F على الهاتف المقفل تعود إليه بالبصمة أو رمز الجهاز فقط.\u200F صفحات القرض الخمس تعمل كالمعتاد.\u200F حجم التحديث ٣٠٠\u2060كيلوبايت.',
-  en: 'Demo Mode shares the app with fixed US-dollar samples. Your financial file is not shown or changed. On a locked phone you return only with biometrics or the device passcode. All five loan pages work as usual. Update size: 300 KB.',
-  es: 'El modo demo comparte la app con números fijos en dólares. Tu archivo financiero no se muestra ni se cambia. En un teléfono bloqueado vuelves solo con biometría o el código del dispositivo. Las cinco páginas del préstamo funcionan como siempre. Tamaño: 300 KB.'
+  ar: updateNote([
+    'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار.\u200F',
+    'ملفك المالي لا يظهر ولا يتغير.\u200F',
+    'على الهاتف المقفل تعود إليه بالبصمة أو رمز الجهاز فقط.\u200F',
+    'صفحات القرض الخمس تعمل كالمعتاد.\u200F',
+    'حجم التحديث ٣٠٠\u2060كيلوبايت.\u200F'
+  ]),
+  en: updateNote([
+    'Demo Mode shares the app with fixed US-dollar samples.',
+    'Your financial file is not shown or changed.',
+    'On a locked phone you return only with biometrics or the device passcode.',
+    'All five loan pages work as usual.',
+    'Update size: 300 KB.'
+  ]),
+  es: updateNote([
+    'El modo demo comparte la app con números fijos en dólares.',
+    'Tu archivo financiero no se muestra ni se cambia.',
+    'En un teléfono bloqueado vuelves solo con biometría o el código del dispositivo.',
+    'Las cinco páginas del préstamo funcionan como siempre.',
+    'Tamaño: 300 KB.'
+  ])
 };
 
 const CACHE = 'smartloan-' + VERSION;
