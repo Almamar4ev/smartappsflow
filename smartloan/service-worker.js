@@ -8,19 +8,22 @@ const VERSION = '1.3';
 function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
   ar: updateNote([
-    'أزلنا تسميات خطر/معتدل من بطاقات القروض المحفوظة.\u200F',
-    'المعتمد الآن هو مؤشر حد البنك فقط أوضح وأدق.\u200F',
-    'حجم التحديث ١٢٠\u2060كيلوبايت.\u200F'
+    'جولة تعريفية قصيرة ودليل استخدام من الإعدادات.\u200F',
+    'إعدادات أوضح للثيم والعملة وترتيب الخيارات.\u200F',
+    'عرض أوضح لحالة القروض وحد البنك.\u200F',
+    'تحسينات عامة على الاستقرار وسلاسة الاستخدام.\u200F'
   ]),
   en: updateNote([
-    'Removed Safe/Moderate/Risky labels from saved loan cards.',
-    'Bank-limit status is now the only clear signal.',
-    'Update size: 120 KB.'
+    'Short intro tour and Help guide in Settings.',
+    'Clearer theme and currency options, better Settings layout.',
+    'Clearer loan status with bank-limit indicators.',
+    'General stability and usability improvements.'
   ]),
   es: updateNote([
-    'Quitamos las etiquetas Seguro/Moderado/Riesgo de los préstamos guardados.',
-    'El límite del banco es ahora la única señal clara.',
-    'Tamaño: 120 KB.'
+    'Tour introductorio breve y guía de uso en Ajustes.',
+    'Tema y moneda más claros, mejor orden en Ajustes.',
+    'Estado de préstamos más claro con el límite del banco.',
+    'Mejoras generales de estabilidad y fluidez.'
   ])
 };
 
