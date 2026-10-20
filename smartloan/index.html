@@ -133,7 +133,6 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 .saved-mini-sub{font-size:13px;color:var(--txt2)}
 .saved-mini-right{text-align:end;flex-shrink:0}
 .saved-mini-amt{font-size:16px;font-weight:800;color:var(--txt)}
-.saved-mini-risk{font-size:12px;font-weight:700;margin-top:2px}
 .no-saved-home{margin:0 20px 20px;background:var(--bg2);border:1px dashed var(--brd);border-radius:14px;padding:20px;text-align:center;color:var(--txt2);font-size:14px;line-height:1.6}
 
 /* ── LIGHT THEME fix — full consistency ── */
@@ -1468,8 +1467,6 @@ function amortize(amount,annualRate,months){
 }
 function safeRate(v){return (v===''||v==null||isNaN(+v))?8.5:+v;}
 function fmt(n){return Number(n).toLocaleString('en-US')}
-function rc(rl){return rl==='safe'?'var(--safe)':rl==='moderate'?'#f59e0b':'var(--risk)'}
-
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
