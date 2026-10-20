@@ -79,10 +79,9 @@ assert('service worker answers GET_VERSION_INFO with VERSION_INFO',
   /const\s+VERSION\s*=/.test(sw) && /const\s+CHANGELOG\s*=/.test(sw));
 assert('Arabic update sentences stay on separate lines with their periods',
   /function updateNote\(lines\)\{ return lines\.join\('\\u2028'\); \}/.test(sw) &&
-  /الإعدادات\.\\u200F/.test(sw) &&
-  /للخيارات\.\\u200F/.test(sw) &&
-  /المالي\.\\u200F/.test(sw) &&
-  /٣٥٠\\u2060كيلوبايت\.\\u200F/.test(sw) &&
+  /المحفوظة\.\\u200F/.test(sw) &&
+  /وأدق\.\\u200F/.test(sw) &&
+  /١٢٠\\u2060كيلوبايت\.\\u200F/.test(sw) &&
   !/\\u2066/.test(sw));
 assert('update banner preserves one sentence per line',
   /updateBanner[\s\S]{0,1200}white-space:pre-line/.test(html) &&

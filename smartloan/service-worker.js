@@ -1,29 +1,26 @@
 /* emiGo: EMI & Loan — service worker
    On a real release: bump VERSION (1.0, 1.1, 1.2…) and rewrite CHANGELOG.
    VERSION is shown to users, so it is a product release, not a running fix counter. */
-const VERSION = '1.2';
+const VERSION = '1.3';
 
 // Each sentence is its own line. U+2028 breaks the line even in the current
 // banner, and the RTL mark keeps every Arabic period with its sentence.
 function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
   ar: updateNote([
-    'جولة تعريفية قصيرة من خمس خطوات ودليل استخدام من الإعدادات.\u200F',
-    'إعدادات أوضح: ثيم وعملة مضغوطة، وترتيب أفضل للخيارات.\u200F',
-    'وضع العرض يحمي خصوصية ملفك المالي.\u200F',
-    'حجم التحديث ٣٥٠\u2060كيلوبايت.\u200F'
+    'أزلنا تسميات خطر/معتدل من بطاقات القروض المحفوظة.\u200F',
+    'المعتمد الآن هو مؤشر حد البنك فقط أوضح وأدق.\u200F',
+    'حجم التحديث ١٢٠\u2060كيلوبايت.\u200F'
   ]),
   en: updateNote([
-    'A short 5-step intro tour and a Help guide in Settings.',
-    'Clearer Settings: compact theme and currency, better row order.',
-    'Demo mode protects your financial file’s privacy.',
-    'Update size: 350 KB.'
+    'Removed Safe/Moderate/Risky labels from saved loan cards.',
+    'Bank-limit status is now the only clear signal.',
+    'Update size: 120 KB.'
   ]),
   es: updateNote([
-    'Tour introductorio de 5 pasos y guía de ayuda en Ajustes.',
-    'Ajustes más claros: tema y moneda compactos, mejor orden.',
-    'El modo demo protege la privacidad de tu archivo financiero.',
-    'Tamaño: 350 KB.'
+    'Quitamos las etiquetas Seguro/Moderado/Riesgo de los préstamos guardados.',
+    'El límite del banco es ahora la única señal clara.',
+    'Tamaño: 120 KB.'
   ])
 };
 
