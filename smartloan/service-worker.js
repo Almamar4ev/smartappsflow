@@ -1,6 +1,7 @@
 /* emiGo: EMI & Loan — service worker
    On a real release: bump VERSION (1.0, 1.1, 1.2…) and rewrite CHANGELOG.
-   VERSION is shown to users, so it is a product release, not a running fix counter. */
+   VERSION is shown to users, so it is a product release, not a running fix counter.
+   Quiet polish can keep VERSION and bump CACHE only so PWA clients refresh. */
 const VERSION = '1.3';
 
 // Each sentence is its own line. U+2028 breaks the line even in the current
@@ -8,26 +9,20 @@ const VERSION = '1.3';
 function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
   ar: updateNote([
-    'جولة تعريفية قصيرة ودليل استخدام من الإعدادات.\u200F',
-    'إعدادات أوضح للثيم والعملة وترتيب الخيارات.\u200F',
-    'عرض أوضح لحالة القروض وحد البنك.\u200F',
-    'تحسينات عامة على الاستقرار وسلاسة الاستخدام.\u200F'
+    'عرض أوضح عند مقارنة خيارات القرض.\u200F',
+    'تحسينات عامة على سلاسة الاستخدام.\u200F'
   ]),
   en: updateNote([
-    'Short intro tour and Help guide in Settings.',
-    'Clearer theme and currency options, better Settings layout.',
-    'Clearer loan status with bank-limit indicators.',
-    'General stability and usability improvements.'
+    'Clearer loan comparisons when exploring options.',
+    'General usability improvements.'
   ]),
   es: updateNote([
-    'Tour introductorio breve y guía de uso en Ajustes.',
-    'Tema y moneda más claros, mejor orden en Ajustes.',
-    'Estado de préstamos más claro con el límite del banco.',
-    'Mejoras generales de estabilidad y fluidez.'
+    'Comparaciones de préstamos más claras.',
+    'Mejoras generales de usabilidad.'
   ])
 };
 
-const CACHE = 'smartloan-' + VERSION;
+const CACHE = 'smartloan-1.3a';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 // Install: pre-cache core, then WAIT. No skipWaiting() here on purpose — the new
