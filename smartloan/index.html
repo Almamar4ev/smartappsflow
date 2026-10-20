@@ -1890,19 +1890,17 @@ function renderHomeSaved(){
   if(activeLoans.length){
     html+=saved.map((s,i)=>{
       if(s.type==='scenario') return '';
-      const color=rc(s.results.riskLevel);
       const displayName=escapeHtml(savedLoanDisplayName(s));
       const savedTime=escapeHtml(s.time||'');
       return`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:#6366f140">
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
-            <div class="saved-mini-sub">${savedTime} · ${tc['risk_'+s.results.riskLevel]} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
+            <div class="saved-mini-sub">${savedTime} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
             ${(function(){var bl=Math.min(100,Math.max(1,+profile.bankLimit||40));var gross=(+profile.salary||0)+(+profile.income||0);var base=(profile.limitBasis==='net')?Math.max(0,gross-((+profile.expenses||0)+(+profile.variable||0))):gross;var otherEx=saved.filter(function(x){return x.type!=='scenario'&&x!==s;}).reduce(function(sm,x){return sm+(x.loanMonthly||0);},0);var mpa=Math.max(0,base*bl/100-otherEx);var over=(s.results.monthly||0)>mpa+0.5;return over?`<span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--risk) 13%,transparent);color:var(--risk);border:1px solid color-mix(in srgb,var(--risk) 38%,transparent);margin-top:4px">${isAr?'⚠ يتجاوز حد البنك':isEs?'⚠ Supera el límite del banco':'⚠ Exceeds bank limit'}</span>`:`<span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--safe) 16%,transparent);color:var(--safe);border:1px solid color-mix(in srgb,var(--safe) 40%,transparent);margin-top:4px">${isAr?'نشط':isEs?'Activo':'Active'}</span>`;})()}
           </div>
           <div class="saved-mini-right">
             <div class="saved-mini-amt">${fmtAmt(s.results.monthly)}</div>
-            <div class="saved-mini-risk" style="color:${color}">${tc['risk_'+s.results.riskLevel]}</div>
           </div>
         </div>
         <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
@@ -1930,19 +1928,17 @@ function renderHomeSaved(){
     </div>`;
     html+=saved.map((s,i)=>{
       if(s.type!=='scenario') return '';
-      const color=rc(s.results.riskLevel);
       const displayName=escapeHtml(savedLoanDisplayName(s));
       const savedTime=escapeHtml(s.time||'');
       return`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:#f59e0b30;opacity:.9">
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
-            <div class="saved-mini-sub">${savedTime} · ${tc['risk_'+s.results.riskLevel]} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
+            <div class="saved-mini-sub">${savedTime} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
             <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#f59e0b15;color:#f59e0b;border:1px solid #f59e0b30;margin-top:4px">${isAr?'سيناريو مقارنة':isEs?'Escenario':'Comparison'}</span>
           </div>
           <div class="saved-mini-right">
             <div class="saved-mini-amt" style="color:#f59e0b">${fmtAmt(s.results.monthly)}</div>
-            <div class="saved-mini-risk" style="color:${color}">${tc['risk_'+s.results.riskLevel]}</div>
           </div>
         </div>
         <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
@@ -3050,7 +3046,7 @@ function renderSavedTab(){
   if(!saved.length){clearBtn.style.display='none';listEl.innerHTML=`<p class="empty-state">${tc.noSaved}</p>`;return;}
   clearBtn.style.display='block';clearBtn.textContent=tc.clearAll;
   listEl.innerHTML=saved.map((s,i)=>{
-    const color=rc(s.results.riskLevel);
+    const dtiCol=dtiColor(s.results.dtiGross||0);
     const displayName=escapeHtml(savedLoanDisplayName(s));
     const savedTime=escapeHtml(s.time||'');
     return`<div class="saved-card">
@@ -3060,8 +3056,7 @@ function renderSavedTab(){
       </div>
       <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:15px">${fmtAmt(s.results.monthly)}</span></div>
       <div class="saved-row"><span class="saved-lbl">${tc.totalInterest}</span><span class="saved-val" style="color:var(--risk)">${fmtAmt(s.results.interest)}</span></div>
-      <div class="saved-row"><span class="saved-lbl">${tc.dtiRatio}</span><span class="saved-val" style="color:${color}">${s.results.dtiGross.toFixed(2)}%</span></div>
-      <div class="saved-row"><span class="saved-lbl">${tc.riskLevel}</span><span class="saved-val" style="color:${color}">${tc['risk_'+s.results.riskLevel]}</span></div>
+      <div class="saved-row"><span class="saved-lbl">${tc.dtiRatio}</span><span class="saved-val" style="color:${dtiCol}">${s.results.dtiGross.toFixed(2)}%</span></div>
       <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--brd);padding-top:10px">
         <button onclick="openSavedDetail(${i})" style="flex:1;padding:9px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;cursor:pointer">
           ${lang==='ar'?'عرض التفاصيل':lang==='es'?'Ver detalles':'View Details'}
@@ -3349,11 +3344,6 @@ function renderCompare(){
       }).join('')}
     </tr>`;
   });
-  // Risk level — دائماً بلغة الواجهة الحالية وليس لغة القرض المحفوظ
-  html+=`<tr>
-    <td style="color:var(--txt);padding:12px 14px;font-size:15px;font-weight:700">${tc.riskLevel}</td>
-    ${saved.slice(0,4).map(s=>{const color=rc(s.results.riskLevel);return`<td style="text-align:center;padding:12px 8px;font-weight:800;font-size:15px;color:${color}">${tc['risk_'+s.results.riskLevel]||s.results.riskLevel}</td>`;}).join('')}
-  </tr>`;
   html+=`</tbody></table></div>`;
   const bestIdx=saved.slice(0,4).reduce((bi,s,i,arr)=>s.results.monthly<arr[bi].results.monthly?i:bi,0);
   const winner=saved[bestIdx];
@@ -3637,7 +3627,6 @@ function exportPDF(){
   if(!r) return;
   const isAr=lang==='ar';
   const dir=isAr?'rtl':'ltr';
-  const color=rc(r.riskLevel);
   const months=+form.period||36;
   const endDate=getStartDate();
   endDate.setMonth(endDate.getMonth()+months);
@@ -3747,7 +3736,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
       <div style="font-size:11px;color:#6b7280;margin-top:3px">${new Date().toLocaleDateString(isAr?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long',day:'numeric'})}</div>
       <span class="loan-tag">${loanTypeName} · ${fmtAmt(+form.amount)}</span>
     </div>
-    <span class="badge" style="color:${color};border-color:${color};background:${color}15">${tc.riskLevel}: ${tc['risk_'+r.riskLevel]}</span>
   </div>
 
   <div class="kpi">
