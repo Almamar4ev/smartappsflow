@@ -1,6 +1,6 @@
 {
   "name": "smart-loan-calculator",
-  "version": "3.8.0",
+  "version": "3.9.0",
   "description": "emiGo: EMI & Loan — EMI, loan & mortgage calculator with bank comparison & payment schedule.",
   "scripts": {
     "test": "node tests/financial-tests.mjs && node tests/pwa-tests.mjs && node tests/demo-mode-tests.mjs"

@@ -791,6 +791,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
         <span class="set-row-label"><span id="lbl-feedback-set">Feedback &amp; support</span><span class="set-row-sub" id="lbl-feedback-hint"></span></span>
         <svg class="set-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
       </button>
+      <button type="button" class="set-row" id="settings-rate-row" onclick="rateApp()" style="display:none">
+        <span class="set-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1L12 16.8 6.6 19.8l1-6.1L3.2 9.4l6.1-.9z"/></svg></span>
+        <span class="set-row-label"><span id="lbl-rate-btn">Rate us</span><span class="set-row-sub" id="lbl-rate-hint">Leave us a review</span></span>
+        <svg class="set-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -3190,6 +3195,12 @@ function renderSettings(){
   const shHint=document.getElementById('lbl-share-hint');
   if(shBtn) shBtn.textContent=isAr?'مشاركة emiGo':isEs?'Compartir emiGo':'Share emiGo';
   if(shHint) shHint.textContent=isAr?'أرسل التطبيق لصديق':isEs?'Envía la app a un amigo':'Send the app to a friend';
+  const rateRow=document.getElementById('settings-rate-row');
+  const rateBtn=document.getElementById('lbl-rate-btn');
+  const rateHint=document.getElementById('lbl-rate-hint');
+  if(rateBtn) rateBtn.textContent=isAr?'أضف تقييمًا':isEs?'Añadir valoración':'Rate us';
+  if(rateHint) rateHint.textContent=isAr?'افتح صفحة التطبيق في المتجر':isEs?'Abre la página de la app en la tienda':'Leave us a review';
+  if(rateRow) rateRow.style.display=isNativeApp()?'':'none';
   const demoBtn=document.getElementById('lbl-demo-btn');
   const demoHint=document.getElementById('lbl-demo-hint');
   const demoRow=document.getElementById('settings-demo-row');
@@ -3546,6 +3557,17 @@ async function shareApp(){
   }catch(_){
     showToast(text);
   }
+}
+
+function rateApp(){
+  if(!isNativeApp()) return;
+  const market='market://details?id=com.smartapps.smartloanadvisor';
+  const app=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
+  if(app&&app.openUrl){
+    app.openUrl({url:market}).catch(function(){ app.openUrl({url:PLAY_URL}); });
+    return;
+  }
+  window.location.href=market;
 }
 
 function sendFeedback(){
