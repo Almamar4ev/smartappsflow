@@ -59,9 +59,16 @@ check('tour step 4 is Calculate overview (not live result tabs)',
   !/لا تحتاج قرضاً محفوظاً الآن|you do not need a saved loan yet/.test(html));
 check('tour Next keeps card and avoids smooth scroll shake',
   /Same screen: do not reset scrollTop/.test(html) &&
-  /scrollIntoView\(\{behavior:'auto'/.test(html) &&
   /update copy in place/.test(html) &&
-  /guideElementNeedsScroll/.test(html));
+  /ensureGuideTargetVisible/.test(html) &&
+  /guide-tour-on/.test(html) &&
+  /id="guide-spot-ring"/.test(html) &&
+  !/scrollIntoView\(\{behavior:'auto'/.test(html));
+check('help sheet list inherits RTL outside #app',
+  /Sheet lives outside #app/.test(html) &&
+  /ov\.setAttribute\('dir', dir\)/.test(html) &&
+  /\[dir="rtl"\] \.guide-help-item svg\{transform:scaleX\(-1\)\}/.test(html) &&
+  !/body\.removeAttribute\('dir'\)/.test(html));
 check('settings help row reuses catalog and can restart tour',
   /id="settings-guide-row"/.test(html) &&
   /openGuideHelp/.test(html) &&
@@ -78,6 +85,22 @@ check('currency settings use slim dropdown not grid panel',
   !/id="currency-grid"/.test(html));
 check('Arabic guide text keeps periods with sentences',
   /formatGuideText/.test(html) && /\\u200F/.test(html));
+check('guide strips Arabic tashkeel for plain copy',
+  /\\u064B-\\u065F\\u0670/.test(html));
+check('demo help card uses experimental demo title in Arabic',
+  /helpDemo:'وضع العرض التجريبي'/.test(html) &&
+  /title:'وضع العرض التجريبي'/.test(html) &&
+  /ملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز/.test(html) &&
+  !/على الهاتف المقفل تعود إليه/.test(html));
+check('scenario banner keeps EMI amounts neutral and loan name in title',
+  /تفعيل السيناريو يوفر/.test(html) &&
+  /يستبدل قرض \$\{repName\}/.test(html) &&
+  /color:var\(--txt\)">\$\{fmtAmt\(rep\.loanMonthly\)\}/.test(html) &&
+  /لكن إجمالي الفائدة يزيد/.test(html));
+check('Help guide no longer includes a What\'s new topic',
+  !/helpWhatsNew/.test(html) &&
+  !/help:whatsnew/.test(html) &&
+  !/GUIDE_HELP[\s\S]*?whatsnew:/.test(html));
 check('Rate hint Arabic asks for support via review',
   /ادعمنا بتقييمك/.test(html));
 check('guide is blocked during sensitive flows',
@@ -88,7 +111,7 @@ check('guide anchors use data-guide-id fail-soft targets',
   /data-guide-id="salary"/.test(html) &&
   /data-guide-id="amount"/.test(html) &&
   /data-guide-id="results-tabs"/.test(html) &&
-  /guide-spotlight/.test(html));
+  /id="guide-spot-ring"/.test(html));
 check('npm test script includes guide-tests',
   typeof pkg.scripts?.test === 'string' &&
   pkg.scripts.test.includes('guide-tests.mjs'));

@@ -59,6 +59,7 @@ body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;min-height:100
 /* لا يمكن تقييد @keyframes بمحدد؛ نعرّف حركة مستقلة للعربية ونبدّل اسمها */
 @keyframes pgInRtl{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
 [dir="rtl"] .screen{animation-name:pgInRtl}
+html.guide-tour-on .screen{animation:none!important}
 
 .glow{position:absolute;top:12%;left:50%;transform:translateX(-50%);width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,var(--glow) 0%,transparent 70%);pointer-events:none;z-index:0}
 
@@ -228,20 +229,21 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .lbl-with-tip .lbl{margin-bottom:0;flex:1}
 .guide-tip-btn{width:22px;height:22px;flex-shrink:0;border-radius:50%;background:transparent;border:1.5px solid var(--txt3);color:var(--txt3);font-size:12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;line-height:1;padding:0;font-family:inherit}
 .guide-tip-btn:active{border-color:var(--acc);color:var(--acc)}
-.guide-spotlight{outline:2.5px solid var(--acc)!important;outline-offset:4px;border-radius:14px;box-shadow:0 0 0 6px color-mix(in srgb,var(--acc) 22%,transparent);position:relative;z-index:10001;transition:none}
+#guide-spot-ring{display:none;position:fixed;z-index:10001;pointer-events:none;border:2.5px solid var(--acc);border-radius:16px;box-sizing:border-box;box-shadow:0 0 0 5px color-mix(in srgb,var(--acc) 22%,transparent)}
 #guide-dim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:10000;pointer-events:none}
-#guide-welcome,#guide-whatsnew,#guide-nudge,#guide-tour-card{display:none;position:fixed;left:12px;right:12px;bottom:calc(14px + var(--safe-bottom));z-index:10002;max-width:430px;margin:0 auto;background:var(--bg2);border:1.5px solid var(--brd);border-radius:18px;padding:14px 16px;box-shadow:0 14px 40px rgba(0,0,0,.35);pointer-events:auto}
+#guide-welcome,#guide-whatsnew,#guide-nudge,#guide-tour-card{display:none;position:fixed;left:12px;right:12px;bottom:calc(14px + var(--safe-bottom));z-index:10002;max-width:430px;margin:0 auto;background:var(--bg2);border:1.5px solid var(--brd);border-radius:18px;padding:16px 18px;box-shadow:0 14px 40px rgba(0,0,0,.35);pointer-events:auto;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #guide-tour-card{border-color:color-mix(in srgb,var(--acc) 45%,var(--brd))}
-.guide-card-title{font-size:14px;font-weight:900;color:var(--txt);margin:0 0 4px}
-.guide-card-body{font-size:12.5px;color:var(--txt2);line-height:1.65;margin:0 0 12px;text-align:start;unicode-bidi:isolate}
+.guide-card-title{font-size:16px;font-weight:900;color:var(--txt);margin:0 0 6px;line-height:1.35}
+.guide-card-body{font-size:14px;color:var(--txt2);line-height:1.7;margin:0 0 14px;text-align:start;unicode-bidi:isolate}
 .guide-card-actions{display:flex;gap:8px;align-items:center}
-.guide-card-actions .guide-primary{flex:1;padding:11px 12px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
-.guide-card-actions .guide-ghost{padding:11px 12px;border:none;border-radius:12px;background:transparent;color:var(--txt2);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
-.guide-step-meta{font-size:11px;font-weight:700;color:var(--acc);margin:0 0 6px}
+.guide-card-actions .guide-primary{flex:1;padding:12px 14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font:inherit;font-size:14.5px;font-weight:800;cursor:pointer}
+.guide-card-actions .guide-ghost{padding:12px 14px;border:none;border-radius:12px;background:transparent;color:var(--txt2);font:inherit;font-size:14.5px;font-weight:700;cursor:pointer}
+.guide-step-meta{font-size:12.5px;font-weight:700;color:var(--acc);margin:0 0 8px}
 #guide-sheet{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:10010;align-items:flex-end}
-#guide-sheet .guide-sheet-panel{width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:20px 20px calc(28px + var(--safe-bottom));border-top:1px solid var(--brd);max-height:88vh;overflow-y:auto}
-.guide-help-item{width:100%;text-align:start;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 12px;margin:0 0 8px;border-radius:13px;border:1.5px solid var(--brd);background:var(--bg3);color:var(--txt);font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+#guide-sheet .guide-sheet-panel{width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:22px 20px calc(28px + var(--safe-bottom));border-top:1px solid var(--brd);max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.guide-help-item{width:100%;text-align:start;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 13px;margin:0 0 8px;border-radius:13px;border:1.5px solid var(--brd);background:var(--bg3);color:var(--txt);font:inherit;font-size:15px;font-weight:700;cursor:pointer}
 .guide-help-item:last-child{margin-bottom:0}
+[dir="rtl"] .guide-help-item svg{transform:scaleX(-1)}
 .tab-row{display:flex;gap:6px;padding:12px 20px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .tab-row::-webkit-scrollbar{display:none}
 .tab-btn{display:inline-flex;align-items:center;padding:8px 12px;border-radius:9px;background:var(--bg2);border:1.5px solid var(--brd);color:var(--txt2);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
@@ -1473,7 +1475,8 @@ function showScreen(id){
   const el=document.getElementById(id);
   el.classList.add('active');
   el.scrollTop=0;
-  window.scrollTo(0,0);
+  // During the tour, skip window jump — it shakes LTR (English/Spanish) more than RTL.
+  if(!_guideTourActive) window.scrollTo(0,0);
 }
 function chooseLang(l){
   lang=l;applyDir();
@@ -2326,13 +2329,16 @@ function renderResults(){
     if(r._isScenario && r._replacedLoan){
       const rep=r._replacedLoan;
       const repName=T[lang]['lt_'+rep.loanType]||rep.loanType;
+      const titleText=isAr?(`سيناريو — يستبدل قرض ${repName}`)
+        :isEs?(`Escenario — reemplaza préstamo ${repName}`)
+        :(`Scenario — replaces ${repName} loan`);
       const saving=Math.round(rep.loanMonthly-r.monthly);
       const savingColor=saving>0?'var(--safe)':saving<0?'var(--risk)':'#f59e0b';
       const savingText=saving>0
-        ?(isAr?`توفير ${fmtAmt(saving)} شهرياً`:isEs?`Ahorro ${fmtAmt(saving)}/mes`:`Save ${fmtAmt(saving)}/mo`)
+        ?(isAr?`تفعيل السيناريو يوفر ${fmtAmt(saving)} شهريا`:isEs?`Activarlo ahorra ${fmtAmt(saving)} al mes`:`This option saves ${fmtAmt(saving)} per month`)
         :saving<0
-        ?(isAr?`زيادة ${fmtAmt(-saving)} شهرياً`:isEs?`+${fmtAmt(-saving)}/mes`:`+${fmtAmt(-saving)}/mo`)
-        :(isAr?'نفس القسط':isEs?'Misma cuota':'Same payment');
+        ?(isAr?`تفعيل السيناريو يزيد القسط ${fmtAmt(-saving)} شهريا`:isEs?`Activarlo sube la cuota ${fmtAmt(-saving)} al mes`:`This option raises the payment by ${fmtAmt(-saving)} per month`)
+        :(isAr?'تفعيل السيناريو يبقي القسط كما هو':isEs?'Activarlo deja la cuota igual':'This option keeps the same payment');
       // فرق إجمالي الفائدة: السيناريو − الحالي (موجب = فائدة بنكية أعلى)
       let curInterest=+(rep.results&&rep.results.interest);
       if(!isFinite(curInterest)){
@@ -2345,33 +2351,50 @@ function renderResults(){
       const interestDiff=Math.round(scInterest-curInterest);
       const interestColor=interestDiff>0?'var(--risk)':interestDiff<0?'var(--safe)':'#f59e0b';
       const interestText=interestDiff>0
-        ?(isAr?`زيادة في إجمالي الفائدة ${fmtAmt(interestDiff)}`:isEs?`+${fmtAmt(interestDiff)} en interés total`:`+${fmtAmt(interestDiff)} total interest`)
+        ?(isAr?`لكن إجمالي الفائدة يزيد ${fmtAmt(interestDiff)}`:isEs?`pero el interés total sube ${fmtAmt(interestDiff)}`:`but total interest goes up by ${fmtAmt(interestDiff)}`)
         :interestDiff<0
-        ?(isAr?`توفير في إجمالي الفائدة ${fmtAmt(-interestDiff)}`:isEs?`Ahorro ${fmtAmt(-interestDiff)} en interés total`:`Save ${fmtAmt(-interestDiff)} total interest`)
-        :(isAr?'نفس إجمالي الفائدة':isEs?'Mismo interés total':'Same total interest');
+        ?(isAr?`وإجمالي الفائدة ينخفض ${fmtAmt(-interestDiff)}`:isEs?`y el interés total baja ${fmtAmt(-interestDiff)}`:`and total interest goes down by ${fmtAmt(-interestDiff)}`)
+        :(isAr?'وإجمالي الفائدة يبقى كما هو':isEs?'y el interés total no cambia':'and total interest stays the same');
+      let tradeoffNote='';
+      if(saving>0 && interestDiff>0){
+        tradeoffNote=isAr?'قسط أقل الآن، وتكلفة أعلى على مدة القرض'
+          :isEs?'Cuota menor ahora, pero el préstamo cuesta más'
+          :'Lower payment now, higher cost over the loan';
+      } else if(saving<0 && interestDiff<0){
+        tradeoffNote=isAr?'قسط أعلى الآن، وتكلفة أقل على مدة القرض'
+          :isEs?'Cuota mayor ahora, pero el préstamo cuesta menos'
+          :'Higher payment now, lower cost over the loan';
+      }
+      const curAmt=Math.round(+(rep.form&&rep.form.amount)||+(rep.loanAmount)||0);
+      const scAmt=Math.round(+(form&&form.amount)||0);
+      const amountNote=(curAmt>0 && scAmt>0 && curAmt!==scAmt)
+        ?(isAr?'ملاحظة: المقارنة ليست على نفس مبلغ القرض'
+          :isEs?'Nota: la comparación no es sobre el mismo monto'
+          :'Note: this is not the same loan amount')
+        :'';
       const vsLbl=isAr?'مقابل':isEs?'vs':'vs';
       scenarioBanner.style.display='block';
       scenarioBanner.innerHTML=`
         <div style="background:var(--bg2);border-radius:14px;border:1.5px solid #f59e0b40;overflow:hidden;margin-bottom:4px">
           <div style="background:linear-gradient(90deg,#f59e0b22,transparent);padding:10px 14px;border-bottom:1px solid #f59e0b30;display:flex;align-items:center;gap:8px">
-            <span style="font-size:13px;font-weight:800;color:#f59e0b">${isAr?'سيناريو — يستبدل قرضاً نشطاً':isEs?'Escenario — Reemplaza préstamo activo':'Scenario — Replaces Active Loan'}</span>
+            <span style="font-size:13px;font-weight:800;color:#f59e0b;line-height:1.35">${titleText}</span>
           </div>
           <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:12px 14px;gap:8px">
             <div style="text-align:center">
-              <div style="font-size:10px;color:var(--txt3);font-weight:700;margin-bottom:3px;text-transform:uppercase">${isAr?'الحالي':isEs?'Actual':'Current'}</div>
-              <div style="font-size:12px;font-weight:700;color:var(--txt2)">${repName}</div>
-              <div style="font-size:18px;font-weight:900;color:var(--risk)">${fmtAmt(rep.loanMonthly)}</div>
+              <div style="font-size:11px;color:var(--txt);font-weight:800;margin-bottom:6px">${isAr?'الحالي':isEs?'Actual':'Current'}</div>
+              <div style="font-size:18px;font-weight:900;color:var(--txt)">${fmtAmt(rep.loanMonthly)}</div>
             </div>
             <div style="text-align:center;color:var(--acc);font-size:12px;font-weight:800;letter-spacing:.02em;padding:0 4px">${vsLbl}</div>
             <div style="text-align:center">
-              <div style="font-size:10px;color:var(--txt3);font-weight:700;margin-bottom:3px;text-transform:uppercase">${isAr?'السيناريو':isEs?'Escenario':'Scenario'}</div>
-              <div style="font-size:12px;font-weight:700;color:var(--txt2)">${repName}</div>
-              <div style="font-size:18px;font-weight:900;color:var(--safe)">${fmtAmt(r.monthly)}</div>
+              <div style="font-size:11px;color:var(--txt);font-weight:800;margin-bottom:6px">${isAr?'السيناريو':isEs?'Escenario':'Scenario'}</div>
+              <div style="font-size:18px;font-weight:900;color:var(--txt)">${fmtAmt(r.monthly)}</div>
             </div>
           </div>
           <div style="text-align:center;padding:8px 14px 12px;display:flex;flex-direction:column;gap:6px">
-            <span style="font-size:14px;font-weight:900;color:${savingColor}">${savingText}</span>
-            <span style="font-size:12.5px;font-weight:800;color:${interestColor}">${interestText}</span>
+            <span style="font-size:13.5px;font-weight:800;color:${savingColor};line-height:1.45">${savingText}</span>
+            <span style="font-size:13px;font-weight:800;color:${interestColor};line-height:1.45">${interestText}</span>
+            ${tradeoffNote?`<span style="font-size:12px;font-weight:700;color:var(--txt2);line-height:1.45;margin-top:2px">${tradeoffNote}</span>`:''}
+            ${amountNote?`<span style="font-size:11.5px;font-weight:600;color:var(--txt3);line-height:1.4">${amountNote}</span>`:''}
           </div>
         </div>`;
     } else {
@@ -4368,14 +4391,14 @@ let _resultTipTimer=null;
 
 const GUIDE_UI={
   en:{welcomeTitle:'Welcome to emiGo',welcomeBody:'A short 5-step tour shows where to enter your profile, create a loan, and read the results.',startTour:'Start tour',skipTour:'Skip',next:'Next',done:'Done',gotIt:'Got it',later:'Later',learnMore:'Learn more',stepOf:function(a,b){return 'Step '+a+' of '+b;},
-    helpTitle:'Help guide',helpHint:'Tour, tips, and what\'s new',sheetClose:'Close',
-    helpRestart:'Restart the guided tour',helpProfile:'Financial profile',helpLoan:'Create a loan',helpResults:'Understand results',helpSave:'Save & compare',helpDemo:'Demo mode',helpWhatsNew:'What\'s new'},
+    helpTitle:'Help guide',helpHint:'Tour and tips',sheetClose:'Close',
+    helpRestart:'Restart the guided tour',helpProfile:'Financial profile',helpLoan:'Create a loan',helpResults:'Understand results',helpSave:'Save & compare',helpDemo:'Demo mode'},
   ar:{welcomeTitle:'مرحباً بك في emiGo',welcomeBody:'جولة قصيرة من خمس خطوات توضّح أين تدخل ملفك المالي، وكيف تنشئ قرضاً، وكيف تقرأ النتائج.',startTour:'ابدأ الجولة',skipTour:'تخطي',next:'التالي',done:'تم',gotIt:'حسناً',later:'لاحقاً',learnMore:'اعرف المزيد',stepOf:function(a,b){return 'الخطوة '+a+' من '+b;},
-    helpTitle:'دليل الاستخدام',helpHint:'الجولة والتلميحات وما الجديد',sheetClose:'إغلاق',
-    helpRestart:'إعادة الجولة الإرشادية',helpProfile:'الملف المالي',helpLoan:'إنشاء قرض',helpResults:'فهم النتائج',helpSave:'الحفظ والمقارنة',helpDemo:'وضع العرض',helpWhatsNew:'ما الجديد'},
+    helpTitle:'دليل الاستخدام',helpHint:'الجولة والتلميحات',sheetClose:'إغلاق',
+    helpRestart:'إعادة الجولة الإرشادية',helpProfile:'الملف المالي',helpLoan:'إنشاء قرض',helpResults:'فهم النتائج',helpSave:'الحفظ والمقارنة',helpDemo:'وضع العرض التجريبي'},
   es:{welcomeTitle:'Bienvenido a emiGo',welcomeBody:'Un recorrido breve de 5 pasos muestra dónde ingresar tu perfil, crear un préstamo y leer los resultados.',startTour:'Empezar',skipTour:'Omitir',next:'Siguiente',done:'Listo',gotIt:'Entendido',later:'Después',learnMore:'Más info',stepOf:function(a,b){return 'Paso '+a+' de '+b;},
-    helpTitle:'Guía de uso',helpHint:'Recorrido, consejos y novedades',sheetClose:'Cerrar',
-    helpRestart:'Reiniciar el recorrido',helpProfile:'Perfil financiero',helpLoan:'Crear un préstamo',helpResults:'Entender resultados',helpSave:'Guardar y comparar',helpDemo:'Modo demo',helpWhatsNew:'Novedades'}
+    helpTitle:'Guía de uso',helpHint:'Recorrido y consejos',sheetClose:'Cerrar',
+    helpRestart:'Reiniciar el recorrido',helpProfile:'Perfil financiero',helpLoan:'Crear un préstamo',helpResults:'Entender resultados',helpSave:'Guardar y comparar',helpDemo:'Modo demo'}
 };
 function guideUi(){return GUIDE_UI[lang]||GUIDE_UI.en;}
 function guidePick(obj){if(!obj) return ''; if(lang==='ar'&&obj.ar!=null) return obj.ar; if(lang==='es'&&obj.es!=null) return obj.es; return obj.en!=null?obj.en:'';}
@@ -4383,7 +4406,8 @@ function formatGuideText(s){
   if(s==null) return '';
   let t=String(s);
   if(lang==='ar'){
-    // Keep each Arabic period with its sentence (same approach as the 1.1 update note).
+    // Plain Arabic for the guide: drop tashkeel, keep each period with its sentence.
+    t=t.replace(/[\u064B-\u065F\u0670]/g,'');
     t=t.replace(/([.!?؟])(?!\u200F)/g,'$1\u200F');
   }
   return t;
@@ -4418,8 +4442,7 @@ const GUIDE_HELP={
   loan:{en:{title:'Create a loan',body:'From Home tap Get Started, then enter:\n\n• Loan type\n• Loan amount\n• Repayment period\n• Annual interest rate\n• Optional start date\n\nTap Calculate to open the five result pages.'},ar:{title:'إنشاء قرض',body:'من الرئيسية اضغط ابدأ ثم أدخل:\n\n• نوع القرض\n• مبلغ القرض\n• مدة السداد\n• معدل الفائدة السنوي\n• تاريخ البداية إن احتجت\n\nثم اضغط احسب قرضي لفتح صفحات النتائج الخمس.'},es:{title:'Crear un préstamo',body:'En Inicio toca Empezar e ingresa:\n\n• Tipo de préstamo\n• Monto\n• Plazo\n• Tasa anual\n• Fecha de inicio opcional\n\nToca Calcular para abrir las cinco páginas de resultados.'}},
   results:{en:{title:'Understand results',body:'After Calculate you get five pages:\n\n• Report — installment, cost, interest, affordability\n• Charts — principal vs interest visually\n• Schedule — month-by-month table\n• Simulate — what-if changes instantly\n• Refinance — explore a later rate or payment change\n\nThe intro tour gives a short overview; open this Help topic anytime for the full list.'},ar:{title:'فهم النتائج',body:'بعد الحساب تظهر خمس صفحات:\n\n• التقرير — القسط والتكلفة والفائدة والقدرة على السداد\n• الرسوم — توزيع الأصل والفائدة بصرياً\n• الجدول — أقساط شهرية ورصيد متبقٍ\n• المحاكاة — ماذا لو تغيّر المبلغ أو الفائدة أو المدة\n• إعادة الجدولة — استكشاف تغيير لاحق للفائدة أو القسط\n\nالجولة التعريفية تعطي نظرة عامة قصيرة؛ افتح هذا الموضوع من الدليل في أي وقت للقائمة كاملة.'},es:{title:'Entender resultados',body:'Tras Calcular tienes cinco páginas:\n\n• Informe — cuota, costo, interés y asequibilidad\n• Gráficos — capital frente a interés\n• Tabla — mes a mes\n• Simular — cambios al instante\n• Refinanciar — explorar un cambio posterior\n\nEl tour da un resumen breve; abre este tema de la guía cuando quieras la lista completa.'}},
   save:{en:{title:'Save & compare',body:'On the Report page tap Save to keep the loan on Home. When you have two or more saved loans, use Compare to see them side by side.\n\nYour profile stays separate from each saved loan.'},ar:{title:'الحفظ والمقارنة',body:'من صفحة التقرير اضغط حفظ ليظهر القرض في الرئيسية. عند وجود قرضين محفوظين أو أكثر استخدم مقارنة لعرضهما جنباً إلى جنب.\n\nملفك المالي يبقى منفصلاً عن كل قرض محفوظ.'},es:{title:'Guardar y comparar',body:'En Informe toca Guardar para dejar el préstamo en Inicio. Con dos o más guardados usa Comparar para verlos juntos.\n\nTu perfil queda separado de cada préstamo guardado.'}},
-  demo:{en:{title:'Demo mode',body:'Demo mode protects your privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. On a locked phone you return only after biometrics or device PIN. Find Demo on Home (eye icon) or in Settings.'},ar:{title:'وضع العرض',body:'هدف وضع العرض الأساسي هو حماية خصوصيتك وخصوصية ملفك المالي. يفتح أرقاماً تجريبية ثابتة بالدولار لتعرّض التطبيق دون كشف ملفك الحقيقي.\n\nملفك الحقيقي يبقى مغلقاً. على الهاتف المقفل تعود إليه بعد البصمة أو رمز الجهاز فقط. تجده من الرئيسية بأيقونة العين أو من الإعدادات.'},es:{title:'Modo demo',body:'El modo demo protege tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. En un teléfono bloqueado vuelves solo con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'}},
-  whatsnew:{en:{title:'What\'s new',body:'When an important feature arrives, emiGo shows a small What\'s new card once. Closing or opening it marks that feature as seen so minor fixes do not repeat the message.\n\nYou can reopen explanations anytime from this Help guide.'},ar:{title:'ما الجديد',body:'عند إضافة ميزة مهمة يظهر بطاقة «ما الجديد» مرة واحدة. إغلاقها أو فتحها يعلّم أنك شاهدتها حتى لا تتكرر مع إصلاحات بسيطة.\n\nيمكنك إعادة أي شرح في أي وقت من دليل الاستخدام.'},es:{title:'Novedades',body:'Cuando llega una función importante, emiGo muestra una tarjeta de novedades una sola vez. Cerrarla u abrirla la marca como vista para que no se repita con arreglos menores.\n\nPuedes reabrir explicaciones cuando quieras desde esta guía.'}}
+  demo:{en:{title:'Demo mode',body:'Demo mode protects your privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. You return to it after biometrics or device PIN. Find Demo on Home (eye icon) or in Settings.'},ar:{title:'وضع العرض التجريبي',body:'هدف وضع العرض التجريبي حماية خصوصيتك وخصوصية ملفك المالي. يفتح ارقاما تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك الحقيقي.\n\nملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بايقونة العين أو من الإعدادات.'},es:{title:'Modo demo',body:'El modo demo protege tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. Vuelves a él con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'}}
 };
 
 const GUIDE_TOUR_STEPS=[
@@ -4443,11 +4466,11 @@ const GUIDE_TOUR_STEPS=[
 const GUIDE_FEATURES=[
   {id:'demo_mode',
     teaser:{en:'New in emiGo: Demo mode',ar:'جديد في emiGo: وضع العرض التجريبي',es:'Nuevo en emiGo: Modo demo'},
-    title:{en:'Demo mode',ar:'وضع العرض',es:'Modo demo'},
+    title:{en:'Demo mode',ar:'وضع العرض التجريبي',es:'Modo demo'},
     body:{
-      en:'Demo mode is built for privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. On a locked phone you return only after biometrics or device PIN. Find it on Home (eye icon) or in Settings.',
-      ar:'وضع العرض مصمّم لحماية خصوصيتك. يفتح أرقاماً تجريبية ثابتة بالدولار لتعرّض التطبيق دون كشف ملفك المالي الحقيقي.\n\nملفك الحقيقي يبقى مغلقاً. على الهاتف المقفل تعود إليه بعد البصمة أو رمز الجهاز فقط. تجده من الرئيسية بأيقونة العين أو من الإعدادات.',
-      es:'El modo demo está pensado para tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. En un teléfono bloqueado vuelves solo con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'
+      en:'Demo mode is built for privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. You return to it after biometrics or device PIN. Find it on Home (eye icon) or in Settings.',
+      ar:'وضع العرض التجريبي مصمم لحماية خصوصيتك. يفتح ارقاما تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك المالي الحقيقي.\n\nملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بايقونة العين أو من الإعدادات.',
+      es:'El modo demo está pensado para tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. Vuelves a él con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'
     }}
 ];
 
@@ -4496,47 +4519,67 @@ function guideTarget(id){
   return document.querySelector('[data-guide-id="'+id+'"]');
 }
 function clearGuideSpotlight(keepDim){
-  if(_guideSpotlightEl){
-    _guideSpotlightEl.classList.remove('guide-spotlight');
-    _guideSpotlightEl=null;
-  }
+  _guideSpotlightEl=null;
+  const ring=document.getElementById('guide-spot-ring');
+  if(ring) ring.style.display='none';
   if(!keepDim){
     const dim=document.getElementById('guide-dim');
     if(dim) dim.style.display='none';
   }
 }
-function guideElementNeedsScroll(el){
-  if(!el||!el.getBoundingClientRect) return false;
-  const rect=el.getBoundingClientRect();
+function guideScrollParent(el){
+  let p=el&&el.parentElement;
+  while(p && p!==document.body){
+    const oy=window.getComputedStyle(p).overflowY;
+    if((oy==='auto'||oy==='scroll') && p.scrollHeight>p.clientHeight+4) return p;
+    p=p.parentElement;
+  }
+  return null;
+}
+function ensureGuideTargetVisible(el){
+  if(!el||!el.getBoundingClientRect) return;
+  // Footer/header chrome does not move with inner scroll — scrolling it shakes the page.
+  if(el.closest('.btn-footer, .home-actions, .step-header, .results-header')) return;
   const card=document.getElementById('guide-tour-card');
   const cardH=(card&&card.style.display!=='none')?Math.max(card.offsetHeight,120):140;
-  const topPad=72;
-  const bottomPad=cardH+24;
-  return rect.top<topPad || rect.bottom>(window.innerHeight-bottomPad);
+  const topPad=76;
+  const bottomPad=cardH+22;
+  const rect=el.getBoundingClientRect();
+  const viewH=window.innerHeight;
+  let dy=0;
+  if(rect.top<topPad) dy=rect.top-topPad;
+  else if(rect.bottom>viewH-bottomPad) dy=rect.bottom-(viewH-bottomPad);
+  if(Math.abs(dy)<12) return; // ignore micro-jumps (LTR text wrap differs from Arabic)
+  const scroller=guideScrollParent(el);
+  if(scroller) scroller.scrollTop+=dy;
+}
+function positionGuideSpotRing(el){
+  const ring=document.getElementById('guide-spot-ring');
+  if(!ring||!el||!el.getBoundingClientRect) return;
+  const r=el.getBoundingClientRect();
+  const pad=5;
+  ring.style.display='block';
+  ring.style.top=(r.top-pad)+'px';
+  ring.style.left=(r.left-pad)+'px';
+  ring.style.width=(r.width+pad*2)+'px';
+  ring.style.height=(r.height+pad*2)+'px';
 }
 function applyGuideSpotlight(el){
+  const dim=document.getElementById('guide-dim');
+  if(dim) dim.style.display='block';
   if(!el){
     clearGuideSpotlight(true);
-    const dim=document.getElementById('guide-dim');
-    if(dim) dim.style.display='block';
     return;
   }
   try{
-    // Same target: keep highlight stable — no class thrash / no re-scroll.
+    // Same target: keep the ring still — no class on the field, no re-scroll.
     if(el===_guideSpotlightEl){
-      const dim=document.getElementById('guide-dim');
-      if(dim) dim.style.display='block';
+      positionGuideSpotRing(el);
       return;
     }
-    clearGuideSpotlight(true);
-    el.classList.add('guide-spotlight');
     _guideSpotlightEl=el;
-    const dim=document.getElementById('guide-dim');
-    if(dim) dim.style.display='block';
-    // Instant scroll only when the target is covered — smooth scroll caused visible shake.
-    if(guideElementNeedsScroll(el)){
-      el.scrollIntoView({behavior:'auto',block:'center',inline:'nearest'});
-    }
+    ensureGuideTargetVisible(el);
+    positionGuideSpotRing(el);
   }catch(e){}
 }
 function hideGuideChrome(){
@@ -4548,18 +4591,21 @@ function hideGuideChrome(){
 function showGuideSheet(title, bodyHtml, isHtml){
   const ov=document.getElementById('guide-sheet');
   if(!ov) return;
+  // Sheet lives outside #app, so it does not inherit RTL from the app root.
+  const dir=lang==='ar'?'rtl':'ltr';
+  ov.setAttribute('dir', dir);
   const titleEl=document.getElementById('guide-sheet-title');
   titleEl.textContent=formatGuideText(title||'');
-  if(lang==='ar') titleEl.setAttribute('dir','rtl'); else titleEl.setAttribute('dir','ltr');
+  titleEl.setAttribute('dir', dir);
   const body=document.getElementById('guide-sheet-body');
+  body.setAttribute('dir', dir);
   if(isHtml){
     body.innerHTML=bodyHtml||'';
     body.style.whiteSpace='normal';
-    body.removeAttribute('dir');
   }else{
     applyGuideTextDir(body, bodyHtml||'');
   }
-  document.getElementById('guide-sheet-close').textContent=guideUi().sheetClose;
+  document.getElementById('guide-sheet-close').textContent=formatGuideText(guideUi().sheetClose);
   ov.style.display='flex';
 }
 function hideGuideSheet(ev){
@@ -4627,15 +4673,15 @@ function renderGuideTourCard(){
   const step=GUIDE_TOUR_STEPS[_guideTourStep];
   if(!step) return;
   const card=document.getElementById('guide-tour-card');
-  document.getElementById('guide-tour-meta').textContent=ui.stepOf(_guideTourStep+1, GUIDE_TOUR_STEPS.length);
+  document.getElementById('guide-tour-meta').textContent=formatGuideText(ui.stepOf(_guideTourStep+1, GUIDE_TOUR_STEPS.length));
   const titleEl=document.getElementById('guide-tour-title');
   const bodyEl=document.getElementById('guide-tour-body');
   titleEl.textContent=formatGuideText(guidePick(step.title));
   applyGuideTextDir(bodyEl, guidePick(step.body));
   if(lang==='ar') titleEl.setAttribute('dir','rtl'); else titleEl.setAttribute('dir','ltr');
-  document.getElementById('guide-tour-skip').textContent=ui.skipTour;
+  document.getElementById('guide-tour-skip').textContent=formatGuideText(ui.skipTour);
   const nextBtn=document.getElementById('guide-tour-next');
-  nextBtn.textContent=(_guideTourStep>=GUIDE_TOUR_STEPS.length-1)?ui.done:ui.next;
+  nextBtn.textContent=formatGuideText((_guideTourStep>=GUIDE_TOUR_STEPS.length-1)?ui.done:ui.next);
   card.style.display='block';
 }
 function showGuideTourStep(){
@@ -4662,6 +4708,7 @@ function startGuideTour(){
   const ov=document.getElementById('guide-sheet');
   if(ov) ov.style.display='none';
   _guideTourActive=true;
+  document.documentElement.classList.add('guide-tour-on');
   _guideTourStep=0;
   showGuideTourStep();
 }
@@ -4681,6 +4728,7 @@ function markAllResultTipsSeen(st){
 }
 function finishGuideTour(completed){
   _guideTourActive=false;
+  document.documentElement.classList.remove('guide-tour-on');
   _guideTourStep=0;
   hideGuideChrome();
   dismissGuideNudge();
@@ -4702,8 +4750,8 @@ function showGuideWelcome(){
   titleEl.textContent=formatGuideText(ui.welcomeTitle);
   if(lang==='ar') titleEl.setAttribute('dir','rtl'); else titleEl.setAttribute('dir','ltr');
   applyGuideTextDir(document.getElementById('guide-welcome-body'), ui.welcomeBody);
-  document.getElementById('guide-welcome-skip').textContent=ui.skipTour;
-  document.getElementById('guide-welcome-start').textContent=ui.startTour;
+  document.getElementById('guide-welcome-skip').textContent=formatGuideText(ui.skipTour);
+  document.getElementById('guide-welcome-start').textContent=formatGuideText(ui.startTour);
   el.style.display='block';
 }
 function nextUnseenFeature(){
@@ -4728,10 +4776,10 @@ function maybeShowWhatsNew(){
   _pendingWhatsNewId=feat.id;
   const ui=guideUi();
   const el=document.getElementById('guide-whatsnew');
-  document.getElementById('guide-whatsnew-title').textContent=guidePick(feat.teaser);
-  document.getElementById('guide-whatsnew-body').textContent=guidePick(feat.title);
-  document.getElementById('guide-whatsnew-later').textContent=ui.later;
-  document.getElementById('guide-whatsnew-open').textContent=ui.learnMore;
+  document.getElementById('guide-whatsnew-title').textContent=formatGuideText(guidePick(feat.teaser));
+  document.getElementById('guide-whatsnew-body').textContent=formatGuideText(guidePick(feat.title));
+  document.getElementById('guide-whatsnew-later').textContent=formatGuideText(ui.later);
+  document.getElementById('guide-whatsnew-open').textContent=formatGuideText(ui.learnMore);
   el.style.display='block';
 }
 function dismissWhatsNew(){
@@ -4777,8 +4825,8 @@ function maybeShowResultTip(tabId){
     titleEl.textContent=formatGuideText(loc.title);
     if(lang==='ar') titleEl.setAttribute('dir','rtl'); else titleEl.setAttribute('dir','ltr');
     applyGuideTextDir(document.getElementById('guide-nudge-body'), loc.body);
-    document.getElementById('guide-nudge-skip').textContent=ui.skipTour;
-    document.getElementById('guide-nudge-ok').textContent=ui.gotIt;
+    document.getElementById('guide-nudge-skip').textContent=formatGuideText(ui.skipTour);
+    document.getElementById('guide-nudge-ok').textContent=formatGuideText(ui.gotIt);
     el.style.display='block';
     patchGuideState(function(s){ s.tipsSeen[tipId]=true; });
   }, 700);
@@ -4807,11 +4855,10 @@ function openGuideHelp(){
     {label:ui.helpLoan,action:'help:loan'},
     {label:ui.helpResults,action:'help:results'},
     {label:ui.helpSave,action:'help:save'},
-    {label:ui.helpDemo,action:'help:demo'},
-    {label:ui.helpWhatsNew,action:'help:whatsnew'}
+    {label:ui.helpDemo,action:'help:demo'}
   ];
   const html=items.map(function(it){
-    return '<button type="button" class="guide-help-item" onclick="runGuideHelpAction(\''+it.action+'\')">'+it.label+
+    return '<button type="button" class="guide-help-item" onclick="runGuideHelpAction(\''+it.action+'\')">'+formatGuideText(it.label)+
       '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg></button>';
   }).join('');
   showGuideSheet(ui.helpTitle, html, true);
@@ -5167,6 +5214,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
 <style>@keyframes slideUpSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}</style>
 <!-- Smart App Guide overlays -->
 <div id="guide-dim" aria-hidden="true"></div>
+<div id="guide-spot-ring" aria-hidden="true"></div>
 <div id="guide-welcome" role="dialog" aria-labelledby="guide-welcome-title">
   <p class="guide-card-title" id="guide-welcome-title"></p>
   <p class="guide-card-body" id="guide-welcome-body"></p>
@@ -5203,9 +5251,9 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
 <div id="guide-sheet" onclick="hideGuideSheet(event)">
   <div class="guide-sheet-panel" onclick="event.stopPropagation()">
     <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 16px"></div>
-    <p id="guide-sheet-title" style="text-align:center;font-size:18px;font-weight:900;color:var(--txt);margin:0 0 10px"></p>
-    <div id="guide-sheet-body" style="font-size:14px;color:var(--txt2);line-height:1.7;white-space:pre-line;margin-bottom:16px"></div>
-    <button type="button" id="guide-sheet-close" onclick="hideGuideSheet()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit"></button>
+    <p id="guide-sheet-title" style="text-align:center;font-size:20px;font-weight:900;color:var(--txt);margin:0 0 12px;line-height:1.35"></p>
+    <div id="guide-sheet-body" style="font-size:15.5px;color:var(--txt2);line-height:1.75;white-space:pre-line;margin-bottom:16px"></div>
+    <button type="button" id="guide-sheet-close" onclick="hideGuideSheet()" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit"></button>
   </div>
 </div>
 <!-- Cloudflare Web Analytics (web only — skipped inside the Android app) --><script>

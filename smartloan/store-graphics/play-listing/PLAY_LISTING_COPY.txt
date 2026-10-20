@@ -1,0 +1,121 @@
+emiGo — Play Console listing copy
+=================================
+Paste into Google Play Console. Keep this file in sync when the listing changes.
+Current store version: 4.0 (versionCode 380079). No new version number for this polish.
+
+App name (max 30)
+-----------------
+emiGo: EMI & Loan
+
+Short description (max 80)
+--------------------------
+en: EMI, loan & mortgage calculator with bank comparison & payment schedule
+ar: حاسبة أقساط وقروض ورهن مع مقارنة البنك وجدول السداد
+es: Calculadora de cuotas, préstamos e hipoteca con comparación bancaria
+
+What's new (release notes — keep general)
+-----------------------------------------
+en:
+Short intro tour and Help guide in Settings.
+Clearer loan comparisons when exploring options.
+Clearer loan status with bank-limit indicators.
+General stability and usability improvements.
+
+ar:
+جولة قصيرة ودليل استخدام من الإعدادات.
+مقارنة أوضح لخيارات القرض.
+عرض أوضح لحالة القروض وحد البنك.
+تحسينات عامة على سلاسة الاستخدام.
+
+es:
+Tour breve y guía de uso en Ajustes.
+Comparaciones de préstamos más claras.
+Estado de préstamos más claro con el límite del banco.
+Mejoras generales de estabilidad y fluidez.
+
+Full description — English
+--------------------------
+emiGo is a private loan calculator for EMI, personal loans, car loans, and mortgages.
+
+Enter your income, expenses, amount, rate, and period. emiGo shows the monthly payment, total interest, total cost, and whether the installment stays within your bank limit.
+
+WHAT YOU GET
+• Instant EMI and loan estimates
+• Bank installment limit vs your monthly payment
+• Amortization schedule
+• Charts for principal and interest
+• Scenario comparison against an active loan
+• Save and compare loans on Home
+• Demo mode with sample numbers so your real file stays closed
+
+BUILT FOR PRIVACY
+Your numbers stay on your device. There is no account and no cloud login.
+
+emiGo is a calculation and estimation tool. It does not approve loans or replace your bank’s offer.
+
+Developer: SmartAppsFlow
+Support: smartappsflow@gmail.com
+Privacy: https://almamar4ev.github.io/smart-apps-legal/smart-loan-calculator/privacy-policy.html
+
+Full description — Arabic
+-------------------------
+emiGo حاسبة خاصة للأقساط والقروض الشخصية وقروض السيارات والرهن.
+
+أدخل الدخل والمصروفات والمبلغ والفائدة والمدة. يعرض emiGo القسط الشهري وإجمالي الفائدة والتكلفة، وهل القسط ضمن حد بنكك.
+
+ماذا تحصل عليه
+• تقدير فوري للقسط والقرض
+• مقارنة القسط مع حد البنك
+• جدول السداد
+• رسوم للأصل والفائدة
+• مقارنة سيناريو مع قرض نشط
+• حفظ القروض ومقارنتها من الرئيسية
+• وضع عرض تجريبي بأرقام عينة، وملفك الحقيقي يبقى مغلقا
+
+خصوصيتك أولا
+الأرقام تبقى على جهازك. لا يوجد حساب ولا تسجيل سحابي.
+
+emiGo أداة حساب وتقدير. لا يوافق على القروض ولا يغني عن عرض البنك.
+
+المطور: SmartAppsFlow
+الدعم: smartappsflow@gmail.com
+الخصوصية: https://almamar4ev.github.io/smart-apps-legal/smart-loan-calculator/privacy-policy.html
+
+Full description — Spanish
+--------------------------
+emiGo es una calculadora privada de cuotas, préstamos personales, auto e hipoteca.
+
+Introduce ingresos, gastos, monto, tasa y plazo. emiGo muestra la cuota mensual, el interés total, el costo total y si la cuota cabe en el límite de tu banco.
+
+QUÉ INCLUYE
+• Estimación instantánea de la cuota
+• Límite bancario frente a tu pago mensual
+• Tabla de amortización
+• Gráficos de capital e interés
+• Comparación de un escenario con un préstamo activo
+• Guardar y comparar préstamos en Inicio
+• Modo demo con números de muestra; tu archivo real permanece cerrado
+
+PRIVACIDAD
+Tus números se quedan en el dispositivo. No hay cuenta ni inicio de sesión en la nube.
+
+emiGo es una herramienta de cálculo. No aprueba préstamos ni sustituye la oferta de tu banco.
+
+Developer: SmartAppsFlow
+Support: smartappsflow@gmail.com
+Privacy: https://almamar4ev.github.io/smart-apps-legal/smart-loan-calculator/privacy-policy.html
+
+Privacy policy URL
+------------------
+https://almamar4ev.github.io/smart-apps-legal/smart-loan-calculator/privacy-policy.html
+
+Website
+-------
+https://smartappsflow.net/smartloan/
+
+Related assets
+--------------
+Feature graphic: store-graphics/play-listing/feature-graphic-1024x500.png
+High-res icon:   store-graphics/play-listing/icon-512.png
+Phone screens:   store-graphics/store-01 … store-06 (English)
+                 store-graphics/ar/store-ar-01 … store-ar-06 (Arabic)

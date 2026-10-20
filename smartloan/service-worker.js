@@ -9,20 +9,23 @@ const VERSION = '1.3';
 function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
   ar: updateNote([
-    'عرض أوضح عند مقارنة خيارات القرض.\u200F',
+    'جولة قصيرة ودليل استخدام أوضح.\u200F',
+    'مقارنة أوضح لخيارات القرض.\u200F',
     'تحسينات عامة على سلاسة الاستخدام.\u200F'
   ]),
   en: updateNote([
+    'A short tour and a clearer Help guide.',
     'Clearer loan comparisons when exploring options.',
     'General usability improvements.'
   ]),
   es: updateNote([
+    'Tour breve y una guía de uso más clara.',
     'Comparaciones de préstamos más claras.',
     'Mejoras generales de usabilidad.'
   ])
 };
 
-const CACHE = 'smartloan-1.3a';
+const CACHE = 'smartloan-1.3b';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 // Install: pre-cache core, then WAIT. No skipWaiting() here on purpose — the new
