@@ -1,32 +1,29 @@
 /* emiGo: EMI & Loan — service worker
    On a real release: bump VERSION (1.0, 1.1, 1.2…) and rewrite CHANGELOG.
    VERSION is shown to users, so it is a product release, not a running fix counter. */
-const VERSION = '1.1';
+const VERSION = '1.2';
 
 // Each sentence is its own line. U+2028 breaks the line even in the current
 // banner, and the RTL mark keeps every Arabic period with its sentence.
 function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
   ar: updateNote([
-    'وضع العرض يشارك التطبيق بأرقام تجريبية ثابتة بالدولار.\u200F',
-    'ملفك المالي لا يظهر ولا يتغير.\u200F',
-    'على الهاتف المقفل تعود إليه بالبصمة أو رمز الجهاز فقط.\u200F',
-    'صفحات القرض الخمس تعمل كالمعتاد.\u200F',
-    'حجم التحديث ٣٠٠\u2060كيلوبايت.\u200F'
+    'جولة تعريفية قصيرة من خمس خطوات ودليل استخدام من الإعدادات.\u200F',
+    'إعدادات أوضح: ثيم وعملة مضغوطة، وترتيب أفضل للخيارات.\u200F',
+    'وضع العرض يحمي خصوصية ملفك المالي.\u200F',
+    'حجم التحديث ٣٥٠\u2060كيلوبايت.\u200F'
   ]),
   en: updateNote([
-    'Demo Mode shares the app with fixed US-dollar samples.',
-    'Your financial file is not shown or changed.',
-    'On a locked phone you return only with biometrics or the device passcode.',
-    'All five loan pages work as usual.',
-    'Update size: 300 KB.'
+    'A short 5-step intro tour and a Help guide in Settings.',
+    'Clearer Settings: compact theme and currency, better row order.',
+    'Demo mode protects your financial file’s privacy.',
+    'Update size: 350 KB.'
   ]),
   es: updateNote([
-    'El modo demo comparte la app con números fijos en dólares.',
-    'Tu archivo financiero no se muestra ni se cambia.',
-    'En un teléfono bloqueado vuelves solo con biometría o el código del dispositivo.',
-    'Las cinco páginas del préstamo funcionan como siempre.',
-    'Tamaño: 300 KB.'
+    'Tour introductorio de 5 pasos y guía de ayuda en Ajustes.',
+    'Ajustes más claros: tema y moneda compactos, mejor orden.',
+    'El modo demo protege la privacidad de tu archivo financiero.',
+    'Tamaño: 350 KB.'
   ])
 };
 

@@ -79,11 +79,10 @@ assert('service worker answers GET_VERSION_INFO with VERSION_INFO',
   /const\s+VERSION\s*=/.test(sw) && /const\s+CHANGELOG\s*=/.test(sw));
 assert('Arabic update sentences stay on separate lines with their periods',
   /function updateNote\(lines\)\{ return lines\.join\('\\u2028'\); \}/.test(sw) &&
-  /بالدولار\.\\u200F/.test(sw) &&
-  /لا يتغير\.\\u200F/.test(sw) &&
-  /فقط\.\\u200F/.test(sw) &&
-  /كالمعتاد\.\\u200F/.test(sw) &&
-  /٣٠٠\\u2060كيلوبايت\.\\u200F/.test(sw) &&
+  /الإعدادات\.\\u200F/.test(sw) &&
+  /للخيارات\.\\u200F/.test(sw) &&
+  /المالي\.\\u200F/.test(sw) &&
+  /٣٥٠\\u2060كيلوبايت\.\\u200F/.test(sw) &&
   !/\\u2066/.test(sw));
 assert('update banner preserves one sentence per line',
   /updateBanner[\s\S]{0,1200}white-space:pre-line/.test(html) &&
@@ -95,9 +94,9 @@ assert('Play rating row stays hidden until the Android app shows settings',
   /rateRow\.style\.display=isNativeApp\(\)\?'':'none'/.test(html) &&
   /market:\/\/details\?id=com\.smartapps\.smartloanadvisor/.test(html) &&
   /id="lbl-rate-btn">Rate us</.test(html) &&
-  /id="lbl-rate-hint">Leave us a review</.test(html) &&
+  /id="lbl-rate-hint">Support us with a review</.test(html) &&
   /:'Rate us'/.test(html) &&
-  /:'Leave us a review'/.test(html));
+  /:'Support us with a review'/.test(html));
 assert('page shows an update banner and a Settings update card',
   /getElementById\(['"]updateBanner['"]\)/.test(html) &&
   /settingsUpdateBox/.test(html) &&
