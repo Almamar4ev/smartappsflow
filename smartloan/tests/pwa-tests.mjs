@@ -90,6 +90,14 @@ assert('update banner preserves one sentence per line',
   /settingsUpdateBox[\s\S]{0,900}white-space:pre-line/.test(html));
 
 // 4d. The page side wires up the notifier: a waiting worker + a Settings entry.
+assert('Play rating row stays hidden until the Android app shows settings',
+  /id="settings-rate-row"[^>]*style="display:none"/.test(html) &&
+  /rateRow\.style\.display=isNativeApp\(\)\?'':'none'/.test(html) &&
+  /market:\/\/details\?id=com\.smartapps\.smartloanadvisor/.test(html) &&
+  /id="lbl-rate-btn">Rate us</.test(html) &&
+  /id="lbl-rate-hint">Leave us a review</.test(html) &&
+  /:'Rate us'/.test(html) &&
+  /:'Leave us a review'/.test(html));
 assert('page shows an update banner and a Settings update card',
   /getElementById\(['"]updateBanner['"]\)/.test(html) &&
   /settingsUpdateBox/.test(html) &&

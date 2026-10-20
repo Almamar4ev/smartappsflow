@@ -71,6 +71,10 @@ check('Android runtime includes the patched Capacitor release',
   pkg.dependencies?.['@capacitor/android'] === '6.2.2');
 check('Android CI installs only locked dependencies',
   /npm ci/.test(workflow) && /smartloan\/package-lock\.json/.test(workflow));
+check('store version 3.9.0 is shown to users as 3.9',
+  pkg.version === '3.9.0' &&
+  /require\('\.\/package\.json'\)\.version/.test(workflow) &&
+  /endsWith\('\.0'\)/.test(workflow));
 check('API 36 uses a supported AGP and Gradle pair',
   /gradle:8\.9\.1/.test(workflow) && /gradle-8\.11\.1/.test(workflow));
 check('Android release excludes WebView financial data from backup and transfer',
