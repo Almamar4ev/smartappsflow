@@ -16,21 +16,21 @@ es: Calculadora de cuotas, préstamos e hipoteca con comparación bancaria
 What's new (release notes — keep general)
 -----------------------------------------
 en:
-Short intro tour and Help guide in Settings.
+A clearer report focused on the numbers that matter.
 Clearer loan comparisons when exploring options.
-Clearer loan status with bank-limit indicators.
+Short intro tour and Help guide in Settings.
 General stability and usability improvements.
 
 ar:
-جولة قصيرة ودليل استخدام من الإعدادات.
+تقرير أوضح يركز على الأرقام الأساسية.
 مقارنة أوضح لخيارات القرض.
-عرض أوضح لحالة القروض وحد البنك.
+جولة قصيرة ودليل استخدام من الإعدادات.
 تحسينات عامة على سلاسة الاستخدام.
 
 es:
-Tour breve y guía de uso en Ajustes.
+Informe más claro, centrado en lo esencial.
 Comparaciones de préstamos más claras.
-Estado de préstamos más claro con el límite del banco.
+Tour breve y guía de uso en Ajustes.
 Mejoras generales de estabilidad y fluidez.
 
 Full description — English

@@ -643,7 +643,6 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="card" id="bankcmp-card" style="padding-top:16px"></div>
     <div class="basis-card"><p class="card-label" id="lbl-basis">HOW YOUR LOAN IS CALCULATED</p><div id="basis-rows"></div></div>
     <div class="card" id="banklimit-card" style="padding-top:16px"></div>
-    <div class="card"><p class="card-label" id="lbl-rec">ESTIMATED LOAN</p><p class="card-big" id="rec-loan"></p><p class="card-sub" id="rec-range"></p><p class="card-sub" id="rec-range-hint" style="margin-top:6px;font-size:12px;opacity:.7"></p></div>
     <div class="action-row" data-guide-id="save">
       <button class="save-btn" onclick="saveScenario()" id="btn-save">Save Scenario</button>
       <button class="home-btn" onclick="goHome()" id="btn-go-home">Home</button>
@@ -2289,16 +2288,6 @@ function renderResults(){
     <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'تاريخ الانتهاء المتوقع':lang==='es'?'Fecha de fin prevista':'Expected End Date'}</span><span class="basis-val" style="color:var(--txt);font-weight:800">${endStr}</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl} <span onclick="showRiskInfo()" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1.3px solid var(--txt3);color:var(--txt3);font-size:11px;font-weight:800;cursor:pointer;vertical-align:middle">؟</span></span><span class="basis-hi" style="color:var(--txt)">${r.dtiGross.toFixed(2)}%</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.dtiNetLbl}</span><span class="basis-hi" style="color:var(--txt)">${r.dtiNet.toFixed(2)}%</span></div>`;
-  document.getElementById('lbl-rec').textContent=tc.recommended;
-  document.getElementById('rec-loan').textContent=T[lang]['lt_'+form.loanType];
-  document.getElementById('rec-range').textContent=tc.suggestedRange+': '+fmtAmt(r.safeMax*0.8)+' – '+fmtAmt(r.safeMax);
-  // Safe range explanation
-  const hint=document.getElementById('rec-range-hint');
-  if(hint) hint.textContent=lang==='ar'
-    ?'تقدير عام يُحسب بناءً على 35% من صافي دخلك كقاعدة عامة للحد الأقصى للقسط الشهري (يختلف عن حد بنكك الفعلي في البطاقة أعلاه)'
-    :lang==='es'
-    ?'Estimación general basada en el 35% de tu ingreso neto como regla general (distinto del límite real de tu banco arriba)'
-    :'A general estimate based on 35% of your net income as a rule of thumb (different from your actual bank limit above)';
   try{ renderBankLimitCard(r); }catch(e){ const _b=document.getElementById('banklimit-card'); if(_b)_b.style.display='none'; }
   try{ renderBankNoteCard(r); renderBankCompareCard(r); }catch(e){
     ['bankpay-card','bankcmp-card'].forEach(id=>{const _c=document.getElementById(id); if(_c)_c.style.display='none';});
@@ -3793,12 +3782,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
   <div class="section">
     <div class="section-title">${tc.basisTitle}</div>
     <table><tbody>${rows}</tbody></table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">${tc.recommended}</div>
-    <div style="font-size:17px;font-weight:900;margin-bottom:5px">${loanTypeName}</div>
-    <div style="font-size:11px;color:#6b7280">${tc.suggestedRange}: ${fmtAmt(r.safeMax*0.8)} – ${fmtAmt(r.safeMax)}</div>
   </div>
 
   <div class="section">

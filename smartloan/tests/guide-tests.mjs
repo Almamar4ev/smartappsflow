@@ -97,6 +97,10 @@ check('scenario banner keeps EMI amounts neutral and loan name in title',
   /يستبدل قرض \$\{repName\}/.test(html) &&
   /color:var\(--txt\)">\$\{fmtAmt\(rep\.loanMonthly\)\}/.test(html) &&
   /لكن إجمالي الفائدة يزيد/.test(html));
+check('report page does not show the 35% estimated-loan range card',
+  !/id="lbl-rec"/.test(html) &&
+  !/id="rec-range-hint"/.test(html) &&
+  !/35% من صافي دخلك كقاعدة عامة/.test(html));
 check('Help guide no longer includes a What\'s new topic',
   !/helpWhatsNew/.test(html) &&
   !/help:whatsnew/.test(html) &&
