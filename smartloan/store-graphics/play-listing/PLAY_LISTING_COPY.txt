@@ -1,7 +1,7 @@
 emiGo — Play Console listing copy
 =================================
 Paste into Google Play Console. Keep this file in sync when the listing changes.
-Current store version: 4.0 (versionCode 380079). No new version number for this polish.
+Current store version: 4.0. Same visible number; Play needs a higher versionCode from CI. No new version name for this polish.
 
 App name (max 30)
 -----------------

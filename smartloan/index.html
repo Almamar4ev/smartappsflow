@@ -1890,12 +1890,11 @@ function renderHomeSaved(){
     html+=saved.map((s,i)=>{
       if(s.type==='scenario') return '';
       const displayName=escapeHtml(savedLoanDisplayName(s));
-      const savedTime=escapeHtml(s.time||'');
       return`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:#6366f140">
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
-            <div class="saved-mini-sub">${savedTime} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
+            <div class="saved-mini-sub">${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
             ${(function(){var bl=Math.min(100,Math.max(1,+profile.bankLimit||40));var gross=(+profile.salary||0)+(+profile.income||0);var base=(profile.limitBasis==='net')?Math.max(0,gross-((+profile.expenses||0)+(+profile.variable||0))):gross;var otherEx=saved.filter(function(x){return x.type!=='scenario'&&x!==s;}).reduce(function(sm,x){return sm+(x.loanMonthly||0);},0);var mpa=Math.max(0,base*bl/100-otherEx);var over=(s.results.monthly||0)>mpa+0.5;return over?`<span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--risk) 13%,transparent);color:var(--risk);border:1px solid color-mix(in srgb,var(--risk) 38%,transparent);margin-top:4px">${isAr?'⚠ يتجاوز حد البنك':isEs?'⚠ Supera el límite del banco':'⚠ Exceeds bank limit'}</span>`:`<span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--safe) 16%,transparent);color:var(--safe);border:1px solid color-mix(in srgb,var(--safe) 40%,transparent);margin-top:4px">${isAr?'نشط':isEs?'Activo':'Active'}</span>`;})()}
           </div>
           <div class="saved-mini-right">
@@ -1928,12 +1927,11 @@ function renderHomeSaved(){
     html+=saved.map((s,i)=>{
       if(s.type!=='scenario') return '';
       const displayName=escapeHtml(savedLoanDisplayName(s));
-      const savedTime=escapeHtml(s.time||'');
       return`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:#f59e0b30;opacity:.9">
         <div onclick="openSavedDetail(${i})" style="display:flex;justify-content:space-between;align-items:center">
           <div class="saved-mini-left">
             <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--acc);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${displayName}</span></div>
-            <div class="saved-mini-sub">${savedTime} · ${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
+            <div class="saved-mini-sub">${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'}</div>
             <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:#f59e0b15;color:#f59e0b;border:1px solid #f59e0b30;margin-top:4px">${isAr?'سيناريو مقارنة':isEs?'Escenario':'Comparison'}</span>
           </div>
           <div class="saved-mini-right">
@@ -3074,11 +3072,10 @@ function renderSavedTab(){
   listEl.innerHTML=saved.map((s,i)=>{
     const dtiCol=dtiColor(s.results.dtiGross||0);
     const displayName=escapeHtml(savedLoanDisplayName(s));
-    const savedTime=escapeHtml(s.time||'');
     return`<div class="saved-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
         <p class="saved-name" style="margin:0">${displayName}</p>
-        <span style="color:var(--txt2);font-size:12px">${savedTime}</span>
+        <span style="color:var(--txt2);font-size:12px">${safeRate(s.form?.rate)}% ${lang==='ar'?'فائدة':lang==='es'?'interés':'APR'}</span>
       </div>
       <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:15px">${fmtAmt(s.results.monthly)}</span></div>
       <div class="saved-row"><span class="saved-lbl">${tc.totalInterest}</span><span class="saved-val" style="color:var(--risk)">${fmtAmt(s.results.interest)}</span></div>
@@ -3338,7 +3335,7 @@ function renderCompare(){
       : '';
     return `<th style="text-align:center;color:var(--acc);padding:12px 8px;font-size:14px;font-weight:800;border-bottom:2px solid var(--brd)">
       ${escapeHtml(savedLoanDisplayName(s).split('—')[0].trim())}
-      <br><span style="color:var(--txt2);font-weight:500;font-size:12px">${escapeHtml(s.time||'')}</span>
+      <br><span style="color:var(--txt2);font-weight:500;font-size:12px">${safeRate(s.form?.rate)}% ${isAr?'فائدة':lang==='es'?'interés':'APR'}</span>
       ${repLabel}
     </th>`;
   }).join('');
