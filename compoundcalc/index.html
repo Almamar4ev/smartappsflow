@@ -37,8 +37,8 @@
   </script>
 
   <!--
-    Web analytics guard — tracks web/PWA visitors only, not Play Store app users.
-    Paste your analytics loader inside initWebAnalytics() when ready.
+    Cloudflare Web Analytics — live site only. Counts page visits, not
+    typed numbers, and not Play Store app users.
   -->
   <script>
     (function () {
@@ -48,7 +48,11 @@
         if (document.referrer && document.referrer.indexOf('play.google.com') !== -1) {
           return false;
         }
-        return true;
+        var protocol = String(window.location.protocol || '').toLowerCase();
+        var hostname = String(window.location.hostname || '').toLowerCase();
+        if (protocol !== 'https:') return false;
+        return hostname === 'smartappsflow.net' ||
+          hostname.slice(-18) === '.smartappsflow.net';
       }
 
       window.initWebAnalytics = function () {
@@ -85,7 +89,7 @@
         var script = document.createElement('script');
         script.id = 'flutter-bootstrap';
         script.async = true;
-        script.src = 'flutter_bootstrap.js?v=20261021202604';
+        script.src = 'flutter_bootstrap.js?v=20261022073752';
         document.body.appendChild(script);
       }
 

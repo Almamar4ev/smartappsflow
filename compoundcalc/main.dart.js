@@ -28305,7 +28305,7 @@ a0u(a,b){var s=0,r=A.R(t.H),q,p=2,o=[],n,m,l,k,j,i,h
 var $async$a0u=A.S(function(c,d){if(c===1){o.push(d)
 s=p}for(;;)switch(s){case 0:l=a.aj(t.Pu).f
 k=b.a
-j=k?"\u062d\u0627\u0633\u0628\u0629 \u0627\u0644\u0641\u0627\u0626\u062f\u0629 \u0627\u0644\u0645\u0631\u0643\u0628\u0629:\nhttps://smartappsflow.net/compoundcalc/":"Compound Interest Calculator:\nhttps://smartappsflow.net/compoundcalc/"
+j=k?"\u062d\u0627\u0633\u0628\u0629 \u0627\u0644\u0641\u0627\u0626\u062f\u0629 \u0627\u0644\u0645\u0631\u0643\u0628\u0629\n\n\u0623\u0646\u062f\u0631\u0648\u064a\u062f \u2014 Google Play:\nhttps://play.google.com/store/apps/details?id=com.compoundcalc.compound_interest_calculator\n\n\u0622\u064a\u0641\u0648\u0646 \u0648\u0627\u0644\u0645\u062a\u0635\u0641\u062d:\nhttps://smartappsflow.net/compoundcalc/":"Compound Interest Calculator\n\nAndroid \u2014 Google Play:\nhttps://play.google.com/store/apps/details?id=com.compoundcalc.compound_interest_calculator\n\niPhone & browser:\nhttps://smartappsflow.net/compoundcalc/"
 i=k?"\u062d\u0627\u0633\u0628\u0629 \u0627\u0644\u0641\u0627\u0626\u062f\u0629 \u0627\u0644\u0645\u0631\u0643\u0628\u0629":"Compound Interest Calculator"
 s=3
 return A.W(A.aYz(j,i,"https://smartappsflow.net/compoundcalc/"),$async$a0u)
