@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="حاسبة الفائدة المركبة — أداة تقديرية لتخطيط الاستثمار طويل الأجل. Compound interest calculator for long-term investment planning.">
+  <meta name="description" content="حاسبة الفائدة المركبة — أداة تقديرية لتخطيط الاستثمار طويل الأجل.">
   <meta name="theme-color" content="#0B5ED7">
 
   <!-- iOS / Safari PWA -->
@@ -24,9 +24,14 @@
       var arabic = lang.indexOf('ar') === 0;
       var title = arabic ? 'حاسبة الفائدة المركبة' : 'Compound Interest Calculator';
       var shortTitle = arabic ? 'حاسبة الاستثمار' : 'Compound Calc';
+      var description = arabic
+        ? 'حاسبة الفائدة المركبة — أداة تقديرية لتخطيط الاستثمار طويل الأجل.'
+        : 'Compound interest calculator for long-term investment planning.';
       document.documentElement.lang = arabic ? 'ar' : 'en';
       document.documentElement.dir = arabic ? 'rtl' : 'ltr';
       document.title = title;
+      var desc = document.querySelector('meta[name="description"]');
+      if (desc) desc.setAttribute('content', description);
       var apple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
       if (apple) apple.setAttribute('content', shortTitle);
       var link = document.createElement('link');
@@ -89,7 +94,7 @@
         var script = document.createElement('script');
         script.id = 'flutter-bootstrap';
         script.async = true;
-        script.src = 'flutter_bootstrap.js?v=20261022073752';
+        script.src = 'flutter_bootstrap.js?v=20261022074643';
         document.body.appendChild(script);
       }
 
