@@ -1,7 +1,9 @@
 {
     "name": "Calculadora de interés compuesto",
     "short_name": "Interés compuesto",
-    "start_url": ".",
+    "id": "/compoundcalc/",
+    "start_url": "/compoundcalc/",
+    "scope": "/compoundcalc/",
     "display": "standalone",
     "background_color": "#E3EFFF",
     "theme_color": "#0B5ED7",

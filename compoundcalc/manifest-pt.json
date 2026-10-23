@@ -1,7 +1,9 @@
 {
     "name": "Calculadora de juros compostos",
     "short_name": "Juros compostos",
-    "start_url": ".",
+    "id": "/compoundcalc/",
+    "start_url": "/compoundcalc/",
+    "scope": "/compoundcalc/",
     "display": "standalone",
     "background_color": "#E3EFFF",
     "theme_color": "#0B5ED7",
