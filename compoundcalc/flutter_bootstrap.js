@@ -41,7 +41,4 @@ _flutter.loader.load({
     // Load CanvasKit from Google CDN — no need to upload the heavy canvaskit/ folder.
     canvasKitBaseUrl: "https://www.gstatic.com/flutter-canvaskit/a10d8ac38de835021c8d2f920dbf50a920ccc030/",
   },
-  serviceWorkerSettings: {
-    serviceWorkerVersion: "4239220472" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */,
-  },
 });
