@@ -1,9 +1,7 @@
 {
     "name": "Compound Interest Calculator",
     "short_name": "Compound Calc",
-    "id": "/compoundcalc/",
-    "start_url": "/compoundcalc/",
-    "scope": "/compoundcalc/",
+    "start_url": ".",
     "display": "standalone",
     "background_color": "#E3EFFF",
     "theme_color": "#0B5ED7",
