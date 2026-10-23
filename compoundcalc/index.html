@@ -20,23 +20,51 @@
   <title>حاسبة الفائدة المركبة</title>
   <script>
     (function () {
-      var lang = (navigator.language || 'ar').toLowerCase();
-      var arabic = lang.indexOf('ar') === 0;
-      var title = arabic ? 'حاسبة الفائدة المركبة' : 'Compound Interest Calculator';
-      var shortTitle = arabic ? 'حاسبة الاستثمار' : 'Compound Calc';
-      var description = arabic
-        ? 'حاسبة الفائدة المركبة — أداة تقديرية لتخطيط الاستثمار طويل الأجل.'
-        : 'Compound interest calculator for long-term investment planning.';
-      document.documentElement.lang = arabic ? 'ar' : 'en';
-      document.documentElement.dir = arabic ? 'rtl' : 'ltr';
-      document.title = title;
+      var code = String(navigator.language || 'en').toLowerCase().split('-')[0];
+      var pages = {
+        ar: {
+          title: 'حاسبة الفائدة المركبة',
+          shortTitle: 'حاسبة الاستثمار',
+          description: 'حاسبة الفائدة المركبة — أداة تقديرية لتخطيط الاستثمار طويل الأجل.',
+          htmlLang: 'ar',
+          dir: 'rtl',
+          manifest: 'manifest.json'
+        },
+        es: {
+          title: 'Calculadora de interés compuesto',
+          shortTitle: 'Interés compuesto',
+          description: 'Calculadora de interés compuesto para planificar inversiones a largo plazo.',
+          htmlLang: 'es',
+          dir: 'ltr',
+          manifest: 'manifest-es.json'
+        },
+        pt: {
+          title: 'Calculadora de juros compostos',
+          shortTitle: 'Juros compostos',
+          description: 'Calculadora de juros compostos para planejar investimentos de longo prazo.',
+          htmlLang: 'pt',
+          dir: 'ltr',
+          manifest: 'manifest-pt.json'
+        }
+      };
+      var page = pages[code] || {
+        title: 'Compound Interest Calculator',
+        shortTitle: 'Compound Calc',
+        description: 'Compound interest calculator for long-term investment planning.',
+        htmlLang: 'en',
+        dir: 'ltr',
+        manifest: 'manifest-en.json'
+      };
+      document.documentElement.lang = page.htmlLang;
+      document.documentElement.dir = page.dir;
+      document.title = page.title;
       var desc = document.querySelector('meta[name="description"]');
-      if (desc) desc.setAttribute('content', description);
+      if (desc) desc.setAttribute('content', page.description);
       var apple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-      if (apple) apple.setAttribute('content', shortTitle);
+      if (apple) apple.setAttribute('content', page.shortTitle);
       var link = document.createElement('link');
       link.rel = 'manifest';
-      link.href = arabic ? 'manifest.json' : 'manifest-en.json';
+      link.href = page.manifest;
       document.head.appendChild(link);
     })();
   </script>
@@ -94,7 +122,7 @@
         var script = document.createElement('script');
         script.id = 'flutter-bootstrap';
         script.async = true;
-        script.src = 'flutter_bootstrap.js?v=20261022074643';
+        script.src = 'flutter_bootstrap.js?v=20261023070220';
         document.body.appendChild(script);
       }
 
@@ -144,7 +172,7 @@
             }));
           }));
         }
-        ['index.html', 'flutter_bootstrap.js', 'main.dart.js', 'manifest.json', 'manifest-en.json'].forEach(function (file) {
+        ['index.html', 'flutter_bootstrap.js', 'main.dart.js', 'manifest.json', 'manifest-en.json', 'manifest-es.json', 'manifest-pt.json'].forEach(function (file) {
           tasks.push(fetch(file, { cache: 'reload' }).catch(function () {}));
         });
         return Promise.all(tasks);
