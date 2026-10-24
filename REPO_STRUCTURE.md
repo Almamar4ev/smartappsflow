@@ -168,6 +168,7 @@ smartappsflow/
 ├── smartloan/            # ✅ fully self-contained; deep log: PROJECT_LOG_AR.md
 ├── carmaintenance/       # PWA only (web)
 ├── compoundcalc/         # Flutter build output (web)
+├── basis/                # PWA — smartappsflow.net/basis/
 │
 └── .github/workflows/
     ├── build-tradelogpro.yml

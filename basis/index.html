@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#f4f0e7">
+  <meta name="description" content="Basis — average price, profit and loss, position size, and compound growth.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Basis">
+  <title>Basis — Trading calculators</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="stylesheet" href="./css/app.css">
+  <script>
+    try {
+      var saved = JSON.parse(localStorage.getItem('basis.v1') || '{}');
+      var loc = (saved.lang || navigator.language || 'en').toLowerCase();
+      var lang = loc.indexOf('ar') === 0 ? 'ar' : loc.indexOf('es') === 0 ? 'es' : loc.indexOf('pt') === 0 ? 'pt' : 'en';
+      var theme = saved.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.dataset.theme = theme;
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.content = theme === 'dark' ? '#12110f' : '#f4f0e7';
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <div class="phone" id="app">
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <div>
+          <div class="brand-name" id="brand-name">Basis</div>
+          <div class="brand-lead" id="brand-lead">Trading calculators</div>
+        </div>
+      </div>
+      <button type="button" class="icon-btn" id="settings-open" aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 3.5v2.2M12 18.3V20.5M3.5 12h2.2M18.3 12H20.5M6 6l1.6 1.6M16.4 16.4 18 18M18 6l-1.6 1.6M7.6 16.4 6 18"/>
+        </svg>
+      </button>
+    </header>
+    <main class="main" id="main"></main>
+    <nav class="nav" id="nav"></nav>
+    <div class="sheet" id="sheet" hidden>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+        <div class="sheet-head">
+          <h2 id="sheet-title">Settings</h2>
+          <button type="button" class="icon-btn" id="sheet-close" aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div class="field">
+          <label for="lang" id="lang-label">Language</label>
+          <select id="lang">
+            <option value="en">English</option>
+            <option value="ar">العربية</option>
+            <option value="es">Español</option>
+            <option value="pt">Português</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="currency" id="currency-label">Currency</label>
+          <select id="currency">
+            <option value="NONE" id="currency-none">Number only</option>
+            <option value="USD">USD · $</option>
+            <option value="EUR">EUR · €</option>
+            <option value="GBP">GBP · £</option>
+            <option value="AED">AED · د.إ</option>
+            <option value="SAR">SAR · ر.س</option>
+            <option value="QAR">QAR · ر.ق</option>
+            <option value="KWD">KWD · د.ك</option>
+          </select>
+        </div>
+        <div class="field">
+          <span class="group-label" id="theme-label">Appearance</span>
+          <div class="segment">
+            <button type="button" id="theme-light">Light</button>
+            <button type="button" id="theme-dark">Dark</button>
+          </div>
+        </div>
+        <button type="button" class="sheet-action" id="share-app">
+          <span class="sheet-action-title" id="share-title">Share Basis</span>
+          <span class="sheet-action-hint" id="share-hint">Send the app to a friend</span>
+        </button>
+        <button type="button" class="sheet-action" id="send-feedback">
+          <span class="sheet-action-title" id="feedback-title">Suggestions &amp; contact</span>
+          <span class="sheet-action-hint" id="feedback-hint">Send us an email</span>
+        </button>
+        <div class="sheet-foot">
+          <a id="privacy-link" href="./privacy-policy.html">Privacy</a>
+          <span class="num">1.0.0</span>
+        </div>
+      </div>
+    </div>
+    <div class="sheet" id="save-sheet" hidden>
+      <div class="sheet-card keep-sheet" role="dialog" aria-modal="true" aria-labelledby="save-title">
+        <div class="sheet-head">
+          <h2 id="save-title">Save this calculation</h2>
+          <button type="button" class="icon-btn" id="save-close" aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <p class="keep-preview" id="save-preview"></p>
+        <div class="field">
+          <label for="save-name" id="save-name-label">Name</label>
+          <input id="save-name" type="text" maxlength="40" autocomplete="off">
+          <p class="hint" id="save-name-hint"></p>
+        </div>
+        <button type="button" class="keep-confirm" id="save-confirm">Save</button>
+      </div>
+    </div>
+    <div class="sheet" id="library-sheet" hidden>
+      <div class="sheet-card keep-sheet" role="dialog" aria-modal="true" aria-labelledby="library-title">
+        <div class="sheet-head">
+          <h2 id="library-title">Saved calculations</h2>
+          <button type="button" class="icon-btn" id="library-close" aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div id="library-list" class="keep-shelf-list"></div>
+      </div>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+  </div>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>
