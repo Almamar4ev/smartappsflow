@@ -17,7 +17,11 @@ const LANGS = new Set(['en', 'ar', 'es', 'pt']);
 const LIBRARY_CAP = 30;
 const FEEDBACK_EMAIL = 'smartappsflow@gmail.com';
 const WEB_URL = 'https://smartappsflow.net/basis/';
+const APP_VERSION = '1.1';
 let toastTimer = 0;
+let pendingWorker = null;
+let pendingInfo = null;
+let bannerDismissed = false;
 
 function detectLang() {
   const loc = (navigator.language || '').toLowerCase();
@@ -181,8 +185,11 @@ function applyChrome() {
   $('#library-close').setAttribute('aria-label', t('close'));
   $('#lang').value = state.lang;
   $('#currency').value = state.currency;
+  const version = $('#app-version');
+  if (version) version.textContent = APP_VERSION;
   syncThemeButtons();
   renderNav();
+  paintUpdateUI();
 }
 
 function syncThemeButtons() {
@@ -813,6 +820,7 @@ function onClick(event) {
   if (act.dataset.act === 'open-library') openLibrarySheet();
   if (act.dataset.act === 'load-save') loadNamed(act.dataset.id);
   if (act.dataset.act === 'delete-save') deleteNamed(act.dataset.id);
+  if (act.dataset.act === 'apply-update') applyPendingUpdate();
 }
 
 function clone(value) {
@@ -1064,15 +1072,149 @@ function boot() {
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeSheets();
   });
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
-  }
+  watchUpdates();
 }
 
 function setTheme(theme) {
   state.theme = theme;
   save();
   applyChrome();
+}
+
+function changelogText(cl) {
+  if (!cl) return t('updateGeneric');
+  return cl[state.lang] || cl.en || cl.ar || t('updateGeneric');
+}
+
+function versionLabel(version) {
+  if (!version) return '';
+  if (state.lang === 'ar') return ` · الإصدار ${version}`;
+  if (state.lang === 'es') return ` · versión ${version}`;
+  if (state.lang === 'pt') return ` · versão ${version}`;
+  return ` · version ${version}`;
+}
+
+function applyPendingUpdate() {
+  if (pendingWorker) pendingWorker.postMessage('SKIP_WAITING');
+  else window.location.reload();
+}
+
+function paintUpdateUI() {
+  const box = $('#settings-update');
+  if (box) {
+    if (!pendingWorker) {
+      box.hidden = true;
+      box.innerHTML = '';
+    } else {
+      box.hidden = false;
+      box.className = 'settings-update';
+      box.innerHTML = `
+        <div class="settings-update-head">${t('updateReady')}${versionLabel(pendingInfo?.version)}</div>
+        <p>${changelogText(pendingInfo?.changelog)}</p>
+        <button type="button" class="update-now" data-act="apply-update">${t('updateNow')}</button>`;
+    }
+  }
+
+  const oldBanner = $('#updateBanner');
+  const oldChip = $('#updateChip');
+  if (!pendingWorker) {
+    oldBanner?.remove();
+    oldChip?.remove();
+    return;
+  }
+  if (bannerDismissed) {
+    oldBanner?.remove();
+    if (!oldChip) {
+      const chip = document.createElement('button');
+      chip.id = 'updateChip';
+      chip.type = 'button';
+      chip.className = 'update-chip';
+      chip.textContent = t('updateReady');
+      chip.addEventListener('click', applyPendingUpdate);
+      $('#app').appendChild(chip);
+    } else {
+      oldChip.textContent = t('updateReady');
+    }
+    return;
+  }
+  oldChip?.remove();
+  if (oldBanner) {
+    oldBanner.querySelector('.update-banner-head').textContent = t('updateAvail') + versionLabel(pendingInfo?.version);
+    oldBanner.querySelector('.update-banner-desc').textContent = changelogText(pendingInfo?.changelog);
+    oldBanner.querySelector('.update-later').textContent = t('updateLater');
+    oldBanner.querySelector('.update-now').textContent = t('updateNow');
+    return;
+  }
+  const bar = document.createElement('div');
+  bar.id = 'updateBanner';
+  bar.className = 'update-banner';
+  bar.innerHTML = `
+    <div class="update-banner-head">${t('updateAvail')}${versionLabel(pendingInfo?.version)}</div>
+    <div class="update-banner-desc"></div>
+    <div class="update-banner-row">
+      <button type="button" class="update-later">${t('updateLater')}</button>
+      <button type="button" class="update-now">${t('updateNow')}</button>
+    </div>`;
+  bar.querySelector('.update-banner-desc').textContent = changelogText(pendingInfo?.changelog);
+  bar.querySelector('.update-later').addEventListener('click', () => {
+    bannerDismissed = true;
+    paintUpdateUI();
+  });
+  bar.querySelector('.update-now').addEventListener('click', (event) => {
+    event.currentTarget.disabled = true;
+    event.currentTarget.textContent = '…';
+    applyPendingUpdate();
+  });
+  $('#app').appendChild(bar);
+}
+
+function offerUpdate(worker) {
+  pendingWorker = worker || null;
+  if (worker) {
+    const onMsg = (event) => {
+      if (event.data && event.data.type === 'VERSION_INFO') {
+        pendingInfo = { version: event.data.version, changelog: event.data.changelog };
+        paintUpdateUI();
+        navigator.serviceWorker.removeEventListener('message', onMsg);
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', onMsg);
+    try { worker.postMessage('GET_VERSION_INFO'); } catch (err) {}
+  }
+  paintUpdateUI();
+}
+
+function watchUpdates() {
+  if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
+  try {
+    if (window.Capacitor && typeof window.Capacitor.getPlatform === 'function' && window.Capacitor.getPlatform() !== 'web') return;
+  } catch (err) {}
+
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
+    const checkWaiting = () => {
+      if (reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg.waiting);
+    };
+    checkWaiting();
+    reg.addEventListener('updatefound', () => {
+      const installing = reg.installing;
+      if (!installing) return;
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) offerUpdate(installing);
+      });
+    });
+    reg.update().then(checkWaiting).catch(() => {});
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') reg.update().then(checkWaiting).catch(() => {});
+    });
+    setInterval(() => { reg.update().then(checkWaiting).catch(() => {}); }, 60000);
+  }).catch(() => {});
+
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
 }
 
 function iconBars() {
