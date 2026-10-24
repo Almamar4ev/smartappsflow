@@ -1064,7 +1064,9 @@ function boot() {
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') closeSheets();
   });
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
+  }
 }
 
 function setTheme(theme) {
