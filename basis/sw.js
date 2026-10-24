@@ -1,7 +1,7 @@
 /* Basis service worker.
    Network first, then cache, so a published update shows up on the next visit
    and a previous visit still opens offline. Bump CACHE when the app shell changes. */
-const CACHE = 'basis-v12';
+const CACHE = 'basis-v13';
 const CORE = [
   './',
   './index.html',
