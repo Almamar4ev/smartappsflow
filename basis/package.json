@@ -1,6 +1,6 @@
 {
   "name": "basis",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "Basis — average price, profit and loss, position size, and compound growth.",
   "scripts": {

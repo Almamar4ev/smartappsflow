@@ -1,4 +1,4 @@
-import { stockAverage, profitLoss, positionByPercent, positionByPrice, compoundGrowth, positionMark, whatIfBuy, targetAverage, whatIfSell, sellCompare } from './calc.js';
+import { stockAverage, profitLoss, positionByPercent, positionByPrice, compoundGrowth, positionMark, targetAverage, whatIfSell, sellCompare, liveFormat, formatInputValue } from './calc.js';
 import { translate } from './i18n.js';
 
 const CURRENCIES = {
@@ -17,7 +17,8 @@ const LANGS = new Set(['en', 'ar', 'es', 'pt']);
 const LIBRARY_CAP = 30;
 const FEEDBACK_EMAIL = 'smartappsflow@gmail.com';
 const WEB_URL = 'https://smartappsflow.net/basis/';
-const APP_VERSION = '1.1';
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.smartapps.basis';
+const APP_VERSION = (typeof self !== 'undefined' && self.BASIS_VERSION) ? self.BASIS_VERSION : '1.2';
 let toastTimer = 0;
 let pendingWorker = null;
 let pendingInfo = null;
@@ -45,9 +46,9 @@ function defaults() {
     theme,
     currency: 'USD',
     avg: {
-      rows: [{ price: '', qty: '' }],
+      rows: [{ price: '', qty: '' }, { price: '', qty: '' }],
       current: '',
-      whatIf: 'buy',
+      whatIf: 'sell',
       buyQty: '',
       buyAmount: '',
       buyPrice: '',
@@ -58,7 +59,7 @@ function defaults() {
     },
     pnl: { side: 'long', entry: '', exit: '', qty: '' },
     pos: {
-      mode: 'percent', account: 'cash', riskMode: 'percent',
+      mode: 'percent', account: 'cash', riskMode: 'percent', fractional: false,
       balance: '', risk: '', stopPct: '', targetPct: '',
       entry: '', stopPrice: '', targetPrice: '',
     },
@@ -80,7 +81,7 @@ function loadState() {
       ...saved,
       avg: { ...base.avg, ...saved.avg, rows: Array.isArray(saved.avg?.rows) && saved.avg.rows.length ? saved.avg.rows.slice(0, 30) : base.avg.rows },
       pnl: { ...base.pnl, ...saved.pnl },
-      pos: { ...base.pos, ...saved.pos },
+      pos: { ...base.pos, ...saved.pos, fractional: Boolean(saved.pos?.fractional) },
       growth: { ...base.growth, ...saved.growth },
       library: {
         avg: Array.isArray(saved.library?.avg) ? saved.library.avg.slice(0, LIBRARY_CAP) : [],
@@ -101,14 +102,26 @@ function save() {
 }
 
 function esc(value) {
-  return String(value ?? '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
+}
+
+function localeTag() {
+  if (state.lang === 'es') return 'es-ES';
+  if (state.lang === 'pt') return 'pt-BR';
+  return 'en-US';
 }
 
 function formatNumber(value, digits) {
-  return Number(value).toLocaleString('en-US', {
+  return Number(value).toLocaleString(localeTag(), {
     minimumFractionDigits: digits.min,
     maximumFractionDigits: digits.max,
   });
+}
+
+function shown(value) {
+  return formatInputValue(value, state.lang);
 }
 
 function moneyCore(body) {
@@ -162,6 +175,8 @@ function applyChrome() {
   $('#brand-name').textContent = t('appName');
   $('#brand-lead').textContent = t('tagline');
   $('#settings-open').setAttribute('aria-label', t('settings'));
+  const shareOpen = $('#share-open');
+  if (shareOpen) shareOpen.setAttribute('aria-label', t('shareApp'));
   $('#sheet-title').textContent = t('settings');
   $('#sheet-close').setAttribute('aria-label', t('close'));
   $('#lang-label').textContent = t('language');
@@ -171,8 +186,8 @@ function applyChrome() {
   $('#theme-light').textContent = t('light');
   $('#theme-dark').textContent = t('dark');
   $('#privacy-link').textContent = t('privacy');
-  $('#share-title').textContent = t('shareApp');
-  $('#share-hint').textContent = t('shareHint');
+  $('#rate-title').textContent = t('rateApp');
+  $('#rate-hint').textContent = t('rateHint');
   $('#feedback-title').textContent = t('feedback');
   $('#feedback-hint').textContent = t('feedbackHint');
   $('#save-title').textContent = t('saveCalc');
@@ -185,8 +200,8 @@ function applyChrome() {
   $('#library-close').setAttribute('aria-label', t('close'));
   $('#lang').value = state.lang;
   $('#currency').value = state.currency;
-  const version = $('#app-version');
-  if (version) version.textContent = APP_VERSION;
+  const version = $('#version-label');
+  if (version) version.textContent = fill('versionName', { v: APP_VERSION });
   syncThemeButtons();
   renderNav();
   paintUpdateUI();
@@ -210,11 +225,11 @@ function renderNav() {
     </button>`).join('');
 }
 
-function field(id, label, bind, unit, value, placeholder = '') {
+function field(id, label, bind, unit, value, placeholder = '0.00') {
   return `<div class="field">
     <label for="${id}">${label}</label>
     <div class="control">
-      <input id="${id}" data-bind="${bind}" type="text" inputmode="decimal" autocomplete="off" placeholder="${esc(placeholder)}" value="${esc(value)}">
+      <input id="${id}" data-bind="${bind}" data-numeric="1" type="text" inputmode="decimal" autocomplete="off" placeholder="${esc(placeholder)}" value="${esc(shown(value))}">
       ${unit ? `<span class="unit" data-unit="${unit}"></span>` : ''}
     </div>
   </div>`;
@@ -239,7 +254,6 @@ function renderMain() {
 }
 
 function viewAverage() {
-  const buying = state.avg.whatIf !== 'sell';
   return `${screenHead(t('avgTitle'), t('avgLead'))}
     <div class="stack">
       <div id="rows"></div>
@@ -248,25 +262,17 @@ function viewAverage() {
       <section class="answer" id="answer"></section>
       <div id="detail"></div>
       <div id="whatif-wrap" class="stack" hidden>
-        <span class="section-label">${t('whatIf')}</span>
-        ${segment('avg.whatIf', [{ value: 'buy', label: t('buyMore') }, { value: 'sell', label: t('sellSome') }])}
-        <div id="whatif-buy" class="stack" ${buying ? '' : 'hidden'}>
-          <div class="grid-2">
-            ${field('buy-qty', t('buyQty'), 'avg.buyQty', '', state.avg.buyQty, '0')}
-            ${field('buy-amount', t('buyAmount'), 'avg.buyAmount', 'currency', state.avg.buyAmount)}
-          </div>
-          ${field('buy-price', t('buyPrice'), 'avg.buyPrice', 'currency', state.avg.buyPrice)}
-          <p class="hint">${t('priceFallback')}</p>
-          ${field('target-avg', `${t('targetAvg')} · ${t('optional')}`, 'avg.target', 'currency', state.avg.target)}
+        <span class="section-label">${t('reachTarget')}</span>
+        ${field('target-avg', t('targetAvg'), 'avg.target', 'currency', state.avg.target)}
+        ${field('buy-price', t('nextBuyPrice'), 'avg.buyPrice', 'currency', state.avg.buyPrice)}
+        <p class="hint">${t('priceFallback')}</p>
+        <span class="section-label">${t('partialSell')}</span>
+        <div class="grid-2">
+          ${field('sell-pct', t('sellPct'), 'avg.sellPct', 'percent', state.avg.sellPct, '25')}
+          ${field('sell-qty', t('sellQty'), 'avg.sellQty', '', state.avg.sellQty)}
         </div>
-        <div id="whatif-sell" class="stack" ${buying ? 'hidden' : ''}>
-          <div class="grid-2">
-            ${field('sell-pct', t('sellPct'), 'avg.sellPct', 'percent', state.avg.sellPct, '25')}
-            ${field('sell-qty', t('sellQty'), 'avg.sellQty', '', state.avg.sellQty)}
-          </div>
-          ${field('sell-price', t('sellPrice'), 'avg.sellPrice', 'currency', state.avg.sellPrice)}
-          <p class="hint">${t('priceFallback')}</p>
-        </div>
+        ${field('sell-price', t('sellPrice'), 'avg.sellPrice', 'currency', state.avg.sellPrice)}
+        <p class="hint">${t('priceFallback')}</p>
         <div id="whatif-out"></div>
         <p class="hint">${t('journalHint')}</p>
       </div>
@@ -279,10 +285,10 @@ function viewPnl() {
     <div class="stack" id="fields">
       ${segment('pnl.side', [{ value: 'long', label: t('long') }, { value: 'short', label: t('short') }])}
       <div class="grid-2">
-        ${field('entry', t('entry'), 'pnl.entry', 'currency', state.pnl.entry, '100')}
-        ${field('exit', t('exit'), 'pnl.exit', 'currency', state.pnl.exit, '120')}
+        ${field('entry', t('entry'), 'pnl.entry', 'currency', state.pnl.entry)}
+        ${field('exit', t('exit'), 'pnl.exit', 'currency', state.pnl.exit)}
       </div>
-      ${field('qty', t('qty'), 'pnl.qty', '', state.pnl.qty, '10')}
+      ${field('qty', t('qty'), 'pnl.qty', '', state.pnl.qty)}
       <p class="hint">${t('feesNote')}</p>
       <section class="answer" id="answer"></section>
       <div id="detail"></div>
@@ -292,23 +298,26 @@ function viewPnl() {
 function viewPosition() {
   const byPercent = state.pos.mode === 'percent';
   const fields = byPercent ? `
-    ${field('balance', t('balance'), 'pos.balance', 'currency', state.pos.balance, '10000')}
-    ${field('risk', t('risk'), 'pos.risk', 'risk', state.pos.risk, '1')}
+    ${field('balance', t('balance'), 'pos.balance', 'currency', state.pos.balance)}
+    ${field('risk', t('risk'), 'pos.risk', 'risk', state.pos.risk)}
     ${segment('pos.riskMode', [{ value: 'percent', label: '%' }, { value: 'amount', label: CURRENCIES[state.currency].label }])}
     <p class="hint" id="risk-hint"></p>
-    ${field('stop', t('stopPct'), 'pos.stopPct', 'percent', state.pos.stopPct, '5')}
+    ${field('stop', t('stopPct'), 'pos.stopPct', 'percent', state.pos.stopPct)}
     ${field('target', `${t('targetPct')} · ${t('optional')}`, 'pos.targetPct', 'percent', state.pos.targetPct)}
     ${segment('pos.account', [{ value: 'cash', label: t('cash') }, { value: 'margin', label: t('margin') }])}
     <p class="hint">${t('cashHint')}</p>` : `
-    ${field('balance', t('balance'), 'pos.balance', 'currency', state.pos.balance, '10000')}
-    ${field('entry', t('entry'), 'pos.entry', 'currency', state.pos.entry, '100')}
-    ${field('risk', t('risk'), 'pos.risk', 'risk', state.pos.risk, '1')}
+    ${field('balance', t('balance'), 'pos.balance', 'currency', state.pos.balance)}
+    ${field('entry', t('entry'), 'pos.entry', 'currency', state.pos.entry)}
+    ${field('risk', t('risk'), 'pos.risk', 'risk', state.pos.risk)}
     ${segment('pos.riskMode', [{ value: 'percent', label: '%' }, { value: 'amount', label: CURRENCIES[state.currency].label }])}
     <p class="hint" id="risk-hint"></p>
     <div class="grid-2">
-      ${field('stop', t('stopPrice'), 'pos.stopPrice', 'currency', state.pos.stopPrice, '95')}
+      ${field('stop', t('stopPrice'), 'pos.stopPrice', 'currency', state.pos.stopPrice)}
       ${field('target', `${t('targetPrice')} · ${t('optional')}`, 'pos.targetPrice', 'currency', state.pos.targetPrice)}
-    </div>`;
+    </div>
+    <button type="button" class="toggle-row" data-act="toggle-fractional" aria-pressed="${state.pos.fractional ? 'true' : 'false'}">
+      <span>${t('fractionalShares')}</span><i></i>
+    </button>`;
   return `${screenHead(t('sizeTitle'), t('sizeLead'))}
     <div class="stack" id="fields">
       ${segment('pos.mode', [{ value: 'percent', label: t('byPercent') }, { value: 'price', label: t('byPrice') }])}
@@ -321,9 +330,9 @@ function viewPosition() {
 function viewGrowth() {
   return `${screenHead(t('growthTitle'), t('growthLead'))}
     <div class="stack">
-      ${field('capital', t('capital'), 'growth.capital', 'currency', state.growth.capital, '10000')}
+      ${field('capital', t('capital'), 'growth.capital', 'currency', state.growth.capital)}
       <div class="grid-2">
-        ${field('rate', t('rate'), 'growth.rate', 'percent', state.growth.rate, '10')}
+        ${field('rate', t('rate'), 'growth.rate', 'percent', state.growth.rate)}
         <div class="field">
           <label for="rate-period">${t('period')}</label>
           <select id="rate-period" data-bind="growth.ratePeriod">
@@ -334,7 +343,7 @@ function viewGrowth() {
         </div>
       </div>
       <div class="grid-2">
-        ${field('duration', t('duration'), 'growth.duration', '', state.growth.duration, '5')}
+        ${field('duration', t('duration'), 'growth.duration', '', state.growth.duration)}
         <div class="field">
           <label for="duration-unit">${t('unit')}</label>
           <select id="duration-unit" data-bind="growth.durationUnit">
@@ -393,21 +402,62 @@ function keepPreview(tab = state.saveTab || state.tab) {
   return result.ok ? `${t('finalBalance')} · ${money(result.finalBalance)}` : t('waiting');
 }
 
-function paintRows() {
-  const host = $('#rows');
-  if (!host) return;
-  host.innerHTML = state.avg.rows.map((row, index) => `
+function buyRowHtml(row, index) {
+  const canRemove = state.avg.rows.length > 1;
+  return `
     <div class="buy">
       <div class="buy-head">
         <span>${fill('buyN', { n: index + 1 })}</span>
-        ${state.avg.rows.length > 1 ? `<button type="button" class="text-btn" data-act="remove-row" data-index="${index}">${t('remove')}</button>` : ''}
+        ${canRemove ? `<button type="button" class="text-btn" data-act="remove-row" data-index="${index}">${t('remove')}</button>` : ''}
       </div>
       <div class="grid-2">
-        ${field(`price-${index}`, t('price'), `avg.row.${index}.price`, 'currency', row.price, '0.00')}
-        ${field(`qty-${index}`, t('shares'), `avg.row.${index}.qty`, '', row.qty, '0')}
+        ${field(`price-${index}`, t('price'), `avg.row.${index}.price`, 'currency', row.price)}
+        ${field(`qty-${index}`, t('shares'), `avg.row.${index}.qty`, '', row.qty)}
       </div>
-    </div>`).join('');
+    </div>`;
+}
+
+function paintRows() {
+  const host = $('#rows');
+  if (!host) return;
+  host.innerHTML = state.avg.rows.map((row, index) => buyRowHtml(row, index)).join('');
   syncUnits();
+}
+
+function appendBuyRow() {
+  const host = $('#rows');
+  if (!host) return;
+  const index = state.avg.rows.length - 1;
+  host.insertAdjacentHTML('beforeend', buyRowHtml(state.avg.rows[index], index));
+  reindexBuyRows();
+  syncUnits();
+}
+
+function reindexBuyRows() {
+  const host = $('#rows');
+  if (!host) return;
+  const canRemove = state.avg.rows.length > 1;
+  [...host.children].forEach((buy, index) => {
+    const label = buy.querySelector('.buy-head span');
+    if (label) label.textContent = fill('buyN', { n: index + 1 });
+    let remove = buy.querySelector('[data-act="remove-row"]');
+    if (canRemove) {
+      if (!remove) {
+        buy.querySelector('.buy-head').insertAdjacentHTML('beforeend', `<button type="button" class="text-btn" data-act="remove-row" data-index="${index}">${t('remove')}</button>`);
+        remove = buy.querySelector('[data-act="remove-row"]');
+      }
+      remove.dataset.index = String(index);
+    } else if (remove) {
+      remove.remove();
+    }
+    buy.querySelectorAll('[data-bind]').forEach((input) => {
+      const key = input.dataset.bind.split('.').pop();
+      input.dataset.bind = `avg.row.${index}.${key}`;
+      input.id = `${key}-${index}`;
+      const tag = input.closest('.field')?.querySelector('label');
+      if (tag) tag.setAttribute('for', input.id);
+    });
+  });
 }
 
 function syncUnits() {
@@ -463,10 +513,6 @@ function paintAverage(answerHost, detail) {
     return;
   }
   if (wrap) wrap.hidden = false;
-  const buyPanel = $('#whatif-buy');
-  const sellPanel = $('#whatif-sell');
-  if (buyPanel) buyPanel.hidden = state.avg.whatIf === 'sell';
-  if (sellPanel) sellPanel.hidden = state.avg.whatIf !== 'sell';
   answer(answerHost, { ready: true, kicker: t('avgPrice'), value: moneyPrice(summary.average) });
   const mark = positionMark({ qty: summary.totalShares, avg: summary.average, price: state.avg.current });
   const snapshot = mark.ok
@@ -493,68 +539,45 @@ function paintWhatIf(summary) {
   const host = $('#whatif-out');
   if (!host) return;
   const position = { qty: summary.totalShares, avg: summary.average, price: state.avg.current };
-  if (state.avg.whatIf === 'sell') {
-    const sold = whatIfSell({ ...position, sellPct: state.avg.sellPct, sellQty: state.avg.sellQty, sellPrice: state.avg.sellPrice });
-    const rows = sellCompare({ ...position, sellPrice: state.avg.sellPrice });
-    const table = rows.every((row) => row.ok)
-      ? `<div class="compare">
-          <div class="row head"><span class="sub">%</span><span class="sub">${t('received')}</span><span class="sub">${t('realized')}</span></div>
-          ${rows.map((row) => `
-            <div class="row">
-              <span class="num">${row.pct}%</span>
-              <span class="sub num">${money(row.received)}</span>
-              <b class="num ${row.realized >= 0 ? 'gain' : 'loss'}">${signedMoney(row.realized)}</b>
-            </div>`).join('')}
-        </div>`
-      : '';
-    host.innerHTML = [
-      sold.ok ? stats([
-        { label: t('sold'), value: qty(sold.sold) },
-        { label: t('received'), value: money(sold.received) },
-        { label: t('realized'), value: signedMoney(sold.realized), tone: sold.realized >= 0 ? 'gain' : 'loss' },
-        { label: t('returnPct'), value: pct(sold.returnPct), tone: sold.returnPct >= 0 ? 'gain' : 'loss' },
-        { label: t('remaining'), value: qty(sold.remaining) },
-        { label: t('remainUnrealized'), value: signedMoney(sold.remainUnrealized), tone: sold.remainUnrealized >= 0 ? 'gain' : 'loss' },
-      ]) : '',
-      table ? `<p class="section-label">${t('quickCompare')}</p>${table}` : '',
-    ].join('');
-    return;
-  }
-  const extra = whatIfBuy({
-    ...position,
-    buyQty: state.avg.buyQty,
-    buyAmount: state.avg.buyAmount,
-    buyPrice: state.avg.buyPrice,
-  });
+  const blocks = [];
   const target = targetAverage({
     ...position,
     buyPrice: state.avg.buyPrice,
     target: state.avg.target,
   });
-  const blocks = [];
-  if (extra.ok) {
-    blocks.push(stats([
-      { label: t('buyQty'), value: qty(extra.buyQty) },
-      { label: t('neededCost'), value: money(extra.buyCost) },
-      { label: t('newQty'), value: qty(extra.newQty) },
-      { label: t('newAvg'), value: moneyPrice(extra.newAvg) },
-      { label: t('avgChange'), value: signedMoney(extra.avgChange), tone: extra.avgChange <= 0 ? 'gain' : 'warn' },
-      ...(extra.breakEven == null ? [] : [{
-        label: t('breakEven'),
-        value: extra.breakEven <= 0 ? t('alreadyProfit') : pct(extra.breakEven),
-        tone: extra.breakEven <= 0 ? 'gain' : 'warn',
-      }]),
-    ]));
-  }
   if (target.ok) {
     blocks.push(stats([
       { label: t('neededShares'), value: qty(target.needed) },
       { label: t('neededCost'), value: money(target.neededCost) },
     ]));
-  } else if (target.reason === 'already') {
+  } else if (state.avg.target && target.reason === 'already') {
     blocks.push(`<p class="note info">${t('targetAlready')}</p>`);
-  } else if (target.reason === 'impossible') {
+  } else if (state.avg.target && target.reason === 'impossible') {
     blocks.push(`<p class="note warn">${t('targetImpossible')}</p>`);
+  }
+  const sold = whatIfSell({ ...position, sellPct: state.avg.sellPct, sellQty: state.avg.sellQty, sellPrice: state.avg.sellPrice });
+  const rows = sellCompare({ ...position, sellPrice: state.avg.sellPrice });
+  if (sold.ok) {
+    blocks.push(stats([
+      { label: t('sold'), value: qty(sold.sold) },
+      { label: t('received'), value: money(sold.received) },
+      { label: t('realized'), value: signedMoney(sold.realized), tone: sold.realized >= 0 ? 'gain' : 'loss' },
+      { label: t('returnPct'), value: pct(sold.returnPct), tone: sold.returnPct >= 0 ? 'gain' : 'loss' },
+      { label: t('remaining'), value: qty(sold.remaining) },
+      { label: t('remainUnrealized'), value: signedMoney(sold.remainUnrealized), tone: sold.remainUnrealized >= 0 ? 'gain' : 'loss' },
+    ]));
+  }
+  if (rows.every((row) => row.ok)) {
+    blocks.push(`<p class="section-label">${t('quickCompare')}</p>
+      <div class="compare" dir="ltr">
+        <div class="row head"><span class="sub">%</span><span class="sub">${t('received')}</span><span class="sub">${t('realized')}</span></div>
+        ${rows.map((row) => `
+          <div class="row">
+            <span class="num">${row.pct}%</span>
+            <span class="sub num">${money(row.received)}</span>
+            <b class="num ${row.realized >= 0 ? 'gain' : 'loss'}">${signedMoney(row.realized)}</b>
+          </div>`).join('')}
+      </div>`);
   }
   host.innerHTML = blocks.join('');
 }
@@ -595,9 +618,10 @@ function paintPosition(answerHost, detail) {
       entry: state.pos.entry,
       stop: state.pos.stopPrice,
       target: state.pos.targetPrice,
+      fractional: state.pos.fractional,
     });
   if (!result.ok) {
-    const prompt = result.reason === 'stop' ? t('needStop') : result.reason === 'prices' ? t('needPrices') : t('needBalance');
+    const prompt = result.reason === 'stop' ? t('needStop') : result.reason === 'prices' ? t('needPrices') : result.reason === 'shares' ? t('needShares') : t('needBalance');
     answer(answerHost, { ready: false, prompt });
     detail.innerHTML = '';
     return;
@@ -610,6 +634,7 @@ function paintPosition(answerHost, detail) {
     value: shareMode ? qty(result.quantity) : money(result.position),
   });
   const blocks = [];
+  if (result.riskPct > 10) blocks.push(`<p class="note warn">${t('highRisk')}</p>`);
   if (result.capped) blocks.push(`<p class="note warn">${fill('capped', { risk: money(result.actualRisk), asked: money(result.requestedRisk) })}</p>`);
   if (result.needsLeverage) blocks.push(`<p class="note info">${fill('marginNote', { lev: `${formatNumber(result.leverage, { min: 2, max: 2 })}x` })}</p>`);
   const primary = shareMode
@@ -767,10 +792,44 @@ function readBind(bind, value) {
   state[parts[0]][parts[1]] = value;
 }
 
+function significantCount(text, end) {
+  let count = 0;
+  for (let i = 0; i < end && i < text.length; i += 1) {
+    if (/\d|[.,٫]/.test(text[i])) count += 1;
+  }
+  return count;
+}
+
+function caretFromCount(text, count) {
+  if (count <= 0) return 0;
+  let seen = 0;
+  for (let i = 0; i < text.length; i += 1) {
+    if (/\d|[.,٫]/.test(text[i])) {
+      seen += 1;
+      if (seen >= count) return i + 1;
+    }
+  }
+  return text.length;
+}
+
 function onField(event) {
   const el = event.target;
   if (!el.dataset || !el.dataset.bind) return;
-  readBind(el.dataset.bind, el.value);
+  if (el.dataset.numeric && event.type === 'input') {
+    const start = el.selectionStart ?? el.value.length;
+    const marked = significantCount(el.value, start);
+    const next = liveFormat(el.value, state.lang);
+    readBind(el.dataset.bind, next.canonical);
+    if (el.value !== next.display) {
+      el.value = next.display;
+      const pos = caretFromCount(next.display, marked);
+      try { el.setSelectionRange(pos, pos); } catch (err) {}
+    }
+  } else if (!el.dataset.numeric || event.type === 'change') {
+    readBind(el.dataset.bind, el.dataset.numeric ? liveFormat(el.value, state.lang).canonical : el.value);
+  } else {
+    return;
+  }
   save();
   paint();
 }
@@ -805,17 +864,30 @@ function onClick(event) {
     if (state.avg.rows.length >= 30) return;
     state.avg.rows.push({ price: '', qty: '' });
     save();
-    paintRows();
-    const inputs = document.querySelectorAll('#rows input');
-    inputs[inputs.length - 2]?.focus();
-  }
-  if (act.dataset.act === 'remove-row') {
-    state.avg.rows.splice(Number(act.dataset.index), 1);
-    if (!state.avg.rows.length) state.avg.rows.push({ price: '', qty: '' });
-    save();
-    paintRows();
+    appendBuyRow();
+    const input = document.getElementById(`price-${state.avg.rows.length - 1}`);
+    input?.focus({ preventScroll: true });
+    input?.closest('.buy')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     paint();
   }
+  if (act.dataset.act === 'remove-row') {
+    const index = Number(act.dataset.index);
+    state.avg.rows.splice(index, 1);
+    if (!state.avg.rows.length) state.avg.rows.push({ price: '', qty: '' });
+    save();
+    const host = $('#rows');
+    host?.children[index]?.remove();
+    if (!host?.children.length) paintRows();
+    else reindexBuyRows();
+    paint();
+  }
+  if (act.dataset.act === 'toggle-fractional') {
+    state.pos.fractional = !state.pos.fractional;
+    save();
+    act.setAttribute('aria-pressed', String(state.pos.fractional));
+    paint();
+  }
+  if (act.dataset.act === 'share-save') shareSaved(act.dataset.id);
   if (act.dataset.act === 'open-save') openSaveSheet();
   if (act.dataset.act === 'open-library') openLibrarySheet();
   if (act.dataset.act === 'load-save') loadNamed(act.dataset.id);
@@ -946,6 +1018,7 @@ function paintLibrary() {
         <span class="figure num">${esc(namedSummary(tab, item.data))}</span>
         <span class="meta">${esc(savedWhen(item.savedAt))}</span>
       </button>
+      ${tab === 'avg' ? `<div class="row-actions"><button type="button" class="text-btn" data-act="share-save" data-id="${esc(item.id)}">${t('shareThis')}</button></div>` : ''}
     </article>`).join('');
 }
 
@@ -987,9 +1060,8 @@ function platformLabel() {
   }
 }
 
-async function shareApp() {
+async function sharePlain(text, copiedKey = 'shareCopied') {
   const title = t('appName');
-  const text = `${t('shareText')}\n\n${WEB_URL}`;
   try {
     const cap = window.Capacitor;
     if (cap?.isNativePlatform?.() && cap.Plugins?.Share?.share) {
@@ -1005,10 +1077,51 @@ async function shareApp() {
   }
   try {
     await navigator.clipboard.writeText(text);
-    toast(t('shareCopied'));
+    toast(t(copiedKey));
   } catch {
     toast(text);
   }
+}
+
+function shareApp() {
+  return sharePlain(`${t('shareText')}\n\n${WEB_URL}`);
+}
+
+function shareSaved(id) {
+  const tab = state.saveTab === 'growth' ? 'growth' : 'avg';
+  const item = libraryFor(tab).find((entry) => entry.id === id);
+  if (!item || tab !== 'avg') return;
+  const summary = stockAverage(item.data?.rows || []);
+  if (!summary.ok) return;
+  const mark = positionMark({ qty: summary.totalShares, avg: summary.average, price: item.data.current });
+  const lines = [
+    t('shareAvgHead'),
+    item.name,
+    fill('shareBuys', { n: summary.buys }),
+    fill('shareShares', { shares: qty(summary.totalShares) }),
+    fill('shareAvgPrice', { avg: moneyPrice(summary.average) }),
+    fill('shareCost', { cost: money(summary.totalCost) }),
+  ];
+  if (mark.ok) {
+    lines.push(fill('shareMark', {
+      price: moneyPrice(item.data.current),
+      pnl: signedMoney(mark.unrealized),
+      pct: pct(mark.unrealizedPct),
+    }));
+  }
+  lines.push(savedWhen(item.savedAt), t('shareVia'), WEB_URL);
+  return sharePlain(lines.join('\n'), 'shareSaveCopied');
+}
+
+function rateApp() {
+  try {
+    const cap = window.Capacitor;
+    if (cap?.isNativePlatform?.() && cap.Plugins?.InAppReview?.requestReview) {
+      cap.Plugins.InAppReview.requestReview();
+      return;
+    }
+  } catch (err) {}
+  window.open(PLAY_URL, '_blank', 'noopener');
 }
 
 function sendFeedback() {
@@ -1049,7 +1162,8 @@ function boot() {
       saveNamed();
     }
   });
-  $('#share-app').addEventListener('click', shareApp);
+  $('#share-open').addEventListener('click', shareApp);
+  $('#rate-app').addEventListener('click', rateApp);
   $('#send-feedback').addEventListener('click', sendFeedback);
   bindSheet('#sheet');
   bindSheet('#save-sheet');

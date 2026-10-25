@@ -6,10 +6,10 @@
   "start_url": "/basis/index.html",
   "scope": "/basis/",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#f4f0e7",
   "theme_color": "#f4f0e7",
   "lang": "en",
+  "categories": ["finance"],
   "prefer_related_applications": false,
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

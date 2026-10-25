@@ -4,32 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#f4f0e7">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; script-src 'self'; object-src 'none'; base-uri 'self'">
   <meta name="description" content="Basis — average price, profit and loss, position size, and compound growth.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Basis">
   <title>Basis — Trading calculators</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" href="./icon-192.png" type="image/png">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="stylesheet" href="./css/app.css">
-  <script>
-    try {
-      var saved = JSON.parse(localStorage.getItem('basis.v1') || '{}');
-      var loc = (saved.lang || navigator.language || 'en').toLowerCase();
-      var lang = loc.indexOf('ar') === 0 ? 'ar' : loc.indexOf('es') === 0 ? 'es' : loc.indexOf('pt') === 0 ? 'pt' : 'en';
-      var theme = saved.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      document.documentElement.lang = lang;
-      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-      document.documentElement.dataset.theme = theme;
-      var meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.content = theme === 'dark' ? '#12110f' : '#f4f0e7';
-    } catch (e) {}
-  </script>
+  <script src="./js/version.js"></script>
+  <script src="./js/boot-theme.js"></script>
 </head>
 <body>
   <div class="phone" id="app">
@@ -41,11 +28,20 @@
           <div class="brand-lead" id="brand-lead">Trading calculators</div>
         </div>
       </div>
-      <button type="button" class="icon-btn" id="settings-open" aria-label="Settings">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
-        </svg>
-      </button>
+      <div class="top-actions">
+        <button type="button" class="icon-btn" id="share-open" aria-label="Share Basis">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3v11"/>
+            <path d="M8.5 6.5 12 3l3.5 3.5"/>
+            <path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/>
+          </svg>
+        </button>
+        <button type="button" class="icon-btn" id="settings-open" aria-label="Settings">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/>
+          </svg>
+        </button>
+      </div>
     </header>
     <main class="main" id="main"></main>
     <nav class="nav" id="nav"></nav>
@@ -87,9 +83,9 @@
             <button type="button" id="theme-dark">Dark</button>
           </div>
         </div>
-        <button type="button" class="sheet-action" id="share-app">
-          <span class="sheet-action-title" id="share-title">Share Basis</span>
-          <span class="sheet-action-hint" id="share-hint">Send the app to a friend</span>
+        <button type="button" class="sheet-action" id="rate-app">
+          <span class="sheet-action-title" id="rate-title">Rate the app</span>
+          <span class="sheet-action-hint" id="rate-hint">Open the Play Store listing</span>
         </button>
         <button type="button" class="sheet-action" id="send-feedback">
           <span class="sheet-action-title" id="feedback-title">Suggestions &amp; contact</span>
@@ -97,7 +93,7 @@
         </button>
         <div class="sheet-foot">
           <a id="privacy-link" href="./privacy-policy.html">Privacy</a>
-          <span class="num" id="app-version">1.1</span>
+          <span class="num" id="version-label">Version 1.2</span>
         </div>
       </div>
     </div>

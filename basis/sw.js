@@ -1,31 +1,31 @@
 /* Basis service worker.
    Cache first so the UI only changes after the user taps Update.
-   Bump VERSION for a user-facing release and rewrite CHANGELOG.
-   Quiet polish can keep VERSION and bump CACHE only. */
-const VERSION = '1.1';
-const CACHE = 'basis-1.1';
+   VERSION comes from js/version.js so the app footer and cache stay in sync. */
+importScripts('./js/version.js');
+const VERSION = self.BASIS_VERSION;
+const CACHE = `basis-${VERSION}`;
 
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'ترس إعدادات أوضح.\u200F',
-    'مفاتيح أوضح في المظهر الفاتح للشراء والبيع وللنسبة والسعر.\u200F',
-    'تثبيت المتصفح يفتح التطبيق بشكل صحيح.\u200F',
+    'الشريط السفلي يبقى ثابتا اثناء التمرير.\u200F',
+    'الارقام تفهم فاصلة كل لغة، مع فواصل الالاف اثناء الكتابة.\u200F',
+    'متوسط مستهدف بدل الشراء الاضافي، ومشاركة الحسابات المحفوظة.\u200F',
   ]),
   en: updateNote([
-    'A proper settings gear.',
-    'Clearer light-theme switches for long/short and percent/price.',
-    'Browser install now opens the app.',
+    'The bottom nav stays put while you scroll.',
+    'Numbers follow each language, with thousands separators as you type.',
+    'Target average replaces extra buy, and saved calculations can be shared.',
   ]),
   es: updateNote([
-    'Icono de ajustes corregido.',
-    'Interruptores más claros en el tema claro.',
-    'La instalación en el navegador abre la app.',
+    'La barra inferior se queda fija al desplazar.',
+    'Los números siguen cada idioma, con miles mientras escribes.',
+    'El precio medio objetivo sustituye la compra extra, y se pueden compartir los cálculos guardados.',
   ]),
   pt: updateNote([
-    'Ícone de definições corrigido.',
-    'Interruptores mais claros no tema claro.',
-    'A instalação no navegador abre o app.',
+    'A barra inferior fica fixa ao rolar.',
+    'Os números seguem cada idioma, com milhares enquanto você digita.',
+    'O preço médio alvo substitui a compra extra, e os cálculos salvos podem ser compartilhados.',
   ]),
 };
 
@@ -33,6 +33,8 @@ const CORE = [
   './',
   './index.html',
   './css/app.css',
+  './js/version.js',
+  './js/boot-theme.js',
   './js/app.js',
   './js/calc.js',
   './js/i18n.js',
@@ -40,10 +42,14 @@ const CORE = [
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
+  './fonts/IBMPlexSansArabic-Regular.woff2',
+  './fonts/IBMPlexSansArabic-Medium.woff2',
+  './fonts/IBMPlexSansArabic-SemiBold.woff2',
+  './fonts/IBMPlexSansArabic-Bold.woff2',
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE)).catch(() => {}));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE)));
 });
 
 self.addEventListener('activate', (event) => {
@@ -77,7 +83,10 @@ self.addEventListener('fetch', (event) => {
         const copy = response.clone();
         caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
         return response;
-      }).catch(() => caches.match('./index.html'));
+      }).catch(() => {
+        if (request.mode === 'navigate') return caches.match('./index.html');
+        return undefined;
+      });
     })
   );
 });

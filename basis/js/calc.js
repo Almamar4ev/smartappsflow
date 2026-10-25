@@ -8,13 +8,72 @@
 
 const MAX_MONTHS = 600;
 const FREQUENCIES = new Set([1, 4, 12, 52, 365]);
+const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
 
-function num(value) {
+export function numberStyle(lang) {
+  return lang === 'es' || lang === 'pt' ? 'es' : 'en';
+}
+
+export function separators(lang) {
+  return numberStyle(lang) === 'es'
+    ? { group: '.', decimal: ',' }
+    : { group: ',', decimal: '.' };
+}
+
+function mapDigits(text) {
+  let out = '';
+  for (const ch of String(text ?? '')) {
+    const ar = ARABIC_DIGITS.indexOf(ch);
+    if (ar >= 0) { out += String(ar); continue; }
+    const fa = PERSIAN_DIGITS.indexOf(ch);
+    if (fa >= 0) { out += String(fa); continue; }
+    out += ch;
+  }
+  return out;
+}
+
+export function parseNumber(value, lang = 'en') {
   if (typeof value === 'number') return Number.isFinite(value) ? value : NaN;
-  const text = String(value ?? '').trim().replace(/,/g, '');
-  if (!text) return NaN;
+  let text = mapDigits(value).trim().replace(/\s/g, '');
+  if (!text || text === '+' || text === '-') return NaN;
+  text = text.replaceAll('٬', 'GRP').replaceAll('٫', 'DEC');
+  const { group, decimal } = separators(lang);
+  if (group) text = text.split(group).join('');
+  text = text.replaceAll('GRP', '');
+  text = text.replaceAll('DEC', '.').split(decimal).join('.');
+  if (!/^[+-]?\d*\.?\d+$/.test(text)) return NaN;
   const n = Number(text);
   return Number.isFinite(n) ? n : NaN;
+}
+
+export function liveFormat(display, lang = 'en') {
+  const { group, decimal } = separators(lang);
+  let text = mapDigits(display).replace(/\s/g, '');
+  const neg = text.startsWith('-');
+  if (neg) text = text.slice(1);
+  text = text.replaceAll('٬', '').replaceAll(group, '');
+  text = text.replaceAll('٫', decimal);
+  const pieces = text.split(decimal);
+  const intRaw = (pieces[0] || '').replace(/\D/g, '');
+  const typedDecimal = pieces.length > 1;
+  const frac = typedDecimal ? pieces.slice(1).join('').replace(/\D/g, '') : '';
+  if (!intRaw && !typedDecimal && !neg) return { canonical: '', display: '' };
+  const grouped = intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, group);
+  let shown = (neg ? '-' : '') + grouped;
+  if (typedDecimal) shown += decimal + frac;
+  let canonical = (neg ? '-' : '') + (intRaw || (typedDecimal ? '0' : ''));
+  if (typedDecimal) canonical += `.${frac}`;
+  if (canonical === '-' || canonical === '-0') canonical = neg && !intRaw && !typedDecimal ? '-' : canonical;
+  return { canonical, display: shown };
+}
+
+export function formatInputValue(canonical, lang = 'en') {
+  return liveFormat(String(canonical ?? '').replace('.', separators(lang).decimal), lang).display;
+}
+
+function num(value) {
+  return parseNumber(value, 'en');
 }
 
 function riskAmount(balance, mode, value) {
@@ -106,7 +165,7 @@ export function positionByPercent({ balance, riskMode, riskValue, stopPct, targe
   };
 }
 
-export function positionByPrice({ balance, riskMode, riskValue, entry, stop, target }) {
+export function positionByPrice({ balance, riskMode, riskValue, entry, stop, target, fractional }) {
   const bal = num(balance);
   const riskVal = num(riskValue);
   const entryPrice = num(entry);
@@ -118,8 +177,11 @@ export function positionByPrice({ balance, riskMode, riskValue, entry, stop, tar
   }
   const requestedRisk = riskAmount(bal, riskMode, riskVal);
   const riskPerShare = Math.abs(entryPrice - stopPrice);
-  const quantity = requestedRisk / riskPerShare;
+  const rawQty = requestedRisk / riskPerShare;
+  const quantity = fractional ? rawQty : Math.floor(rawQty);
+  if (!(quantity > 0)) return { ok: false, reason: 'shares' };
   const position = quantity * entryPrice;
+  const actualRisk = quantity * riskPerShare;
   const rewardPerShare = targetPrice != null && targetPrice > 0 ? Math.abs(targetPrice - entryPrice) : null;
   const reward = rewardPerShare == null ? null : quantity * rewardPerShare;
   const rr = rewardPerShare == null ? null : rewardPerShare / riskPerShare;
@@ -130,13 +192,15 @@ export function positionByPrice({ balance, riskMode, riskValue, entry, stop, tar
     pctOfBalance: (position / bal) * 100,
     riskPerShare,
     stopPct: (riskPerShare / entryPrice) * 100,
-    actualRisk: requestedRisk,
-    riskPct: (requestedRisk / bal) * 100,
+    actualRisk,
+    riskPct: (actualRisk / bal) * 100,
+    requestedRisk,
     rewardPerShare,
     targetPct: rewardPerShare == null ? null : (rewardPerShare / entryPrice) * 100,
     reward,
     rr,
     balance: bal,
+    floored: !fractional && quantity !== rawQty,
   };
 }
 
@@ -146,12 +210,13 @@ export function compoundGrowth({ capital, rate, ratePeriod, duration, durationUn
   const span = num(duration);
   const contribution = deposit === '' || deposit == null ? 0 : num(deposit);
   const freq = num(frequency);
-  if (!(principal > 0) || !Number.isFinite(rateValue) || !(span > 0)) {
+  if (!Number.isFinite(principal) || principal < 0 || !Number.isFinite(rateValue) || !(span > 0)) {
     return { ok: false, reason: 'empty' };
   }
   if (!Number.isFinite(contribution) || contribution < 0) return { ok: false, reason: 'deposit' };
+  if (!(principal > 0) && !(contribution > 0)) return { ok: false, reason: 'empty' };
   if (!FREQUENCIES.has(freq)) return { ok: false, reason: 'frequency' };
-  const months = durationUnit === 'years' ? Math.round(span) * 12 : Math.round(span);
+  const months = durationUnit === 'years' ? Math.round(span * 12) : Math.round(span);
   if (!(months > 0)) return { ok: false, reason: 'empty' };
   if (months > MAX_MONTHS) return { ok: false, reason: 'range' };
 
