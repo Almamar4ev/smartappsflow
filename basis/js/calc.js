@@ -308,7 +308,7 @@ export function whatIfBuy({ qty, avg, price, buyQty, buyAmount, buyPrice }) {
   };
 }
 
-export function targetAverage({ qty, avg, price, buyPrice, target }) {
+export function targetAverage({ qty, avg, price, buyPrice, target, whole }) {
   const Q = num(qty);
   const A = num(avg);
   const T = num(target);
@@ -316,11 +316,16 @@ export function targetAverage({ qty, avg, price, buyPrice, target }) {
   if (!(Q > 0) || !(A > 0) || !(T > 0) || !(Pb > 0)) return { ok: false, reason: 'empty' };
   if (T >= A) return { ok: false, reason: 'already' };
   if (T <= Pb) return { ok: false, reason: 'impossible' };
-  const needed = Q * (A - T) / (T - Pb);
-  return { ok: true, needed, neededCost: needed * Pb };
+  let needed = Q * (A - T) / (T - Pb);
+  if (whole) needed = Math.ceil(needed - 1e-12);
+  if (!(needed > 0) || !Number.isFinite(needed)) return { ok: false, reason: 'empty' };
+  const neededCost = needed * Pb;
+  const newQty = Q + needed;
+  const newAvg = (Q * A + neededCost) / newQty;
+  return { ok: true, needed, neededCost, newQty, newAvg };
 }
 
-export function whatIfSell({ qty, avg, price, sellPct, sellQty, sellPrice }) {
+export function whatIfSell({ qty, avg, price, sellPct, sellQty, sellPrice, whole }) {
   const Q = num(qty);
   const A = num(avg);
   if (!(Q > 0) || !(A > 0)) return { ok: false, reason: 'position' };
@@ -328,8 +333,16 @@ export function whatIfSell({ qty, avg, price, sellPct, sellQty, sellPrice }) {
   if (!(Ps > 0)) return { ok: false, reason: 'price' };
   const named = num(sellQty);
   const percent = num(sellPct);
-  const sold = Math.min(Q, named > 0 ? named : percent > 0 ? Q * percent / 100 : NaN);
-  if (!(sold > 0)) return { ok: false, reason: 'sell' };
+  let sold;
+  if (whole) {
+    if (named > 0) sold = Math.min(Math.floor(named), Math.floor(Q));
+    else if (percent > 0) sold = Math.floor(Q * Math.min(percent, 100) / 100);
+    else sold = NaN;
+    if (!(sold >= 1)) return { ok: false, reason: 'shares' };
+  } else {
+    sold = Math.min(Q, named > 0 ? named : percent > 0 ? Q * percent / 100 : NaN);
+    if (!(sold > 0)) return { ok: false, reason: 'sell' };
+  }
   const remaining = Q - sold;
   return {
     ok: true,
@@ -342,9 +355,9 @@ export function whatIfSell({ qty, avg, price, sellPct, sellQty, sellPrice }) {
   };
 }
 
-export function sellCompare({ qty, avg, price, sellPrice }) {
-  return [25, 50, 100].map((pct) => ({
+export function sellCompare({ qty, avg, price, sellPrice, whole }) {
+  return [25, 50, 75, 100].map((pct) => ({
     pct,
-    ...whatIfSell({ qty, avg, price, sellPct: pct, sellQty: '', sellPrice }),
+    ...whatIfSell({ qty, avg, price, sellPct: pct, sellQty: '', sellPrice, whole }),
   }));
 }

@@ -18,8 +18,11 @@ const LIBRARY_CAP = 30;
 const FEEDBACK_EMAIL = 'smartappsflow@gmail.com';
 const WEB_URL = 'https://smartappsflow.net/basis/';
 const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.smartapps.basis';
-const APP_VERSION = (typeof self !== 'undefined' && self.BASIS_VERSION) ? self.BASIS_VERSION : '1.2';
+const APP_VERSION = (typeof self !== 'undefined' && self.BASIS_VERSION) ? self.BASIS_VERSION : '1.3';
+const LTR = '\u2066';
+const PDF = '\u2069';
 let toastTimer = 0;
+let pendingDeleteId = null;
 let pendingWorker = null;
 let pendingInfo = null;
 let bannerDismissed = false;
@@ -48,7 +51,10 @@ function defaults() {
     avg: {
       rows: [{ price: '', qty: '' }, { price: '', qty: '' }],
       current: '',
-      whatIf: 'sell',
+      whatIf: 'lower',
+      planOpen: true,
+      compareOpen: false,
+      sellMode: 'pct',
       buyQty: '',
       buyAmount: '',
       buyPrice: '',
@@ -79,7 +85,15 @@ function loadState() {
     return {
       ...base,
       ...saved,
-      avg: { ...base.avg, ...saved.avg, rows: Array.isArray(saved.avg?.rows) && saved.avg.rows.length ? saved.avg.rows.slice(0, 30) : base.avg.rows },
+      avg: {
+        ...base.avg,
+        ...saved.avg,
+        rows: Array.isArray(saved.avg?.rows) && saved.avg.rows.length ? saved.avg.rows.slice(0, 30) : base.avg.rows,
+        whatIf: saved.avg?.whatIf === 'sell' ? 'sell' : 'lower',
+        sellMode: saved.avg?.sellMode === 'qty' ? 'qty' : 'pct',
+        planOpen: saved.avg?.planOpen !== false,
+        compareOpen: Boolean(saved.avg?.compareOpen),
+      },
       pnl: { ...base.pnl, ...saved.pnl },
       pos: { ...base.pos, ...saved.pos, fractional: Boolean(saved.pos?.fractional) },
       growth: { ...base.growth, ...saved.growth },
@@ -254,28 +268,44 @@ function renderMain() {
 }
 
 function viewAverage() {
+  const planOpen = state.avg.planOpen !== false;
+  const lower = state.avg.whatIf !== 'sell';
+  const byPct = state.avg.sellMode !== 'qty';
   return `${screenHead(t('avgTitle'), t('avgLead'))}
     <div class="stack">
+      <section class="answer" id="answer"></section>
+      <div id="snapshot"></div>
       <div id="rows"></div>
       <button type="button" class="add-btn" data-act="add-row">${t('addBuy')}</button>
       ${field('current', `${t('currentPrice')} · ${t('optional')}`, 'avg.current', 'currency', state.avg.current)}
-      <section class="answer" id="answer"></section>
-      <div id="detail"></div>
-      <div id="whatif-wrap" class="stack" hidden>
-        <span class="section-label">${t('reachTarget')}</span>
-        ${field('target-avg', t('targetAvg'), 'avg.target', 'currency', state.avg.target)}
-        ${field('buy-price', t('nextBuyPrice'), 'avg.buyPrice', 'currency', state.avg.buyPrice)}
-        <p class="hint">${t('priceFallback')}</p>
-        <span class="section-label">${t('partialSell')}</span>
-        <div class="grid-2">
-          ${field('sell-pct', t('sellPct'), 'avg.sellPct', 'percent', state.avg.sellPct, '25')}
-          ${field('sell-qty', t('sellQty'), 'avg.sellQty', '', state.avg.sellQty)}
+      <section class="plan${planOpen ? ' open' : ''}" id="plan" hidden>
+        <button type="button" class="plan-head" data-act="toggle-plan" aria-expanded="${planOpen ? 'true' : 'false'}">
+          <span><b>${t('planNext')}</b><small>${t('planNextLead')}</small></span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="plan-body" id="plan-body" ${planOpen ? '' : 'hidden'}>
+          ${segment('avg.whatIf', [{ value: 'lower', label: t('lowerAvg') }, { value: 'sell', label: t('sellPart') }])}
+          <div class="plan-tool" id="lower-tool" ${lower ? '' : 'hidden'}>
+            <div class="grid-2">
+              ${field('target-avg', t('targetAvg'), 'avg.target', 'currency', state.avg.target)}
+              ${field('buy-price', t('buyPrice'), 'avg.buyPrice', 'currency', state.avg.buyPrice)}
+            </div>
+            <div id="lower-out"></div>
+          </div>
+          <div class="plan-tool" id="sell-tool" ${lower ? 'hidden' : ''}>
+            ${segment('avg.sellMode', [{ value: 'pct', label: t('sellByPct') }, { value: 'qty', label: t('sellByQty') }])}
+            <div class="grid-2">
+              <div id="sell-pct-wrap" ${byPct ? '' : 'hidden'}>${field('sell-pct', t('sellPct'), 'avg.sellPct', 'percent', state.avg.sellPct)}</div>
+              <div id="sell-qty-wrap" ${byPct ? 'hidden' : ''}>${field('sell-qty', t('shares'), 'avg.sellQty', '', state.avg.sellQty)}</div>
+              ${field('sell-price', t('sellPrice'), 'avg.sellPrice', 'currency', state.avg.sellPrice)}
+            </div>
+            <div id="sell-out"></div>
+            <button type="button" class="link-btn" id="compare-toggle" data-act="toggle-compare" aria-expanded="${state.avg.compareOpen ? 'true' : 'false'}">${state.avg.compareOpen ? t('hideCompare') : t('compareAmounts')}</button>
+            <div id="compare-out" ${state.avg.compareOpen ? '' : 'hidden'}></div>
+          </div>
+          <p class="plan-note">${t('journalHint')}</p>
         </div>
-        ${field('sell-price', t('sellPrice'), 'avg.sellPrice', 'currency', state.avg.sellPrice)}
-        <p class="hint">${t('priceFallback')}</p>
-        <div id="whatif-out"></div>
-        <p class="hint">${t('journalHint')}</p>
-      </div>
+      </section>
       ${saveBar()}
     </div>`;
 }
@@ -495,7 +525,7 @@ function stats(items) {
 function paint() {
   syncUnits();
   const answerHost = $('#answer');
-  const detail = $('#detail');
+  const detail = $('#detail') || $('#snapshot');
   if (!answerHost || !detail) return;
   if (state.tab === 'avg') paintAverage(answerHost, detail);
   else if (state.tab === 'pnl') paintPnl(answerHost, detail);
@@ -503,83 +533,132 @@ function paint() {
   else paintGrowth(answerHost, detail);
 }
 
-function paintAverage(answerHost, detail) {
+function paintAverage(answerHost, snapshot) {
   const summary = stockAverage(state.avg.rows);
-  const wrap = $('#whatif-wrap');
+  const plan = $('#plan');
   if (!summary.ok) {
     answer(answerHost, { ready: false, prompt: t('needBuy') });
-    detail.innerHTML = '';
-    if (wrap) wrap.hidden = true;
+    snapshot.innerHTML = '';
+    if (plan) plan.hidden = true;
     return;
   }
-  if (wrap) wrap.hidden = false;
+  if (plan) plan.hidden = false;
   answer(answerHost, { ready: true, kicker: t('avgPrice'), value: moneyPrice(summary.average) });
   const mark = positionMark({ qty: summary.totalShares, avg: summary.average, price: state.avg.current });
-  const snapshot = mark.ok
-    ? stats([
-      { label: t('marketValue'), value: money(mark.value) },
-      { label: t('unrealized'), value: signedMoney(mark.unrealized), tone: mark.unrealized >= 0 ? 'gain' : 'loss' },
-      { label: t('returnPct'), value: pct(mark.unrealizedPct), tone: mark.unrealizedPct >= 0 ? 'gain' : 'loss' },
-      { label: t('breakEven'), value: mark.inProfit ? t('alreadyProfit') : pct(mark.breakEven), tone: mark.inProfit ? 'gain' : 'warn' },
-    ])
-    : '';
-  detail.innerHTML = `
-    ${stats([
-      { label: t('totalShares'), value: qty(summary.totalShares) },
-      { label: t('invested'), value: money(summary.totalCost) },
-      { label: t('buys'), value: String(summary.buys) },
-      { label: t('avgPrice'), value: moneyPrice(summary.average) },
-    ])}
-    ${snapshot}
-    <p class="note">${fill('avgInsight', { price: moneyPrice(summary.average) })}</p>`;
-  paintWhatIf(summary);
+  const cells = [
+    { label: t('shares'), value: qty(summary.totalShares) },
+    { label: t('shareCostLabel'), value: money(summary.totalCost) },
+    mark.ok
+      ? { label: t('profitNow'), value: signedMoney(mark.unrealized), tone: mark.unrealized >= 0 ? 'gain' : 'loss' }
+      : { label: t('buys'), value: String(summary.buys) },
+  ];
+  snapshot.innerHTML = `<div class="totals num">${cells.map((cell) => `
+    <div><span>${cell.label}</span><b class="${cell.tone || ''}">${cell.value}</b></div>`).join('')}</div>`;
+  paintLower(summary);
+  paintSell(summary);
 }
 
-function paintWhatIf(summary) {
-  const host = $('#whatif-out');
+function usedBuyPrice() {
+  const named = String(state.avg.buyPrice || '').trim();
+  if (named && Number(named) > 0) return named;
+  return String(state.avg.current || '').trim();
+}
+
+function paintLower(summary) {
+  const host = $('#lower-out');
   if (!host) return;
-  const position = { qty: summary.totalShares, avg: summary.average, price: state.avg.current };
-  const blocks = [];
   const target = targetAverage({
-    ...position,
+    qty: summary.totalShares,
+    avg: summary.average,
+    price: state.avg.current,
     buyPrice: state.avg.buyPrice,
     target: state.avg.target,
+    whole: true,
   });
-  if (target.ok) {
-    blocks.push(stats([
-      { label: t('neededShares'), value: qty(target.needed) },
-      { label: t('neededCost'), value: money(target.neededCost) },
-    ]));
-  } else if (state.avg.target && target.reason === 'already') {
-    blocks.push(`<p class="note info">${t('targetAlready')}</p>`);
-  } else if (state.avg.target && target.reason === 'impossible') {
-    blocks.push(`<p class="note warn">${t('targetImpossible')}</p>`);
+  if (target.reason === 'already') {
+    host.innerHTML = `<div class="note">${fill('pickLowerTarget', { avg: moneyPrice(summary.average) })}</div>`;
+    return;
   }
-  const sold = whatIfSell({ ...position, sellPct: state.avg.sellPct, sellQty: state.avg.sellQty, sellPrice: state.avg.sellPrice });
-  const rows = sellCompare({ ...position, sellPrice: state.avg.sellPrice });
-  if (sold.ok) {
-    blocks.push(stats([
-      { label: t('sold'), value: qty(sold.sold) },
-      { label: t('received'), value: money(sold.received) },
-      { label: t('realized'), value: signedMoney(sold.realized), tone: sold.realized >= 0 ? 'gain' : 'loss' },
-      { label: t('returnPct'), value: pct(sold.returnPct), tone: sold.returnPct >= 0 ? 'gain' : 'loss' },
-      { label: t('remaining'), value: qty(sold.remaining) },
-      { label: t('remainUnrealized'), value: signedMoney(sold.remainUnrealized), tone: sold.remainUnrealized >= 0 ? 'gain' : 'loss' },
-    ]));
+  if (target.reason === 'impossible') {
+    const shownTarget = moneyPrice(Number(state.avg.target));
+    host.innerHTML = `<div class="note">${fill('mustBuyBelow', { target: shownTarget })}</div>`;
+    return;
   }
-  if (rows.every((row) => row.ok)) {
-    blocks.push(`<p class="section-label">${t('quickCompare')}</p>
-      <div class="compare" dir="ltr">
-        <div class="row head"><span class="sub">%</span><span class="sub">${t('received')}</span><span class="sub">${t('realized')}</span></div>
-        ${rows.map((row) => `
-          <div class="row">
-            <span class="num">${row.pct}%</span>
-            <span class="sub num">${money(row.received)}</span>
-            <b class="num ${row.realized >= 0 ? 'gain' : 'loss'}">${signedMoney(row.realized)}</b>
-          </div>`).join('')}
-      </div>`);
+  if (!target.ok) {
+    host.innerHTML = `<div class="idle">${t('enterLower')}</div>`;
+    return;
   }
-  host.innerHTML = blocks.join('');
+  const buyPrice = usedBuyPrice();
+  host.innerHTML = `<div class="result-card">
+    <div class="ba">
+      <span class="from num">${esc(moneyPrice(summary.average))}</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      <span class="to num">${esc(moneyPrice(target.newAvg))}</span>
+    </div>
+    <p>${fill('buySharesAt', { q: qty(target.needed), price: moneyPrice(Number(buyPrice)) })}</p>
+    <div class="facts num">
+      <div><span>${t('neededCost')}</span><b>${esc(money(target.neededCost))}</b></div>
+      <div><span>${t('sharesAfter')}</span><b>${esc(qty(target.newQty))}</b></div>
+    </div>
+    <button type="button" class="ghost" data-act="add-as-buy" data-price="${esc(buyPrice)}" data-qty="${esc(String(target.needed))}">${t('addAsBuy')}</button>
+  </div>`;
+}
+
+function paintSell(summary) {
+  const host = $('#sell-out');
+  if (!host) return;
+  const byQty = state.avg.sellMode === 'qty';
+  const position = { qty: summary.totalShares, avg: summary.average, price: state.avg.current };
+  const sold = whatIfSell({
+    ...position,
+    sellPct: byQty ? '' : state.avg.sellPct,
+    sellQty: byQty ? state.avg.sellQty : '',
+    sellPrice: state.avg.sellPrice,
+    whole: true,
+  });
+  if (sold.reason === 'shares') {
+    host.innerHTML = `<div class="note">${t('qtyTooSmall')}</div>`;
+  } else if (!sold.ok) {
+    host.innerHTML = `<div class="idle">${t('enterSell')}</div>`;
+  } else {
+    const tone = sold.realized >= 0 ? 'gain' : 'loss';
+    const sellPx = Number(state.avg.sellPrice) > 0 ? Number(state.avg.sellPrice) : Number(state.avg.current);
+    host.innerHTML = `<div class="result-card">
+      <p>${fill('sellResult', { q: `<span class="num">${qty(sold.sold)}</span>`, price: `<span class="num">${moneyPrice(sellPx)}</span>`, pnl: `<strong class="num ${tone}">${signedMoney(sold.realized)}</strong>` })}</p>
+      <div class="facts num">
+        <div><span>${t('youReceive')}</span><b>${esc(money(sold.received))}</b></div>
+        <div><span>${t('remaining')}</span><b>${esc(qty(sold.remaining))}</b></div>
+        <div><span>${t('returnPct')}</span><b class="${tone}">${esc(pct(sold.returnPct))}</b></div>
+      </div>
+    </div>`;
+  }
+  paintCompare(position);
+}
+
+function paintCompare(position) {
+  const host = $('#compare-out');
+  if (!host) return;
+  const rows = sellCompare({ ...position, sellPrice: state.avg.sellPrice, whole: true });
+  if (!rows.every((row) => row.ok)) {
+    host.innerHTML = '';
+    return;
+  }
+  const currentPct = Math.round(Number(state.avg.sellPct));
+  host.innerHTML = `<div class="compare">
+    <div class="row head">
+      <span>${t('comparePercent')}</span>
+      <span class="sub">${t('shares')}</span>
+      <span class="sub">${t('youReceive')}</span>
+      <span class="sub">${t('realizedProfit')}</span>
+    </div>
+    ${rows.map((row) => `
+      <button type="button" class="row${currentPct === row.pct ? ' active' : ''}" data-act="pick-compare" data-pct="${row.pct}">
+        <span class="num">${row.pct}%</span>
+        <span class="num">${qty(row.sold)}</span>
+        <span class="num">${money(row.received)}</span>
+        <b class="num ${row.realized >= 0 ? 'gain' : 'loss'}">${signedMoney(row.realized)}</b>
+      </button>`).join('')}
+  </div>`;
 }
 
 function paintPnl(answerHost, detail) {
@@ -853,6 +932,18 @@ function onClick(event) {
       document.querySelectorAll(`[data-press="${press.dataset.press}"]`).forEach((button) => {
         button.setAttribute('aria-pressed', String(button === press));
       });
+      if (press.dataset.press === 'avg.whatIf') {
+        const lower = $('#lower-tool');
+        const sell = $('#sell-tool');
+        if (lower) lower.hidden = state.avg.whatIf !== 'lower';
+        if (sell) sell.hidden = state.avg.whatIf !== 'sell';
+      }
+      if (press.dataset.press === 'avg.sellMode') {
+        const pctWrap = $('#sell-pct-wrap');
+        const qtyWrap = $('#sell-qty-wrap');
+        if (pctWrap) pctWrap.hidden = state.avg.sellMode === 'qty';
+        if (qtyWrap) qtyWrap.hidden = state.avg.sellMode !== 'qty';
+      }
       syncUnits();
       paint();
     }
@@ -891,7 +982,64 @@ function onClick(event) {
   if (act.dataset.act === 'open-save') openSaveSheet();
   if (act.dataset.act === 'open-library') openLibrarySheet();
   if (act.dataset.act === 'load-save') loadNamed(act.dataset.id);
-  if (act.dataset.act === 'delete-save') deleteNamed(act.dataset.id);
+  if (act.dataset.act === 'pending-delete') {
+    pendingDeleteId = act.dataset.id;
+    paintLibrary();
+    requestAnimationFrame(() => document.querySelector('.keep-card.pending .no')?.focus());
+  }
+  if (act.dataset.act === 'cancel-delete') {
+    pendingDeleteId = null;
+    paintLibrary();
+  }
+  if (act.dataset.act === 'confirm-delete') deleteNamed(act.dataset.id);
+  if (act.dataset.act === 'lib-tab') {
+    state.saveTab = act.dataset.tab === 'growth' ? 'growth' : 'avg';
+    pendingDeleteId = null;
+    paintLibrary();
+  }
+  if (act.dataset.act === 'toggle-plan') {
+    state.avg.planOpen = state.avg.planOpen === false;
+    save();
+    const plan = $('#plan');
+    const open = state.avg.planOpen !== false;
+    plan?.classList.toggle('open', open);
+    const body = $('#plan-body');
+    if (body) body.hidden = !open;
+    act.setAttribute('aria-expanded', String(open));
+  }
+  if (act.dataset.act === 'toggle-compare') {
+    state.avg.compareOpen = !state.avg.compareOpen;
+    save();
+    const box = $('#compare-out');
+    if (box) box.hidden = !state.avg.compareOpen;
+    act.setAttribute('aria-expanded', String(state.avg.compareOpen));
+    act.textContent = state.avg.compareOpen ? t('hideCompare') : t('compareAmounts');
+  }
+  if (act.dataset.act === 'pick-compare') {
+    state.avg.sellPct = String(act.dataset.pct);
+    state.avg.sellMode = 'pct';
+    save();
+    const pctWrap = $('#sell-pct-wrap');
+    const qtyWrap = $('#sell-qty-wrap');
+    if (pctWrap) pctWrap.hidden = false;
+    if (qtyWrap) qtyWrap.hidden = true;
+    document.querySelectorAll('[data-press="avg.sellMode"]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.value === 'pct'));
+    });
+    const input = $('#sell-pct');
+    if (input) input.value = shown(state.avg.sellPct);
+    paint();
+  }
+  if (act.dataset.act === 'add-as-buy') {
+    if (state.avg.rows.length >= 30) return;
+    state.avg.rows.push({ price: act.dataset.price || '', qty: act.dataset.qty || '' });
+    save();
+    appendBuyRow();
+    const input = document.getElementById(`price-${state.avg.rows.length - 1}`);
+    input?.focus({ preventScroll: true });
+    input?.closest('.buy')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    paint();
+  }
   if (act.dataset.act === 'apply-update') applyPendingUpdate();
 }
 
@@ -987,6 +1135,7 @@ function saveNamed() {
 function openLibrarySheet() {
   if (state.tab !== 'avg' && state.tab !== 'growth') return;
   state.saveTab = state.tab;
+  pendingDeleteId = null;
   paintLibrary();
   closeSheets();
   openSheet('#library-sheet', true);
@@ -1000,26 +1149,58 @@ function savedWhen(ts) {
   }
 }
 
+function libraryBits(tab, item) {
+  if (tab === 'avg') {
+    const summary = stockAverage(item.data?.rows || []);
+    if (!summary.ok) return { value: '—', sum: '' };
+    return {
+      value: moneyPrice(summary.average),
+      sum: `${summary.buys} ${t('buys')} · ${qty(summary.totalShares)} ${t('shares')} · ${t('shareCostLabel')} ${money(summary.totalCost)}`,
+    };
+  }
+  const result = compoundGrowth(item.data || {});
+  if (!result.ok) return { value: '—', sum: '' };
+  const data = item.data || {};
+  const unit = data.durationUnit === 'months' ? t('months') : t('years');
+  const deposit = Number(data.deposit) > 0 ? ` · ${signedMoney(Number(data.deposit))}` : '';
+  return {
+    value: money(result.finalBalance),
+    sum: `${esc(shown(data.duration))} ${unit} · ${esc(shown(data.rate))}%${deposit}`,
+  };
+}
+
 function paintLibrary() {
   const tab = state.saveTab === 'growth' ? 'growth' : 'avg';
   const list = libraryFor(tab);
   const host = $('#library-list');
+  const tabs = `<div class="lib-tabs" role="group">
+    <button type="button" class="chip" data-act="lib-tab" data-tab="avg" aria-pressed="${tab === 'avg' ? 'true' : 'false'}">${t('libAvg')}</button>
+    <button type="button" class="chip" data-act="lib-tab" data-tab="growth" aria-pressed="${tab === 'growth' ? 'true' : 'false'}">${t('libGrowth')}</button>
+  </div>`;
   if (!list.length) {
-    host.innerHTML = `<p class="empty">${t('savedEmpty')}</p>`;
+    host.innerHTML = `${tabs}<p class="empty">${t('savedEmpty')}</p>`;
     return;
   }
-  host.innerHTML = list.map((item) => `
-    <article class="keep-card">
-      <div class="buy-head">
-        <span>${esc(item.name)}</span>
-        <button type="button" class="text-btn" data-act="delete-save" data-id="${esc(item.id)}">${t('deleteSave')}</button>
-      </div>
-      <button type="button" class="load" data-act="load-save" data-id="${esc(item.id)}">
-        <span class="figure num">${esc(namedSummary(tab, item.data))}</span>
-        <span class="meta">${esc(savedWhen(item.savedAt))}</span>
-      </button>
-      ${tab === 'avg' ? `<div class="row-actions"><button type="button" class="text-btn" data-act="share-save" data-id="${esc(item.id)}">${t('shareThis')}</button></div>` : ''}
-    </article>`).join('');
+  host.innerHTML = tabs + list.map((item) => {
+    const pending = pendingDeleteId === item.id;
+    const bits = libraryBits(tab, item);
+    return `<article class="keep-card${pending ? ' pending' : ''}">
+      <div class="r1"><span class="name">${esc(item.name)}</span><span class="date num">${esc(savedWhen(item.savedAt))}</span></div>
+      <div class="figure num">${esc(bits.value)}</div>
+      <div class="sum num">${bits.sum}</div>
+      ${pending
+        ? `<div class="confirm" role="alertdialog" aria-label="${esc(t('deleteSave'))}">
+            <span>${esc(fill('deleteNamed', { name: item.name }))}</span>
+            <button type="button" class="no" data-act="cancel-delete">${t('cancel')}</button>
+            <button type="button" class="yes" data-act="confirm-delete" data-id="${esc(item.id)}">${t('deleteSave')}</button>
+          </div>`
+        : `<div class="acts">
+            <button type="button" class="load" data-act="load-save" data-id="${esc(item.id)}">${t('loadSave')}</button>
+            <button type="button" class="act" data-act="share-save" data-id="${esc(item.id)}" aria-label="${esc(t('shareThis'))}">${iconShareSmall()}</button>
+            <button type="button" class="act del" data-act="pending-delete" data-id="${esc(item.id)}" aria-label="${esc(t('deleteSave'))}">${iconTrash()}</button>
+          </div>`}
+    </article>`;
+  }).join('');
 }
 
 function loadNamed(id) {
@@ -1036,20 +1217,21 @@ function loadNamed(id) {
 }
 
 function deleteNamed(id) {
-  if (!window.confirm(t('deleteSaveQ'))) return;
   const tab = state.saveTab === 'growth' ? 'growth' : 'avg';
   state.library[tab] = libraryFor(tab).filter((item) => item.id !== id);
+  pendingDeleteId = null;
   save();
   paintLibrary();
   paintKeep();
+  toast(t('toastDeleted'), 2500);
 }
 
-function toast(message) {
+function toast(message, ms = 2200) {
   const el = $('#toast');
   el.textContent = message;
   el.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.hidden = true; }, 2200);
+  toastTimer = setTimeout(() => { el.hidden = true; }, ms);
 }
 
 function platformLabel() {
@@ -1087,30 +1269,72 @@ function shareApp() {
   return sharePlain(`${t('shareText')}\n\n${WEB_URL}`);
 }
 
+function wrapVal(value) {
+  return `${LTR}${value}${PDF}`;
+}
+
+function factLine(label, value) {
+  return `${label}: ${wrapVal(value)}`;
+}
+
+function shareHeading(name, toolKey) {
+  const tool = t(toolKey);
+  const trimmed = String(name || '').trim();
+  const generic = !trimmed || trimmed === tool || trimmed === t('avgTitle') || trimmed === t('growthTitle');
+  return generic ? `*${tool}*` : `*${trimmed} · ${tool}*`;
+}
+
+function shareAvgText(item) {
+  const summary = stockAverage(item.data?.rows || []);
+  if (!summary.ok) return '';
+  const lines = [
+    shareHeading(item.name, 'shareAvgTitle'),
+    factLine(t('shareAverage'), moneyPrice(summary.average)),
+    factLine(t('shares'), qty(summary.totalShares)),
+    factLine(t('shareCostLabel'), money(summary.totalCost)),
+  ];
+  const mark = positionMark({ qty: summary.totalShares, avg: summary.average, price: item.data?.current });
+  if (mark.ok) {
+    lines.push(factLine(t('currentPrice'), moneyPrice(item.data.current)));
+    lines.push(factLine(mark.unrealized < 0 ? t('shareLoss') : t('shareProfit'), signedMoney(mark.unrealized)));
+    lines.push(factLine(t('returnPct'), pct(mark.unrealizedPct)));
+  }
+  lines.push('', WEB_URL);
+  return lines.join('\n');
+}
+
+function annualRateOf(growth) {
+  const rate = Number(growth?.rate);
+  if (!Number.isFinite(rate)) return '';
+  const annual = growth.ratePeriod === 'monthly' ? rate * 12 : growth.ratePeriod === 'weekly' ? rate * 52 : rate;
+  return `${formatNumber(annual, { min: 0, max: 2 })}%`;
+}
+
+function shareGrowthText(item) {
+  const data = item.data || {};
+  const result = compoundGrowth(data);
+  if (!result.ok) return '';
+  const unit = data.durationUnit === 'months' ? t('monthUnit') : t('yearUnit');
+  const lines = [
+    shareHeading(item.name, 'shareGrowthTitle'),
+    factLine(t('finalBalance'), money(result.finalBalance)),
+    factLine(t('capital'), money(result.capital)),
+  ];
+  if (result.totalDeposited > 0 && Number(data.deposit) > 0) {
+    lines.push(factLine(t('deposit'), money(Number(data.deposit))));
+  }
+  lines.push(factLine(t('shareAnnual'), annualRateOf(data)));
+  lines.push(`${t('duration')}: ${wrapVal(shown(data.duration))} ${unit}`);
+  lines.push('', WEB_URL);
+  return lines.join('\n');
+}
+
 function shareSaved(id) {
   const tab = state.saveTab === 'growth' ? 'growth' : 'avg';
   const item = libraryFor(tab).find((entry) => entry.id === id);
-  if (!item || tab !== 'avg') return;
-  const summary = stockAverage(item.data?.rows || []);
-  if (!summary.ok) return;
-  const mark = positionMark({ qty: summary.totalShares, avg: summary.average, price: item.data.current });
-  const lines = [
-    t('shareAvgHead'),
-    item.name,
-    fill('shareBuys', { n: summary.buys }),
-    fill('shareShares', { shares: qty(summary.totalShares) }),
-    fill('shareAvgPrice', { avg: moneyPrice(summary.average) }),
-    fill('shareCost', { cost: money(summary.totalCost) }),
-  ];
-  if (mark.ok) {
-    lines.push(fill('shareMark', {
-      price: moneyPrice(item.data.current),
-      pnl: signedMoney(mark.unrealized),
-      pct: pct(mark.unrealizedPct),
-    }));
-  }
-  lines.push(savedWhen(item.savedAt), t('shareVia'), WEB_URL);
-  return sharePlain(lines.join('\n'), 'shareSaveCopied');
+  if (!item) return;
+  const text = tab === 'avg' ? shareAvgText(item) : shareGrowthText(item);
+  if (text) return sharePlain(text, 'shareSaveCopied');
 }
 
 function rateApp() {
@@ -1342,6 +1566,12 @@ function iconSize() {
 }
 function iconGrowth() {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 16c2-1 3-5 5-5s3 3 5 3 3-6 6-7"/><path d="M4 19h16"/></svg>';
+}
+function iconShareSmall() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+}
+function iconTrash() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
 }
 
 boot();

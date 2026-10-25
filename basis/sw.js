@@ -8,24 +8,24 @@ const CACHE = `basis-${VERSION}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'الشريط السفلي يبقى ثابتا اثناء التمرير.\u200F',
-    'الارقام تفهم فاصلة كل لغة، مع فواصل الالاف اثناء الكتابة.\u200F',
-    'متوسط مستهدف بدل الشراء الاضافي، ومشاركة الحسابات المحفوظة.\u200F',
+    'خطط خطوتك التالية: خفض المتوسط أو بيع جزء، مع نتيجة قبل وبعد.\u200F',
+    'مشاركة أوضح: معلومة واحدة في كل سطر، وتأكيد الحذف داخل البطاقة.\u200F',
+    'جدول المقارنة داخل أداة البيع فقط.\u200F',
   ]),
   en: updateNote([
-    'The bottom nav stays put while you scroll.',
-    'Numbers follow each language, with thousands separators as you type.',
-    'Target average replaces extra buy, and saved calculations can be shared.',
+    'Plan your next move: lower the average or sell part, with before and after.',
+    'Clearer sharing: one fact per line, and delete confirmation on the card.',
+    'The comparison table lives only inside Sell part.',
   ]),
   es: updateNote([
-    'La barra inferior se queda fija al desplazar.',
-    'Los números siguen cada idioma, con miles mientras escribes.',
-    'El precio medio objetivo sustituye la compra extra, y se pueden compartir los cálculos guardados.',
+    'Planifica el siguiente paso: baja el promedio o vende parte, con antes y después.',
+    'Compartir más claro: un dato por línea, y confirmar el borrado en la tarjeta.',
+    'La tabla de comparación está solo en Vender parte.',
   ]),
   pt: updateNote([
-    'A barra inferior fica fixa ao rolar.',
-    'Os números seguem cada idioma, com milhares enquanto você digita.',
-    'O preço médio alvo substitui a compra extra, e os cálculos salvos podem ser compartilhados.',
+    'Planeje o próximo passo: reduza o médio ou venda parte, com antes e depois.',
+    'Compartilhar mais claro: um fato por linha, e confirmar a exclusão no cartão.',
+    'A tabela de comparação fica só em Vender parte.',
   ]),
 };
 
