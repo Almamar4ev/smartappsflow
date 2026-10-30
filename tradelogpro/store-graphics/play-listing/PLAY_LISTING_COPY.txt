@@ -1,7 +1,7 @@
 Edgeory — Play Console listing copy (EN)
 ========================================
-Mirror of tradelogpro/PLAY_LISTING_EN.txt (canonical).
-Update the root file first when the listing changes.
+Canonical store text for Google Play. Update this file when the listing changes,
+then paste into Play Console (and keep store-graphics/play-listing in sync).
 
 App name (max 30)
 -----------------
@@ -34,7 +34,7 @@ Edgeory runs on your device. Your trades, notes, and photos stay local. Use it a
 IMPORTANT
 Edgeory is a personal journal and analytics tool only. It does not provide investment advice, trading signals, or brokerage services. Past performance metrics do not guarantee future results.
 
-Start logging. Know your edge. Trade with a clearer memory of what worked.
+Start logging. Know your edge. Trade with clearer memory of what worked.
 
 Developer: SmartAppsFlow
 Support: smartappsflow@gmail.com
@@ -47,3 +47,18 @@ https://smartappsflow.net
 Privacy policy URL
 ------------------
 https://smartappsflow.net/tradelogpro/privacy-policy.html
+
+Related assets
+--------------
+Graphics (phone):  store-graphics/play-listing/01..08 + icon-512 + feature-graphic
+Graphics (10-in):  store-graphics/play-listing/tablet-10in/  (1080x1920 — required min 1080px/side)
+Copy mirror:       store-graphics/play-listing/PLAY_LISTING_COPY.txt
+
+Future listing note (Premium / accounts)
+---------------------------------------
+Current copy correctly describes V1: offline-first, no cloud login.
+When optional cloud sync / user+password / paid tiers ship, update this file
+AND Play Console (and Privacy Policy) in the same release — especially lines
+about "without creating an account", "stay local", and "offline-first".
+Do not claim "always offline" after accounts exist; say local-first + optional
+signed-in sync if that is the product.

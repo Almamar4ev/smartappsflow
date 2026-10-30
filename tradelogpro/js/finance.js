@@ -113,6 +113,11 @@ function calcPnl(t) {
   return gross - calcFeesAmt(t.fees, t.fees_mode, gross) + calcRealizedPnl(t) - _abFees;
 }
 
+// Realized only: closed trades in full, open trades by their partial sells. No unrealized P&L.
+function calcRealizedTotal(t) {
+  return t.status === 'closed' ? calcPnl(t) : calcRealizedPnl(t);
+}
+
 // Break-even band: a P&L within +/-0.005 counts as neither win nor loss.
 var BE_EPS = 0.005;
 function isWin(t)  { return calcPnl(t) >  BE_EPS; }
@@ -154,10 +159,28 @@ function calcTotalFees(trades) {
 // ==========================================================================
 // TRADE DURATION
 // ==========================================================================
+function calcDcaSummary(t) {
+  var firstQty = t.original_qty || t.qty || 0;
+  var allBuys = [{qty: firstQty, price: t.entry || 0, date: t.entry_date}];
+  (t.add_buys || []).forEach(function(b){ allBuys.push({qty: b.qty || 0, price: b.price || 0, date: b.date}); });
+  var totalShares = allBuys.reduce(function(s,b){ return s + b.qty; }, 0);
+  var totalCost   = allBuys.reduce(function(s,b){ return s + b.qty * b.price; }, 0);
+  var avg         = totalShares > 0 ? totalCost / totalShares : 0;
+  var remainingQty = calcTotalQty(t);
+  var feeVal = parseFloat(t.fees) || 0;
+  var breakEven;
+  if (t.fees_mode === '$' && feeVal > 0 && remainingQty > 0) {
+    var dir2 = t.direction === 'Long' ? 1 : -1;
+    breakEven = avg + dir2 * (feeVal / remainingQty);
+  } else {
+    breakEven = avg;
+  }
+  return {avg: avg, totalShares: totalShares, buys: allBuys.length, breakEven: breakEven};
+}
 function calcTradeDuration(t) {
   if (!t.entry_date) return null;
-  var start = new Date(t.entry_date);
-  var end = t.status === 'closed' && t.exit_date ? new Date(t.exit_date) : new Date();
+  var start = parseLocalDate(t.entry_date);
+  var end = t.status === 'closed' && t.exit_date ? parseLocalDate(t.exit_date) : new Date();
   var diff = Math.floor((end - start) / (1000 * 60 * 60 * 24));
   return diff < 0 ? 0 : diff;
 }

@@ -70,10 +70,9 @@ jobs:
           curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js -o www/jspdf.umd.min.js
           curl -fsSL https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js -o www/chart.umd.min.js
           mkdir -p www/fonts
-          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@5.2.7/latin-400-normal.woff2 -o www/fonts/ibm-plex-mono-400.woff2
-          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@5.2.7/latin-500-normal.woff2 -o www/fonts/ibm-plex-mono-500.woff2
-          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@5.2.7/latin-600-normal.woff2 -o www/fonts/ibm-plex-mono-600.woff2
-          curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/ibm-plex-mono@5.2.7/latin-700-normal.woff2 -o www/fonts/ibm-plex-mono-700.woff2
+          curl -fsSL https://cdn.jsdelivr.net/npm/@fontsource/roboto@5.3.0/files/roboto-latin-400-normal.woff2 -o www/fonts/roboto-400.woff2
+          curl -fsSL https://cdn.jsdelivr.net/npm/@fontsource/roboto@5.3.0/files/roboto-latin-500-normal.woff2 -o www/fonts/roboto-500.woff2
+          curl -fsSL https://cdn.jsdelivr.net/npm/@fontsource/roboto@5.3.0/files/roboto-latin-700-normal.woff2 -o www/fonts/roboto-700.woff2
           curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-400-normal.woff2 -o www/fonts/dm-sans-400.woff2
           curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-500-normal.woff2 -o www/fonts/dm-sans-500.woff2
           curl -fsSL https://cdn.jsdelivr.net/fontsource/fonts/dm-sans@5.2.8/latin-600-normal.woff2 -o www/fonts/dm-sans-600.woff2
@@ -245,6 +244,15 @@ jobs:
 
       - name: Copy web assets
         run: npx cap sync android
+
+      - name: Enable on-device OCR (ML Kit)
+        run: |
+          set -e
+          MAN=android/app/src/main/AndroidManifest.xml
+          if ! grep -q 'com.google.mlkit.vision.DEPENDENCIES' "$MAN"; then
+            sed -i '/<application/a\        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="ocr" />' "$MAN"
+          fi
+          grep -q 'com.google.mlkit.vision.DEPENDENCIES' "$MAN"
 
       - name: Build AAB and APK
         run: |

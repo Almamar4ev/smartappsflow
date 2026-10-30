@@ -7,7 +7,7 @@
 //   - Network First for navigations and index.html
 //   - Cache First for other static files inside /tradelogpro/
 
-const CACHE = 'edgeory-v8';
+const CACHE = 'edgeory-v12';
 
 const ASSETS = [
   './',
@@ -20,9 +20,13 @@ const ASSETS = [
   './js/theme.js',
   './js/finance.js',
   './js/sanitize.js',
+  './js/screenshot-import.js',
   './js/app.js',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './fonts/roboto-400.woff2',
+  './fonts/roboto-500.woff2',
+  './fonts/roboto-700.woff2'
 ];
 
 self.addEventListener('install', function (event) {

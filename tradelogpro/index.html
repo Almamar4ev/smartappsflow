@@ -103,26 +103,10 @@ function detectAppRuntime(loc, cap) {
 
 </head>
 <body>
-<script>
-// Emergency failsafe: always hide loader after 3s
-setTimeout(function(){
-  var ls = document.getElementById('loadingScreen');
-  if (ls) { ls.style.opacity='0'; ls.style.display='none'; }
-}, 3000);
-</script>
-
-<!-- LOADING SCREEN -->
-<div id="loadingScreen">
-  <div style="font-size:36px"></div>
-  <div class="loader-ring"></div>
-  <p style="font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:2px">LOADING EDGEORY…</p>
-</div>
-
 <div class="app-shell">
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-mark">TM</div>
       <div class="logo-name">Edgeory</div>
     </div>
     <div class="sidebar-section">Navigation</div>
@@ -140,13 +124,16 @@ setTimeout(function(){
   <div class="main">
     <div class="topbar">
       <div class="topbar-left" style="display:flex;align-items:center;gap:10px">
-        <button onclick="openDrawer()" style="background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;padding:2px 6px;line-height:1;flex-shrink:0">&#9776;</button>
+        <button class="top-back" id="topBackBtn" onclick="goBackFromMore()" aria-label="Back">
+          <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="phone-hide" id="hamburgerBtn" onclick="openDrawer()" style="background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;padding:2px 6px;line-height:1;flex-shrink:0">&#9776;</button>
         <span class="page-title" id="topbarTitle">Dashboard</span>
       </div>
       <div class="topbar-right">
         <span id="topbarAccountBadge"></span>
         <button class="theme-btn" id="topbarThemeBtn" onclick="toggleTheme()" title="Switch theme" aria-label="Switch theme" style="background:none;border:1px solid var(--border2);border-radius:8px;color:var(--text2);cursor:pointer;padding:7px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0"></button>
-        <button class="btn btn-green btn-sm keep-mobile" onclick="openTradeModal(null)">＋ Log</button>
+        <button class="btn btn-green btn-sm keep-mobile" id="topLogBtn" onclick="openTradeModal(null)">+ Log</button>
       </div>
     </div>
     <div class="content" id="mainContent"></div>
@@ -157,12 +144,10 @@ setTimeout(function(){
 <nav class="bottom-nav">
   <button class="bottom-nav-item active" id="bnav-dashboard" onclick="setView('dashboard')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span><span>Dashboard</span></button>
   <button class="bottom-nav-item" id="bnav-trades" onclick="setView('trades')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span><span>Trades</span></button>
-  <button class="bottom-nav-item" id="bnav-calendar" onclick="setView('calendar')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span>Calendar</span></button>
   <button class="bottom-nav-item" id="bnav-calculators" onclick="setView('calculators')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg></span><span>Calc</span></button>
   <button class="bottom-nav-item" id="bnav-analytics" onclick="setView('analytics')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span>Analytics</span></button>
-  <button class="bottom-nav-item" id="bnav-accounts" onclick="setView('accounts')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span>Accounts</span></button>
+  <button class="bottom-nav-item" id="bnav-more" onclick="setView('more')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></span><span>More</span></button>
 </nav>
-<button class="fab-btn" id="fabBtn" onclick="openTradeModal(null)">＋</button>
 
 <!-- ════════════════════════════════════════
      TRADE MODAL
@@ -194,6 +179,7 @@ setTimeout(function(){
           <label>Stock / Symbol <span class="req">*</span></label>
           <input id="f_ticker" type="text" placeholder="AAPL, BTC/USD…" autocomplete="off" oninput="onTickerInput(this)" onblur="setTimeout(hideTickerSuggest,150)">
         <div id="tickerSuggest" class="ticker-suggest" style="display:none"></div>
+        <div id="didYouMean" class="did-you-mean" style="display:none"></div>
         </div>
         <div class="field">
           <label>Trade Status</label>
@@ -411,6 +397,7 @@ setTimeout(function(){
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('accountModal')">Cancel</button>
+      <button class="btn btn-danger" id="accDeleteBtn" style="display:none" onclick="deleteAccount(editingAccountId)">Delete</button>
       <button class="btn btn-primary" id="accSaveBtn" onclick="saveAccount()">Create Account</button>
     </div>
   </div>
@@ -448,12 +435,40 @@ setTimeout(function(){
 ════════════════════════════════════════ -->
 <div class="modal-overlay" id="tradeDetailModal">
   <div class="modal">
+    <div class="sheet-handle"></div>
     <div class="modal-header">
       <div class="modal-title" id="detailModalTitle">Trade Details</div>
       <button class="modal-close" onclick="closeModal('tradeDetailModal')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body" id="tradeDetailBody"></div>
-    <div class="modal-footer" id="tradeDetailFooter"></div>
+    <div class="modal-footer foot" id="tradeDetailFooter"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmSheet">
+  <div class="modal narrow">
+    <div class="sheet-handle"></div>
+    <div class="modal-header"><div class="modal-title" id="confirmSheetTitle">Confirm</div></div>
+    <div class="modal-body" id="confirmSheetBody"></div>
+    <div class="modal-footer" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn btn-secondary" id="confirmSheetCancel">Cancel</button>
+      <button class="btn btn-danger" id="confirmSheetOk">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="promptSheet">
+  <div class="modal narrow">
+    <div class="sheet-handle"></div>
+    <div class="modal-header"><div class="modal-title" id="promptSheetTitle">Name</div></div>
+    <div class="modal-body">
+      <p id="promptSheetHint" style="font-size:13px;color:var(--text3);margin-bottom:10px"></p>
+      <input id="promptSheetInput" type="text" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closePromptSheet(false)">Cancel</button>
+      <button class="btn btn-primary" onclick="closePromptSheet(true)">Save</button>
+    </div>
   </div>
 </div>
 
@@ -540,7 +555,7 @@ setTimeout(function(){
     <span class="drawer-item-icon"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 2 22 8 8 22 2 16 16 2z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 4.5 2 2"/><path d="m4.5 13.5 2 2"/></svg></span><span>Formulas &amp; Definitions</span>
   </button>
 
-  <div class="drawer-footer">Edgeory v1.0<br>Built for serious traders</div>
+  <div class="drawer-footer">Edgeory v<span id="appVersionLabel"></span><br>Built for serious traders</div>
 </div>
 
 <!-- PROFILE MODAL -->
@@ -555,7 +570,7 @@ setTimeout(function(){
         <div style="width:72px;height:72px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff;margin:0 auto 10px" id="profileAvatarBig">T</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="field"><label>Your Name</label><input id="prof_name" type="text" placeholder="e.g. Yousuf Al-Mamari"></div>
+      <div class="field"><label>Your Name</label><input id="prof_name" type="text" placeholder="e.g. Alex Morgan"></div>
       <div class="field"><label>Email <span class="opt">(optional)</span></label><input id="prof_email" type="email" placeholder="e.g. you@email.com"></div>
       <div class="field"><label>Trading Since</label><input id="prof_since" type="text" placeholder="e.g. 2022"></div>
       <div class="field"><label>Favorite Market</label><input id="prof_market" type="text" placeholder="e.g. Stocks, Crypto, Forex"></div>
@@ -722,6 +737,7 @@ setTimeout(function(){
 <script src="js/theme.js"></script>
 <script src="js/finance.js"></script>
 <script src="js/sanitize.js"></script>
+<script src="js/screenshot-import.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

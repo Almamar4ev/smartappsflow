@@ -94,6 +94,20 @@ function loadFromDB(callback) {
 
 function getActiveAccount() { return state.accounts.find(function(a){return a.id===state.activeAccountId;})||null; }
 function getAccountTrades(aid) { return state.trades.filter(function(t){return t.accountId===aid;}); }
-function today() { return new Date().toISOString().split('T')[0]; }
+function localDateStr(d) {
+  d = d || new Date();
+  var y = d.getFullYear();
+  var m = d.getMonth() + 1;
+  var day = d.getDate();
+  return y + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+}
+function parseLocalDate(str) {
+  var p = String(str || '').split('-');
+  var y = parseInt(p[0], 10) || 0;
+  var m = parseInt(p[1], 10) || 1;
+  var day = parseInt(p[2], 10) || 1;
+  return new Date(y, m - 1, day);
+}
+function today() { return localDateStr(new Date()); }
 
 // ==========================================================================

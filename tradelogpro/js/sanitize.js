@@ -257,38 +257,74 @@ function safePhoto(src) {
   if (typeof src !== 'string' || src.length > SAFE_PHOTO_MAX) return '';
   return /^data:image\/(jpeg|png|webp|gif);base64,/.test(src) ? src : '';
 }
+function _fmtAbs(v, minD, maxD) {
+  return Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: minD, maximumFractionDigits: maxD });
+}
 function fmtMoney(n) {
-  var abs = Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  return (n < 0 ? '-' : '') + currSym() + abs;
+  n = parseFloat(n) || 0;
+  var v = Math.round(Math.abs(n) * 100) / 100;
+  if (v < 0.005) return currSym() + '0';
+  var d = (Math.round(v * 100) % 100 === 0) ? 0 : 2;
+  return (n < 0 ? '-' : '') + currSym() + _fmtAbs(v, d, d);
 }
 function fmtPnl(n) {
-  var v = Math.abs(n);
-  var decimals = v % 1 === 0 ? 0 : 2;
-  var abs = v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  if (v < 0.005) return currSym() + '0.00';
-  return (n >= 0 ? '+' : '-') + currSym() + abs;
+  n = parseFloat(n) || 0;
+  var v = Math.round(Math.abs(n) * 100) / 100;
+  if (v < 0.005) return currSym() + '0';
+  var d = (Math.round(v * 100) % 100 === 0) ? 0 : 2;
+  return (n >= 0 ? '+' : '-') + currSym() + _fmtAbs(v, d, d);
 }
 function fmtNum(n, d) { return parseFloat(n).toFixed(d !== undefined ? d : 4); }
 function fmtPrice(n) {
   var v = parseFloat(n) || 0;
-  return currSym() + v.toFixed(2);
+  var a = Math.abs(v);
+  var d = (a > 0 && a < 1) ? 4 : 2;
+  return (v < 0 ? '-' : '') + currSym() + a.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 function fmtN(n, prefix) {
   var p = (prefix === undefined) ? currSym() : prefix;
-  var v = parseFloat(n) || 0;
-  if (v % 1 === 0) return p + v.toLocaleString('en-US');
-  return p + v.toFixed(2);
+  return fmtMoney(n).replace(currSym() === '' ? '\u0000' : currSym(), p);
 }
 function fmtQty(n) {
   var v = parseFloat(n) || 0;
-  if (v % 1 === 0) return v.toString();
-  return v.toFixed(2);
+  var a = Math.abs(v);
+  if (a > 0 && a < 1) return (v < 0 ? '-' : '') + a.toLocaleString('en-US', { maximumFractionDigits: 4 });
+  var r = Math.round(a * 100) / 100;
+  if (r < 0.005) return '0';
+  var d = (Math.round(r * 100) % 100 === 0) ? 0 : 2;
+  return (v < 0 ? '-' : '') + r.toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+function fmtPct(n) {
+  n = parseFloat(n) || 0;
+  var r = Math.round(Math.abs(n) * 100) / 100;
+  if (r < 0.005) return '0%';
+  var d = (Math.round(r * 100) % 100 === 0) ? 0 : 2;
+  return (n >= 0 ? '+' : '-') + r.toFixed(d) + '%';
+}
+function fmtPctPlain(n) {
+  return fmtPct(Math.abs(parseFloat(n) || 0)).replace(/^\+/, '');
+}
+function fmtWinRate(n) {
+  n = parseFloat(n) || 0;
+  var r = Math.round(n * 10) / 10;
+  var d = (Math.round(r * 10) % 10 === 0) ? 0 : 1;
+  return r.toFixed(d) + '%';
 }
 function fmtDate(d) {
   if (!d || d === '—') return d || '—';
-  var parts = d.split('-');
+  var parts = String(d).split('-');
   if (parts.length !== 3) return d;
   return parts[2] + '-' + parts[1] + '-' + parts[0];
+}
+function fmtDateLong(d) {
+  if (!d || d === '—') return '—';
+  var parts = String(d).split('-');
+  if (parts.length !== 3) return d;
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var m = parseInt(parts[1], 10);
+  var day = parseInt(parts[2], 10);
+  if (!m || !day) return d;
+  return (day < 10 ? '0' : '') + day + ' ' + months[m - 1] + ' ' + parts[0];
 }
 // Report (PDF) number formatting — same thousands separators as the UI.
 // fmtReportNum keeps the sign of n and always shows 2 decimals (e.g. 100000
@@ -310,7 +346,7 @@ function fmtPnlCompact(n) {
   var v = Math.abs(n);
   var s;
   if (v >= 1000000) s = (v/1000000).toFixed(v >= 10000000 ? 0 : 1).replace(/\.0$/,'') + 'M';
-  else if (v >= 10000) s = (v/1000).toFixed(v >= 100000 ? 0 : 1).replace(/\.0$/,'') + 'k';
+  else if (v >= 1000) s = (v/1000).toFixed(v >= 100000 ? 0 : 1).replace(/\.0$/,'') + 'k';
   else s = Math.round(v).toLocaleString('en-US');
   return sign + currSym() + s;
 }

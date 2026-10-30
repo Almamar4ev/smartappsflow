@@ -3,7 +3,7 @@
 // ==========================================================================
 var APP_NAME = 'Edgeory';
 var APP_TAGLINE = 'Your Trading Journal';
-var APP_VERSION = '1.0';
+var APP_VERSION = '1.2.0';
 var APP_STORE_TITLE = 'Edgeory: Trading Journal';
 var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 
@@ -12,6 +12,14 @@ var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // ==========================================================================
 var state = {accounts:[],trades:[],activeAccountId:null};
 var currentView = 'dashboard';
+var MORE_VIEWS = { accounts: 1, journal: 1, formulas: 1, import: 1, 'import-review': 1 };
+var tradeLayout = 'list';
+var _importDraft = null;
+var _importMerge = false;
+var _importGuideBroker = 'xtb';
+var _importT212Kind = 'pos';
+var _undoTimer = null;
+var _undoAction = null;
 var filterAccountId = 'all';
 var editingTradeId = null;
 var openedFromDetail = false;
