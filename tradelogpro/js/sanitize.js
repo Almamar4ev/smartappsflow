@@ -1,19 +1,44 @@
 // NUMBER FORMATTING
 // ==========================================================================
-// Currency display toggle: '$' or '' (no symbol)
-function currSym() {
-  return localStorage.getItem('tl_show_currency') === 'off' ? '' : '$';
+// Display currency. Amounts are never converted; only the symbol changes.
+var CURRENCIES = [
+  { code: 'USD', sym: '$' }, { code: 'EUR', sym: '€' }, { code: 'GBP', sym: '£' },
+  { code: 'AED', sym: 'AED ' }, { code: 'SAR', sym: 'SAR ' }, { code: 'OMR', sym: 'OMR ' },
+  { code: 'KWD', sym: 'KWD ' }, { code: 'QAR', sym: 'QAR ' }, { code: 'BHD', sym: 'BHD ' },
+  { code: 'NONE', sym: '' }
+];
+function currCode() {
+  var c = localStorage.getItem('tl_currency');
+  if (!c) c = localStorage.getItem('tl_show_currency') === 'off' ? 'NONE' : 'USD';
+  return CURRENCIES.some(function(x){ return x.code === c; }) ? c : 'USD';
 }
-function toggleCurrencyDisplay() {
-  var curr = localStorage.getItem('tl_show_currency') || 'on';
-  localStorage.setItem('tl_show_currency', curr === 'on' ? 'off' : 'on');
+function currSym() {
+  var c = currCode();
+  for (var i = 0; i < CURRENCIES.length; i++) if (CURRENCIES[i].code === c) return CURRENCIES[i].sym;
+  return '$';
+}
+function currLbl() {
+  var s = currSym().trim();
+  return s ? ' (' + s + ')' : '';
+}
+function setCurrency(code) {
+  if (!CURRENCIES.some(function(x){ return x.code === code; })) code = 'USD';
+  localStorage.setItem('tl_currency', code);
+  localStorage.setItem('tl_show_currency', code === 'NONE' ? 'off' : 'on');
   renderSidebar();
   renderMain();
   updateDrawerCurrencyLabel();
+  updateCurrencyLabels();
+}
+function updateCurrencyLabels() {
+  document.querySelectorAll('.cur-lbl').forEach(function(el){ el.textContent = currLbl(); });
+}
+function toggleCurrencyDisplay() {
+  setCurrency(currCode() === 'NONE' ? 'USD' : 'NONE');
 }
 function updateDrawerCurrencyLabel() {
   var el = document.getElementById('drawerCurrencyLabel');
-  if (el) el.textContent = localStorage.getItem('tl_show_currency') === 'off' ? 'Show Currency ($)' : 'Hide Currency Symbol';
+  if (el) el.textContent = currCode() === 'NONE' ? 'Show Currency ($)' : 'Hide Currency Symbol';
 }
 
 function esc(s) {
@@ -38,6 +63,13 @@ function _sstr(v, max) {
   if (v == null) return '';
   var s = String(v);
   return s.length > max ? s.slice(0, max) : s;
+}
+function _sname(v, max) {
+  return _sstr(String(v == null ? '' : v).replace(/<[^>]*>/g, ''), max);
+}
+function eid(id) {
+  var s = String(id == null ? '' : id);
+  return ID_RE.test(s) && s.length <= 64 ? s : '';
 }
 function _snum(v) {
   var n = parseFloat(v);
@@ -104,7 +136,7 @@ function _sanAccount(a) {
   a = a || {};
   return {
     id: _sid(a.id, 'acc_'),
-    name: _sstr(a.name, 60),
+    name: _sname(a.name, 60),
     startingCapital: _snum(a.startingCapital != null ? a.startingCapital : a.capital),
     broker: _sstr(a.broker, 80),
     currency: _sstr(a.currency, 8),
@@ -168,7 +200,7 @@ function safeTicker(v) {
 function _sanPosCalc(e) {
   e = e || {};
   return {
-    id: _sid(e.id, 'pos_'), name: _sstr(e.name, 100), date: _sdate(e.date),
+    id: _sid(e.id, 'pos_'), name: _sname(e.name, 100), date: _sdate(e.date),
     mode: _schoice(e.mode, ['price', 'pct'], 'price'),
     riskMode: _schoice(e.riskMode, ['%', '$'], '%'),
     balance: _sstr(e.balance, 40), risk: _sstr(e.risk, 40), entry: _sstr(e.entry, 40),
@@ -178,7 +210,7 @@ function _sanPosCalc(e) {
 function _sanCompCalc(e) {
   e = e || {};
   return {
-    id: _sid(e.id, 'comp_'), name: _sstr(e.name, 100), date: _sdate(e.date),
+    id: _sid(e.id, 'comp_'), name: _sname(e.name, 100), date: _sdate(e.date),
     capital: _sstr(e.capital, 40), rate: _sstr(e.rate, 40), ratePer: _sstr(e.ratePer, 20),
     duration: _sstr(e.duration, 40), durUnit: _sstr(e.durUnit, 20),
     deposit: _sstr(e.deposit, 40), freq: _sstr(e.freq, 20)
@@ -187,7 +219,7 @@ function _sanCompCalc(e) {
 function _sanAvgCalc(e) {
   e = e || {};
   return {
-    id: _sid(e.id, 'avg_'), name: _sstr(e.name, 100), date: _sdate(e.date),
+    id: _sid(e.id, 'avg_'), name: _sname(e.name, 100), date: _sdate(e.date),
     rows: Array.isArray(e.rows) ? e.rows.map(function(r){
       return {price:_sstr(r && r.price, 40), qty:_sstr(r && r.qty, 40)};
     }).slice(0, 100) : []
@@ -207,7 +239,7 @@ function sanitizeTemplates(value) {
   return arr.map(function(t){
     t = t || {};
     return {
-      id: _sid(t.id, 'tpl_'), name: _sstr(t.name, 100), ticker: safeTicker(t.ticker),
+      id: _sid(t.id, 'tpl_'), name: _sname(t.name, 100), ticker: safeTicker(t.ticker),
       type: _schoice(t.type, ['', 'Day Trade', 'Swing Trade', 'Scalp', 'Position', 'Options', 'Futures', 'Crypto'], ''),
       direction: (t.direction === 'Short') ? 'Short' : 'Long',
       fees: _sstr(t.fees, 20), fees_mode: (t.fees_mode === '$') ? '$' : '%', risk: _sstr(t.risk, 20)
@@ -233,7 +265,7 @@ function sanitizeJournals(value) {
 }
 function sanitizeProfile(value) {
   var p = _parseMaybeJson(value, {}) || {};
-  return {name:_sstr(p.name, 80), email:_sstr(p.email, 254), since:_sstr(p.since, 40), market:_sstr(p.market, 80)};
+  return {name:_sname(p.name, 80), email:_sstr(p.email, 254), since:_sstr(p.since, 40), market:_sstr(p.market, 80)};
 }
 function sanitizeBenchmark(value) {
   var b = _parseMaybeJson(value, null);
@@ -245,8 +277,10 @@ function sanitizeBenchmark(value) {
 function sanitizePrefs(value) {
   var p = _parseMaybeJson(value, {}) || {};
   return {
-    theme: _schoice(p.theme, ['dark', 'light', 'green'], 'dark'),
-    showCurrency: p.showCurrency === 'off' ? 'off' : 'on'
+    theme: _schoice(p.theme, ['system', 'dark', 'light', 'green'], 'dark'),
+    font: _schoice(p.font, ['default', 'large', 'xlarge'], 'default'),
+    showCurrency: p.showCurrency === 'off' ? 'off' : 'on',
+    currency: _schoice(p.currency, ['USD', 'EUR', 'GBP', 'AED', 'SAR', 'OMR', 'KWD', 'QAR', 'BHD', 'NONE'], p.showCurrency === 'off' ? 'NONE' : 'USD')
   };
 }
 
@@ -348,7 +382,9 @@ function fmtPnlCompact(n) {
   if (v >= 1000000) s = (v/1000000).toFixed(v >= 10000000 ? 0 : 1).replace(/\.0$/,'') + 'M';
   else if (v >= 1000) s = (v/1000).toFixed(v >= 100000 ? 0 : 1).replace(/\.0$/,'') + 'k';
   else s = Math.round(v).toLocaleString('en-US');
-  return sign + currSym() + s;
+  var cs = currSym();
+  // Calendar cells fit about 5 characters at 360px
+  return sign + (cs.length > 1 || s.length > 3 ? '' : cs) + s;
 }
 function plural(n, one, many) {
   return n + ' ' + (n === 1 ? one : many);

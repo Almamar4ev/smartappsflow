@@ -6,6 +6,10 @@ var APP_TAGLINE = 'Your Trading Journal';
 var APP_VERSION = '1.2.0';
 var APP_STORE_TITLE = 'Edgeory: Trading Journal';
 var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
+// One-time "What's new" note for people who already used an older version.
+// Change WHATS_NEW_ID on each release that should announce itself.
+var WHATS_NEW_ID = '1.2.0';
+var WHATS_NEW_TEXT = 'New text size option in More, clearer calculators and easier-to-read numbers.';
 
 // ==========================================================================
 // STATE + INDEXEDDB STORAGE

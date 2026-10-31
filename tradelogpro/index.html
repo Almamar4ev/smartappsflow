@@ -12,6 +12,10 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>Edgeory</title>
 <script>
+// Apply the saved text size before first paint (no flash of default size).
+try { var _tlf = localStorage.getItem('tl_font'); if (_tlf === 'large' || _tlf === 'xlarge') document.documentElement.setAttribute('data-font', _tlf); } catch (e) {}
+</script>
+<script>
 // ========================================================================
 // RUNTIME + ANALYTICS GUARD
 // Cloudflare Web Analytics is allowed only on the public SmartAppsFlow
@@ -127,7 +131,7 @@ function detectAppRuntime(loc, cap) {
         <button class="top-back" id="topBackBtn" onclick="goBackFromMore()" aria-label="Back">
           <svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <button class="phone-hide" id="hamburgerBtn" onclick="openDrawer()" style="background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;padding:2px 6px;line-height:1;flex-shrink:0">&#9776;</button>
+        <button class="phone-hide" id="hamburgerBtn" onclick="openDrawer()" style="background:none;border:none;color:var(--text);font-size:calc(24px*var(--fzh));cursor:pointer;padding:2px 6px;line-height:1;flex-shrink:0">&#9776;</button>
         <span class="page-title" id="topbarTitle">Dashboard</span>
       </div>
       <div class="topbar-right">
@@ -142,11 +146,11 @@ function detectAppRuntime(loc, cap) {
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
-  <button class="bottom-nav-item active" id="bnav-dashboard" onclick="setView('dashboard')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span><span>Dashboard</span></button>
-  <button class="bottom-nav-item" id="bnav-trades" onclick="setView('trades')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span><span>Trades</span></button>
-  <button class="bottom-nav-item" id="bnav-calculators" onclick="setView('calculators')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg></span><span>Calc</span></button>
-  <button class="bottom-nav-item" id="bnav-analytics" onclick="setView('analytics')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span>Analytics</span></button>
-  <button class="bottom-nav-item" id="bnav-more" onclick="setView('more')"><span class="bnav-icon"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></span><span>More</span></button>
+  <button class="bottom-nav-item active" id="bnav-dashboard" aria-label="Home" onclick="setView('dashboard')"><span class="bnav-icon"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></span><span>Home</span></button>
+  <button class="bottom-nav-item" id="bnav-trades" onclick="setView('trades')"><span class="bnav-icon"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span><span>Trades</span></button>
+  <button class="bottom-nav-item" id="bnav-calculators" onclick="setView('calculators')"><span class="bnav-icon"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg></span><span>Calc</span></button>
+  <button class="bottom-nav-item" id="bnav-analytics" onclick="setView('analytics')"><span class="bnav-icon"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span><span>Analytics</span></button>
+  <button class="bottom-nav-item" id="bnav-more" onclick="setView('more')"><span class="bnav-icon"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></span><span>More</span></button>
 </nav>
 
 <!-- ════════════════════════════════════════
@@ -162,18 +166,18 @@ function detectAppRuntime(loc, cap) {
       <!-- TEMPLATES SECTION -->
       <div style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--text3)">TEMPLATES</span>
-          <button type="button" onclick="saveAsTemplate()" style="padding:6px 14px;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save as Template</button>
+          <span style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text3)">TEMPLATES</span>
+          <button type="button" onclick="saveAsTemplate()" style="padding:6px 14px;background:var(--surface3);border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-size:calc(12px*var(--fz));font-weight:600;cursor:pointer"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save as Template</button>
         </div>
         <div id="templateButtons" style="display:flex;flex-wrap:wrap;gap:4px;min-height:24px">
-          <span style="font-size:11px;color:var(--text3)">No templates yet</span>
+          <span style="font-size:calc(11px*var(--fz));color:var(--text3)">No templates yet</span>
         </div>
       </div>
       <div class="form-grid">
         <div class="section-divider">Required</div>
         <div class="field form-full">
           <label>Account <span class="req">*</span></label>
-          <select id="f_account" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;width:100%;font-size:14px"></select>
+          <select id="f_account" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;width:100%;font-size:calc(14px*var(--fz))"></select>
         </div>
         <div class="field">
           <label>Stock / Symbol <span class="req">*</span></label>
@@ -244,7 +248,7 @@ function detectAppRuntime(loc, cap) {
           </select>
         </div>
         <div class="field">
-          <label>Risk ($) <span class="opt">(optional)</span></label>
+          <label>Risk<span class="cur-lbl"> ($)</span> <span class="opt">(optional)</span></label>
           <input id="f_risk" type="number" step="0.01" placeholder="0.00">
         </div>
         <div class="field form-full">
@@ -288,7 +292,7 @@ function detectAppRuntime(loc, cap) {
       <button class="modal-close" onclick="cancelSubModal('partialCloseModal')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <div id="partialCloseInfo" style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;"></div>
+      <div id="partialCloseInfo" style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px;font-size:calc(13px*var(--fz));"></div>
       <div class="form-grid">
         <div class="field">
           <label>Shares to Close <span class="req">*</span></label>
@@ -332,7 +336,7 @@ function detectAppRuntime(loc, cap) {
       <button class="modal-close" onclick="cancelSubModal('addBuyModal')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <div id="addBuyInfo" style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px;font-size:13px;"></div>
+      <div id="addBuyInfo" style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px;font-size:calc(13px*var(--fz));"></div>
       <div class="form-grid">
         <div class="field">
           <label>Additional Shares <span class="req">*</span></label>
@@ -375,10 +379,10 @@ function detectAppRuntime(loc, cap) {
         <div class="field"><label>Capital <span class="opt">(optional)</span></label><input id="f_acc_capital" type="number" step="0.01" placeholder="10000.00"></div>
         <div class="field"><label>Broker / Platform <span class="opt">(optional)</span></label><input id="acc_broker" type="text" placeholder="e.g. Binance, TD…"></div>
         <div id="accTransactionSection" style="display:none">
-          <div style="margin-bottom:8px;font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--text3);text-transform:uppercase">Deposit / Withdraw</div>
+          <div style="margin-bottom:8px;font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text3);text-transform:uppercase">Deposit / Withdraw</div>
           <div style="display:flex;flex-direction:row;gap:8px;margin-bottom:10px">
-            <button type="button" onclick="accTransaction('deposit')" style="flex:1;padding:10px;background:var(--green);color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">+ Deposit</button>
-            <button type="button" onclick="accTransaction('withdraw')" style="flex:1;padding:10px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">− Withdraw</button>
+            <button type="button" onclick="accTransaction('deposit')" style="flex:1;padding:10px;background:var(--green);color:#000;border:none;border-radius:8px;font-size:calc(13px*var(--fz));font-weight:700;cursor:pointer">+ Deposit</button>
+            <button type="button" onclick="accTransaction('withdraw')" style="flex:1;padding:10px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:8px;font-size:calc(13px*var(--fz));font-weight:700;cursor:pointer">− Withdraw</button>
           </div>
           <div id="accTransactionForm" style="display:none">
             <div class="field">
@@ -386,10 +390,10 @@ function detectAppRuntime(loc, cap) {
               <input id="f_acc_transaction" type="number" step="0.01" placeholder="0.00">
             </div>
             <div class="field" style="margin-top:8px">
-              <label style="font-family:var(--sans);font-size:12px;letter-spacing:.2px;color:var(--text2);font-weight:600">Date</label>
+              <label style="font-family:var(--sans);font-size:calc(12px*var(--fz));letter-spacing:.2px;color:var(--text2);font-weight:600">Date</label>
               <input id="f_acc_tx_date" type="date">
             </div>
-            <button type="button" onclick="confirmTransaction()" style="width:100%;margin-top:8px;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Confirm</button>
+            <button type="button" onclick="confirmTransaction()" style="width:100%;margin-top:8px;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:calc(13px*var(--fz));font-weight:700;cursor:pointer">Confirm</button>
           </div>
           <div id="accTransactionHistory"></div>
         </div>
@@ -409,22 +413,22 @@ function detectAppRuntime(loc, cap) {
 <div class="modal-overlay" id="reportModal">
   <div class="modal wide">
     <div class="modal-header">
-      <div class="modal-title" style="display:flex;align-items:center;gap:8px"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export Trading Report</div>
+      <div class="modal-title" style="display:flex;align-items:center;gap:8px"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Export report</div>
       <button class="modal-close" onclick="closeModal('reportModal')"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:16px">
         <div class="field"><label>Date From</label><input id="rep_from" type="date" onchange="updateReportPreview()"></div>
         <div class="field"><label>Date To</label><input id="rep_to" type="date" onchange="updateReportPreview()"></div>
-        <div class="field"><label>Account</label>
+        <div class="field" style="grid-column:1/-1"><label>Account</label>
           <select id="rep_account" onchange="updateReportPreview()"><option value="all">All Accounts</option></select>
         </div>
       </div>
       <div id="reportPreviewStats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px"></div>
-      <div style="font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--text2);text-transform:uppercase;margin-bottom:10px;font-weight:600">Export Format</div>
+      <div style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text2);text-transform:uppercase;margin-bottom:10px;font-weight:600">Export Format</div>
       <div style="display:flex;gap:10px">
-        <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:14px" onclick="exportExcel()">Excel (.xlsx)</button>
-        <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:14px" onclick="exportPDF()">PDF</button>
+        <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:calc(15px*var(--fz));height:48px" onclick="exportExcel()">Excel (.xlsx)</button>
+        <button class="btn btn-secondary" style="flex:1;justify-content:center;font-size:calc(15px*var(--fz));height:48px" onclick="exportPDF()">PDF</button>
       </div>
     </div>
   </div>
@@ -462,8 +466,8 @@ function detectAppRuntime(loc, cap) {
     <div class="sheet-handle"></div>
     <div class="modal-header"><div class="modal-title" id="promptSheetTitle">Name</div></div>
     <div class="modal-body">
-      <p id="promptSheetHint" style="font-size:13px;color:var(--text3);margin-bottom:10px"></p>
-      <input id="promptSheetInput" type="text" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:10px 12px;font-size:14px">
+      <p id="promptSheetHint" style="font-size:calc(13px*var(--fz));color:var(--text3);margin-bottom:10px"></p>
+      <input id="promptSheetInput" type="text" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:10px 12px;font-size:calc(14px*var(--fz))">
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closePromptSheet(false)">Cancel</button>
@@ -567,7 +571,7 @@ function detectAppRuntime(loc, cap) {
     </div>
     <div class="modal-body">
       <div style="text-align:center;margin-bottom:20px">
-        <div style="width:72px;height:72px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:#fff;margin:0 auto 10px" id="profileAvatarBig">T</div>
+        <div style="width:72px;height:72px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:calc(30px*var(--fzh));font-weight:700;color:#fff;margin:0 auto 10px" id="profileAvatarBig">T</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:16px">
       <div class="field"><label>Your Name</label><input id="prof_name" type="text" placeholder="e.g. Alex Morgan"></div>
@@ -593,14 +597,14 @@ function detectAppRuntime(loc, cap) {
     <div class="modal-body">
       <div style="display:flex;flex-direction:column;gap:16px">
       <div class="field"><label>Type</label>
-        <select id="fb_type" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;width:100%;font-size:14px">
+        <select id="fb_type" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;width:100%;font-size:calc(14px*var(--fz))">
           <option value="bug">Bug Report</option>
           <option value="feature">Feature Request</option>
           <option value="other">General Feedback</option>
         </select>
       </div>
       <div class="field"><label>Message</label>
-        <textarea id="fb_message" rows="5" maxlength="1000" placeholder="Describe your feedback..." style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px;font-size:14px;font-family:var(--sans);resize:vertical"></textarea>
+        <textarea id="fb_message" rows="5" maxlength="1000" placeholder="Describe your feedback..." style="width:100%;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px;font-size:calc(14px*var(--fz));font-family:var(--sans);resize:vertical"></textarea>
         <div class="field-hint">Up to 1000 characters</div>
       </div>
       </div>
@@ -622,7 +626,7 @@ function detectAppRuntime(loc, cap) {
     <div class="modal-body" style="overflow-y:auto;max-height:70dvh">
 
       <!-- ANALYTICS DEFINITIONS -->
-      <div style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--blue);margin-bottom:12px;text-transform:uppercase;font-weight:700">Analytics Definitions</div>
+      <div style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--blue);margin-bottom:12px;text-transform:uppercase;font-weight:700">Analytics Definitions</div>
 
       <div class="formula-card">
         <div class="formula-name">Win Rate</div>
@@ -667,7 +671,7 @@ function detectAppRuntime(loc, cap) {
       </div>
 
       <!-- CALCULATOR FORMULAS -->
-      <div style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--green);margin:20px 0 12px;text-transform:uppercase;font-weight:700">Calculator Formulas</div>
+      <div style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--green);margin:20px 0 12px;text-transform:uppercase;font-weight:700">Calculator Formulas</div>
 
       <div class="formula-card">
         <div class="formula-name">P&amp;L Calculator</div>
@@ -694,7 +698,7 @@ function detectAppRuntime(loc, cap) {
       </div>
 
       <!-- TRADING GLOSSARY -->
-      <div style="font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--gold);margin:20px 0 12px;text-transform:uppercase;font-weight:700">Trading Glossary</div>
+      <div style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--gold);margin:20px 0 12px;text-transform:uppercase;font-weight:700">Trading Glossary</div>
 
       <div class="formula-card">
         <div class="formula-name">Long</div>

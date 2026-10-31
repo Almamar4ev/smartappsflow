@@ -117,6 +117,17 @@ function calcPnl(t) {
 function calcRealizedTotal(t) {
   return t.status === 'closed' ? calcPnl(t) : calcRealizedPnl(t);
 }
+// Cost of the shares behind calcRealizedTotal: the whole trade once closed, only the sold shares while open.
+function calcRealizedCost(t) {
+  if (t.status === 'closed') return calcInvestedValue(t);
+  if (!t.partial_closes || !t.partial_closes.length) return 0;
+  calcPositionState(t);
+  var avg = calcAvgPrice(t);
+  return t.partial_closes.reduce(function(sum, pc){
+    var basis = (pc.basis != null) ? pc.basis : (pc._ledgerBasis != null ? pc._ledgerBasis : avg);
+    return sum + basis * pc.qty;
+  }, 0);
+}
 
 // Break-even band: a P&L within +/-0.005 counts as neither win nor loss.
 var BE_EPS = 0.005;
@@ -194,3 +205,71 @@ function fmtDuration(days) {
   var yr = Math.floor(days/365); var rm = Math.floor((days%365)/30); return yr+'yr'+(rm>0?' '+rm+'mo':'');
 }
 // ==========================================================================
+
+// Calculators: pure math shared by the UI and tests
+// Converts a risk input when the user switches between % of account and a fixed amount.
+function convertRiskValue(value, balance, toMode) {
+  var v = parseFloat(value), b = parseFloat(balance);
+  if (!(v > 0) || !(b > 0)) return null;
+  var out = toMode === '$' ? b * v / 100 : v / b * 100;
+  return Math.round(out * 100) / 100;
+}
+
+// o: {balance, risk, riskMode '%'|'$', priceMode, margin, slPct, tpPct, entry, stop, target}
+function calcPositionPlan(o) {
+  var bal = parseFloat(o.balance), riskVal = parseFloat(o.risk);
+  if (isNaN(bal) || isNaN(riskVal) || bal <= 0 || riskVal <= 0) return { error: 'risk' };
+  if (o.riskMode === '$' ? riskVal > bal : riskVal > 100) return { error: 'riskTooHigh' };
+  var riskAmt = o.riskMode === '$' ? riskVal : bal * riskVal / 100;
+  var r;
+  if (o.priceMode) {
+    var entry = parseFloat(o.entry), sl = parseFloat(o.stop), tp = parseFloat(o.target) || null;
+    if (isNaN(entry) || isNaN(sl) || entry <= 0 || sl <= 0 || sl === entry) return { error: 'prices' };
+    if (tp && (tp - entry) * (sl - entry) >= 0) return { error: 'targetSide' };
+    var rps = Math.abs(entry - sl);
+    var idealQty = riskAmt / rps;
+    var capped = !o.margin && idealQty * entry > bal;
+    var qty = capped ? bal / entry : idealQty;
+    var rwps = tp ? Math.abs(tp - entry) : null;
+    r = { posVal: qty * entry, qty: qty, entry: entry, actualRisk: qty * rps, idealRisk: idealQty * rps,
+      slPct: rps / entry * 100, tpPct: rwps ? rwps / entry * 100 : null, rps: rps, rwps: rwps,
+      reward: rwps ? qty * rwps : null, rr: rwps ? rwps / rps : null, capped: capped, short: sl > entry };
+  } else {
+    var slPct = parseFloat(o.slPct), tpPct = parseFloat(o.tpPct) || null;
+    if (isNaN(slPct) || slPct <= 0) return { error: 'stopPct' };
+    if (slPct >= 100) return { error: 'stopTooBig' };
+    var idealPos = riskAmt / (slPct / 100);
+    var capped2 = !o.margin && idealPos > bal;
+    var posVal = capped2 ? bal : idealPos;
+    r = { posVal: posVal, qty: null, actualRisk: posVal * (slPct / 100), idealRisk: riskAmt,
+      slPct: slPct, tpPct: tpPct, reward: tpPct ? posVal * tpPct / 100 : null, rr: tpPct ? tpPct / slPct : null, capped: capped2 };
+  }
+  r.balance = bal;
+  r.riskAmt = riskAmt;
+  r.leverage = r.posVal / bal;
+  r.needsLeverage = !!o.margin && r.leverage > 1.0001;
+  r.balanceIfStop = bal - r.actualRisk;
+  r.balanceIfTarget = r.reward !== null ? bal + r.reward : null;
+  return r;
+}
+
+// o: {capital, rate, ratePer 'annual'|'monthly'|'weekly', duration, durUnit 'months'|'years', deposit, freq}
+function calcCompoundPlan(o) {
+  var P = parseFloat(o.capital), rate = parseFloat(o.rate), duration = parseInt(o.duration, 10);
+  var deposit = parseFloat(o.deposit) || 0, freq = parseInt(o.freq, 10) || 12;
+  if (isNaN(P) || isNaN(rate) || isNaN(duration) || P <= 0 || duration <= 0) return null;
+  var annualRate = o.ratePer === 'monthly' ? rate / 100 * 12 : (o.ratePer === 'weekly' ? rate / 100 * 52 : rate / 100);
+  var totalMonths = o.durUnit === 'years' ? duration * 12 : duration;
+  var base = 1 + annualRate / freq;
+  var monthlyFactor = base > 0 ? Math.pow(base, freq / 12) : 1;
+  var bal = P, totalDeposited = 0, totalGrowth = 0, rows = [];
+  for (var mo = 1; mo <= totalMonths; mo++) {
+    var growth = bal * (monthlyFactor - 1);
+    bal = bal + growth + deposit;
+    totalDeposited += deposit; totalGrowth += growth;
+    rows.push([mo, growth, deposit, bal]);
+  }
+  var totalInvested = P + totalDeposited;
+  return { finalBalance: bal, totalMonths: totalMonths, totalDeposited: totalDeposited, totalInvested: totalInvested,
+    totalGrowth: totalGrowth, roi: totalInvested !== 0 ? totalGrowth / totalInvested * 100 : 0, rows: rows };
+}

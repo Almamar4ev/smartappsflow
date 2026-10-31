@@ -24,7 +24,7 @@ function extractFunction(src, name) {
 }
 
 const names = [
-  '_sid','_sstr','_snum','_sdate','_siso','_schoice','_parseMaybeJson',
+  '_sid','_sstr','_sname','eid','_snum','_sdate','_siso','_schoice','_parseMaybeJson',
   'safeTicker','safePhoto',
   '_sanEvent','_sanTrade','_sanAccount','sanitizeState',
   '_sanPosCalc','_sanCompCalc','_sanAvgCalc','sanitizeSavedCalcs',
@@ -111,6 +111,8 @@ assert('journal tags are capped', journals['2026-07-17'].tags.length === 20);
 assert('invalid benchmark is rejected', api.sanitizeBenchmark({basePrice:'<x>'}) === null);
 assert('valid benchmark is retained', api.sanitizeBenchmark({basePrice:5000,savedAt:'2026-07-17T00:00:00.000Z'}).basePrice === 5000);
 assert('preferences are restricted to allowed values', api.sanitizePrefs({theme:'evil',showCurrency:'evil'}).theme === 'dark' && api.sanitizePrefs({theme:'evil',showCurrency:'evil'}).showCurrency === 'on');
+assert('text size pref rejects unknown values', api.sanitizePrefs({font:'"><img src=x>'}).font === 'default' && api.sanitizePrefs({}).font === 'default');
+assert('text size pref keeps allowed values', api.sanitizePrefs({font:'large'}).font === 'large' && api.sanitizePrefs({font:'xlarge'}).font === 'xlarge');
 assert('profile fields are clamped', api.sanitizeProfile({name:'x'.repeat(100)}).name.length === 80);
 
 assert('safeTicker strips markup and lowercases', api.safeTicker(' aa<img> ') === 'AAIMG');
@@ -138,6 +140,12 @@ assert('normal account id preserved on load sanitize', keep.accounts[0].id === '
 assert('normal trade id preserved on load sanitize', keep.trades[0].id === 'tr_1730000000002');
 assert('normal trade→account link preserved', keep.trades[0].accountId === 'acc_1730000000000');
 assert('trade notes preserved', keep.trades[0].notes === 'hello');
+
+const dirtyAcc = api._sanAccount({ id:'acc_ok', name:'Main<img src=x onerror=alert(1)>', transactions:[] });
+assert('account name strips HTML tags', dirtyAcc.name === 'Main');
+assert('eid accepts a normal id', api.eid('acc_main') === 'acc_main');
+assert('eid rejects quotes in ids', api.eid("acc';alert(1)//") === '');
+assert('eid rejects markup in ids', api.eid('<img>') === '');
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);

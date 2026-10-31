@@ -32,6 +32,8 @@ const NEEDED = [
   'calcRealizedPnl',
   'calcAddBuyFees',
   'calcPnl',
+  'calcRealizedTotal',
+  'calcRealizedCost',
   'isWin',
   'isLoss',
   'isBreakeven'
@@ -71,7 +73,7 @@ const sandbox = {};
 vm.createContext(sandbox);
 vm.runInContext(code + '\nthis.__api = {' + NEEDED.join(',') + '};', sandbox);
 const api = sandbox.__api;
-const { calcPnl, calcPositionState, calcRealizedPnl, migrateBasis, isWin, isLoss, isBreakeven } = api;
+const { calcPnl, calcPositionState, calcRealizedPnl, calcRealizedTotal, calcRealizedCost, migrateBasis, isWin, isLoss, isBreakeven } = api;
 
 // --- Tiny assertion helpers ----------------------------------------------
 let passed = 0, failed = 0;
@@ -198,6 +200,21 @@ test('8. Partial: buy 10@100, partial 5@120, final 5@130',
     partial_closes: [{ id: 'p1', qty: 5, price: 110, date: '2026-01-05', ts: 2 }] });
   const st = calcPositionState(t);
   test('15. Intraday ts orders add before sell (avg 93.33)', st.avg, 93.33);
+}
+
+// 16) Report % on closed: realized P&L over the cost of the shares that produced it.
+{
+  const closed = T({ entry: 5.5, qty: 100, original_qty: 100, exit: 33 });
+  const open = T({ status: 'open', entry: 50, qty: 100, original_qty: 100 });
+  const partial = T({ status: 'open', entry: 100, qty: 5, original_qty: 10,
+    partial_closes: [{ id: 'p1', qty: 5, price: 110, date: '2026-01-05', basis: 100 }] });
+  test('16. Closed trade cost = full invested 550', calcRealizedCost(closed), 550);
+  test('16b. Open trade with no sells adds no cost', calcRealizedCost(open), 0);
+  test('16c. Partial close counts only sold shares (5 x 100)', calcRealizedCost(partial), 500);
+  const all = [closed, open, partial];
+  const pnl = all.reduce((s, t) => s + calcRealizedTotal(t), 0);
+  const cost = all.reduce((s, t) => s + calcRealizedCost(t), 0);
+  test('16d. Report % = (2750 + 50) / (550 + 500) = 266.67%', pnl / cost * 100, 266.67);
 }
 
 console.log('\n----------------------------------------');

@@ -26,7 +26,7 @@ console.log('Edgeory — PWA / service-worker scope tests\n');
 
 // 1. Service worker is registered with the relative path ./sw.js
 assert("service worker is registered with relative path './sw.js'",
-  shipped.includes("navigator.serviceWorker.register('./sw.js')"));
+  shipped.includes("navigator.serviceWorker.register('./sw.js'"));
 
 // 1b. The old absolute /tradelog-pro/sw.js path is gone
 assert('legacy /tradelog-pro/sw.js registration is removed',
@@ -71,12 +71,27 @@ assert("service worker deletes 'edgeory-' caches (and legacy trademory-/tradelog
   sw.includes("indexOf('trademory-')") &&
   sw.includes("indexOf('tradelogpro-')"));
 
-// 4. Navigation requests use Network First: a fetch() is attempted first and
-//    the cache is only consulted in the .catch() offline fallback.
-const navFirst =
+// 4. Navigations serve the cached shell first, so the HTML always matches the
+//    cached CSS/JS of the same release; the network is only a fallback.
+const shellFirst =
   /req\.mode === 'navigate'/.test(sw) &&
-  /if \(isNavigation\)[\s\S]*?fetch\(req\)[\s\S]*?\.catch\(function \(\) \{[\s\S]*?caches\.match/.test(sw);
-assert('navigation uses Network First (fetch first, cache on failure)', navFirst);
+  /if \(isNavigation\)[\s\S]*?caches\.match\([\s\S]*?fetch\(req\)/.test(sw);
+assert('navigation serves the cached shell, network only as fallback', shellFirst);
+
+// 5. A new release waits for the user: no unconditional skipWaiting on install,
+//    SKIP_WAITING message handled, and the page shows an Update banner.
+const installBlock = (sw.match(/addEventListener\('install'[\s\S]*?\n\}\);/) || [''])[0];
+assert('install only skips waiting for legacy releases without the banner',
+  /if \(legacy\) return self\.skipWaiting\(\)/.test(installBlock) &&
+  !/^\s*self\.skipWaiting\(\);/m.test(installBlock));
+assert("service worker handles the 'SKIP_WAITING' message",
+  /event\.data === 'SKIP_WAITING'\) self\.skipWaiting\(\)/.test(sw));
+assert('page shows an Update banner and reloads on controllerchange',
+  appJs.includes('function showUpdateBanner') &&
+  appJs.includes("postMessage('SKIP_WAITING')") &&
+  appJs.includes("addEventListener('controllerchange'"));
+assert('install bypasses the HTTP cache so a release never caches stale files',
+  /cache: 'reload'/.test(installBlock));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
