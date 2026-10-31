@@ -169,6 +169,8 @@ https://smartappsflow.net/tradelogpro/
 - مراجعة أمنية (31 أكتوبر 2026): لا XSS نشط. أُضيف eid() لمعرّفات onclick، وesc() لعناوين الحساب والتيكر في التحليلات، و_sname لإزالة الوسوم من الأسماء. CDN لـ xlsx/jspdf/chart يبقى مع SRI. CSP مؤجّل بسبب onclick المضمّن. Compound الافتراضي Years. رسالة تحديث ويب. الكاش **edgeory-v18**. npm test: 225 ناجح.
 - حجم الخط (31 أكتوبر 2026): Default / Large / Extra large في Preferences عبر `html[data-font]` و`--fz`/`--fzh`. المفتاح `tl_font`. مُثبّت على الهاتف للمراجعة، غير مُلتزم وغير منشور. الكاش **edgeory-v19**.
 - رسالة «Edgeory updated» لمرة واحدة للمستخدمين الحاليين (`maybeShowWhatsNew`، المفتاح `tl_whats_new`). عند كل إصدار يجب الإعلان عنه: غيّر `WHATS_NEW_ID` و`WHATS_NEW_TEXT` في `state.js` و`UPDATE_NOTE` في `sw.js` وارفع الكاش. نُشر الويب إلى `main` في 31 أكتوبر 2026.
+- قاعدة: لا حركة دخول على إعادة الرسم داخل الصفحة نفسها — `.view-enter` يُضاف فقط عند تغيير الصفحة في `setView`. ولا تغلق ورقة ثم تعيد فتحها لتبديل محتواها. الكاش **edgeory-v20**.
+- زر الرجوع: `backStep()` هو المصدر الوحيد لترتيب الرجوع؛ أندرويد عبر `handleAndroidBack` والويب عبر `initWebBack` (history guard). لا تضف pushState قبل تفاعل المستخدم.
 
 ### حالة المرحلة الحالية (7 أغسطس 2026)
 

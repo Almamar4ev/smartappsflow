@@ -382,7 +382,9 @@ textarea{resize:vertical;min-height:70px;}
 .info-row:last-child{border-bottom:none;}
 .info-row .lbl{color:var(--text3);font-family:var(--sans);font-size:calc(12px*var(--fz));letter-spacing:.2px;font-weight:600;text-transform:capitalize;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.content > * {animation:fadeIn .3s ease both;}
+/* Enter animation only when switching views (setView adds .view-enter). In-page re-renders (theme, text size, journal mood, filters) must not fade, or the page flashes. */
+.content.view-enter > * {animation:fadeIn .22s ease both;}
+@media (prefers-reduced-motion:reduce){.content.view-enter > *{animation:none}}
 
 /* ═══════════════════════════════════════════════════
    LIGHTBOX
@@ -792,6 +794,7 @@ select:active{opacity:0.85;}
 
 /* Position Size: live result pinned on scroll + price ladder */
 .ps-live{position:sticky;top:0;z-index:3;background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:14px 16px;box-shadow:0 -12px 0 var(--bg),0 10px 24px rgba(0,0,0,.35)}
+.ps-live.is-empty{position:static;background:transparent;border-style:dashed;box-shadow:none;padding:12px 16px}
 .ps-live-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .ps-side{font-size:calc(12px*var(--fz));font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;color:var(--text2);background:var(--surface3)}
 .ps-side.buy{color:var(--green);background:var(--green-bg)}

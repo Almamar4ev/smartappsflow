@@ -20,7 +20,21 @@ function setView(view, accountId) {
   var logBtn = document.getElementById('topLogBtn');
   if (logBtn) logBtn.style.display = (view === 'more' || MORE_VIEWS[view]) ? 'none' : '';
   document.body.classList.toggle('no-bnav', view === 'import' || view === 'import-review');
+  markViewEnter(view);
   renderSidebar(); renderMain(); renderFilterBar();
+}
+
+// Fade the page in only when the view actually changes; same-view re-renders stay still.
+var _enteredView = null, _viewEnterTimer = null;
+function markViewEnter(view) {
+  var mc = document.getElementById('mainContent');
+  if (!mc || view === _enteredView) return;
+  _enteredView = view;
+  if (_viewEnterTimer) clearTimeout(_viewEnterTimer);
+  mc.classList.remove('view-enter');
+  void mc.offsetWidth; // restart the animation on consecutive view changes
+  mc.classList.add('view-enter');
+  _viewEnterTimer = setTimeout(function() { mc.classList.remove('view-enter'); }, 300);
 }
 
 function goBackFromMore() {
@@ -181,7 +195,15 @@ function setTradeFilter(val) {
   window._tradeFilter = val;
   var filterVal = val;
   var displayed = getVisibleTrades();
-  // Update chips in-place (no full re-render)
+  // Move the selected state on the current (1.1) filter tabs in place.
+  document.querySelectorAll('#tradeFilterTabs .fl-tab').forEach(function(b) {
+    var on = b.getAttribute('data-f') === filterVal;
+    var col = b.getAttribute('data-col');
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+    b.style.color = (!on && col) ? col : '';
+  });
+  // Legacy chip markup (older layout) — kept in sync if it is ever rendered.
   var chipsEl = document.getElementById('tradeFilterChips');
   if (chipsEl) {
     var segItems3 = [{val:'all',label:'All',col:'var(--blue)'},{val:'wins',label:cicon('check',12,'var(--green)')+' Wins',col:'var(--green)'},{val:'losses',label:cicon('cross',12,'var(--red)')+' Losses',col:'var(--red)'},{val:'open',label:'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-left:2px"></span> Open',col:'var(--gold)'},{val:'closed',label:'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-left:2px"></span> Closed',col:'var(--blue)'}];
@@ -796,7 +818,7 @@ function renderTradeLog() {
   ];
   var chipsHtml = segItems2.map(function(c){
     var isActive = filterVal === c.val;
-    return '<button class="fl-tab' + (isActive ? ' on' : '') + '"' + (c.col && !isActive ? ' style="color:' + c.col + '"' : '') + ' onclick="setTradeFilter(&apos;' + c.val + '&apos;)" aria-label="' + c.label + ', ' + c.n + '">' + c.label + '<small>' + c.n + '</small></button>';
+    return '<button class="fl-tab' + (isActive ? ' on' : '') + '" data-f="' + c.val + '" data-col="' + c.col + '"' + (c.col && !isActive ? ' style="color:' + c.col + '"' : '') + ' aria-pressed="' + isActive + '" onclick="setTradeFilter(&apos;' + c.val + '&apos;)" aria-label="' + c.label + ', ' + c.n + '">' + c.label + '<small>' + c.n + '</small></button>';
   }).join('');
   // Build summary bar HTML (only when filter active and has results)
   var summaryHtml = '';
@@ -838,7 +860,7 @@ function renderTradeLog() {
       '</select>' +
     '</div>' +
   '</div>' +
-  '<div class="seg" style="grid-template-columns:repeat(5,minmax(0,1fr))">' + chipsHtml + '</div>' +
+  '<div class="seg" id="tradeFilterTabs" style="grid-template-columns:repeat(5,minmax(0,1fr))">' + chipsHtml + '</div>' +
   '<div id="tradeFilterSummary">' + summaryHtml + '</div>' +
   '<div class="panel" id="tradeTableWrap">' +
     (displayed.length
@@ -3019,6 +3041,7 @@ function calcPositionSize() {
   ['ps_a_tp', 'ps_p_tp', 'ps_a_en', 'ps_p_en', 'ps_a_sl', 'ps_p_sl'].forEach(function(id) { set(id, ''); });
   set('ps_af_tp', '—'); set('ps_af_sl', '—');
   var lad = document.getElementById('ps_ladder');
+  el.classList.toggle("is-empty", !!r.error);
   if (r.error) {
     el.innerHTML = '<div class="ps-live-h"><span class="ps-side">Position size</span></div><div class="ps-live-empty">' + PS_ERRORS[r.error] + '</div>';
     if (lad) lad.classList.remove('short');
@@ -3512,6 +3535,13 @@ function changeMonthYear(dir) {
   buildMonthChart(allMonthPnl, allYears, closed);
 }
 
+// Swap the open sheet to the trade detail without closing it: closing and reopening
+// the same sheet made the backdrop flash and the sheet slide in twice.
+function openTradeDetailInPlace(id) {
+  openTradeDetail(id);
+  var m = document.querySelector("#tradeDetailModal .modal");
+  if (m) m.scrollTop = 0;
+}
 function openMonthTradesModal(monthKey) {
   // monthKey = 'YYYY-MM'
   var trades;
@@ -3545,7 +3575,7 @@ function openMonthTradesModal(monthKey) {
     var pnl = calcPnl(t);
     var pnlCol = pnl >= 0 ? 'var(--green)' : 'var(--red)';
     html +=
-      '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;cursor:pointer" onclick="closeModal(&apos;tradeDetailModal&apos;);setTimeout(function(){ openTradeDetail(&apos;' + eid(t.id) + '&apos;); },100)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border-radius:8px;padding:10px 14px;cursor:pointer" onclick="openTradeDetailInPlace(&apos;' + eid(t.id) + '&apos;)">' +
         '<div>' +
           '<div style="font-family:var(--mono);font-size:calc(14px*var(--fz));font-weight:700">' + esc(t.ticker) + '</div>' +
           '<div style="font-size:calc(11px*var(--fz));color:var(--text3);margin-top:2px">' + fmtDate(t.entry_date) + ' &#8594; ' + fmtDate(t.exit_date) + '</div>' +
@@ -4769,28 +4799,66 @@ function initSheetSwipe() {
   document.addEventListener('touchcancel', end);
 }
 
+// One back step, shared by the Android back button and the web/PWA back gesture.
+// Order: lightbox → sheet → drawer → inner More page → More → Home → "press again" → exit.
+// Returns 'handled' (stayed in the app), 'warn' (first press on Home) or 'exit'.
 var _backExitAt = 0;
-function handleAndroidBack() {
+function backStep() {
   var lightbox = document.getElementById('lightbox');
-  if (lightbox && lightbox.classList.contains('open')) { closeLightbox(); return; }
+  if (lightbox && lightbox.classList.contains('open')) { closeLightbox(); return 'handled'; }
   if (_modalStack.length) {
     dismissModal(_modalStack[_modalStack.length - 1]);
-    return;
+    return 'handled';
   }
   var drawer = document.getElementById('sideDrawer');
-  if (drawer && drawer.classList.contains('open')) { closeDrawer(); return; }
-  if (MORE_VIEWS[currentView]) { setView('more'); return; }
-  if (currentView !== 'dashboard') { setView('dashboard'); return; }
+  if (drawer && drawer.classList.contains('open')) { closeDrawer(); return 'handled'; }
+  if (MORE_VIEWS[currentView]) { setView('more'); return 'handled'; }
+  if (currentView !== 'dashboard') { setView('dashboard'); return 'handled'; }
   if (Date.now() - _backExitAt > 2000) {
     _backExitAt = Date.now();
     showToast('Press back again to exit', 'info');
-    return;
+    return 'warn';
   }
   _backExitAt = 0;
+  return 'exit';
+}
+function handleAndroidBack() {
+  if (backStep() !== 'exit') return;
   var Cap = window.Capacitor;
   if (Cap && Cap.Plugins && Cap.Plugins.App && typeof Cap.Plugins.App.minimizeApp === 'function') {
     Cap.Plugins.App.minimizeApp();
   }
+}
+
+// Web / installed PWA: the page has no history of its own, so the phone's back
+// gesture used to leave Edgeory from any screen. Keep one guard entry on top of
+// the history; each back pops it, runs backStep(), and puts it back. On Home the
+// first back only warns and leaves the guard off for 2 seconds, so a second back
+// leaves the app the browser's own way.
+// Chrome skips history entries added before any user interaction, so the first
+// guard is added on the first tap/key press.
+var _webGuardOn = false, _webGuardTimer = null;
+function pushWebBackGuard() {
+  if (_webGuardOn) return;
+  try { history.pushState({ tlBack: 1 }, ''); _webGuardOn = true; } catch(e) {}
+}
+function initWebBack() {
+  var first = function() {
+    document.removeEventListener('pointerdown', first, true);
+    document.removeEventListener('keydown', first, true);
+    pushWebBackGuard();
+  };
+  document.addEventListener('pointerdown', first, true);
+  document.addEventListener('keydown', first, true);
+  window.addEventListener('popstate', function() {
+    if (!_webGuardOn) return; // guard already off: the browser is leaving
+    _webGuardOn = false;
+    if (_webGuardTimer) { clearTimeout(_webGuardTimer); _webGuardTimer = null; }
+    var r = backStep();
+    if (r === 'handled') { pushWebBackGuard(); return; }
+    // 'warn': stay unguarded for the 2-second window, then re-arm.
+    _webGuardTimer = setTimeout(function() { _webGuardTimer = null; _backExitAt = 0; pushWebBackGuard(); }, 2000);
+  });
 }
 
 function initApp() {
@@ -4848,6 +4916,8 @@ function initApp() {
   }
   if (isNativeApp && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
     try { window.Capacitor.Plugins.App.addListener('backButton', handleAndroidBack); } catch(e) {}
+  } else if (!isNativeApp) {
+    try { initWebBack(); } catch(e) {}
   }
   try { maybeShowWhatsNew(returningUser); } catch(e) {}
 }
