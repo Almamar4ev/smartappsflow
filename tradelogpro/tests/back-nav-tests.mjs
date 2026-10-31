@@ -115,6 +115,34 @@ console.log('Edgeory — back navigation tests\n');
   assert('a late second back warns again instead of exiting', !e.left && e.toasts.length === 2);
 }
 
+// Monthly P&L list → trade detail → dismiss returns to the list, not the chart.
+{
+  const log = [];
+  const sheet = { scrollTop: 0 };
+  const ctx = {
+    document: { querySelector: () => sheet },
+    openTradeDetail(id) { ctx._detailFromMonth = null; log.push('detail:' + id); },
+    closeModal(id) { log.push('closed:' + id); },
+  };
+  vm.createContext(ctx);
+  vm.runInContext(
+    'var _openMonthKey = null, _detailFromMonth = null, _monthListScroll = 0;\n' +
+    'function openMonthTradesModal(k) { _detailFromMonth = null; _openMonthKey = k; log.push("list:" + k); }\n' +
+    extractFunction(appJs, 'openTradeDetailInPlace') + '\n' + extractFunction(appJs, 'closeTradeDetail'),
+    Object.assign(ctx, { log }));
+  vm.runInContext('openMonthTradesModal("2026-05")', ctx);
+  sheet.scrollTop = 240;
+  vm.runInContext('openTradeDetailInPlace("t1")', ctx);
+  assert('opening a trade from the month list shows its detail at the top', log.at(-1) === 'detail:t1' && sheet.scrollTop === 0);
+  vm.runInContext('closeTradeDetail()', ctx);
+  assert('closing that detail returns to the same month list', log.at(-1) === 'list:2026-05' && log.indexOf('closed:tradeDetailModal') < 0);
+  assert('the list keeps its scroll position', sheet.scrollTop === 240);
+  vm.runInContext('closeTradeDetail()', ctx);
+  assert('closing the list itself closes the sheet', log.at(-1) === 'closed:tradeDetailModal');
+  vm.runInContext('openTradeDetail("t2"); closeTradeDetail()', ctx);
+  assert('a trade opened elsewhere closes normally', log.at(-1) === 'closed:tradeDetailModal');
+}
+
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
 if (failed) process.exit(1);

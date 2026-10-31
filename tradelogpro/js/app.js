@@ -1944,6 +1944,7 @@ function _deleteTrade(id) {
 // TRADE DETAIL
 // ==========================================================================
 function openTradeDetail(id) {
+  _detailFromMonth = null;
   var t = state.trades.find(function(x){ return x.id === id; });
   if (!t) return;
   var pnl = calcPnl(t);
@@ -3537,12 +3538,31 @@ function changeMonthYear(dir) {
 
 // Swap the open sheet to the trade detail without closing it: closing and reopening
 // the same sheet made the backdrop flash and the sheet slide in twice.
+// Detail opened from a Monthly P&L list returns to that list when the detail is
+// dismissed (X, back, swipe). The list itself closes only from its own Close / X.
+var _openMonthKey = null, _detailFromMonth = null, _monthListScroll = 0;
 function openTradeDetailInPlace(id) {
-  openTradeDetail(id);
   var m = document.querySelector("#tradeDetailModal .modal");
+  _monthListScroll = m ? m.scrollTop : 0;
+  var month = _openMonthKey;
+  openTradeDetail(id);
+  _detailFromMonth = month;
   if (m) m.scrollTop = 0;
 }
+function closeTradeDetail() {
+  if (_detailFromMonth) {
+    var month = _detailFromMonth;
+    _detailFromMonth = null;
+    openMonthTradesModal(month);
+    var m = document.querySelector("#tradeDetailModal .modal");
+    if (m) m.scrollTop = _monthListScroll;
+    return;
+  }
+  closeModal('tradeDetailModal');
+}
 function openMonthTradesModal(monthKey) {
+  _detailFromMonth = null;
+  _openMonthKey = monthKey;
   // monthKey = 'YYYY-MM'
   var trades;
   if (filterAccountId === 'all') { trades = state.trades; }
@@ -4767,6 +4787,7 @@ function dismissModal(id) {
   else if (id === 'partialCloseModal' || id === 'addBuyModal') cancelSubModal(id);
   else if (id === 'confirmSheet') { _confirmSheetCb = null; closeModal(id); }
   else if (id === 'promptSheet') closePromptSheet(false);
+  else if (id === 'tradeDetailModal') closeTradeDetail();
   else closeModal(id);
 }
 

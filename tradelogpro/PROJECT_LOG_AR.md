@@ -171,6 +171,7 @@ https://smartappsflow.net/tradelogpro/
 - رسالة «Edgeory updated» لمرة واحدة للمستخدمين الحاليين (`maybeShowWhatsNew`، المفتاح `tl_whats_new`). عند كل إصدار يجب الإعلان عنه: غيّر `WHATS_NEW_ID` و`WHATS_NEW_TEXT` في `state.js` و`UPDATE_NOTE` في `sw.js` وارفع الكاش. نُشر الويب إلى `main` في 31 أكتوبر 2026.
 - قاعدة: لا حركة دخول على إعادة الرسم داخل الصفحة نفسها — `.view-enter` يُضاف فقط عند تغيير الصفحة في `setView`. ولا تغلق ورقة ثم تعيد فتحها لتبديل محتواها. الكاش **edgeory-v20**.
 - زر الرجوع: `backStep()` هو المصدر الوحيد لترتيب الرجوع؛ أندرويد عبر `handleAndroidBack` والويب عبر `initWebBack` (history guard). لا تضف pushState قبل تفاعل المستخدم.
+- إغلاق ورقة تفاصيل الصفقة يمر عبر `closeTradeDetail()` (يعود لقائمة الشهر إن فُتحت منها). على الهاتف: لا `backdrop-filter` على الأوراق، والحركة `sheetUp` بـ fill-mode `backwards` فقط. الكاش **edgeory-v21**.
 
 ### حالة المرحلة الحالية (7 أغسطس 2026)
 

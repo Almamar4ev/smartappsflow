@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v20';
-const UPDATE_NOTE = 'Back now returns to Home instead of closing the app, plus smoother screens.';
+const CACHE = 'edgeory-v21';
+const UPDATE_NOTE = 'Smoother trade sheets, and closing a trade from a monthly list returns to the list.';
 
 const ASSETS = [
   './',

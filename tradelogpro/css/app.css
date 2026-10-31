@@ -190,6 +190,9 @@ table.trade-table{width:100%;border-collapse:collapse;font-size:calc(12.5px*var(
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:20px;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:640px;max-height:90vh;max-height:90dvh;overflow-y:auto;animation:modalIn .2s ease;transition:background .25s;}
+@keyframes overlayIn{from{background:rgba(0,0,0,0)}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.modal-overlay.open,.modal{animation:none!important}}
 @keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface);z-index:1;}
 .modal-title{font-size:calc(16px*var(--fz));font-weight:700;color:var(--text);}
@@ -471,6 +474,12 @@ textarea{resize:vertical;min-height:70px;}
   .cal-day-pnl{font-size:calc(11px*var(--fz));}
   .modal-overlay{padding:0;align-items:flex-end;}
   .modal,.modal.wide,.modal.narrow{border-radius:16px 16px 0 0;max-height:92dvh;max-width:100%;}
+  /* Phone sheets: slide up fully opaque and darken the backdrop gradually. The old pop-in
+     (blurred backdrop + sheet fading from transparent) read as a flash. Fill mode is
+     backwards only, so the swipe-to-close inline transform still works afterwards. */
+  .modal-overlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(0,0,0,.6);}
+  .modal-overlay.open{animation:overlayIn .2s ease backwards;}
+  .modal,.modal.wide,.modal.narrow{animation:sheetUp .26s cubic-bezier(.2,.8,.2,1) backwards;}
   .modal-header{padding:14px 16px;}
   .modal-body{padding:14px 16px;}
   .modal-body:last-child{padding-bottom:calc(14px + env(safe-area-inset-bottom,0));}
