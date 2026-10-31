@@ -426,6 +426,11 @@ textarea{resize:vertical;min-height:70px;}
 .ps-risk-btn.active{border-color:var(--blue);color:var(--blue);background:var(--blue-bg);}
 .saved-calc-row{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;transition:border-color .15s;}
 .saved-calc-row:hover{border-color:var(--blue);}
+.saved-calc-row.on{border-color:var(--blue);background:var(--blue-bg,var(--surface2));}
+.avg-editing{display:flex;align-items:center;gap:6px;min-height:40px;padding:4px 6px 4px 12px;border:1px solid var(--border2);border-radius:10px;background:var(--surface2);font-size:calc(13px*var(--fz));color:var(--text2)}
+.avg-editing>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.avg-editing b{color:var(--text);font-weight:600}
+.avg-editing button{height:32px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--blue);font:600 calc(13px*var(--fz)) var(--sans);cursor:pointer;flex-shrink:0}
 /* Mobile: stack formula box below inputs */
 @media(max-width:900px){
   #calc-pnl > div, #calc-compound > div, #calc-position > div { grid-template-columns:1fr !important; }
@@ -802,7 +807,19 @@ select:active{opacity:0.85;}
 .field input[type=date]{min-width:0;width:100%}
 
 /* Position Size: live result pinned on scroll + price ladder */
-.ps-live{position:sticky;top:0;z-index:3;background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:14px 16px;box-shadow:0 -12px 0 var(--bg),0 10px 24px rgba(0,0,0,.35)}
+.ps-live{position:relative;background:var(--surface2);border:1px solid var(--border2);border-radius:16px;padding:14px 16px}
+/* Compact result bar (shown only while the full card is scrolled out of view). Zero-height
+   sticky dock: it never changes the page height, so nothing jumps while scrolling. */
+.ps-dock{position:sticky;top:0;height:0;z-index:5;margin-bottom:-12px}
+.ps-minibar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;box-shadow:0 -12px 0 var(--bg),0 6px 16px rgba(0,0,0,.22);font-variant-numeric:tabular-nums;white-space:nowrap;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .16s ease,transform .16s ease}
+.ps-minibar.show{opacity:1;transform:none}
+.ps-minibar .mb-main{font-size:calc(17px*var(--fzh));font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ps-minibar .mb-main small{font-size:calc(12px*var(--fz));font-weight:500;color:var(--text2)}
+.ps-minibar .mb-risk,.ps-minibar .mb-rew{font-size:calc(14px*var(--fz));font-weight:700}
+.ps-minibar .mb-risk{color:var(--red)}
+.ps-minibar .mb-rew{color:var(--green)}
+.ps-minibar .mb-rr{margin-left:auto;font-size:calc(12px*var(--fz));font-weight:700;color:var(--text2);background:var(--surface3);border-radius:999px;padding:3px 9px}
+@media (prefers-reduced-motion:reduce){.ps-minibar{transition:none}}
 .ps-live.is-empty{position:static;background:transparent;border-style:dashed;box-shadow:none;padding:12px 16px}
 .ps-live-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .ps-side{font-size:calc(12px*var(--fz));font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;color:var(--text2);background:var(--surface3)}

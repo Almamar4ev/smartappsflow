@@ -372,6 +372,15 @@ function setAccountFilter(val) {
 // STOCK AVERAGE CALCULATOR
 // ==========================================================================
 var _avgRows = [{price:'', qty:''}, {price:'', qty:''}];
+// Saved calculation currently open in the editor. Save updates it in place
+// (e.g. a third buy added to "Smci") instead of creating a duplicate.
+var _avgLoadedId = null;
+function avgLoadedEntry() {
+  if (!_avgLoadedId) return null;
+  var e = getSavedCalcs('tl_avg_calcs').find(function(x){ return x.id === _avgLoadedId; });
+  if (!e) _avgLoadedId = null;
+  return e || null;
+}
 function padAvgRows() {
   while (_avgRows.length < 2) _avgRows.push({price:'', qty:''});
 }
@@ -390,16 +399,18 @@ function renderAvgCalc() {
       '<button class="xb" onclick="removeAvgRow(' + i + ')" aria-label="Remove purchase ' + (i+1) + '">' + icon('close',16) + '</button>' +
     '</div>';
   }).join('');
+  var loaded = avgLoadedEntry();
   return '<div style="padding:4px 0;display:flex;flex-direction:column;gap:8px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
       '<span class="cap">Purchases</span>' +
       '<button class="pill-btn" onclick="fillAvgFromOpenTrade()">' + icon('clipboard',14) + 'From open trade</button>' +
     '</div>' +
     '<div id="avgFromTradePick"></div>' +
+    (loaded ? '<div class="avg-editing"><span>Editing <b>' + esc(loaded.name) + '</b></span><button type="button" onclick="saveAvgCalcAsNew()">Save as new</button><button type="button" onclick="newAvgCalc()">New</button></div>' : '') +
     rowsHtml +
     '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px">' +
       '<button onclick="addAvgRow()" style="height:44px;border-radius:10px;border:1px dashed var(--border2);background:transparent;color:var(--blue);font:600 calc(14px*var(--fz)) var(--sans)">+ Add purchase</button>' +
-      '<button class="btn btn-secondary" style="height:44px;border-radius:10px" onclick="saveAvgCalc()">Save</button>' +
+      '<button class="btn btn-secondary" style="height:44px;border-radius:10px" onclick="saveAvgCalc()">' + (loaded ? 'Update' : 'Save') + '</button>' +
     '</div>' +
     '<div id="avg_result" style="display:flex;flex-direction:column;gap:12px;margin-top:6px">' + avgEmptyHtml() + '</div>' +
     '<div id="avgSavedList"></div>' +
@@ -444,6 +455,7 @@ function applyOpenTradeToAvgById(id) {
   if (t) applyOpenTradeToAvg(t);
 }
 function applyOpenTradeToAvg(t) {
+  _avgLoadedId = null; // a trade is a new source, not the saved calculation
   _avgRows = [{ price: t.entry || '', qty: t.original_qty || t.qty || '' }];
   (t.add_buys || []).forEach(function(b){ _avgRows.push({ price: b.price || '', qty: b.qty || '' }); });
   padAvgRows();
@@ -511,6 +523,32 @@ function calcAvgSell(totalShares, avgPrice, totalCost) {
 function saveAvgCalc() {
   var valid = _avgRows.filter(function(r){ return parseFloat(r.price) > 0 && parseFloat(r.qty) > 0; });
   if (!valid.length) { showToast('Enter at least one row first', 'error'); return; }
+  var loaded = avgLoadedEntry();
+  if (loaded) {
+    var arr0 = getSavedCalcs('tl_avg_calcs').map(function(x) {
+      return x.id === loaded.id ? Object.assign({}, x, { date: localDateStr(new Date()), rows: JSON.parse(JSON.stringify(_avgRows)) }) : x;
+    });
+    setSavedCalcs('tl_avg_calcs', arr0);
+    renderAvgSaved();
+    showToast('Updated: ' + loaded.name, 'success');
+    return;
+  }
+  saveAvgCalcAsNew();
+}
+
+function newAvgCalc() {
+  _avgLoadedId = null;
+  _avgRows = [];
+  padAvgRows();
+  var d = document.getElementById('calc_avg');
+  if (d) d.innerHTML = renderAvgCalc();
+  calcStockAvg();
+  renderAvgSaved();
+}
+
+function saveAvgCalcAsNew() {
+  var valid = _avgRows.filter(function(r){ return parseFloat(r.price) > 0 && parseFloat(r.qty) > 0; });
+  if (!valid.length) { showToast('Enter at least one row first', 'error'); return; }
   promptSheet('Name this calculation', 'e.g. AAPL DCA', '', function(name) {
     if (!name || !name.trim()) return;
     var entry = {
@@ -523,6 +561,10 @@ function saveAvgCalc() {
     arr.unshift(entry);
     if (arr.length > 20) arr = arr.slice(0, 20);
     setSavedCalcs('tl_avg_calcs', arr);
+    _avgLoadedId = entry.id; // keep editing what was just saved
+    var d = document.getElementById('calc_avg');
+    if (d) d.innerHTML = renderAvgCalc();
+    calcStockAvg();
     renderAvgSaved();
     showToast('Saved: ' + name.trim(), 'success');
   });
@@ -536,7 +578,7 @@ function renderAvgSaved() {
   el.innerHTML = '<div style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text2);text-transform:uppercase;margin-bottom:8px">Saved Calculations</div>' +
     arr.map(function(e) {
       var rowCount = (e.rows || []).filter(function(r){ return parseFloat(r.price) > 0 && parseFloat(r.qty) > 0; }).length;
-      return '<div class="saved-calc-row">' +
+      return '<div class="saved-calc-row' + (e.id === _avgLoadedId ? ' on' : '') + '">' +
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:calc(13px*var(--fz));font-weight:600">' + esc(e.name) + '</div>' +
           '<div style="font-size:calc(12px*var(--fz));color:var(--text3);font-family:var(--mono)">' + e.date + ' &middot; ' + rowCount + ' purchase' + (rowCount !== 1 ? 's' : '') + '</div>' +
@@ -554,6 +596,7 @@ function loadAvgCalc(id) {
   var e = arr.find(function(x){ return x.id === id; });
   if (!e || !e.rows) return;
   _avgRows = JSON.parse(JSON.stringify(e.rows));
+  _avgLoadedId = e.id;
   padAvgRows();
   var d = document.getElementById('calc_avg');
   if (d) d.innerHTML = renderAvgCalc();
@@ -570,7 +613,9 @@ function _deleteAvgCalc(id) {
   var idx = list.findIndex(function(x){ return x.id === id; });
   if (idx < 0) return;
   var snap = list[idx];
+  var wasLoaded = _avgLoadedId === id;
   setSavedCalcs('tl_avg_calcs', list.filter(function(x){ return x.id !== id; }));
+  if (wasLoaded) { _avgLoadedId = null; var d = document.getElementById('calc_avg'); if (d) { d.innerHTML = renderAvgCalc(); calcStockAvg(); } }
   renderAvgSaved();
   haptic('warning');
   showUndoToast('Calculation deleted', function() {
@@ -2921,6 +2966,7 @@ function renderPosCalc() {
       '<div class="ps-out"><div class="a" id="ps_a_' + k + '"></div><div class="p" id="ps_p_' + k + '"></div></div></div>';
   };
   return '<div class="calc-stack ps-b">' +
+  '<div class="ps-dock" aria-hidden="true"><div class="ps-minibar" id="psMiniBar"></div></div>' +
   '<div class="ps-live" id="posCalcResult"></div>' +
   '<section class="calc-card">' +
     '<div class="calc-card-h"><span class="calc-card-t">Your account</span></div>' +
@@ -3031,6 +3077,36 @@ var PS_ERRORS = {
   stopPct: 'Enter how far your stop is, in %',
   stopTooBig: 'The stop must be under 100% away'
 };
+// Compact result bar: the full result card scrolls with the page, and once it is
+// out of view this one-line bar shows at the top. Separate element, so the page
+// height never changes while scrolling (no jump, no flicker between states).
+var _psDockObs = null, _psDockTarget = null, _psCardOut = false;
+function psSetMiniBar(r) {
+  var bar = document.getElementById('psMiniBar');
+  if (!bar) return;
+  if (!r) { bar.innerHTML = ''; bar.classList.remove('show'); return; }
+  var main = r.qty !== null ? fmtQty(r.qty) + ' <small>' + (r.qty === 1 ? 'share' : 'shares') + '</small>' : fmtMoney(r.posVal);
+  bar.innerHTML = '<b class="mb-main">' + main + '</b>' +
+    '<span class="mb-risk">' + fmtPnl(-r.actualRisk) + '</span>' +
+    (r.reward !== null ? '<span class="mb-rew">' + fmtPnl(r.reward) + '</span>' : '') +
+    (r.rr !== null ? '<span class="mb-rr">1 : ' + trimNum(r.rr, 2) + '</span>' : '');
+  psWatchDock();
+  bar.classList.toggle('show', _psCardOut);
+}
+function psWatchDock() {
+  var card = document.getElementById('posCalcResult');
+  if (!card || card === _psDockTarget || typeof IntersectionObserver !== 'function') return;
+  if (_psDockObs) _psDockObs.disconnect();
+  _psDockTarget = card; _psCardOut = false;
+  _psDockObs = new IntersectionObserver(function(entries) {
+    var e = entries[entries.length - 1];
+    // Out = scrolled above the top edge (not merely below the fold).
+    _psCardOut = !e.isIntersecting && e.boundingClientRect.top < (e.rootBounds ? e.rootBounds.top : 0) + 1;
+    var bar = document.getElementById('psMiniBar');
+    if (bar) bar.classList.toggle('show', _psCardOut && !!bar.innerHTML && !card.classList.contains('is-empty'));
+  }, { root: document.getElementById('mainContent'), threshold: 0, rootMargin: '-8px 0px 0px 0px' });
+  _psDockObs.observe(card);
+}
 function calcPositionSize() {
   var el = document.getElementById('posCalcResult'); if (!el) return;
   var v = function(id) { var e = document.getElementById(id); return e ? numStr(e.value) : ''; };
@@ -3043,6 +3119,7 @@ function calcPositionSize() {
   set('ps_af_tp', '—'); set('ps_af_sl', '—');
   var lad = document.getElementById('ps_ladder');
   el.classList.toggle("is-empty", !!r.error);
+  psSetMiniBar(r.error ? null : r);
   if (r.error) {
     el.innerHTML = '<div class="ps-live-h"><span class="ps-side">Position size</span></div><div class="ps-live-empty">' + PS_ERRORS[r.error] + '</div>';
     if (lad) lad.classList.remove('short');

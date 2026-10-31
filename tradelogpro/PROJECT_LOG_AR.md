@@ -172,6 +172,7 @@ https://smartappsflow.net/tradelogpro/
 - قاعدة: لا حركة دخول على إعادة الرسم داخل الصفحة نفسها — `.view-enter` يُضاف فقط عند تغيير الصفحة في `setView`. ولا تغلق ورقة ثم تعيد فتحها لتبديل محتواها. الكاش **edgeory-v20**.
 - زر الرجوع: `backStep()` هو المصدر الوحيد لترتيب الرجوع؛ أندرويد عبر `handleAndroidBack` والويب عبر `initWebBack` (history guard). لا تضف pushState قبل تفاعل المستخدم.
 - إغلاق ورقة تفاصيل الصفقة يمر عبر `closeTradeDetail()` (يعود لقائمة الشهر إن فُتحت منها). على الهاتف: لا `backdrop-filter` على الأوراق، والحركة `sheetUp` بـ fill-mode `backwards` فقط. الكاش **edgeory-v21**.
+- Position Size: النتيجة المثبتة صارت شريطًا مصغّرًا `#psMiniBar` داخل `.ps-dock` (sticky، ارتفاع صفر) يظهر فقط حين تخرج `#posCalcResult` من الشاشة. Stock Average: `_avgLoadedId` يجعل Save يحدّث الحسبة المحمّلة. الكاش **edgeory-v22**.
 
 ### حالة المرحلة الحالية (7 أغسطس 2026)
 
