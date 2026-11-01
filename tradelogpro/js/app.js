@@ -3544,7 +3544,7 @@ function renderAnalytics() {
       statCard('Profit Factor', pf, pf === '\u221e' ? 'No losses · closed only' : (pf >= 1 ? 'Closed trades · above 1.0 is good' : 'Closed trades · below 1.0'), pf === '\u221e' ? 'var(--green)' : (pf >= 1 ? 'var(--green)' : 'var(--red)')) +
       statCard('Avg Win', fmtPnl(avgWin), 'Per winning trade', 'var(--green)') +
       statCard('Avg Loss', (avgLoss > 0 ? '-' : '') + fmtMoney(avgLoss), 'Per losing trade', avgLoss > 0 ? 'var(--red)' : 'var(--text3)') +
-      statCard('Fees paid', fmtMoney(calcTotalFees(closed)), 'Commissions and fees', 'var(--red)') +
+      statCard('Fees paid', fmtMoney(calcTotalFees(closed)), 'Total fees paid', 'var(--red)') +
     '</div>' +
     // Current streak + best/worst
     '<div class="stats-row">' +
@@ -3994,50 +3994,102 @@ function showCSVPreview(parsed) {
 }
 
 
+// Plan a Trading 212 import into one account as a sync, not a blind append. Each
+// bought lot is known by symbol + buy date + buy price. Against what the account has:
+//  - same lot, same result          -> skipped (re-importing a file adds nothing)
+//  - lot open here, now sold in full -> that same trade is closed (keeps its id,
+//                                       notes, photos and linked deposit)
+//  - lot open here, now partly sold  -> the open trade keeps the shares still held,
+//                                       and the sold part is added as a closed trade
+//  - lot not here                    -> added
+// Trades edited here with add-buys or partial sells are never changed by an import.
+// Pure: returns { trades, added, updated, skipped } and leaves `trades` untouched.
+function planCsvImport(trades, accId, parsed, stamp) {
+  var eps = 0.0000001;
+  var lotKey = function(tk, ed, en) { return [String(tk || '').toUpperCase(), ed || '', (+en || 0).toFixed(4)].join('|'); };
+  var sig = function(tk, ed, xd, qty, en, ex) { return lotKey(tk, ed, en) + '|' + (xd || '') + '|' + (+qty || 0).toFixed(6) + '|' + (+ex || 0).toFixed(4); };
+  var next = trades.map(function(t){ return t.accountId === accId ? JSON.parse(JSON.stringify(t)) : t; });
+  var mine = next.filter(function(t){ return t.accountId === accId; });
+  var exact = {}, openLots = {};
+  var index = function(t) {
+    (exact[sig(t.ticker, t.entry_date, t.exit_date, t.original_qty, t.entry, t.exit)] = exact[sig(t.ticker, t.entry_date, t.exit_date, t.original_qty, t.entry, t.exit)] || []).push(t);
+    var simple = !(t.add_buys && t.add_buys.length) && !(t.partial_closes && t.partial_closes.length);
+    if (t.status === 'open' && simple) (openLots[lotKey(t.ticker, t.entry_date, t.entry)] = openLots[lotKey(t.ticker, t.entry_date, t.entry)] || []).push(t);
+  };
+  mine.forEach(index);
+  var takeExact = function(k) { var a = exact[k]; return a && a.length ? a.shift() : null; };
+  var dropOpen = function(t) {
+    var a = openLots[lotKey(t.ticker, t.entry_date, t.entry)];
+    if (a) { var ix = a.indexOf(t); if (ix >= 0) a.splice(ix, 1); }
+  };
+  var fresh = [], res = { added: 0, updated: 0, skipped: 0 }, n = 0;
+  var mk = function(pc) {
+    return { id: 'tr_csv_' + stamp + '_' + (n++), accountId: accId,
+      ticker: safeTicker(pc.ticker), direction: pc.dir, type: '', status: pc.status,
+      entry_date: pc.entryDate, exit_date: pc.exitDate,
+      entry: pc.entry, exit: pc.exit, qty: pc.qty, original_qty: pc.qty,
+      fees: pc.fees, fees_mode: '$', notes: 'Imported from CSV',
+      photos: [], add_buys: [], partial_closes: [], createdAt: new Date().toISOString() };
+  };
+  // Sells first: they may close what an earlier import left open.
+  var order = parsed.slice().sort(function(a, b){ return (a.status === 'closed' ? 0 : 1) - (b.status === 'closed' ? 0 : 1); });
+  order.forEach(function(pc) {
+    var tk = safeTicker(pc.ticker);
+    if (takeExact(sig(tk, pc.entryDate, pc.exitDate, pc.qty, pc.entry, pc.exit))) { res.skipped++; return; }
+    var lot = openLots[lotKey(tk, pc.entryDate, pc.entry)] || [];
+    var open = lot.filter(function(t){ return (t.original_qty || 0) >= pc.qty - eps; })[0] || null;
+    if (pc.status === 'closed' && open) {
+      var oq = open.original_qty || 0;
+      if (Math.abs(oq - pc.qty) <= eps) {
+        open.status = 'closed'; open.exit = pc.exit; open.exit_date = pc.exitDate; open.fees = pc.fees; open.fees_mode = '$';
+        open.current_price = null;
+        dropOpen(open);
+      } else {
+        var left = oq - pc.qty;
+        open.fees = +((parseFloat(open.fees) || 0) * left / oq).toFixed(2);
+        open.original_qty = left; open.qty = left;
+        fresh.push(mk(pc));
+      }
+      res.updated++;
+      return;
+    }
+    if (pc.status === 'open' && lot.length) {
+      // Same lot still open here: the file now says how many shares are left.
+      var o = lot[0];
+      if (Math.abs((o.original_qty || 0) - pc.qty) > eps) { o.original_qty = pc.qty; o.qty = pc.qty; o.fees = pc.fees; res.updated++; }
+      else res.skipped++;
+      dropOpen(o);
+      return;
+    }
+    fresh.push(mk(pc));
+    res.added++;
+  });
+  res.trades = fresh.concat(next);
+  return res;
+}
+
 function confirmCSVImport(deposit) {
   var accId = document.getElementById('csvTargetAccount') ? document.getElementById('csvTargetAccount').value : null;
   if (!accId) { showToast('Select an account', 'error'); return; }
   var parsed = window._csvParsed || [];
   if (!parsed.length) { showToast('No trades to import', 'error'); return; }
-  var stamp = Date.now();
-  // Importing the same file twice must not double the trades: skip any trade the
-  // account already has with the same symbol, dates, shares and prices.
-  var sig = function(ticker, ed, xd, qty, en, ex) {
-    return [String(ticker || '').toUpperCase(), ed || '', xd || '', (+qty || 0).toFixed(6), (+en || 0).toFixed(4), (+ex || 0).toFixed(4)].join('|');
-  };
-  var have = {};
-  state.trades.forEach(function(t){ if (t.accountId === accId) have[sig(t.ticker, t.entry_date, t.exit_date, t.original_qty, t.entry, t.exit)] = 1; });
-  var dupes = 0;
-  parsed = parsed.filter(function(t){
-    var k = sig(safeTicker(t.ticker), t.entryDate, t.exitDate, t.qty, t.entry, t.exit);
-    if (have[k]) { dupes++; return false; }
-    have[k] = 1;
-    return true;
-  });
-  if (!parsed.length) { showToast('These trades are already in this account. Nothing new to import.', 'info'); return; }
-  var incoming = parsed.map(function(t, i) {
-    return {
-      id:'tr_csv_'+stamp+'_'+i, accountId:accId,
-      ticker:safeTicker(t.ticker), direction:t.dir, type:'', status:t.status,
-      entry_date:t.entryDate, exit_date:t.exitDate,
-      entry:t.entry, exit:t.exit, qty:t.qty, original_qty:t.qty,
-      fees:t.fees, fees_mode:'$', notes:'Imported from CSV',
-      photos:[], add_buys:[], partial_closes:[],
-      createdAt:new Date().toISOString()
-    };
-  });
-  // One cash check for the whole file: positions still open use cash, closed
-  // trades add or take their P&L. Ask once if the account ends up short.
+  var plan = planCsvImport(state.trades, accId, parsed, Date.now());
+  if (!plan.added && !plan.updated) { showToast('These trades are already in this account. Nothing new to import.', 'info'); return; }
+  // One cash check for the whole file: compare the account before and after.
   var acc = state.accounts.find(function(a){ return a.id === accId; });
   if (deposit === undefined && acc) {
-    var need = calcAccountCash(acc, state.trades) - calcAccountCash(acc, state.trades.concat(incoming));
+    var need = calcAccountCash(acc, state.trades) - calcAccountCash(acc, plan.trades);
     if (need > 0.005) { confirmCashOrGo(acc, need, null, function(dep){ confirmCSVImport(dep); }); return; }
   }
-  for (var k = incoming.length - 1; k >= 0; k--) state.trades.unshift(incoming[k]);
+  state.trades = plan.trades;
   if (deposit > 0) addLinkedDeposit(acc, deposit, today(), null, null, 'Trading 212 import');
   save(); renderSidebar(); renderMain();
   closeModal('csvPreviewModal');
-  showToast('Imported ' + parsed.length + ' trades' + (dupes ? ' · ' + dupes + ' already here, skipped' : '') + (deposit > 0 ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
+  var parts = [];
+  if (plan.added) parts.push(plural(plan.added, 'new trade', 'new trades'));
+  if (plan.updated) parts.push(plan.updated + ' updated (sold since your last import)');
+  if (plan.skipped) parts.push(plan.skipped + ' already here');
+  showToast('Imported: ' + parts.join(' · ') + (deposit > 0 ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
   window._csvParsed = null;
 }
 
@@ -4553,7 +4605,7 @@ function renderImportReview() {
   if (ibkrRead) {
     var fillRow = function(kind, b) {
       var c = kind === 'BUY' ? 'var(--blue)' : 'var(--green)', bg = kind === 'BUY' ? 'rgba(77,159,255,.12)' : 'rgba(0,214,143,.12)';
-      var sub = fmtDateLong(b.date) + (b.time ? ' · ' + esc(String(b.time).slice(0, 5)) : '') + (b.commission != null ? ' · comm ' + fmtMoney(b.commission) : '');
+      var sub = fmtDateLong(b.date) + (b.time ? ' · ' + esc(String(b.time).slice(0, 5)) : '') + (b.commission != null ? ' · fee ' + fmtMoney(b.commission) : '');
       return '<div class="ev"><span class="badge" style="background:' + bg + ';color:' + c + '">' + kind + '</span><div><div class="n" style="font-size:calc(13px*var(--fz));font-weight:500">' + fmtQty(b.qty) + ' @ ' + fmtPrice(b.price) + '</div><div class="sub n">' + sub + '</div></div><span class="n" style="color:var(--text2)">' + fmtMoney(b.amount || b.qty * b.price) + '</span></div>';
     };
     html += '<div class="panel" style="padding:10px 12px">' +

@@ -38,10 +38,11 @@ const ctx = {
   document: { getElementById: (id) => dom[id] || null },
   save() {}, renderSidebar() {}, renderMain() {}, closeModal() {},
   fmtMoney: (v) => '$' + Number(v).toFixed(2),
+  plural: (n, one, many) => n + ' ' + (n === 1 ? one : many),
 };
 vm.createContext(ctx);
 vm.runInContext(read('finance.js') + '\n' + read('equity.js') + '\n' +
-  ['realizedEquityEvents', 'reportData', 'parseT212Csv', 'confirmCSVImport', 'confirmCashOrGo', 'addLinkedDeposit']
+  ['realizedEquityEvents', 'reportData', 'parseT212Csv', 'planCsvImport', 'confirmCSVImport', 'confirmCashOrGo', 'addLinkedDeposit']
     .map((n) => extractFunction(appJs, n)).join('\n') + '\nvar _cashNoDeposit = null;', ctx);
 const run = (code) => vm.runInContext(code, ctx);
 const mk = (o) => Object.assign({ id: 't' + Math.random().toString(36).slice(2, 7), accountId: 'a1', direction: 'Long',
@@ -138,6 +139,43 @@ const csv = [
   ctx.window._csvParsed = run('parseT212Csv(' + JSON.stringify(csv) + ')').parsed;
   run('confirmCSVImport()');
   assert('Importing the same file again adds nothing', ctx.state.trades.length === 2 && /already in this account/.test(toasts.at(-1)), toasts.at(-1));
+}
+
+// Re-importing a newer Trading 212 file: 10 trades, then 5 more opened since.
+{
+  const hdr = 'Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total,Transaction fee';
+  const row = (act, time, tk, sh, px) => [act, time, 'X', tk, tk, sh, px, 'USD', 1, '', sh * px, 0].join(',');
+  // File 1: 9 closed round trips + AAPL bought and still open = 10 trades
+  const f1 = [hdr];
+  for (let k = 1; k <= 9; k++) { f1.push(row('Market buy', `2026-0${1 + (k % 8)}-0${k} 10:00:00`, 'T' + k, 10, 20)); f1.push(row('Market sell', `2026-0${1 + (k % 8)}-2${k} 10:00:00`, 'T' + k, 10, 22)); }
+  f1.push(row('Market buy', '2026-05-01 10:00:00', 'AAPL', 10, 100));
+  // File 2: everything in file 1, AAPL now sold, plus 5 new trades
+  const f2 = f1.slice();
+  f2.push(row('Market sell', '2026-06-01 10:00:00', 'AAPL', 10, 120));
+  for (let k = 1; k <= 5; k++) f2.push(row('Market buy', `2026-07-0${k} 10:00:00`, 'N' + k, 5, 50));
+  const runImport = (text) => { ctx.window = { _csvParsed: run('parseT212Csv(' + JSON.stringify(text.join('\n')) + ')').parsed }; run('confirmCSVImport()'); };
+  ctx.state.trades = []; ctx.state.accounts = [{ id: 'a1', name: 'T212', type: 'cash', startingCapital: 0, transactions: [] }];
+  dom.csvTargetAccount = { value: 'a1' };
+  runImport(f1);
+  const aapl = ctx.state.trades.find((t) => t.ticker === 'AAPL');
+  assert('Sync: first file gives 10 trades, AAPL open', ctx.state.trades.length === 10 && aapl && aapl.status === 'open', ctx.state.trades.length);
+  aapl.notes = 'my note';
+  runImport(f2);
+  const aapl2 = ctx.state.trades.filter((t) => t.ticker === 'AAPL');
+  assert('Sync: second file adds only the 5 new trades (15, not 25)', ctx.state.trades.length === 15, ctx.state.trades.length);
+  assert('Sync: AAPL is the same trade, now closed at 120, note kept (no duplicate)',
+    aapl2.length === 1 && aapl2[0].id === aapl.id && aapl2[0].status === 'closed' && aapl2[0].exit === 120 && aapl2[0].notes === 'my note', aapl2);
+  assert('Sync: the toast says what happened', /5 new trades/.test(toasts.at(-1)) && /1 updated/.test(toasts.at(-1)) && /9 already here/.test(toasts.at(-1)), toasts.at(-1));
+  // Partly sold since the last import: 4 of 10 sold
+  ctx.state.trades = [];
+  runImport(f1);
+  const open1 = ctx.state.trades.find((t) => t.ticker === 'AAPL');
+  const f3 = f1.concat([row('Market sell', '2026-06-01 10:00:00', 'AAPL', 4, 120)]);
+  runImport(f3);
+  const after = ctx.state.trades.filter((t) => t.ticker === 'AAPL');
+  const keep = after.find((t) => t.id === open1.id), sold = after.find((t) => t.id !== open1.id);
+  assert('Sync partly sold: the open trade keeps 6 shares, the 4 sold are a closed trade',
+    after.length === 2 && keep && keep.status === 'open' && keep.original_qty === 6 && sold && sold.status === 'closed' && sold.qty === 4, after);
 }
 
 // P2 Balance curve: each account's capital starts with that account.
