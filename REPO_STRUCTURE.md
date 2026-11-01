@@ -118,6 +118,10 @@ to `main` as `51a3d72`; Play upload confirmed later):
 > - CI `versionCode` = run number **+ 100**, because 1.2.0 was built locally as
 >   versionCode 51 while CI was broken. Every AAB sent to Play needs a higher code than the
 >   last one uploaded; raise the offset if another local build is ever uploaded.
+> - Android 15+ forces edge-to-edge and Capacitor 6 does not handle it. `tradelogpro/native-android/`
+>   (MainActivity + SystemBarsPlugin) is copied over the generated MainActivity by CI; it keeps the
+>   WebView inside the system bars and above the keyboard and paints them with the theme colour
+>   (`syncSystemBars` in `js/theme.js`). Keep `splashImmersive` false.
 
 **Milestone in progress** (branch `refactor/tradelogpro-modules`):
 

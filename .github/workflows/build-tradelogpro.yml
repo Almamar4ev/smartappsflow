@@ -100,8 +100,8 @@ jobs:
                 "backgroundColor": "#0c0f1a",
                 "androidScaleType": "CENTER_CROP",
                 "showSpinner": false,
-                "splashFullScreen": true,
-                "splashImmersive": true
+                "splashFullScreen": false,
+                "splashImmersive": false
               }
             }
           }
@@ -109,6 +109,19 @@ jobs:
 
       - name: Add Android platform
         run: npx cap add android
+
+      # Android 15+ draws every app edge to edge and Capacitor 6 does not handle it:
+      # sheets slid under the status bar with the keyboard open, and the splash left
+      # white status bar icons on the light theme. MainActivity registers
+      # SystemBarsPlugin, which keeps the WebView inside the bars and above the
+      # keyboard and paints the bar areas in the theme colour (js/theme.js).
+      - name: Add native system bar handling
+        run: |
+          set -e
+          DST=android/app/src/main/java/com/tradelog/pro
+          test -f "$DST/MainActivity.java"
+          cp native-android/MainActivity.java native-android/SystemBarsPlugin.java "$DST/"
+          grep -q 'registerPlugin(SystemBarsPlugin.class)' "$DST/MainActivity.java"
 
       # Capacitor 6's default AGP cannot compile against android-36.
       # Same bump as Smart Loan: AGP 8.7.2 + Gradle 8.9.

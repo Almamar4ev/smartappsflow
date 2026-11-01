@@ -1000,7 +1000,9 @@ function renderCalendar() {
     '</div>';
   }
   var tradingDays = 0, greenDays = 0, monthPnl = 0;
+  var monthKey = year + '-' + String(month+1).padStart(2,'0') + '-';
   Object.keys(dayMap).forEach(function(k) {
+    if (k.indexOf(monthKey) !== 0) return; // footer totals this month only
     tradingDays++;
     monthPnl += dayMap[k].pnl;
     if (dayMap[k].pnl > 0.005) greenDays++;
@@ -2055,7 +2057,14 @@ function openTradeDetail(id) {
     return '<div class="fact"><span class="k">' + k + '</span><span class="v' + (long ? ' long' : '') + '">' + v + '</span></div>';
   }
   var heldTxt = tradeDays == null ? '—' : (tradeDays === 0 ? 'Same day' : plural(tradeDays, 'day', 'days'));
-  var factsHtml = fact('Avg entry', fmtPrice(avg || dca.avg));
+  // A fully closed trade has no shares left, so the ledger avg falls back to the first
+  // entry; show the average cost of every buy instead, and the average of every sell.
+  var entryAvg = isOpen ? (avg || dca.avg) : calcAvgPrice(t);
+  var sells = (t.partial_closes || []).filter(function(pc){ return pc.qty > 0; });
+  var soldQty = sells.reduce(function(s, pc){ return s + pc.qty; }, 0);
+  var exitAvg = sells.length > 1 && soldQty > 0
+    ? sells.reduce(function(s, pc){ return s + pc.price * pc.qty; }, 0) / soldQty : t.exit;
+  var factsHtml = fact('Avg entry', fmtPrice(entryAvg));
   if (isOpen) {
     factsHtml += fact('Shares left', fmtQty(remainingQty) + ' <small>/ ' + fmtQty(totalBought) + '</small>') +
       fact('Invested', fmtMoney(invested)) +
@@ -2063,7 +2072,7 @@ function openTradeDetail(id) {
       fact('Open for', heldTxt) +
       fact('Fees', feeTxt);
   } else {
-    factsHtml += fact('Exit price', t.exit ? fmtPrice(t.exit) : '—') +
+    factsHtml += fact(sells.length > 1 ? 'Avg exit' : 'Exit price', exitAvg ? fmtPrice(exitAvg) : '—') +
       fact('Invested', fmtMoney(invested)) +
       fact('Shares', fmtQty(totalBought)) +
       fact('Held for', heldTxt) +
@@ -4970,6 +4979,11 @@ function initApp() {
 
   // Apply theme
   try { applyTheme(localStorage.getItem('tl_theme') || 'dark'); } catch(e) {}
+  // The launch splash resets the system bar icons when it hides (~1.5s), and other
+  // apps can change them while Edgeory is in the background: paint them again.
+  setTimeout(function(){ syncSystemBars(); }, 1800);
+  setTimeout(function(){ syncSystemBars(); }, 3500);
+  document.addEventListener('visibilitychange', function(){ if (!document.hidden) syncSystemBars(); });
   try { updateCurrencyLabels(); } catch(e) {}
 
   // Load state from localStorage synchronously (always sanitize — IDs flow into onclick).

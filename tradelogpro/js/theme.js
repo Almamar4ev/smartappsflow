@@ -41,10 +41,19 @@ function applyTheme(mode) {
   var isLightBg = (mode === 'light' || mode === 'green');
   var tcMeta = document.getElementById('themeColorMeta');
   if (tcMeta) tcMeta.setAttribute('content', mode === 'light' ? '#ffffff' : (mode === 'green' ? '#f4fbf4' : '#0c0f1a'));
+  syncSystemBars(mode);
+}
+// Android app: paint the status/navigation bar areas with the top/bottom bar colour
+// (--bg2) and pick dark or light icons. Native side: native-android/SystemBarsPlugin.java.
+var BAR_COLORS = { dark: '#0c0f1a', light: '#ffffff', green: '#f4fbf4' };
+function syncSystemBars(mode) {
+  if (!mode) mode = document.body.classList.contains('light') ? 'light' : (document.body.classList.contains('green') ? 'green' : 'dark');
+  var light = mode === 'light' || mode === 'green';
   try {
-    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar) {
-      window.Capacitor.Plugins.StatusBar.setStyle({ style: isLightBg ? 'LIGHT' : 'DARK' });
-    }
+    var P = window.Capacitor && window.Capacitor.Plugins;
+    if (!P) return;
+    if (P.SystemBars) P.SystemBars.setStyle({ color: BAR_COLORS[mode] || BAR_COLORS.dark, light: light }).catch(function(){});
+    else if (P.StatusBar) P.StatusBar.setStyle({ style: light ? 'LIGHT' : 'DARK' });
   } catch (e) {}
 }
 function toggleTheme() {
