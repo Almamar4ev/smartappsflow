@@ -110,6 +110,15 @@ to `main` as `51a3d72`; Play upload confirmed later):
 | **Privacy policy file** | ✅ Added | `tradelogpro/privacy-policy.html` (Aug 8, 2026) |
 | **Paid features / billing** | ⏸ Deferred | Free first; **no Coming Soon UI**; build Premium before billing |
 
+> **Important — Edgeory Android CI (1 Nov 2026):**
+> - The OCR step in `.github/workflows/build-tradelogpro.yml` inserts the
+>   `com.google.mlkit.vision.DEPENDENCIES` meta-data **before `</application>`** and then
+>   checks the manifest is well-formed XML. Appending after `<application` put it inside the
+>   tag's attributes and broke runs 47–50; do not go back to that.
+> - CI `versionCode` = run number **+ 100**, because 1.2.0 was built locally as
+>   versionCode 51 while CI was broken. Every AAB sent to Play needs a higher code than the
+>   last one uploaded; raise the offset if another local build is ever uploaded.
+
 **Milestone in progress** (branch `refactor/tradelogpro-modules`):
 
 1. Phase A merged (`#7`); live site verified for css/js + SW v2.

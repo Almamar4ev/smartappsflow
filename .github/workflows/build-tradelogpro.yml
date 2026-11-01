@@ -133,7 +133,9 @@ jobs:
           # reports show, so it comes from package.json: bump it there once and
           # every build of that release carries the same name.
           APP_VERSION="$(node -p "require('./package.json').version")"
-          sed -i "s/versionCode .*/versionCode ${GITHUB_RUN_NUMBER}/" android/app/build.gradle
+          # +100: versionCode 51 was built locally (1.2.0, 31 Oct 2026) while CI
+          # was broken, so CI codes must stay above every local build.
+          sed -i "s/versionCode .*/versionCode $((GITHUB_RUN_NUMBER + 100))/" android/app/build.gradle
           sed -i "s/versionName .*/versionName \"${APP_VERSION}\"/" android/app/build.gradle
           # Capacitor usually sets these from appId; pin them explicitly so a
           # wrong scaffold never reaches Play Console.
@@ -249,10 +251,15 @@ jobs:
         run: |
           set -e
           MAN=android/app/src/main/AndroidManifest.xml
+          # Insert before </application>: Capacitor's template opens <application
+          # over several lines, so appending after "<application" put the tag
+          # inside its attributes and broke the manifest merge (runs 47-50).
           if ! grep -q 'com.google.mlkit.vision.DEPENDENCIES' "$MAN"; then
-            sed -i '/<application/a\        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="ocr" />' "$MAN"
+            sed -i 's#</application>#    <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="ocr" />\n    </application>#' "$MAN"
           fi
           grep -q 'com.google.mlkit.vision.DEPENDENCIES' "$MAN"
+          # Fail here, not in Gradle, if the manifest is not well-formed XML.
+          python3 -c "import sys,xml.dom.minidom; xml.dom.minidom.parse(sys.argv[1])" "$MAN"
 
       - name: Build AAB and APK
         run: |
