@@ -247,16 +247,12 @@ function detectAppRuntime(loc, cap) {
           <select id="f_type">
             <option value="">Select type…</option>
             <option>Day Trade</option><option>Swing Trade</option><option>Scalp</option>
-            <option>Position</option><option>Options</option><option>Futures</option><option>Crypto</option>
+            <option>Position</option>
           </select>
-        </div>
-        <div class="field">
-          <label>Risk<span class="cur-lbl"> ($)</span> <span class="opt">(optional)</span></label>
-          <input id="f_risk" type="number" step="0.01" placeholder="e.g. 100">
         </div>
         <div class="field form-full">
           <label>Notes / Setup <span class="opt">(optional)</span></label>
-          <textarea id="f_notes" placeholder="Describe your setup, reasoning…"></textarea>
+          <textarea id="f_notes" maxlength="5000" placeholder="Describe your setup, reasoning…"></textarea>
         </div>
         <div class="section-divider">Target &amp; Stop</div>
         <div class="field">
@@ -271,7 +267,7 @@ function detectAppRuntime(loc, cap) {
           <label>Trade Screenshots <span class="opt">(optional)</span></label>
           <div class="photo-upload-area" onclick="document.getElementById('f_photos').click()">
             <div style="color:var(--text3)"><svg class="ic" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-            <p>Click to upload charts or screenshots (max 5MB each)</p>
+            <p>Tap to add charts or screenshots (up to 5)</p>
           </div>
           <input type="file" id="f_photos" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this)">
           <div class="photo-previews" id="photoPreviews"></div>

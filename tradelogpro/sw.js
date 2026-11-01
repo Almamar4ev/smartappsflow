@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v29';
-const UPDATE_NOTE = 'Re-importing a newer Trading 212 file now adds only new trades and updates the ones you sold since.';
+const CACHE = 'edgeory-v30';
+const UPDATE_NOTE = 'Editing a trade keeps its target and stop, the detail shows your risk and R, and screenshots take far less space.';
 
 const ASSETS = [
   './',

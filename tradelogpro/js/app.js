@@ -1789,13 +1789,20 @@ function openTradeModal(tradeId, fromDetail) {
   populateAccountSelector(tradeId ? (state.trades.find(function(t){ return t.id===tradeId; })||{}).accountId : null);
   populateTickerSuggestions();
   hideTickerSuggest();
-  var f = {ticker:'',type:'',direction:'Long',status:'open',entry_date:today(),exit_date:'',entry:'',exit:'',qty:'',fees:'',fees_mode:'$',risk:'',notes:''};
+  var f = {ticker:'',type:'',direction:'Long',status:'open',entry_date:today(),exit_date:'',entry:'',exit:'',qty:'',fees:'',fees_mode:'$',risk:'',notes:'',target:'',stoploss:''};
   if (tradeId) {
     var t = state.trades.find(function(x){ return x.id === tradeId; });
-    if (t) { f.ticker=t.ticker||''; f.type=t.type||''; f.direction=t.direction||'Long'; f.status=t.status||'open'; f.entry_date=t.entry_date||today(); f.exit_date=t.exit_date||''; f.entry=t.entry||''; f.exit=t.exit||''; f.qty=t.original_qty||t.qty||''; f.fees=t.fees||''; f.fees_mode=t.fees_mode||'%'; f.risk=t.risk||''; f.notes=t.notes||''; }
+    if (t) { f.ticker=t.ticker||''; f.type=t.type||''; f.direction=t.direction||'Long'; f.status=t.status||'open'; f.entry_date=t.entry_date||today(); f.exit_date=t.exit_date||''; f.entry=t.entry||''; f.exit=t.exit||''; f.qty=t.original_qty||t.qty||''; f.fees=t.fees||''; f.fees_mode=t.fees_mode||'%'; f.risk=t.risk||''; f.notes=t.notes||''; f.target=t.target||''; f.stoploss=t.stoploss||''; }
   }
   var fields = {f_ticker:'ticker',f_type:'type',f_direction:'direction',f_status:'status',f_entry_date:'entry_date',f_exit_date:'exit_date',f_entry:'entry',f_exit:'exit',f_qty:'qty',f_fees:'fees',f_fees_mode:'fees_mode',f_risk:'risk',f_notes:'notes',f_target:'target',f_stoploss:'stoploss'};
-  Object.keys(fields).forEach(function(id){ var el = document.getElementById(id); if (el) el.value = f[fields[id]]; });
+  var typeSel = document.getElementById('f_type');
+  if (typeSel) {
+    [].slice.call(typeSel.querySelectorAll('option[data-legacy]')).forEach(function(o){ o.remove(); });
+    if (f.type && ![].slice.call(typeSel.options).some(function(o){ return o.value === f.type; })) {
+      var lo = document.createElement('option'); lo.value = f.type; lo.textContent = f.type; lo.setAttribute('data-legacy', '1'); typeSel.appendChild(lo);
+    }
+  }
+  Object.keys(fields).forEach(function(id){ var el = document.getElementById(id); if (el) el.value = f[fields[id]] == null ? '' : f[fields[id]]; });
   var _td = today();
   var _ed = document.getElementById('f_entry_date'); if (_ed) _ed.max = _td;
   var _xd = document.getElementById('f_exit_date'); if (_xd) _xd.max = _td;
@@ -1902,23 +1909,33 @@ function linkedDepositTotal(tradeId, buyId) {
 }
 function calcInvestedPreview() { updateInvestedPreview(); }
 
+// Screenshot -> JPEG data URL small enough to keep (safePhoto drops anything over
+// SAFE_PHOTO_MAX on the next load, so the output must stay under it): up to 1600px,
+// quality stepped down, then size stepped down, on a white background (PNGs with
+// transparency would otherwise turn black).
+var PHOTO_TARGET = 900000; // characters, below SAFE_PHOTO_MAX
+var PHOTO_MAX = 5;
 function compressPhoto(file, callback) {
   var reader = new FileReader();
+  reader.onerror = function() { callback(null); };
   reader.onload = function(e) {
     var img = new Image();
+    img.onerror = function() { callback(null); };
     img.onload = function() {
       var canvas = document.createElement('canvas');
-      var MAX = 1600; var w = img.width, h = img.height;
-      if (w > h) { if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } }
-      else { if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; } }
-      canvas.width = w; canvas.height = h;
       var ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, 0, 0, w, h);
-      var compressed = canvas.toDataURL('image/jpeg', 0.92);
-      if (compressed.length > 1100000) compressed = canvas.toDataURL('image/jpeg', 0.85);
-      if (compressed.length > 680000) compressed = canvas.toDataURL('image/jpeg', 0.78);
-      callback(compressed);
+      var side = 1600, out = '';
+      for (var pass = 0; pass < 4 && (!out || out.length > PHOTO_TARGET); pass++) {
+        var k = Math.min(1, side / Math.max(img.width, img.height));
+        canvas.width = Math.max(1, Math.round(img.width * k)); canvas.height = Math.max(1, Math.round(img.height * k));
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        var qs = [0.9, 0.82, 0.74];
+        for (var qi = 0; qi < qs.length; qi++) { out = canvas.toDataURL('image/jpeg', qs[qi]); if (out.length <= PHOTO_TARGET) break; }
+        side = Math.round(side * 0.8);
+      }
+      callback(out && out.length <= SAFE_PHOTO_MAX ? out : null);
     };
     img.src = e.target.result;
   };
@@ -1928,17 +1945,22 @@ function compressPhoto(file, callback) {
 function handlePhotoUpload(input) {
   var files = input.files;
   if (!files || !files.length) return;
-  for (var i = 0; i < files.length && pendingPhotos.length < 5; i++) {
+  var slots = PHOTO_MAX - pendingPhotos.length, extra = 0;
+  for (var i = 0; i < files.length; i++) {
     (function(file) {
-      if (file.size > 5 * 1024 * 1024) { showToast(file.name + ' is larger than 5MB', 'error'); return; }
       if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) { showToast('Only JPG, PNG, WEBP or GIF images', 'error'); return; }
+      if (file.size > 25 * 1024 * 1024) { showToast(file.name + ' is larger than 25MB', 'error'); return; }
+      if (slots <= 0) { extra++; return; }
+      slots--; // reserve now: the files finish compressing in any order
       compressPhoto(file, function(compressed) {
-        if (pendingPhotos.length >= 5) { showToast('Max 5 screenshots', 'error'); return; }
+        if (!compressed) { showToast('Could not read ' + file.name, 'error'); return; }
+        if (pendingPhotos.length >= PHOTO_MAX) return;
         pendingPhotos.push(compressed);
         renderPhotoPreviews();
       });
     })(files[i]);
   }
+  if (extra) showToast('Up to ' + PHOTO_MAX + ' screenshots per trade. ' + plural(extra, 'image was', 'images were') + ' not added.', 'error');
   input.value = '';
 }
 function renderPhotoPreviews() {
@@ -1990,6 +2012,11 @@ function saveTradeModal(deposit) {
   if (_entryD && _entryD > _td) { showToast('Entry date cannot be in the future', 'error'); return; }
   if (_exitD && _exitD > _td) { showToast('Exit date cannot be in the future', 'error'); return; }
   if (_entryD && _exitD && _exitD < _entryD) { showToast('Exit date cannot be before the entry date', 'error'); return; }
+  var _tgt = parseFloat(document.getElementById('f_target').value) || null;
+  var _stp = parseFloat(document.getElementById('f_stoploss').value) || null;
+  var _long = document.getElementById('f_direction').value !== 'Short';
+  if (_stp && (_long ? _stp >= entry : _stp <= entry)) { showToast(_long ? 'For a long trade the stop loss must be below the entry price' : 'For a short trade the stop loss must be above the entry price', 'error'); return; }
+  if (_tgt && (_long ? _tgt <= entry : _tgt >= entry)) { showToast(_long ? 'For a long trade the target must be above the entry price' : 'For a short trade the target must be below the entry price', 'error'); return; }
   // An open buy spends cash now (a closed trade logged later is history). On an
   // edit, only a cost increase is checked, against cash without this trade.
   if (deposit === undefined && status === 'open') {
@@ -2012,7 +2039,7 @@ function saveTradeModal(deposit) {
       var _hasHist = (t.add_buys && t.add_buys.length) || (t.partial_closes && t.partial_closes.length);
       if (!_hasHist) { t.original_qty=qty; t.qty=qty; }
       else if (Math.abs((t.original_qty || 0) - qty) > 0.0000001) { showToast('Quantity is locked because this trade has add-buys or partial closes', 'error'); }
-      t.fees=fees; t.fees_mode=fees_mode; t.risk=parseFloat(document.getElementById('f_risk').value)||null;
+      t.fees=fees; t.fees_mode=fees_mode;
       t.notes=document.getElementById('f_notes').value.trim();
       t.target=parseFloat(document.getElementById('f_target').value)||null;
       t.stoploss=parseFloat(document.getElementById('f_stoploss').value)||null;
@@ -2043,7 +2070,7 @@ function saveTradeModal(deposit) {
       direction: document.getElementById('f_direction').value, status: status,
       entry_date: document.getElementById('f_entry_date').value, exit_date: document.getElementById('f_exit_date').value || null,
       entry: entry, exit: exit_val, qty: qty, original_qty: qty, fees: fees, fees_mode: fees_mode,
-      risk: parseFloat(document.getElementById('f_risk').value) || null, notes: document.getElementById('f_notes').value.trim(),
+      risk: null, notes: document.getElementById('f_notes').value.trim(),
       target: parseFloat(document.getElementById('f_target').value) || null,
       stoploss: parseFloat(document.getElementById('f_stoploss').value) || null,
       photos: pendingPhotos.slice(), add_buys: [], partial_closes: [], createdAt: new Date().toISOString()
@@ -2179,6 +2206,12 @@ function openTradeDetail(id) {
       fact('Fees', feeTxt);
   }
   html += '<div class="facts">' + factsHtml + '</div>';
+  // Risk at the stop (average entry and shares bought) and, once closed, the result in R.
+  var riskAmt = t.stoploss ? Math.abs(calcAvgPrice(t) - t.stoploss) * totalBought : (parseFloat(t.risk) || 0);
+  if (riskAmt > 0.005) {
+    var rTxt = !isOpen ? ' · <b class="n" style="color:' + pnlColor(pnl) + '">' + (pnl >= 0 ? '+' : '') + (pnl / riskAmt).toFixed(2) + 'R</b>' : '';
+    html += '<div class="dt-ts"><span>' + (t.stoploss ? 'Risk at stop' : 'Risk') + '</span><span class="n">' + fmtMoney(riskAmt) + rTxt + '</span></div>';
+  }
   if (isOpen) {
     var ts = (t.target || t.stoploss)
       ? '<span class="n">' + (t.target ? fmtPrice(t.target) : '—') + ' / ' + (t.stoploss ? fmtPrice(t.stoploss) : '—') + '</span>'
@@ -5159,9 +5192,10 @@ function initApp() {
   try { renderMain(); } catch(e) {}
   try { renderFilterBar(); } catch(e) {}
 
-  // Background: try IndexedDB for GitHub Pages
+  // Background: IndexedDB holds the full copy (photos included); read it wherever
+  // it exists. Until it is read, save() leaves it alone (storage.js).
   try {
-    if (window.location.protocol === 'https:') {
+    if (window.indexedDB) {
       loadFromDB(function() {
         try { renderSidebar(); renderMain(); } catch(e) {}
       });

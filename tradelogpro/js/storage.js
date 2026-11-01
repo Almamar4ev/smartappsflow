@@ -19,7 +19,20 @@ function save() {
   state.schemaVersion = 3;
   state.updatedAt = new Date().toISOString();
   var lsOk = true;
-  try { localStorage.setItem('tl_v3', JSON.stringify(state)); }
+  // Photos are megabytes; localStorage holds about 5MB. When IndexedDB works, the
+  // localStorage copy goes without photos (marked photosInDb) and IndexedDB keeps
+  // the full state; loading puts the photos back by trade id. Without IndexedDB,
+  // localStorage keeps everything as before.
+  // Safety: IndexedDB is never written before it was read this session (_dbReady),
+  // and photos leave the localStorage copy only while IndexedDB writes succeed.
+  var dbReady = !!window._dbReady;
+  var lsState = state;
+  if (dbReady && _db && window._idbOk !== false && state.trades.some(function(t){ return t.photos && t.photos.length; })) {
+    lsState = Object.assign({}, state, { photosInDb: true, trades: state.trades.map(function(t){
+      return (t.photos && t.photos.length) ? Object.assign({}, t, { photos: [] }) : t;
+    }) });
+  }
+  try { localStorage.setItem('tl_v3', JSON.stringify(lsState)); }
   catch(e) {
     lsOk = false;
     if (!window._storageWarned) {
@@ -28,12 +41,20 @@ function save() {
     }
   }
   if (lsOk) window._storageWarned = false;
+  if (!dbReady) return;
   openDB(function(db) {
     if (!db) return;
+    var fallback = function() {
+      // IndexedDB refused the write: keep a full copy (with photos) in localStorage.
+      window._idbOk = false;
+      try { localStorage.setItem('tl_v3', JSON.stringify(state)); } catch(e2) {}
+    };
     try {
       var tx = db.transaction('state','readwrite');
+      tx.oncomplete = function(){ window._idbOk = true; };
+      tx.onerror = fallback; tx.onabort = fallback;
       tx.objectStore('state').put({id:'main', data: JSON.stringify(state)});
-    } catch(e) {}
+    } catch(e) { fallback(); }
   });
 }
 
@@ -84,13 +105,20 @@ function loadFromDB(callback) {
           var lsStamp = lsv.updatedAt || '', idbStamp = idb.updatedAt || '';
           winner = (lsStamp > idbStamp) ? lsv : idb;
           if (lsStamp !== idbStamp) needSync = true;
+          // The localStorage copy may be newer but saved without photos: take them from IndexedDB.
+          if (winner === lsv && lsv.photosInDb && Array.isArray(lsv.trades) && Array.isArray(idb.trades)) {
+            var pics = {};
+            idb.trades.forEach(function(t){ if (t && t.id && t.photos && t.photos.length) pics[t.id] = t.photos; });
+            lsv.trades.forEach(function(t){ if (t && (!t.photos || !t.photos.length) && pics[t.id]) t.photos = pics[t.id]; });
+          }
         } else if (idb) { winner = idb; needSync = true; }
         else if (lsv) { winner = lsv; needSync = true; }
         if (winner) applyLoadedState(winner);
+        window._dbReady = true;
         if (needSync) save();
         callback();
       };
-      req.onerror = function() { callback(); };
+      req.onerror = function() { callback(); }; // unreadable: never written this session
     } catch(e) { callback(); }
   });
 }
