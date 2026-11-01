@@ -100,11 +100,24 @@ function calcAddBuyFees(t) {
   if (t.add_buys) t.add_buys.forEach(function(b){ total += calcFeesAmt(b.fees, b.fees_mode, 0); });
   return total;
 }
+// FEE POLICY (one rule for every number in the app):
+//  - A buy fee in $ (the trade fee, and each add-buy fee) leaves cash on the day it is
+//    paid and is part of the trade's cost while the trade is open. It enters realized
+//    P&L, and Fees paid, once: when the trade is fully closed.
+//  - A sell fee counts with its sell (partial sell or final close).
+//  - A % fee is a share of profit, taken from winning sells only.
+// So: Balance (capital + realized P&L) = Cash + cost of open shares + buy fees paid on
+// open trades, and the sum of a trade's realized events equals its final P&L.
+function calcOpenBuyFees(t) {
+  return calcAddBuyFees(t) + (t.fees_mode === '$' ? (parseFloat(t.fees) || 0) : 0);
+}
 function calcPnl(t) {
   var _abFees = calcAddBuyFees(t);
   if (t.status === 'open') {
+    // Open: realized so far, or with a current price, what selling now would give
+    // after the buy fees already paid.
     var unreal = calcUnrealizedPnl(t);
-    return (unreal !== null ? unreal : calcRealizedPnl(t)) - _abFees;
+    return unreal !== null ? unreal - calcOpenBuyFees(t) : calcRealizedPnl(t);
   }
   var dir = t.direction === 'Long' ? 1 : -1;
   var st = calcPositionState(t);
@@ -164,8 +177,8 @@ function calcTradeFees(t) {
       total += parseFloat(t.fees) || 0; // closed by its last partial sell: same as calcPnl
     }
   }
-  // Add-position (buy-side) flat commissions
-  total += calcAddBuyFees(t);
+  // Add-buy fees are buy fees: counted once the trade is closed (fee policy above).
+  if (t.status === 'closed') total += calcAddBuyFees(t);
   return total;
 }
 function calcTotalFees(trades) {
@@ -296,7 +309,7 @@ function calcAccountCash(acc, trades, excludeId) {
       cash -= calcPositionState(t).cost;
       // Commissions paid when buying (add-buys, and the trade fee in $) are
       // gone from cash now; calcPnl takes them once the trade closes.
-      cash -= calcAddBuyFees(t) + (t.fees_mode === '$' ? (parseFloat(t.fees) || 0) : 0);
+      cash -= calcOpenBuyFees(t);
     }
   });
   return cash;
@@ -339,5 +352,17 @@ function tradeRealizedEvents(t) {
     }
   }
   return out;
+}
+
+// The position as it stood at the end of a day: only buys and sells dated up to it.
+// null if the trade had not started yet. Used for a report ending in the past.
+function positionAsOf(t, date) {
+  if (!date) return calcPositionState(t);
+  if ((t.entry_date || '') > date) return null;
+  var copy = Object.assign({}, t, {
+    add_buys: (t.add_buys || []).filter(function(b){ return (b.date || t.entry_date || '') <= date; }),
+    partial_closes: (t.partial_closes || []).filter(function(pc){ return (pc.date || '') <= date; }).map(function(pc){ return Object.assign({}, pc); })
+  });
+  return calcPositionState(copy);
 }
 

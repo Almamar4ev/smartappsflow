@@ -2549,10 +2549,16 @@ function reportData(sel) {
     rows.push(r);
   });
   rows.sort(function(a, b){ return String(a.last).localeCompare(String(b.last)); });
-  var open = trades.filter(function(t){ return t.status === 'open' && (!to || (t.entry_date || '') <= to); }).map(function(t){
-    var st = calcPositionState(t);
-    return { t: t, qty: st.qty, avg: st.avg, cost: st.cost };
-  }).sort(function(a, b){ return String(a.t.entry_date || '').localeCompare(String(b.t.entry_date || '')); });
+  // Positions held at the end of the period, rebuilt from the buys and sells dated up
+  // to it (an add-buy in November is not in an October report). No end date: today.
+  var open = [];
+  trades.forEach(function(t){
+    var heldThen = to ? ((t.entry_date || '') <= to && (t.status === 'open' || (t.exit_date || '') > to)) : t.status === 'open';
+    if (!heldThen) return;
+    var st = positionAsOf(t, to);
+    if (st && st.qty > 0.0000001) open.push({ t: t, qty: st.qty, avg: st.avg, cost: st.cost });
+  });
+  open.sort(function(a, b){ return String(a.t.entry_date || '').localeCompare(String(b.t.entry_date || '')); });
   var closedRows = rows.filter(function(r){ return r.closedHere; });
   var pnl = rows.reduce(function(s, r){ return s + r.pnl; }, 0);
   var cost = rows.reduce(function(s, r){ return s + r.cost; }, 0);
@@ -2579,9 +2585,9 @@ function updateReportPreview() {
   el.innerHTML =
     '<div class="stat-card" style="--accent:' + pnlColor(R.pnl) + '"><div class="stat-label">Realized P&amp;L</div><div class="stat-value" style="color:' + pnlColor(R.pnl) + ';font-size:calc(16px*var(--fz))">' + fmtPnl(R.pnl) + '</div><div class="stat-sub" style="color:' + pnlColor(R.pnl) + '">' + (R.pct != null ? fmtPct(R.pct) + ' on shares sold' : 'No sells in this period') + '</div></div>' +
     '<div class="stat-card" style="--accent:var(--blue)"><div class="stat-label">Closed</div><div class="stat-value" style="color:var(--blue);font-size:calc(17px*var(--fz))">' + R.closed + '</div><div class="stat-sub">' + (R.partly ? R.partly + ' partly sold' : 'trades') + '</div></div>' +
-    '<div class="stat-card" style="--accent:var(--blue)"><div class="stat-label">Win Rate</div><div class="stat-value" style="color:var(--blue);font-size:calc(17px*var(--fz))">' + wr + '</div><div class="stat-sub">of trades closed</div></div>' +
-    '<div class="stat-card" style="--accent:var(--purple)"><div class="stat-label">Still open</div><div class="stat-value" style="color:var(--purple);font-size:calc(14px*var(--fz))">' + fmtMoney(R.openCost) + '</div><div class="stat-sub">' + plural(R.open.length, 'position', 'positions') + ' at cost</div></div>' +
-    '<div class="cash-note" style="grid-column:1/-1">P&amp;L counts the sells made in this period, on the day they happened. Open positions are listed separately.</div>';
+    '<div class="stat-card" style="--accent:var(--blue)"><div class="stat-label">Win Rate</div><div class="stat-value" style="color:var(--blue);font-size:calc(17px*var(--fz))">' + wr + '</div><div class="stat-sub">trades closed, whole result</div></div>' +
+    '<div class="stat-card" style="--accent:var(--purple)"><div class="stat-label">' + (R.sel.to ? 'Open on ' + R.sel.to.slice(5).replace('-', '/') : 'Still open') + '</div><div class="stat-value" style="color:var(--purple);font-size:calc(14px*var(--fz))">' + fmtMoney(R.openCost) + '</div><div class="stat-sub">' + plural(R.open.length, 'position', 'positions') + ' at cost</div></div>' +
+    '<div class="cash-note" style="grid-column:1/-1">P&amp;L counts the sells made in this period, on the day they happened. Win rate judges each trade closed in the period by its whole result. Open positions are as they stood at the end of the period.</div>';
 }
 
 function _b64ToBlob(b64, mime) {
@@ -2616,7 +2622,7 @@ function saveFileSmart(filename, base64, mime) {
       a.href = url; a.download = filename;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('Saved: ' + filename, 'success');
+      showToast('Download started: ' + filename, 'success'); // the browser does not report when the file is saved
       return Promise.resolve(true);
     } catch(e){ showToast('Download failed: ' + e.message, 'error'); return Promise.resolve(false); }
   }
@@ -2644,8 +2650,8 @@ function exportExcel() {
     ['P&L % on shares sold', R.pct != null ? n2(R.pct) : 0],
     ['Trades closed', R.closed],
     ['Partly sold', R.partly],
-    ['Win rate (trades closed)', R.closed ? (R.wins / R.closed * 100).toFixed(1) + '%' : '—'],
-    ['Open positions at cost', n2(R.openCost)],
+    ['Win rate (trades closed in the period, whole-trade result)', R.closed ? (R.wins / R.closed * 100).toFixed(1) + '%' : '—'],
+    ['Open positions at cost' + (R.sel.to ? ' on ' + R.sel.to : ' (today)'), n2(R.openCost)],
     ['P&L counts the sells made in this period, on the day they happened.']
   ], { origin: { r: rows.length + 3, c: 0 } });
   ws['!cols'] = [{wch:10},{wch:10},{wch:12},{wch:11},{wch:12},{wch:12},{wch:11},{wch:11},{wch:11},{wch:16},{wch:14},{wch:13},{wch:10},{wch:20}];
@@ -2685,13 +2691,13 @@ function exportPDF() {
   var summary = [
     'Realized P&L: ' + signed(R.pnl),
     'P&L % on shares sold: ' + (R.pct != null ? (R.pct >= 0 ? '+' : '') + R.pct.toFixed(2) + '%' : '—'),
-    'Win rate: ' + (R.closed ? (R.wins / R.closed * 100).toFixed(1) + '%' : '—') + ' of ' + R.closed + ' closed',
+    'Win rate: ' + (R.closed ? (R.wins / R.closed * 100).toFixed(1) + '%' : '—') + ' of ' + R.closed + ' closed (whole trade)',
     'Trades closed: ' + R.closed + (R.partly ? '  ·  partly sold: ' + R.partly : ''),
-    'Open positions: ' + R.open.length + ' at cost ' + money(R.openCost)
+    'Open ' + (R.sel.to ? 'on ' + R.sel.to : 'today') + ': ' + R.open.length + ' at cost ' + money(R.openCost)
   ];
   summary.forEach(function(t, k){ doc.text(t, margin + (k % 3) * 92, 28 + Math.floor(k / 3) * 6); });
   doc.setTextColor(120, 120, 120);
-  doc.text('P&L counts the sells made in this period, on the day they happened. Open positions have no realized P&L yet.', margin, 40);
+  doc.text('P&L counts the sells made in this period, on the day they happened. Win rate judges each trade closed in the period by its whole result.', margin, 40);
 
   var y = 46;
   function header(cols, colW) {
@@ -2732,7 +2738,7 @@ function exportPDF() {
         r.cost > 0 ? (r.pnl >= 0 ? '+' : '') + (r.pnl / r.cost * 100).toFixed(2) + '%' : '—'];
     }) : [['No sells in this period', '', '', '', '', '', '', '', '', '', '', '']], [10, 11]);
   if (R.open.length) {
-    table('Open positions (no realized P&L yet)', ['Symbol','Dir','Entry Date','Shares Held','Avg Cost','Cost'],
+    table('Open positions ' + (R.sel.to ? 'on ' + R.sel.to : 'today') + ' (no realized P&L yet)', ['Symbol','Dir','Entry Date','Shares Held','Avg Cost','Cost'],
       [24, 16, 26, 26, 28, 30],
       R.open.map(function(o){ return [o.t.ticker, o.t.direction, o.t.entry_date || '', fmtReportQty(o.qty), money(o.avg), money(o.cost)]; }), []);
   }
@@ -3878,7 +3884,7 @@ function parseT212Csv(text) {
   var isT212 = hasAction && hasTicker && hasShares;
 
   var parsed = [];
-  var _unmatchedSells = 0;
+  var _unmatchedSells = 0, _otherCurrency = 0;
 
   if (isT212) {
     // Trading 212: read every buy/sell row first, sort them by time (exports
@@ -3903,6 +3909,10 @@ function parseT212Csv(text) {
       if (!isBuy && !isSell) continue;
       var fee = 0;
       feeCols.forEach(function(ix){ var v = parseFloat(String(row[ix] || '').replace(/"/g, '')); if (v > 0) fee += v; });
+      // Fees are in the account currency; a price in another currency (exchange
+      // rate not 1) would mix two units, so that row's fees are left out.
+      var fx = parseFloat(getCol(row, ['exchange rate']));
+      if (fx > 0 && Math.abs(fx - 1) > 1e-9) { _otherCurrency++; fee = 0; }
       var nd = normDate(rawTime);
       events.push({ buy: isBuy, ticker: ticker, shares: shares, price: price, date: nd, time: nd + ' ' + (String(rawTime).split(/[ T]/)[1] || ''), fee: fee, n: i });
     }
@@ -3938,7 +3948,7 @@ function parseT212Csv(text) {
   }
 
   if (!parsed.length) return { error: 'No valid trades found. Check CSV format.' };
-  return { parsed: parsed, unmatched: _unmatchedSells };
+  return { parsed: parsed, unmatched: _unmatchedSells, otherCurrency: _otherCurrency };
 }
 
 function importCSV() {
@@ -3953,6 +3963,7 @@ function importCSV() {
         var res = parseT212Csv(ev.target.result);
         if (res.error) { showToast(res.error, 'error'); return; }
         if (res.unmatched > 0) showToast(res.unmatched + ' sell row(s) had no buy in this file (bought earlier?) and were skipped', 'error');
+        if (res.otherCurrency > 0) showToast(res.otherCurrency + ' row(s) are priced in another currency than your account. Prices stay as in the file and their fees were left out. Use one Edgeory account per currency.', 'error');
         showCSVPreview(res.parsed);
       } catch(err) { showToast('Import failed: ' + err.message, 'error'); }
     };
@@ -4036,7 +4047,8 @@ function showCSVPreview(parsed) {
 //  - lot open here, now partly sold  -> the open trade keeps the shares still held,
 //                                       and the sold part is added as a closed trade
 //  - lot not here                    -> added
-// Trades edited here with add-buys or partial sells are never changed by an import.
+// Trades edited here with add-buys or partial sells, and trades entered by hand, are
+// never changed by an import (an exact copy of one is still skipped, not doubled).
 // Pure: returns { trades, added, updated, skipped } and leaves `trades` untouched.
 function planCsvImport(trades, accId, parsed, stamp) {
   var eps = 0.0000001;
@@ -4048,7 +4060,10 @@ function planCsvImport(trades, accId, parsed, stamp) {
   var index = function(t) {
     (exact[sig(t.ticker, t.entry_date, t.exit_date, t.original_qty, t.entry, t.exit)] = exact[sig(t.ticker, t.entry_date, t.exit_date, t.original_qty, t.entry, t.exit)] || []).push(t);
     var simple = !(t.add_buys && t.add_buys.length) && !(t.partial_closes && t.partial_closes.length);
-    if (t.status === 'open' && simple) (openLots[lotKey(t.ticker, t.entry_date, t.entry)] = openLots[lotKey(t.ticker, t.entry_date, t.entry)] || []).push(t);
+    // Only trades that came from an import (tr_csv_ ids) may be closed or resized by
+    // a later file; a trade you entered by hand is never changed automatically.
+    var imported = String(t.id || '').indexOf('tr_csv_') === 0;
+    if (t.status === 'open' && simple && imported) (openLots[lotKey(t.ticker, t.entry_date, t.entry)] = openLots[lotKey(t.ticker, t.entry_date, t.entry)] || []).push(t);
   };
   mine.forEach(index);
   var takeExact = function(k) { var a = exact[k]; return a && a.length ? a.shift() : null; };
@@ -4364,7 +4379,7 @@ function maybeShowIosStorageTip() {
   bar.className = 'update-banner';
   bar.setAttribute('role', 'status');
   bar.innerHTML = '<div class="ub-text"><b>Keep your trades safe on iPhone</b>' +
-    '<span>Safari can clear website data after 7 days without a visit. Tap Share, then Add to Home Screen, and back up now and then.</span></div>' +
+    '<span>Safari may remove website data after a period of inactivity. Tap Share, then Add to Home Screen, and back up regularly.</span></div>' +
     '<button type="button" class="ub-later" onclick="dismissIosTip(true)">Back up</button>' +
     '<button type="button" class="ub-now" onclick="dismissIosTip(false)">Got it</button>';
   document.body.appendChild(bar);

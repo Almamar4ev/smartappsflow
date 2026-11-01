@@ -193,6 +193,9 @@ function sanitizeState(loaded) {
     updatedAt: _siso(loaded.updatedAt)
   };
   if (loaded.schemaVersion != null) out.schemaVersion = _sstr(loaded.schemaVersion, 20);
+  // Save counter: orders two copies saved within the same millisecond.
+  var rev = parseInt(loaded.rev, 10);
+  if (rev > 0 && rev < 1e15) out.rev = rev;
   if (!out.activeAccountId) out.activeAccountId = accounts.length ? accounts[0].id : '';
   return out;
 }

@@ -15,51 +15,89 @@ function openDB(callback) {
   } catch(err) { callback(null); }
 }
 
-function save() {
-  state.schemaVersion = 3;
-  state.updatedAt = new Date().toISOString();
-  var lsOk = true;
-  // Photos are megabytes; localStorage holds about 5MB. When IndexedDB works, the
-  // localStorage copy goes without photos (marked photosInDb) and IndexedDB keeps
-  // the full state; loading puts the photos back by trade id. Without IndexedDB,
-  // localStorage keeps everything as before.
-  // Safety: IndexedDB is never written before it was read this session (_dbReady),
-  // and photos leave the localStorage copy only while IndexedDB writes succeed.
-  var dbReady = !!window._dbReady;
-  var lsState = state;
-  if (dbReady && _db && window._idbOk !== false && state.trades.some(function(t){ return t.photos && t.photos.length; })) {
-    lsState = Object.assign({}, state, { photosInDb: true, trades: state.trades.map(function(t){
-      return (t.photos && t.photos.length) ? Object.assign({}, t, { photos: [] }) : t;
-    }) });
-  }
-  try { localStorage.setItem('tl_v3', JSON.stringify(lsState)); }
+// ── Photos across the two stores ──────────────────────────────────────────────
+// IndexedDB holds the full state, photos included. localStorage (about 5MB) holds a
+// copy that leaves out only the photos already confirmed in IndexedDB: a trade's
+// photos are stripped there, with a reference (photoRefs[tradeId] = signature), only
+// when the last *completed* IndexedDB write held exactly those photos (_photoDurable).
+// New, changed or not-yet-confirmed photos stay inline in localStorage, so closing
+// the app mid-write, or a failed or aborted IndexedDB write, never loses them; a
+// trade whose photos were removed has no reference, so nothing brings them back.
+function photoSig(photos) {
+  if (!photos || !photos.length) return '';
+  return photos.length + ':' + photos.map(function(p){ p = String(p || ''); return p.length + '.' + p.slice(-24); }).join('|');
+}
+function photoSigs(trades) {
+  var out = {};
+  (trades || []).forEach(function(t){ if (t && t.id && t.photos && t.photos.length) out[t.id] = photoSig(t.photos); });
+  return out;
+}
+window._photoDurable = window._photoDurable || {};
+function lsSnapshot(st) {
+  var refs = {}, any = false;
+  var canStrip = !!window._dbReady && !!_db && window._idbOk !== false;
+  var pending = window._pendingPhotoRefs || null; // loaded stripped, IndexedDB not read yet
+  var trades = st.trades.map(function(t){
+    var sig = photoSig(t.photos);
+    if (sig && canStrip && window._photoDurable[t.id] === sig) { refs[t.id] = sig; any = true; return Object.assign({}, t, { photos: [] }); }
+    if (!sig && pending && pending[t.id]) { refs[t.id] = pending[t.id]; any = true; } // keep the pointer until merged
+    return t;
+  });
+  var out = Object.assign({}, st, { trades: trades });
+  delete out.photoRefs; delete out.photosInDb;
+  if (any) { out.photoRefs = refs; out.photosInDb = true; }
+  if (window._pendingLegacyPhotos) out.photosInDb = true; // v30/v31 copy not merged yet
+  return out;
+}
+function writeLocal(st) {
+  try { localStorage.setItem('tl_v3', JSON.stringify(lsSnapshot(st))); return true; }
   catch(e) {
-    lsOk = false;
     if (!window._storageWarned) {
       window._storageWarned = true;
       showToast('Storage is full — export a backup and remove old trade photos to free space', 'error');
     }
+    return false;
   }
-  if (lsOk) window._storageWarned = false;
-  if (!dbReady) return;
+}
+
+function save() {
+  state.schemaVersion = 3;
+  state.updatedAt = new Date().toISOString();
+  // Newest copy even within one millisecond, and above anything this device has stored
+  // (a restored older backup carries a smaller counter).
+  state.rev = Math.max(parseInt(state.rev, 10) || 0, window._maxRev || 0) + 1;
+  window._maxRev = state.rev;
+  if (writeLocal(state)) window._storageWarned = false;
+  // IndexedDB is never written before it was read this session.
+  if (!window._dbReady) return;
+  var rev = state.rev, full = JSON.stringify(state), sigs = photoSigs(state.trades);
   openDB(function(db) {
     if (!db) return;
-    var fallback = function() {
-      // IndexedDB refused the write: keep a full copy (with photos) in localStorage.
-      window._idbOk = false;
-      try { localStorage.setItem('tl_v3', JSON.stringify(state)); } catch(e2) {}
+    var failed = function() {
+      window._idbOk = false; // keep every photo inline in localStorage from now on
+      writeLocal(state);
     };
     try {
       var tx = db.transaction('state','readwrite');
-      tx.oncomplete = function(){ window._idbOk = true; };
-      tx.onerror = fallback; tx.onabort = fallback;
-      tx.objectStore('state').put({id:'main', data: JSON.stringify(state)});
-    } catch(e) { fallback(); }
+      tx.oncomplete = function(){
+        // Writes to one store complete in the order they were made, so the last one
+        // to complete is the newest snapshot: its photos are now the durable ones.
+        window._idbOk = true;
+        window._photoDurable = sigs;
+        if (state.rev === rev) writeLocal(state); // nothing newer: slim the local copy
+      };
+      tx.onerror = failed; tx.onabort = failed;
+      tx.objectStore('state').put({id:'main', data: full});
+    } catch(e) { failed(); }
   });
 }
 
 function applyLoadedState(parsed) {
   if (!parsed || typeof parsed !== 'object') return false;
+  // A localStorage copy saved without some photos: keep its pointers so a save made
+  // before IndexedDB is read does not drop them (see lsSnapshot).
+  window._pendingPhotoRefs = (parsed.photoRefs && typeof parsed.photoRefs === 'object') ? parsed.photoRefs : null;
+  window._pendingLegacyPhotos = !!(parsed.photosInDb && !parsed.photoRefs);
   var cleaned = sanitizeState(parsed);
   if (!cleaned.accounts || !cleaned.accounts.length) return false;
   state = cleaned;
@@ -103,17 +141,31 @@ function loadFromDB(callback) {
         var winner = null;
         if (idb && lsv) {
           var lsStamp = lsv.updatedAt || '', idbStamp = idb.updatedAt || '';
-          winner = (lsStamp > idbStamp) ? lsv : idb;
-          if (lsStamp !== idbStamp) needSync = true;
-          // The localStorage copy may be newer but saved without photos: take them from IndexedDB.
+          var lsRev = parseInt(lsv.rev, 10) || 0, idbRev = parseInt(idb.rev, 10) || 0;
+          window._maxRev = Math.max(window._maxRev || 0, lsRev, idbRev);
+          // Newer save counter wins; copies from before the counter compare by time.
+          var lsNewer = (lsRev || idbRev) ? lsRev > idbRev : lsStamp > idbStamp;
+          winner = lsNewer ? lsv : idb;
+          if (lsStamp !== idbStamp || lsRev !== idbRev) needSync = true;
+          // The localStorage copy may be newer but saved without some photos: take those
+          // from IndexedDB. With photoRefs only the referenced trades are filled, so a
+          // trade whose photos were deleted stays empty; older copies (v30/v31, no
+          // photoRefs) fill every empty trade as they did then.
           if (winner === lsv && lsv.photosInDb && Array.isArray(lsv.trades) && Array.isArray(idb.trades)) {
             var pics = {};
             idb.trades.forEach(function(t){ if (t && t.id && t.photos && t.photos.length) pics[t.id] = t.photos; });
-            lsv.trades.forEach(function(t){ if (t && (!t.photos || !t.photos.length) && pics[t.id]) t.photos = pics[t.id]; });
+            var refs = (lsv.photoRefs && typeof lsv.photoRefs === 'object') ? lsv.photoRefs : null;
+            lsv.trades.forEach(function(t){
+              if (!t || (t.photos && t.photos.length) || !pics[t.id]) return;
+              if (!refs || refs[t.id]) t.photos = pics[t.id];
+            });
           }
         } else if (idb) { winner = idb; needSync = true; }
         else if (lsv) { winner = lsv; needSync = true; }
         if (winner) applyLoadedState(winner);
+        // Photos merged: nothing pending, and what IndexedDB holds is durable.
+        window._pendingPhotoRefs = null; window._pendingLegacyPhotos = false;
+        window._photoDurable = idb ? photoSigs(idb.trades) : {};
         window._dbReady = true;
         if (needSync) save();
         callback();

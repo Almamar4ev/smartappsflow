@@ -106,7 +106,7 @@ if (muscatData && muscatData.tz === 'Asia/Muscat') {
 const FINANCE = [
   'calcAvgPrice', '_tradeEvents', 'calcPositionState', 'migrateBasis',
   'calcTotalQty', 'calcBoughtQty', 'calcInvestedValue', 'calcFeesAmt',
-  'calcUnrealizedPnl', 'calcRealizedPnl', 'calcAddBuyFees', 'calcPnl',
+  'calcUnrealizedPnl', 'calcRealizedPnl', 'calcAddBuyFees', 'calcOpenBuyFees', 'calcPnl',
   'isWin', 'isLoss', 'isBreakeven', 'calcDcaSummary'
 ];
 let financeCode = 'var BE_EPS = 0.005;\n';

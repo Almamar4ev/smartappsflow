@@ -114,9 +114,29 @@ console.log('Edgeory — code audit regression tests\n');
   assert('Report October: October buy closed in November is not', !ids.includes('nov'));
   assert('Report October: the partial sell made in October counts (+50)', R.rows.find((r) => r.t.id === 'part') && near(R.rows.find((r) => r.t.id === 'part').pnl, 50));
   assert('Report October: realized P&L = 20 + 50 = 70', near(R.pnl, 70), R.pnl);
-  assert('Report October: 1 closed, 1 partly sold, the open position listed apart', R.closed === 1 && R.partly === 1 && R.open.length === 1);
+  // Open on 31 Oct: CCC (still held) and BBB (bought 20 Oct, sold 1 Nov) — as they stood then.
+  assert('Report October: 1 closed, 1 partly sold, 2 positions open on 31 Oct', R.closed === 1 && R.partly === 1 && R.open.length === 2, R.open.map((o) => o.t.id));
   const N = run("reportData({ accId: 'all', from: '2026-11-01', to: '2026-11-30' })");
   assert('Report November: the October buy closed in November shows here (+50)', N.rows.length === 1 && N.rows[0].t.id === 'nov' && near(N.pnl, 50));
+}
+
+// R2-08: an add-buy in November is not in a report ending 31 October.
+{
+  ctx.state.trades = [mk({ id: 'pos', ticker: 'POS', status: 'open', entry: 10, qty: 20, original_qty: 10, entry_date: '2026-09-01',
+    add_buys: [{ id: 'nb', qty: 10, price: 20, date: '2026-11-05', fees: 0, fees_mode: '$' }] })];
+  const R = run("reportData({ accId: 'all', from: '2026-10-01', to: '2026-10-31' })");
+  assert('R2-08 October report holds 10 shares at 10 (not the November buy)', R.open.length === 1 && near(R.open[0].qty, 10) && near(R.open[0].cost, 100), R.open[0]);
+  const T = run("reportData({ accId: 'all', from: '', to: '' })");
+  assert('R2-08 with no end date: today, 20 shares', near(T.open[0].qty, 20));
+}
+// R2-09: partial +100 in September, final -50 in October (whole trade +50).
+{
+  ctx.state.trades = [mk({ id: 'w', ticker: 'W', status: 'closed', entry: 10, qty: 0, original_qty: 20, entry_date: '2026-08-01', exit: 7.5, exit_date: '2026-10-10',
+    partial_closes: [{ id: 'p1', qty: 10, price: 20, date: '2026-09-10', fees: 0, fees_mode: '$' }, { id: 'p2', qty: 10, price: 5, date: '2026-10-10', fees: 0, fees_mode: '$' }] })];
+  run('rebuildBasis(state.trades[0])');
+  const R = run("reportData({ accId: 'all', from: '2026-10-01', to: '2026-10-31' })");
+  assert('R2-09 October P&L is -50 (the October sell only)', near(R.pnl, -50), R.pnl);
+  assert('R2-09 win rate counts the trade by its whole result (+50 = win), as labelled', R.closed === 1 && R.wins === 1);
 }
 
 // P2 Trading 212: rows newest first, fees shared out, re-import skipped.
@@ -176,6 +196,73 @@ const csv = [
   const keep = after.find((t) => t.id === open1.id), sold = after.find((t) => t.id !== open1.id);
   assert('Sync partly sold: the open trade keeps 6 shares, the 4 sold are a closed trade',
     after.length === 2 && keep && keep.status === 'open' && keep.original_qty === 6 && sold && sold.status === 'closed' && sold.qty === 4, after);
+}
+
+// Second audit R2-01..R2-03: one fee policy. Buy fees leave cash when paid and
+// enter realized P&L (and Fees paid) once, when the trade fully closes.
+{
+  const acc = { id: 'a1', startingCapital: 2000 };
+  const t = mk({ status: 'open', entry: 100, qty: 10, original_qty: 10, fees: 5, fees_mode: '$', current_price: 100, entry_date: '2026-01-01' });
+  ctx.acc = acc; ctx.t = t;
+  const bal = () => 2000 + run('calcRealizedTotal(t)');
+  const openBook = () => (t.status === 'open' ? run('calcPositionState(t).cost') + run('calcOpenBuyFees(t)') : 0);
+  assert('R2-01 open: cash 995', near(run('calcAccountCash(acc, [t])'), 995));
+  assert('R2-01 open: Balance = cash + open cost + buy fee paid (2000 = 995 + 1000 + 5)', near(bal(), run('calcAccountCash(acc, [t])') + openBook()));
+  assert('R2-01 open: nothing realized yet, so P&L 0 and Fees paid 0 (fee is in the open cost)', near(run('calcRealizedTotal(t)'), 0) && near(run('calcTradeFees(t)'), 0));
+  assert('R2-01 open with a price: P&L if sold now = -5 (the buy fee)', near(run('calcPnl(t)'), -5), run('calcPnl(t)'));
+  t.partial_closes = [{ id: 'p1', qty: 5, price: 110, date: '2026-01-05', fees: 0, fees_mode: '$' }]; t.qty = 5; run('rebuildBasis(t)');
+  assert('R2-02 after selling 5@110: realized +50, cash 1545, Balance reconciles', near(run('calcRealizedTotal(t)'), 50) && near(run('calcAccountCash(acc, [t])'), 1545) && near(bal(), run('calcAccountCash(acc, [t])') + openBook()));
+  t.partial_closes.push({ id: 'p2', qty: 5, price: 120, date: '2026-01-09', fees: 0, fees_mode: '$' }); t.qty = 0; t.status = 'closed'; t.exit = 120; t.exit_date = '2026-01-09'; run('rebuildBasis(t)');
+  const evs = run('tradeRealizedEvents(t)');
+  assert('R2-02 closed: P&L = 50 + 100 - 5 fee once = 145, Fees paid 5', near(run('calcPnl(t)'), 145) && near(run('calcTradeFees(t)'), 5));
+  assert('R2-02 the sum of the realized events equals the trade P&L', near(evs.reduce((s, e) => s + e.pnl, 0), run('calcPnl(t)')));
+  assert('R2-02 closed: Balance = cash (2145)', near(bal(), 2145) && near(run('calcAccountCash(acc, [t])'), 2145));
+  const u = mk({ status: 'open', entry: 100, qty: 20, original_qty: 10, fees: 5, fees_mode: '$', entry_date: '2026-01-01',
+    add_buys: [{ id: 'b', qty: 10, price: 100, date: '2026-01-02', fees: '10', fees_mode: '$' }] });
+  ctx.u = u;
+  assert('R2-03 open with add-buy fee: realized 0 and Fees paid 0, same rule for both buy fees', near(run('calcRealizedTotal(u)'), 0) && near(run('calcTradeFees(u)'), 0) && near(run('calcPnl(u)'), 0));
+  assert('R2-03 cash 2000 - 2000 cost - 15 fees = -15; Balance reconciles', near(run('calcAccountCash(acc, [u])'), -15) && near(2000, run('calcAccountCash(acc, [u])') + run('calcPositionState(u).cost') + run('calcOpenBuyFees(u)')));
+  u.status = 'closed'; u.exit = 100; u.exit_date = '2026-01-05';
+  assert('R2-03 closed flat: P&L -15 and Fees paid 15, each fee once', near(run('calcPnl(u)'), -15) && near(run('calcTradeFees(u)'), 15));
+}
+
+// R2-12: two buys of the same ticker, day and price; re-import must not merge or double them.
+{
+  const hdr = 'Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total,Transaction fee';
+  const f = [hdr, 'Market buy,2026-03-02 10:00:00,X,ZZ,ZZ,10,50,USD,1,,500,0', 'Market buy,2026-03-02 10:05:00,X,ZZ,ZZ,10,50,USD,1,,500,0',
+    'Market sell,2026-03-09 10:00:00,X,ZZ,ZZ,15,60,USD,1,150,900,0'].join('\r\n');   // CRLF line ends
+  const res = run('parseT212Csv(' + JSON.stringify(f) + ')');
+  const sum = (st) => res.parsed.filter((p) => p.status === st).reduce((s, p) => s + p.qty, 0);
+  assert('R2-12 CRLF file parses; FIFO: 15 closed, 5 still open from 20 bought', !res.error && sum('closed') === 15 && sum('open') === 5, res);
+  ctx.state.trades = []; ctx.state.accounts = [{ id: 'a1', name: 'T', type: 'cash', startingCapital: 0, transactions: [] }];
+  dom.csvTargetAccount = { value: 'a1' };
+  ctx.window = { _csvParsed: res.parsed }; run('confirmCSVImport()');
+  const n1 = ctx.state.trades.length;
+  ctx.window = { _csvParsed: run('parseT212Csv(' + JSON.stringify(f) + ')').parsed }; run('confirmCSVImport()');
+  assert('R2-12 re-importing keeps the same pieces (no merge, no double)', ctx.state.trades.length === n1 && n1 === 3, [n1, ctx.state.trades.length]);
+}
+// Quoted fields with commas parse.
+{
+  const f = ['Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total',
+    'Market buy,2026-04-01 10:00:00,X,QQ,"Name, Inc.",4,25,USD,1,,100'].join('\n');
+  const res = run('parseT212Csv(' + JSON.stringify(f) + ')');
+  assert('a quoted name with a comma does not shift the columns', res.parsed && res.parsed[0].qty === 4 && res.parsed[0].entry === 25, res);
+}
+// R2-13: price in another currency than the fees -> fees left out and reported.
+{
+  const f = ['Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total,Currency conversion fee',
+    'Market buy,2026-05-01 10:00:00,X,EU,EU,10,100,USD,1.0850,,921.66,1.38'].join('\n');
+  const res = run('parseT212Csv(' + JSON.stringify(f) + ')');
+  assert('R2-13 other-currency row: fee not mixed in, and counted for the warning', res.otherCurrency === 1 && res.parsed[0].fees === 0, res);
+}
+// A trade entered by hand that looks like a broker lot is never changed by an import.
+{
+  ctx.state.trades = [mk({ id: 'manual1', accountId: 'a1', ticker: 'MM', status: 'open', entry: 30, qty: 10, original_qty: 10, entry_date: '2026-06-01', notes: 'mine' })];
+  const f = ['Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total',
+    'Market buy,2026-06-01 10:00:00,X,MM,MM,10,30,USD,1,,300', 'Market sell,2026-06-20 10:00:00,X,MM,MM,10,33,USD,1,30,330'].join('\n');
+  ctx.window = { _csvParsed: run('parseT212Csv(' + JSON.stringify(f) + ')').parsed }; run('confirmCSVImport()');
+  const m = ctx.state.trades.find((t) => t.id === 'manual1');
+  assert('manual trade stays open and unchanged; the import adds its own closed trade', m && m.status === 'open' && m.original_qty === 10 && ctx.state.trades.length === 2, ctx.state.trades.map((t) => [t.id, t.status]));
 }
 
 // P2 Balance curve: each account's capital starts with that account.

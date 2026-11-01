@@ -31,6 +31,7 @@ const NEEDED = [
   'calcUnrealizedPnl',
   'calcRealizedPnl',
   'calcAddBuyFees',
+  'calcOpenBuyFees',
   'calcPnl',
   'calcRealizedTotal',
   'calcRealizedCost',
