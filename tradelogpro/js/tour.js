@@ -9,7 +9,7 @@ var TOUR_STEPS = [
     body: 'Balance, net P&L and win rate. They update every time you close a trade.' },
   { view: 'dashboard', targets: ['#topLogBtn'],
     title: 'Log a trade',
-    body: 'Tap + Log for each buy. Later, open the trade to add buys or sell in parts, and your average stays exact.' },
+    body: 'Tap + Log to record a new trade. To buy more or sell part of it later, open the trade. Your average updates by itself.' },
   { view: 'trades', targets: ['#tradeFilterTabs', '#bnav-trades', '#nav-trades'],
     title: 'Your trade log',
     body: 'Filter wins, losses and open trades, or switch to Calendar to see each day’s P&L. Tap a trade for its full history.' },
@@ -21,7 +21,7 @@ var TOUR_STEPS = [
     body: 'Win rate, profit factor, streaks and monthly P&L. Tap a month to see the trades behind it.' },
   { view: 'more', targets: ['#bnav-more', '#nav-more'],
     title: 'Your data',
-    body: 'Your trades stay on this device. Back up here, import from a broker screenshot, and keep a daily journal.' }
+    body: 'Your trades stay on this device. Back up here, import your trades, and keep a daily journal.' }
 ];
 var _tourStep = -1;
 
@@ -93,11 +93,12 @@ function showTourStep() {
     '<div class="tour-actions"><button type="button" class="tour-skip" onclick="endTour(\'skipped\')">Skip</button>' +
     '<button type="button" class="tour-next" onclick="nextTourStep()">' + (last ? 'Done' : 'Next') + '</button></div>';
   card.classList.add('show');
+  // Place ring and card in this same frame (reading the layout forces it), so the
+  // card never shows on the wrong side first; check again once painted.
+  _tourReposition();
   requestAnimationFrame(function () {
-    requestAnimationFrame(function () {
-      _tourReposition();
-      if (viewChanged && ring) requestAnimationFrame(function () { ring.classList.remove('jump'); });
-    });
+    _tourReposition();
+    if (viewChanged && ring) requestAnimationFrame(function () { ring.classList.remove('jump'); });
   });
 }
 

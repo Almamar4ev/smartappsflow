@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v26';
-const UPDATE_NOTE = 'Cash or margin accounts, a one-tap deposit when a buy needs more cash, and a faster quick tour.';
+const CACHE = 'edgeory-v27';
+const UPDATE_NOTE = 'A new interactive equity chart: drag along it, pick a period, and switch between Balance and P&L.';
 
 const ASSETS = [
   './',
@@ -25,6 +25,7 @@ const ASSETS = [
   './js/sanitize.js',
   './js/screenshot-import.js',
   './js/app.js',
+  './js/equity.js',
   './js/tour.js',
   './icon-192.png',
   './icon-512.png',

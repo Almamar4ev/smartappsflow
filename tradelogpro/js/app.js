@@ -708,11 +708,7 @@ function renderDashboard() {
     statCard('Brokerage Fees', fmtMoney(calcTotalFees(trades)), plural(closed.length, 'closed trade', 'closed trades'), 'var(--red)') +
   '</div>' +
   '<div class="charts-row">' +
-    '<div class="panel"><div class="panel-header"><div class="panel-title">Equity Curve</div>' +
-      (eqLast.length ? '<span class="eq-last" style="color:' + pnlColor(eqLastVal) + '">' + fmtPnl(eqLastVal) + '</span>' : '') +
-    '</div>' +
-    (eqLast.length ? '<div class="chart-wrap"><canvas id="equityChart"></canvas></div>' : '<div class="empty-state" style="padding:28px 12px"><p>Close a trade to start your curve</p></div>') +
-    '</div>' +
+    equityPanelHtml(eqLast.length > 0) +
     winLossPanel(wins, losses, closed.length) +
   '</div>' +
   '<div class="bottom-row dash-extra">' +
@@ -804,7 +800,8 @@ function buildCharts() {
   var gc = 'rgba(90,99,128,0.15)', tc = '#5a6380';
   function ax(){ return {ticks:{color:tc,font:{family:'Roboto',size:chartFontSize(11)}},grid:{color:gc}}; }
   var el = document.getElementById('equityChart');
-  if (el && eqData.length) { if (equityChart) equityChart.destroy(); var col = run>=0?'#00d68f':'#ff4d6d'; equityChart = new Chart(el,{type:'line',data:{labels:eqLabels,datasets:[{data:eqData,borderColor:col,backgroundColor:col+'20',tension:.3,fill:true,pointRadius:radii,pointHoverRadius:6}]},options:Object.assign({},cd,{scales:{x:Object.assign(ax(),{ticks:Object.assign(ax().ticks,{maxTicksLimit:6})}),y:ax()}})}); }
+  var eqAccounts = filterAccountId === 'all' ? state.accounts : state.accounts.filter(function(a){ return a.id === (acc && acc.id); });
+  if (el && eqData.length) drawEquity(trades, eqAccounts);
   var bySymbol = {}, byType = {};
   closed.forEach(function(t){ var p=calcPnl(t); bySymbol[t.ticker]=(bySymbol[t.ticker]||0)+p; byType[t.type||'Other']=(byType[t.type||'Other']||0)+p; });
 
@@ -1316,8 +1313,9 @@ function renderAccountsView() {
   try { lastBackup = localStorage.getItem('tl_last_backup') || ''; } catch(e) {}
   if (!/^\d{4}-\d{2}-\d{2}$/.test(lastBackup)) lastBackup = '';
   var html = '<div class="stats-row">' +
-    statCard('Total Deposits', fmtMoney(totalDeposits), totalDeposits ? '' : 'None recorded', totalDeposits ? 'var(--green)' : 'var(--text2)') +
-    statCard('Total Withdrawals', fmtMoney(totalWithdrawals), totalWithdrawals ? '' : 'None recorded', totalWithdrawals ? 'var(--red)' : 'var(--text2)') +
+    // Neutral: a deposit is not a gain and a withdrawal is not a loss (often it is profit taken out).
+    statCard('Total Deposits', fmtMoney(totalDeposits), totalDeposits ? '' : 'None recorded', 'var(--blue)') +
+    statCard('Total Withdrawals', fmtMoney(totalWithdrawals), totalWithdrawals ? '' : 'None recorded', 'var(--blue)') +
   '</div>' +
   '<div class="cap" style="padding:2px 2px 0">Your accounts</div>' +
   '<div id="accountsListSection">' + renderAccountsList() + '</div>';
@@ -1364,8 +1362,8 @@ function setAccType(t) {
   });
   var hint = document.getElementById('accTypeHint');
   if (hint) hint.textContent = _accType === 'margin'
-    ? 'Buys can go past your cash. Edgeory shows the part on margin.'
-    : 'Edgeory warns you when a buy costs more than your cash.';
+    ? 'Buys can go above your cash. The extra shows as margin.'
+    : 'You’ll get a heads-up when a buy costs more than the cash in this account.';
 }
 
 function editAccount(id) {
@@ -1433,7 +1431,7 @@ function renderTransactionHistory(acc, showAll) {
   var visible = sorted.slice(0, limit);
   var hasMore = sorted.length > 10 && !showAll;
   var rows = visible.map(function(tx){
-    var color = tx.type === 'deposit' ? 'var(--green)' : 'var(--red)';
+    var color = 'var(--text)';
     var sign = tx.type === 'deposit' ? '+' : '-';
     var typeLabel = tx.type === 'deposit' ? 'Deposit' : 'Withdraw';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">' +
@@ -1867,7 +1865,8 @@ function addLinkedDeposit(acc, amount, date, tradeId, buyId, ticker) {
   if (!acc || !(amount > 0)) return;
   if (!acc.transactions) acc.transactions = [];
   var tx = { id: 'tx_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), type: 'deposit', amount: amount,
-    date: date || today(), tradeId: tradeId, note: 'For ' + ticker + ' buy' };
+    date: date || today(), note: tradeId ? 'For ' + ticker + ' buy' : 'For ' + ticker };
+  if (tradeId) tx.tradeId = tradeId;
   if (buyId) tx.buyId = buyId;
   acc.transactions.push(tx);
   acc.startingCapital = (parseFloat(acc.startingCapital) || 0) + amount;
@@ -4034,25 +4033,35 @@ function showCSVPreview(parsed) {
 }
 
 
-function confirmCSVImport() {
+function confirmCSVImport(deposit) {
   var accId = document.getElementById('csvTargetAccount') ? document.getElementById('csvTargetAccount').value : null;
   if (!accId) { showToast('Select an account', 'error'); return; }
   var parsed = window._csvParsed || [];
   if (!parsed.length) { showToast('No trades to import', 'error'); return; }
-  parsed.forEach(function(t, i) {
-    state.trades.unshift({
-      id:'tr_csv_'+Date.now()+'_'+i, accountId:accId,
+  var stamp = Date.now();
+  var incoming = parsed.map(function(t, i) {
+    return {
+      id:'tr_csv_'+stamp+'_'+i, accountId:accId,
       ticker:safeTicker(t.ticker), direction:t.dir, type:'', status:t.status,
       entry_date:t.entryDate, exit_date:t.exitDate,
       entry:t.entry, exit:t.exit, qty:t.qty, original_qty:t.qty,
       fees:t.fees, fees_mode:'$', notes:'Imported from CSV',
       photos:[], add_buys:[], partial_closes:[],
       createdAt:new Date().toISOString()
-    });
+    };
   });
+  // One cash check for the whole file: positions still open use cash, closed
+  // trades add or take their P&L. Ask once if the account ends up short.
+  var acc = state.accounts.find(function(a){ return a.id === accId; });
+  if (deposit === undefined && acc) {
+    var need = calcAccountCash(acc, state.trades) - calcAccountCash(acc, state.trades.concat(incoming));
+    if (need > 0.005) { confirmCashOrGo(acc, need, null, function(dep){ confirmCSVImport(dep); }); return; }
+  }
+  for (var k = incoming.length - 1; k >= 0; k--) state.trades.unshift(incoming[k]);
+  if (deposit > 0) addLinkedDeposit(acc, deposit, today(), null, null, 'Trading 212 import');
   save(); renderSidebar(); renderMain();
   closeModal('csvPreviewModal');
-  showToast('Imported ' + parsed.length + ' trades into account!', 'success');
+  showToast('Imported ' + parsed.length + ' trades' + (deposit > 0 ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
   window._csvParsed = null;
 }
 
@@ -4390,7 +4399,8 @@ function renderMore() {
     '<div class="grp">' +
       moreItem("backupData()", icon('save',18), 'Back up data' + (lastBackup ? '<span class="it-cap">Last backup ' + esc(fmtDateLong(lastBackup)) + '</span>' : '<span class="it-cap warn">No backup yet. Save a copy of your trades</span>'), '›', 'var(--green)') +
       moreItem("restoreData()", icon('folder',18), 'Restore backup', '›', 'var(--green)') +
-      moreItem("setView('import')", icon('camera',18), 'Import from screenshot', (isNativeApp() ? '4 brokers' : 'Android app') + ' ›', 'var(--green)') +
+      // Screenshot import reads text with ML Kit on the phone: Android app only, hidden on the web.
+      (isNativeApp() ? moreItem("setView('import')", icon('camera',18), 'Import from screenshot', '4 brokers ›', 'var(--green)') : '') +
       moreItem("importCSV()", icon('doc',18), 'Import from Trading 212', 'CSV ›', 'var(--green)') +
     '</div>' +
     '<div class="cap" style="padding:2px 4px 0">Preferences</div>' +
@@ -4864,7 +4874,7 @@ function applyImportPartial(tradeId) {
   updatePartialPreview();
 }
 
-function confirmScreenshotImport() {
+function confirmScreenshotImport(deposit) {
   var d = _importDraft;
   if (!d) return;
   syncImportInputs();
@@ -4927,14 +4937,22 @@ function confirmScreenshotImport() {
       trade.qty = rem;
     }
   }
+  // An imported position still open needs cash like any buy (cost of the shares held,
+  // less any profit from sells it already made). Closed history needs none.
+  if (deposit === undefined && trade.status === 'open') {
+    var need = calcPositionState(trade).cost - calcRealizedTotal(trade);
+    confirmCashOrGo(state.accounts.find(function(a){ return a.id === accId; }), need, null, function(dep){ confirmScreenshotImport(dep); });
+    return;
+  }
   if (d.screen === 'xtb' && d.nameHint) rememberNameTicker(d.nameHint, ticker);
   state.trades.unshift(trade);
+  if (deposit > 0) addLinkedDeposit(state.accounts.find(function(a){ return a.id === accId; }), deposit, first.date, trade.id, null, ticker);
   _importDraft = null;
   save();
   renderSidebar();
   haptic('success');
   setView('trades');
-  showToast('Trade saved from screenshot', 'success');
+  showToast('Trade saved from screenshot' + (deposit > 0 ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
 }
 
 function tickerDistance(a, b) {
@@ -5175,8 +5193,11 @@ function watchWebUpdates() {
     check();
     reg.addEventListener('updatefound', function() {
       var nw = reg.installing; if (!nw) return;
+      // Say so as soon as the download starts; the button turns on once it is ready.
+      if (navigator.serviceWorker.controller) showUpdateBanner(nw, true);
       nw.addEventListener('statechange', function() {
         if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(nw);
+        if (nw.state === 'redundant' && _swWaiting === nw) { var b = document.getElementById('updateBanner'); if (b) b.remove(); _swWaiting = null; }
       });
     });
     document.addEventListener('visibilitychange', function() {
@@ -5190,16 +5211,21 @@ function watchWebUpdates() {
     window.location.reload();
   });
 }
-function showUpdateBanner(worker) {
+function showUpdateBanner(worker, pending) {
   _swWaiting = worker;
-  if (document.getElementById('updateBanner')) return;
+  var old = document.getElementById('updateBanner');
+  if (old) {
+    var nowBtn = old.querySelector('.ub-now');
+    if (nowBtn && !pending && nowBtn.disabled && !_swUpdateAsked) { nowBtn.disabled = false; nowBtn.textContent = 'Update'; }
+    return;
+  }
   var bar = document.createElement('div');
   bar.id = 'updateBanner';
   bar.className = 'update-banner';
   bar.setAttribute('role', 'status');
   bar.innerHTML = '<div class="ub-text"><b>Update available</b><span id="updateNote">A new version of Edgeory is ready.</span></div>' +
     '<button type="button" class="ub-later" onclick="dismissUpdateBanner()">Later</button>' +
-    '<button type="button" class="ub-now" onclick="applyWebUpdate(this)">Update</button>';
+    '<button type="button" class="ub-now" onclick="applyWebUpdate(this)"' + (pending ? ' disabled>Getting ready…' : '>Update') + '</button>';
   document.body.appendChild(bar);
   var onMsg = function(e) {
     if (!e.data || e.data.type !== 'VERSION_INFO') return;

@@ -379,7 +379,7 @@ function detectAppRuntime(loc, cap) {
     <div class="modal-body">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="field"><label>Account Name <span class="req">*</span></label><input id="f_acc_name" type="text" placeholder="e.g. Main, Crypto…"></div>
-        <div class="field"><label>Capital <span class="opt">(optional)</span></label><input id="f_acc_capital" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 10,000" oninput="fmtNumInput(this)"></div>
+        <div class="field"><label>Capital <span class="opt">(optional)</span></label><input id="f_acc_capital" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 10,000" oninput="fmtNumInput(this)"><div class="cash-note">The money you put in. Profits and losses from your trades are added on top.</div></div>
         <div class="field"><label>Account type</label>
           <div class="seg" id="accTypeSeg" role="radiogroup" aria-label="Account type" style="grid-template-columns:1fr 1fr">
             <button type="button" role="radio" data-t="cash" onclick="setAccType('cash')">Cash</button>
@@ -391,8 +391,8 @@ function detectAppRuntime(loc, cap) {
         <div id="accTransactionSection" style="display:none">
           <div style="margin-bottom:8px;font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text3);text-transform:uppercase">Deposit / Withdraw</div>
           <div style="display:flex;flex-direction:row;gap:8px;margin-bottom:10px">
-            <button type="button" onclick="accTransaction('deposit')" style="flex:1;padding:10px;background:var(--green);color:#000;border:none;border-radius:8px;font-size:calc(13px*var(--fz));font-weight:700;cursor:pointer">+ Deposit</button>
-            <button type="button" onclick="accTransaction('withdraw')" style="flex:1;padding:10px;background:var(--red-bg);color:var(--red);border:1px solid var(--red);border-radius:8px;font-size:calc(13px*var(--fz));font-weight:700;cursor:pointer">− Withdraw</button>
+            <button type="button" class="btn btn-secondary" onclick="accTransaction('deposit')" style="flex:1;justify-content:center;height:42px">Deposit</button>
+            <button type="button" class="btn btn-secondary" onclick="accTransaction('withdraw')" style="flex:1;justify-content:center;height:42px">Withdraw</button>
           </div>
           <div id="accTransactionForm" style="display:none">
             <div class="field">
@@ -753,6 +753,7 @@ function detectAppRuntime(loc, cap) {
 <script src="js/sanitize.js"></script>
 <script src="js/screenshot-import.js"></script>
 <script src="js/app.js"></script>
+<script src="js/equity.js"></script>
 <script src="js/tour.js"></script>
 </body>
 </html>
