@@ -93,6 +93,17 @@ assert('page shows an Update banner and reloads on controllerchange',
 assert('install bypasses the HTTP cache so a release never caches stale files',
   /cache: 'reload'/.test(installBlock));
 
+const stateJs = readFileSync(join(root, 'js', 'state.js'), 'utf8');
+const pick = (src, re) => ((src.match(re) || [])[1] || '');
+const swCache = pick(sw, /const CACHE = '([^']+)'/);
+assert('each web release announces itself once: WHATS_NEW_ID equals sw.js CACHE',
+  swCache && pick(stateJs, /var WHATS_NEW_ID = '([^']+)'/) === swCache);
+assert("the in-app 'Edgeory updated' text matches the update banner note",
+  pick(stateJs, /var WHATS_NEW_TEXT = '([^']+)'/) === pick(sw, /const UPDATE_NOTE = '([^']+)'/));
+const scripts = [...html.matchAll(/<script src="(js\/[^"]+)"/g)].map((m) => m[1]);
+assert('every app script is precached by the service worker (' + scripts.length + ' files)',
+  scripts.length > 0 && scripts.every((s) => sw.includes("'./" + s + "'")));
+
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
 if (failed) process.exit(1);

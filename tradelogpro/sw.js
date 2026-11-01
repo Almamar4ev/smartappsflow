@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v23';
-const UPDATE_NOTE = 'Calendar totals now show the month on screen, and closed trades show your true average entry and exit.';
+const CACHE = 'edgeory-v24';
+const UPDATE_NOTE = 'New app tour in More, calendar totals for the month on screen, and your true average entry and exit on closed trades.';
 
 const ASSETS = [
   './',
@@ -25,6 +25,7 @@ const ASSETS = [
   './js/sanitize.js',
   './js/screenshot-import.js',
   './js/app.js',
+  './js/tour.js',
   './icon-192.png',
   './icon-512.png',
   './fonts/roboto-400.woff2',

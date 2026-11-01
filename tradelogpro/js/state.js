@@ -7,9 +7,11 @@ var APP_VERSION = '1.2.0';
 var APP_STORE_TITLE = 'Edgeory: Trading Journal';
 var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // One-time "What's new" note for people who already used an older version.
-// Change WHATS_NEW_ID on each release that should announce itself.
-var WHATS_NEW_ID = '1.2.0';
-var WHATS_NEW_TEXT = 'New text size option in More, clearer calculators and easier-to-read numbers.';
+// Shown once after each web release, whether the user tapped Update or the new
+// version applied by itself after the app was closed (Later). Must equal sw.js
+// CACHE / UPDATE_NOTE — tests/pwa-tests.mjs enforces it.
+var WHATS_NEW_ID = 'edgeory-v24';
+var WHATS_NEW_TEXT = 'New app tour in More, calendar totals for the month on screen, and your true average entry and exit on closed trades.';
 
 // ==========================================================================
 // STATE + INDEXEDDB STORAGE

@@ -1015,7 +1015,7 @@ function renderCalendar() {
   '<div class="cal-grid" id="calGrid"><div class="cal-header">Su</div><div class="cal-header">Mo</div><div class="cal-header">Tu</div><div class="cal-header">We</div><div class="cal-header">Th</div><div class="cal-header">Fr</div><div class="cal-header">Sa</div>' +
   cells + '</div>' +
   '<div style="display:flex;justify-content:space-between;padding:8px 14px 12px;font-size:calc(12px*var(--fz));color:var(--text3);border-top:1px solid var(--border)">' +
-    '<span>' + plural(tradingDays, 'trading day', 'trading days') + ' · ' + greenDays + ' green</span>' +
+    '<span>' + plural(tradingDays, 'trading day', 'trading days') + ' · ' + plural(greenDays, 'winning day', 'winning days') + '</span>' +
     '<span class="n" style="font-weight:700;color:' + pnlColor(monthPnl) + '">' + fmtPnl(monthPnl) + '</span>' +
   '</div></div>';
 }
@@ -1541,6 +1541,7 @@ function saveAccount() {
   }
   save(); closeModal('accountModal'); renderSidebar(); renderMain();
   showToast((editingAccountId ? 'Account updated' : 'Account created') + ': ' + name, 'success');
+  if (typeof maybeOfferTour === 'function') setTimeout(maybeOfferTour, 900);
   editingAccountId = null;
 }
 
@@ -4278,6 +4279,7 @@ function renderMore() {
       moreItem("setView('journal')", icon('book',18), 'Daily journal', 'Today ›', 'var(--blue)') +
       moreItem("setView('accounts')", icon('user',18), 'Accounts', state.accounts.length + ' ›', 'var(--blue)') +
       moreItem("setView('formulas')", icon('ruler',18), 'Formulas &amp; definitions', '›', 'var(--blue)') +
+      moreItem("replayTour()", icon('bulb',18), 'App tour', '1 min ›', 'var(--blue)') +
     '</div>' +
     '<div class="cap" style="padding:2px 4px 0">Your data</div>' +
     '<div class="grp">' +
@@ -4911,6 +4913,7 @@ function initSheetSwipe() {
 // Returns 'handled' (stayed in the app), 'warn' (first press on Home) or 'exit'.
 var _backExitAt = 0;
 function backStep() {
+  if (typeof tourActive === 'function' && tourActive()) { endTour('skipped'); return 'handled'; }
   var lightbox = document.getElementById('lightbox');
   if (lightbox && lightbox.classList.contains('open')) { closeLightbox(); return 'handled'; }
   if (_modalStack.length) {
@@ -5032,6 +5035,7 @@ function initApp() {
     try { initWebBack(); } catch(e) {}
   }
   try { maybeShowWhatsNew(returningUser); } catch(e) {}
+  setTimeout(function(){ try { if (typeof maybeOfferTour === 'function') maybeOfferTour(); } catch(e) {} }, 1200);
 }
 
 // Shown once after an update, only to people who had data from an older version.
