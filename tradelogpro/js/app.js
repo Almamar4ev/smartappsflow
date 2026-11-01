@@ -2083,6 +2083,7 @@ function saveTradeModal(deposit) {
   var wasFromDetail = openedFromDetail;
   save(); closeModal('tradeModal'); renderSidebar(); renderMain();
   haptic('success');
+  if (!wasEditing) setTimeout(function(){ try { maybeShowIosStorageTip(); } catch(e) {} }, 2500);
   showToast((wasEditing ? 'Trade updated' : 'Trade logged') + ': ' + ticker + (_depAcc ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
   if (wasEditing && wasFromDetail) {
     var savedId = wasEditing;
@@ -4343,6 +4344,37 @@ function shareApp() {
   copyShareText(text);
 }
 
+// iPhone / iPad in the browser: Safari may delete a website's data after 7 days
+// without a visit; a Home Screen web app is kept. Told once, to people with data.
+function isIosBrowser() {
+  var ua = navigator.userAgent || '';
+  var ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+  var standalone = navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  return ios && !standalone && !isNativeApp();
+}
+function maybeShowIosStorageTip() {
+  if (!isIosBrowser()) return;
+  try { if (localStorage.getItem('tl_ios_tip')) return; } catch(e) { return; }
+  if (!state.trades.length) return; // nothing to lose yet; ask once there is
+  if (document.getElementById('updateBanner') || document.getElementById('whatsNewBanner') || document.getElementById('iosTip')) return;
+  if ((typeof tourActive === 'function' && tourActive()) || document.querySelector('.tour-card.show')) { setTimeout(maybeShowIosStorageTip, 4000); return; }
+  if (_modalStack.length) { setTimeout(maybeShowIosStorageTip, 4000); return; }
+  var bar = document.createElement('div');
+  bar.id = 'iosTip';
+  bar.className = 'update-banner';
+  bar.setAttribute('role', 'status');
+  bar.innerHTML = '<div class="ub-text"><b>Keep your trades safe on iPhone</b>' +
+    '<span>Safari can clear website data after 7 days without a visit. Tap Share, then Add to Home Screen, and back up now and then.</span></div>' +
+    '<button type="button" class="ub-later" onclick="dismissIosTip(true)">Back up</button>' +
+    '<button type="button" class="ub-now" onclick="dismissIosTip(false)">Got it</button>';
+  document.body.appendChild(bar);
+}
+function dismissIosTip(backup) {
+  try { localStorage.setItem('tl_ios_tip', '1'); } catch(e) {}
+  var b = document.getElementById('iosTip'); if (b) b.remove();
+  if (backup) backupData();
+}
+
 function isNativeApp() {
   var Cap = window.Capacitor;
   return !!(Cap && ((typeof Cap.isNativePlatform === 'function' && Cap.isNativePlatform()) || Cap.isNative));
@@ -5223,6 +5255,7 @@ function initApp() {
   }
   try { maybeShowWhatsNew(returningUser); } catch(e) {}
   setTimeout(function(){ try { if (typeof maybeOfferTour === 'function') maybeOfferTour(); } catch(e) {} }, 1200);
+  setTimeout(function(){ try { maybeShowIosStorageTip(); } catch(e) {} }, 2600);
 }
 
 // Shown once after an update, only to people who had data from an older version.

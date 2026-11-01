@@ -10,8 +10,8 @@ var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // Shown once after each web release, whether the user tapped Update or the new
 // version applied by itself after the app was closed (Later). Must equal sw.js
 // CACHE / UPDATE_NOTE — tests/pwa-tests.mjs enforces it.
-var WHATS_NEW_ID = 'edgeory-v30';
-var WHATS_NEW_TEXT = 'Editing a trade keeps its target and stop, the detail shows your risk and R, and screenshots take far less space.';
+var WHATS_NEW_ID = 'edgeory-v31';
+var WHATS_NEW_TEXT = 'iPhone users get a one-time tip to keep their trades safe from Safari clearing website data.';
 
 // ==========================================================================
 // STATE + INDEXEDDB STORAGE

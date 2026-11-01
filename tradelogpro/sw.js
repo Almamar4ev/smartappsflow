@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v30';
-const UPDATE_NOTE = 'Editing a trade keeps its target and stop, the detail shows your risk and R, and screenshots take far less space.';
+const CACHE = 'edgeory-v31';
+const UPDATE_NOTE = 'iPhone users get a one-time tip to keep their trades safe from Safari clearing website data.';
 
 const ASSETS = [
   './',
