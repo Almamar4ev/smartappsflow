@@ -126,6 +126,8 @@ function _sanTrade(t) {
     stoploss: (t.stoploss == null || t.stoploss === '') ? null : _snum(t.stoploss),
     current_price: (t.current_price != null && isFinite(parseFloat(t.current_price))) ? parseFloat(t.current_price) : null,
     notes: _sstr(t.notes, 5000),
+    // Broker order ID of the sell this trade came from (import de-duplication).
+    extSell: (typeof t.extSell === 'string' && /^t212:[A-Za-z0-9_.-]{1,60}$/.test(t.extSell)) ? t.extSell : undefined,
     createdAt: _siso(t.createdAt),
     photos: Array.isArray(t.photos) ? t.photos.map(safePhoto).filter(Boolean).slice(0, 20) : [],
     add_buys: Array.isArray(t.add_buys) ? t.add_buys.map(function(b){ return _sanEvent(b, 'ab_'); }).slice(0, 5000) : [],

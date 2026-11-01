@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v32';
-const UPDATE_NOTE = 'Fees now follow one rule everywhere, photos are safer while saving, and reports show positions as of the period end.';
+const CACHE = 'edgeory-v33';
+const UPDATE_NOTE = 'Trading 212 imports read real exports correctly: dates, splits, and sells of shares bought before the file.';
 
 const ASSETS = [
   './',

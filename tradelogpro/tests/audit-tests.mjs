@@ -265,6 +265,46 @@ const csv = [
   assert('manual trade stays open and unchanged; the import adds its own closed trade', m && m.status === 'open' && m.original_qty === 10 && ctx.state.trades.length === 2, ctx.state.trades.map((t) => [t.id, t.status]));
 }
 
+// Real Trading 212 export layout (anonymized): "Time (UTC)" column, sells of shares
+// bought before the 12-month file, a stock split, cash rows to skip.
+{
+  const H = 'Action,Time (UTC),ISIN,Ticker,Name,Notes,ID,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Currency (Result),Total,Currency (Total)';
+  const f = [H,
+    'Market sell,2025-11-03 14:41:49+00:00,US0000000001,AAA,"Alpha Inc",,EOF1,100.0000000000,5.0000000000,USD,1.00000000,50.00,"USD",500.00,"USD"',
+    'Market buy,2025-11-04 15:10:15+00:00,US0000000002,BBB,"Beta",,EOF2,10.0000000000,40.0000000000,USD,1.00000000,,,400.00,"USD"',
+    'Market buy,2026-04-20 08:00:02+00:00,US0000000003,SPL,"Split Co",,EOF3,40.0000000000,5.0000000000,USD,1.00000000,,,200.00,"USD"',
+    'Stock split close,2026-05-11 06:00:57+00:00,US0000000003,SPL,"Split Co",,EOF4,40.0000000000,5.0000000000,USD,1.00000000,0.00,"USD",200.00,"USD"',
+    'Stock split open,2026-05-11 06:00:57+00:00,US0000000003,SPL,"Split Co",,EOF5,2.0000000000,100.0000000000,USD,1.00000000,,,200.00,"USD"',
+    'Market sell,2026-06-02 14:21:56+00:00,US0000000002,BBB,"Beta",,EOF6,30.0000000000,30.0000000000,USD,1.00000000,-300.00,"USD",900.00,"USD"',
+    'Withdrawal,2026-06-09 11:47:13+00:00,,,,"Sent to bank",x1,,,,,,,-100.00,"USD"',
+    'Deposit,2026-06-09 14:39:35+00:00,,,,"Bank refund",x2,,,,,,,100.00,"USD"'].join('\n');
+  const r = run('parseT212Csv(' + JSON.stringify(f) + ')');
+  const by = (tk) => r.parsed.filter((p) => p.ticker === tk);
+  const pnl = (p) => (p.exit - p.entry) * p.qty - p.fees;
+  assert('real layout: dates come from "Time (UTC)", not today', r.parsed.every((p) => p.entryDate !== '2026-11-01'), r.parsed.map((p) => p.entryDate));
+  assert('sell of shares bought before the file: kept, P&L = broker Result (+50)', by('AAA').length === 1 && near(pnl(by('AAA')[0]), 50) && by('AAA')[0].entryDate === '2025-11-03', by('AAA'));
+  assert('partly before the file: one closed trade for all 30 at broker cost, P&L -300', by('BBB').length === 1 && by('BBB')[0].qty === 30 && near(pnl(by('BBB')[0]), -300), by('BBB'));
+  assert('stock split: 40 @ 5 becomes 2 @ 100, cost unchanged', by('SPL').length === 1 && near(by('SPL')[0].qty, 2) && near(by('SPL')[0].entry, 100), by('SPL'));
+  assert('deposit and withdrawal rows are not trades; counts reported', r.parsed.length === 3 && r.fromBroker === 2 && r.splits === 1 && r.unmatched === 0, r);
+  assert('trades from before the file say so in their note', /Bought before 2025-11-03/.test(by('AAA')[0].note));
+}
+
+// Overlapping 12-month exports: a sell of shares bought before both files gets a
+// different start date in each, but its broker order ID is the same -> no duplicate.
+{
+  const H = 'Action,Time (UTC),ISIN,Ticker,Name,Notes,ID,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Currency (Result),Total,Currency (Total)';
+  const sell = 'Market sell,2026-06-02 14:21:28+00:00,X,OLD,"Old Co",,EOF900,10.0000000000,22.0000000000,USD,1.00000000,60.00,"USD",220.00,"USD"';
+  const f1 = [H, 'Market buy,2025-11-03 10:00:00+00:00,X,NEW,"New Co",,EOF901,5.0000000000,10.0000000000,USD,1.00000000,,,50.00,"USD"', sell].join('\n');
+  const f2 = [H, 'Market buy,2025-12-10 10:00:00+00:00,X,NW2,"New Two",,EOF902,5.0000000000,12.0000000000,USD,1.00000000,,,60.00,"USD"', sell].join('\n');
+  ctx.state.trades = []; ctx.state.accounts = [{ id: 'a1', name: 'T', type: 'cash', startingCapital: 0, transactions: [] }];
+  dom.csvTargetAccount = { value: 'a1' };
+  ctx.window = { _csvParsed: run('parseT212Csv(' + JSON.stringify(f1) + ')').parsed }; run('confirmCSVImport()');
+  ctx.window = { _csvParsed: run('parseT212Csv(' + JSON.stringify(f2) + ')').parsed }; run('confirmCSVImport()');
+  const olds = ctx.state.trades.filter((t) => t.ticker === 'OLD');
+  assert('overlapping exports: the same broker sell is imported once', olds.length === 1 && olds[0].extSell === 't212:EOF900', olds.map((t) => [t.entry_date, t.extSell]));
+  assert('overlapping exports: the new buy of the second file is added', ctx.state.trades.length === 3, ctx.state.trades.map((t) => t.ticker));
+}
+
 // P2 Balance curve: each account's capital starts with that account.
 {
   const accounts = [
