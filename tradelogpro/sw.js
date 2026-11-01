@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v25';
-const UPDATE_NOTE = 'See the cash left in your account when you log a buy, clearer example values in every field, and a smoother quick tour.';
+const CACHE = 'edgeory-v26';
+const UPDATE_NOTE = 'Cash or margin accounts, a one-tap deposit when a buy needs more cash, and a faster quick tour.';
 
 const ASSETS = [
   './',

@@ -140,6 +140,7 @@ function _sanAccount(a) {
     startingCapital: _snum(a.startingCapital != null ? a.startingCapital : a.capital),
     broker: _sstr(a.broker, 80),
     currency: _sstr(a.currency, 8),
+    type: _schoice(a.type, ['cash', 'margin'], 'cash'),
     createdAt: _siso(a.createdAt),
     transactions: Array.isArray(a.transactions) ? a.transactions.map(function(tx){
       // Runtime writes `withdraw`; accept the old `withdrawal` spelling only
@@ -149,12 +150,17 @@ function _sanAccount(a) {
       var safeType = rawType === 'deposit' ? 'deposit' :
         ((rawType === 'withdraw' || rawType === 'withdrawal') ? 'withdraw' : '');
       if (!safeType) return null;
-      return {
+      var out = {
         id: _sid(tx && tx.id, 'tx_'),
         type: safeType,
         amount: Math.abs(_snum(tx && tx.amount)),
         date: _sdate(tx && tx.date)
       };
+      // Deposits Edgeory added to cover a buy keep a link to it (removed with it).
+      if (tx && typeof tx.tradeId === 'string' && ID_RE.test(tx.tradeId) && tx.tradeId.length <= 64) out.tradeId = tx.tradeId;
+      if (tx && typeof tx.buyId === 'string' && ID_RE.test(tx.buyId) && tx.buyId.length <= 64) out.buyId = tx.buyId;
+      if (tx && tx.note) out.note = _sstr(tx.note, 80);
+      return out;
     }).filter(Boolean).slice(0, 5000) : []
   };
 }

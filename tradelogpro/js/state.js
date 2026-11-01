@@ -10,8 +10,8 @@ var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // Shown once after each web release, whether the user tapped Update or the new
 // version applied by itself after the app was closed (Later). Must equal sw.js
 // CACHE / UPDATE_NOTE — tests/pwa-tests.mjs enforces it.
-var WHATS_NEW_ID = 'edgeory-v25';
-var WHATS_NEW_TEXT = 'See the cash left in your account when you log a buy, clearer example values in every field, and a smoother quick tour.';
+var WHATS_NEW_ID = 'edgeory-v26';
+var WHATS_NEW_TEXT = 'Cash or margin accounts, a one-tap deposit when a buy needs more cash, and a faster quick tour.';
 
 // ==========================================================================
 // STATE + INDEXEDDB STORAGE

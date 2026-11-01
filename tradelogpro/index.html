@@ -120,6 +120,8 @@ function detectAppRuntime(loc, cap) {
     <div class="nav-item" onclick="setView('calculators')" id="nav-calculators"><span class="icon"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="16" y2="18"/></svg></span>Calculators</div>
     <div class="nav-item" onclick="setView('accounts')" id="nav-accounts"><span class="icon"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Accounts</div>
     <div class="nav-item" onclick="setView('journal')" id="nav-journal"><span class="icon"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Journal</div>
+    <div class="nav-item" onclick="setView('analytics')" id="nav-analytics"><span class="icon"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span>Analytics</div>
+    <div class="nav-item" onclick="setView('more')" id="nav-more"><span class="icon"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></span>More</div>
     <div class="sidebar-section">Accounts</div>
     <div class="accounts-list" id="sidebarAccounts"></div>
     <button class="add-account-btn" onclick="openNewAccountModal()"><span>＋</span>New Account</button>
@@ -378,6 +380,13 @@ function detectAppRuntime(loc, cap) {
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="field"><label>Account Name <span class="req">*</span></label><input id="f_acc_name" type="text" placeholder="e.g. Main, Crypto…"></div>
         <div class="field"><label>Capital <span class="opt">(optional)</span></label><input id="f_acc_capital" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 10,000" oninput="fmtNumInput(this)"></div>
+        <div class="field"><label>Account type</label>
+          <div class="seg" id="accTypeSeg" role="radiogroup" aria-label="Account type" style="grid-template-columns:1fr 1fr">
+            <button type="button" role="radio" data-t="cash" onclick="setAccType('cash')">Cash</button>
+            <button type="button" role="radio" data-t="margin" onclick="setAccType('margin')">Margin</button>
+          </div>
+          <div class="cash-note" id="accTypeHint"></div>
+        </div>
         <div class="field"><label>Broker / Platform <span class="opt">(optional)</span></label><input id="acc_broker" type="text" placeholder="e.g. Binance, TD…"></div>
         <div id="accTransactionSection" style="display:none">
           <div style="margin-bottom:8px;font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text3);text-transform:uppercase">Deposit / Withdraw</div>

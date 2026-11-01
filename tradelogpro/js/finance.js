@@ -288,4 +288,9 @@ function calcAccountCash(acc, trades, excludeId) {
   });
   return cash;
 }
+// Cash is tracked once an account has a starting capital or any deposit/withdrawal;
+// without either, Edgeory has no cash figure to check buys against.
+function accountTracksCash(acc) {
+  return !!acc && ((parseFloat(acc.startingCapital) || 0) > 0 || !!(acc.transactions && acc.transactions.length));
+}
 

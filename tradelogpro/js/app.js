@@ -10,7 +10,7 @@ function setView(view, accountId) {
   var titleEl = document.getElementById('topbarTitle');
   if (titleEl) titleEl.textContent = titles[view] || '';
   document.querySelectorAll('.nav-item').forEach(function(el){ el.classList.remove('active'); });
-  var navKey = view === 'more' ? 'accounts' : view;
+  var navKey = view;
   var ni = document.getElementById('nav-' + navKey); if (ni) ni.classList.add('active');
   document.querySelectorAll('.bottom-nav-item').forEach(function(el){ el.classList.remove('active'); });
   var bnavKey = MORE_VIEWS[view] ? 'more' : (view === 'more' ? 'more' : view);
@@ -1043,6 +1043,17 @@ function openCalendarDay(dateStr) {
 // ACCOUNTS VIEW
 // ==========================================================================
 
+// Cash line on an account card: what is free, on margin, or missing.
+function accountCashLine(acc) {
+  var st = 'font-size:calc(12px*var(--fz));margin-top:4px';
+  if (!accountTracksCash(acc)) return '<div style="' + st + ';color:var(--text3)">Add a starting capital to track cash</div>';
+  var cash = calcAccountCash(acc, state.trades);
+  var tag = acc.type === 'margin' ? ' <span class="badge" style="font-size:calc(10px*var(--fz));margin-left:4px">Margin</span>' : '';
+  if (cash >= -0.005) return '<div class="n" style="' + st + ';color:var(--text2)">Cash ' + fmtMoney(cash) + tag + '</div>';
+  if (acc.type === 'margin') return '<div class="n" style="' + st + ';color:var(--gold)">' + fmtMoney(-cash) + ' on margin' + tag + '</div>';
+  return '<div class="n" style="' + st + ';color:var(--red)">Short ' + fmtMoney(-cash) + ' · ' +
+    '<button type="button" onclick="event.stopPropagation();openAccountMoney(\'' + eid(acc.id) + '\',' + (Math.round(-cash * 100) / 100) + ')" style="background:none;border:0;padding:0;color:var(--blue);font:inherit;font-weight:700;cursor:pointer">Add deposit</button></div>';
+}
 function renderAccountsList() {
   var html = '';
   if (!state.accounts.length) {
@@ -1071,6 +1082,7 @@ function renderAccountsList() {
           '<div style="font-size:calc(15px*var(--fz));font-weight:700">' + esc(acc.name) + activeBadge + '</div>' +
           '<div class="n" style="font-size:calc(11px*var(--fz));color:var(--text3);margin-top:3px">' + plural(trades.length,'trade','trades') + ' · Win rate ' + wr + '</div>' +
           '<div class="n" style="font-size:calc(11px*var(--fz));color:var(--red);margin-top:1px">Fees ' + fmtMoney(calcTotalFees(trades)) + '</div>' +
+          accountCashLine(acc) +
         '</div>' +
         '<div style="text-align:right">' +
           '<div class="n" style="font-size:calc(16px*var(--fz));font-weight:700;color:' + pnlColor(netPnl) + '">' + fmtPnl(netPnl) + '</div>' +
@@ -1307,34 +1319,6 @@ function renderAccountsView() {
     statCard('Total Deposits', fmtMoney(totalDeposits), totalDeposits ? '' : 'None recorded', totalDeposits ? 'var(--green)' : 'var(--text2)') +
     statCard('Total Withdrawals', fmtMoney(totalWithdrawals), totalWithdrawals ? '' : 'None recorded', totalWithdrawals ? 'var(--red)' : 'var(--text2)') +
   '</div>' +
-  '<div class="stats-row">' +
-    '<button class="tile" onclick="backupData()">' +
-      '<span style="color:var(--green)">' + icon('save', 22) + '</span>' +
-      '<span class="t" style="color:var(--green)">Backup Data</span>' +
-      '<span class="d">' + plural(totalTrades,'trade','trades') + (lastBackup ? ' · last ' + esc(fmtDateLong(lastBackup).replace(/ \d{4}$/, '')) : '') + '</span>' +
-    '</button>' +
-    '<button class="tile" onclick="restoreData()">' +
-      '<span style="color:var(--blue)">' + icon('folder', 22) + '</span>' +
-      '<span class="t" style="color:var(--blue)">Restore Backup</span>' +
-      '<span class="d">Load from a saved file</span>' +
-    '</button>' +
-  '</div>' +
-  '<div class="cap" style="padding:2px 2px 0">Import trades</div>' +
-  '<button class="wide-row" onclick="setView(\'import\')">' +
-    '<span style="color:var(--blue)">' + icon('camera', 24) + '</span>' +
-    '<span style="min-width:0"><span style="display:block;font-size:calc(14px*var(--fz));font-weight:700;color:var(--blue)">From screenshot</span><span style="display:block;font-size:calc(11px*var(--fz));color:var(--text3);margin-top:1px">' + (isNativeApp() ? 'An open position, read on this phone' : 'Available in the Android app') + '</span></span>' +
-    '<span class="tag" style="color:var(--green);border-color:rgba(0,214,143,.5)">XTB · Baraka · IBKR · T212</span>' +
-  '</button>' +
-  '<button class="wide-row" onclick="importCSV()">' +
-    '<span style="color:var(--blue)">' + icon('doc', 24) + '</span>' +
-    '<span style="min-width:0"><span style="display:block;font-size:calc(14px*var(--fz));font-weight:700;color:var(--blue)">From CSV file</span><span style="display:block;font-size:calc(11px*var(--fz));color:var(--text3);margin-top:1px">Closed trades history</span></span>' +
-    '<span class="tag" style="color:var(--gold);border-color:rgba(255,194,71,.6)">Trading 212</span>' +
-  '</button>' +
-  '<button class="wide-row" onclick="openReportModal()">' +
-    '<span style="color:var(--purple)">' + icon('doc', 24) + '</span>' +
-    '<span style="min-width:0"><span style="display:block;font-size:calc(14px*var(--fz));font-weight:700">Export Report</span><span style="display:block;font-size:calc(11px*var(--fz));color:var(--text3);margin-top:1px">' + plural(totalTrades,'trade','trades') + ' ready · Excel or PDF</span></span>' +
-    '<span></span>' +
-  '</button>' +
   '<div class="cap" style="padding:2px 2px 0">Your accounts</div>' +
   '<div id="accountsListSection">' + renderAccountsList() + '</div>';
   return html;
@@ -1358,12 +1342,30 @@ function openNewAccountModal() {
   var delBtn = document.getElementById('accDeleteBtn');
   if (delBtn) delBtn.style.display = 'none';
   editingAccountId = null;
+  setAccType('cash');
   openModal('accountModal');
 }
 
-function openAccountMoney(id) {
+function openAccountMoney(id, amount) {
   editAccount(id);
   accTransaction('deposit');
+  var inp = document.getElementById('f_acc_transaction');
+  if (inp && amount > 0) inp.value = groupNum(amount.toFixed(2));
+}
+
+// Cash: Edgeory warns when a buy costs more than the account's cash.
+// Margin: buys may go past it; the part above the cash is shown as on margin.
+var _accType = 'cash';
+function setAccType(t) {
+  _accType = t === 'margin' ? 'margin' : 'cash';
+  document.querySelectorAll('#accTypeSeg button').forEach(function(b){
+    var on = b.getAttribute('data-t') === _accType;
+    b.classList.toggle('on', on); b.setAttribute('aria-checked', on);
+  });
+  var hint = document.getElementById('accTypeHint');
+  if (hint) hint.textContent = _accType === 'margin'
+    ? 'Buys can go past your cash. Edgeory shows the part on margin.'
+    : 'Edgeory warns you when a buy costs more than your cash.';
 }
 
 function editAccount(id) {
@@ -1374,6 +1376,7 @@ function editAccount(id) {
   var n = document.getElementById('f_acc_name'); if (n) n.value = acc.name || '';
   var cap = document.getElementById('f_acc_capital'); if (cap) cap.value = acc.startingCapital ? groupNum(parseFloat(acc.startingCapital).toFixed(2)) : '';
   var broker = document.getElementById('acc_broker'); if (broker) broker.value = acc.broker || '';
+  setAccType(acc.type);
 
   var txSection = document.getElementById('accTransactionSection');
   if (txSection) txSection.style.display = 'block';
@@ -1436,7 +1439,7 @@ function renderTransactionHistory(acc, showAll) {
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">' +
       '<div style="flex:1">' +
         '<div style="font-size:calc(12px*var(--fz));color:var(--text2);font-weight:500">' + typeLabel + '</div>' +
-        '<div style="font-size:calc(12px*var(--fz));color:var(--text3);font-family:var(--mono);margin-top:1px">' + fmtDate(tx.date) + '</div>' +
+        '<div style="font-size:calc(12px*var(--fz));color:var(--text3);font-family:var(--mono);margin-top:1px">' + fmtDate(tx.date) + (tx.note ? ' · ' + esc(tx.note) : '') + '</div>' +
       '</div>' +
       '<span style="color:' + color + ';font-family:var(--mono);font-weight:700;font-size:calc(13px*var(--fz));margin-right:10px">' + sign + fmtMoney(tx.amount) + '</span>' +
       '<div style="display:flex;gap:4px">' +
@@ -1529,12 +1532,12 @@ function saveAccount() {
   if (editingAccountId) {
     var acc = state.accounts.find(function(a){ return a.id === editingAccountId; });
     if (acc) {
-      acc.name = name; acc.startingCapital = capital;
+      acc.name = name; acc.startingCapital = capital; acc.type = _accType;
       acc.broker = document.getElementById('acc_broker').value;
     }
   } else {
     var newAcc = {id: 'acc_' + Date.now(), name: name, startingCapital: capital,
-      broker: document.getElementById('acc_broker').value,
+      broker: document.getElementById('acc_broker').value, type: _accType,
       transactions: [], createdAt: new Date().toISOString()};
     state.accounts.push(newAcc);
     if (!state.activeAccountId) state.activeAccountId = newAcc.id;
@@ -1832,27 +1835,71 @@ function tradeFormAccount() {
   var id = sel ? sel.value : '';
   return state.accounts.find(function(a){ return a.id === id; }) || null;
 }
-// "Main has $X cash" under a buy's cost; red when the buy needs more than that.
+// Line under a buy's cost: what the account has, and what is left or missing.
 function cashNoteHtml(acc, cost, excludeId) {
-  if (!acc || !(cost > 0)) return '';
+  if (!acc || !(cost > 0) || !accountTracksCash(acc)) return '';
   var cash = calcAccountCash(acc, state.trades, excludeId);
-  if (cost > cash + 0.005) {
-    return '<span style="color:var(--red)">' + esc(acc.name) + ' has ' + (cash > 0 ? fmtMoney(cash) : 'no') + ' cash available.</span> ' +
-      'Record a deposit if you added money.';
-  }
-  return esc(acc.name) + ' has ' + fmtMoney(cash) + ' cash available · ' + fmtMoney(cash - cost) + ' left after this buy';
+  var left = cash - cost, have = Math.max(cash, 0);
+  if (left >= -0.005) return esc(acc.name) + ' cash ' + fmtMoney(cash) + ' · ' + fmtMoney(left) + ' left after this buy';
+  if (acc.type === 'margin') return esc(acc.name) + ' cash ' + fmtMoney(have) + ' · <b>' + fmtMoney(-left) + ' on margin</b>';
+  return '<span style="color:var(--red)">' + fmtMoney(-left) + ' more than the ' + fmtMoney(have) + ' cash in ' + esc(acc.name) + '</span>';
 }
-// Warn (never block: margin accounts can buy past their cash) when a buy costs more
-// than the account's cash. onGo runs when the user saves anyway.
+// Before saving a buy on a cash account that cannot pay for it: offer to record the
+// missing amount as a deposit linked to this buy. onGo(depositAmount) saves; 0 = none.
+// Margin accounts and accounts without a cash figure save straight away.
+var _cashNoDeposit = null;
 function confirmCashOrGo(acc, cost, excludeId, onGo) {
-  var cash = acc ? calcAccountCash(acc, state.trades, excludeId) : 0;
-  if (!acc || !(cost > cash + 0.005)) { onGo(); return; }
+  if (!acc || acc.type === 'margin' || !accountTracksCash(acc)) { onGo(0); return; }
+  var cash = calcAccountCash(acc, state.trades, excludeId);
+  var short = Math.round((cost - cash) * 100) / 100;
+  if (!(short > 0.005)) { onGo(0); return; }
+  _cashNoDeposit = function(){ closeModal('confirmSheet'); var fn = onGo; _cashNoDeposit = null; fn(0); };
   confirmSheet({
-    title: 'More than the cash in ' + acc.name,
-    body: 'This buy costs ' + fmtMoney(cost) + ', but ' + acc.name + ' has ' + (cash > 0 ? fmtMoney(cash) : 'no') +
-      ' cash available (capital, deposits and closed P&L, minus open trades). If you added money, record a deposit in Accounts so your balance stays right. On margin? Save anyway.',
-    ok: 'Save anyway'
-  }, onGo);
+    title: 'Not enough cash in ' + acc.name,
+    body: 'This buy costs ' + fmtMoney(cost) + ' and ' + acc.name + ' has ' + fmtMoney(Math.max(cash, 0)) + '. Add the missing ' + fmtMoney(short) + ' as a deposit?',
+    ok: 'Add ' + fmtMoney(short) + ' deposit',
+    extra: '<button type="button" class="btn btn-secondary" style="width:100%;justify-content:center" onclick="_cashNoDeposit && _cashNoDeposit()">Save without deposit</button>' +
+      '<p style="font-size:calc(12px*var(--fz));color:var(--text3);margin-top:10px">Trading on margin? Set the account type to Margin in Accounts.</p>'
+  }, function(){ _cashNoDeposit = null; onGo(short); });
+}
+// Deposit recorded for a buy; removed again if that trade or add-buy is deleted.
+function addLinkedDeposit(acc, amount, date, tradeId, buyId, ticker) {
+  if (!acc || !(amount > 0)) return;
+  if (!acc.transactions) acc.transactions = [];
+  var tx = { id: 'tx_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), type: 'deposit', amount: amount,
+    date: date || today(), tradeId: tradeId, note: 'For ' + ticker + ' buy' };
+  if (buyId) tx.buyId = buyId;
+  acc.transactions.push(tx);
+  acc.startingCapital = (parseFloat(acc.startingCapital) || 0) + amount;
+}
+// Takes out the deposits linked to a trade (or one add-buy of it); returns them for undo.
+function removeLinkedDeposits(tradeId, buyId) {
+  var removed = [];
+  state.accounts.forEach(function(acc){
+    if (!acc.transactions) return;
+    acc.transactions = acc.transactions.filter(function(tx){
+      var hit = tx.tradeId === tradeId && (buyId ? tx.buyId === buyId : true);
+      if (hit) { removed.push({ accId: acc.id, tx: tx }); acc.startingCapital = (parseFloat(acc.startingCapital) || 0) - tx.amount; }
+      return !hit;
+    });
+  });
+  return removed;
+}
+function restoreLinkedDeposits(removed) {
+  (removed || []).forEach(function(r){
+    var acc = state.accounts.find(function(a){ return a.id === r.accId; });
+    if (!acc) return;
+    if (!acc.transactions) acc.transactions = [];
+    acc.transactions.push(r.tx);
+    acc.startingCapital = (parseFloat(acc.startingCapital) || 0) + r.tx.amount;
+  });
+}
+function linkedDepositTotal(tradeId, buyId) {
+  var sum = 0;
+  state.accounts.forEach(function(acc){ (acc.transactions || []).forEach(function(tx){
+    if (tx.tradeId === tradeId && (buyId ? tx.buyId === buyId : true)) sum += tx.amount;
+  }); });
+  return sum;
 }
 function calcInvestedPreview() { updateInvestedPreview(); }
 
@@ -1923,7 +1970,7 @@ function removePendingPhoto(idx) {
   renderPhotoPreviews();
 }
 
-function saveTradeModal(cashOk) {
+function saveTradeModal(deposit) {
   var ticker = safeTicker(document.getElementById('f_ticker').value);
   var entry = parseFloat(document.getElementById('f_entry').value);
   var qty = parseFloat(document.getElementById('f_qty').value);
@@ -1944,12 +1991,17 @@ function saveTradeModal(cashOk) {
   if (_entryD && _entryD > _td) { showToast('Entry date cannot be in the future', 'error'); return; }
   if (_exitD && _exitD > _td) { showToast('Exit date cannot be in the future', 'error'); return; }
   if (_entryD && _exitD && _exitD < _entryD) { showToast('Exit date cannot be before the entry date', 'error'); return; }
-  // Only a new open buy spends cash today; a closed or edited trade is history.
-  if (!cashOk && !editingTradeId && status === 'open') {
+  // An open buy spends cash now (a closed trade logged later is history). On an
+  // edit, only a cost increase is checked, against cash without this trade.
+  if (deposit === undefined && status === 'open') {
     var _acc = state.accounts.find(function(a){ return a.id === accId; });
-    var _cost = entry * qty;
-    if (_acc && _cost > calcAccountCash(_acc, state.trades) + 0.005) {
-      confirmCashOrGo(_acc, _cost, null, function(){ saveTradeModal(true); });
+    var _cost = entry * qty, _prev = 0;
+    if (editingTradeId) {
+      var _old = state.trades.find(function(x){ return x.id === editingTradeId; });
+      _prev = _old && _old.status === 'open' ? (_old.entry || 0) * (_old.original_qty || 0) : 0;
+    }
+    if (_acc && _cost > _prev + 0.005) {
+      confirmCashOrGo(_acc, _cost, editingTradeId || null, function(d){ saveTradeModal(d); });
       return;
     }
   }
@@ -1997,11 +2049,13 @@ function saveTradeModal(cashOk) {
     };
     state.trades.unshift(newTrade);
   }
+  var _depAcc = deposit > 0 ? state.accounts.find(function(a){ return a.id === accId; }) : null;
+  if (_depAcc) addLinkedDeposit(_depAcc, deposit, document.getElementById('f_entry_date').value || today(), editingTradeId || newTrade.id, null, ticker);
   var wasEditing = editingTradeId;
   var wasFromDetail = openedFromDetail;
   save(); closeModal('tradeModal'); renderSidebar(); renderMain();
   haptic('success');
-  showToast((wasEditing ? 'Trade updated' : 'Trade logged') + ': ' + ticker, 'success');
+  showToast((wasEditing ? 'Trade updated' : 'Trade logged') + ': ' + ticker + (_depAcc ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
   if (wasEditing && wasFromDetail) {
     var savedId = wasEditing;
     openTradeDetail(savedId);
@@ -2012,18 +2066,22 @@ function saveTradeModal(cashOk) {
 function deleteTrade(id) {
   var t = state.trades.find(function(x){ return x.id === id; });
   if (!t) return;
-  confirmSheet({ title: 'Delete this trade?', body: (t.ticker || 'This trade') + ' and its buys and sells will be removed.', ok: 'Delete', danger: true }, function() { _deleteTrade(id); });
+  var dep = linkedDepositTotal(id);
+  confirmSheet({ title: 'Delete this trade?', body: (t.ticker || 'This trade') + ' and its buys and sells will be removed' +
+    (dep > 0 ? ', with the ' + fmtMoney(dep) + ' deposit added for it.' : '.'), ok: 'Delete', danger: true }, function() { _deleteTrade(id); });
 }
 function _deleteTrade(id) {
   var idx = state.trades.findIndex(function(t){ return t.id === id; });
   if (idx < 0) return;
   var snap = JSON.parse(JSON.stringify(state.trades[idx]));
   state.trades.splice(idx, 1);
+  var deps = removeLinkedDeposits(id);
   save(); closeModal('tradeDetailModal'); closeModal('tradeModal');
   renderSidebar(); renderMain();
   haptic('warning');
   showUndoToast('Trade deleted', function() {
     state.trades.splice(idx, 0, snap);
+    restoreLinkedDeposits(deps);
     save(); renderSidebar(); renderMain();
   });
 }
@@ -2225,8 +2283,9 @@ function deleteAddBuy(tradeId, buyId) {
     var t = state.trades.find(function(x){ return x.id === tradeId; });
     if (!t || !t.add_buys) return;
     t.add_buys = t.add_buys.filter(function(b){ return b.id !== buyId; });
+    var deps = removeLinkedDeposits(tradeId, buyId);
     save(); closeModal('tradeDetailModal'); renderSidebar(); renderMain();
-    showToast('Position removed', 'success');
+    showToast('Position removed' + (deps.length ? ' with its ' + fmtMoney(deps.reduce(function(s, d){ return s + d.tx.amount; }, 0)) + ' deposit' : ''), 'success');
     openTradeDetail(tradeId);
   });
 }
@@ -2372,7 +2431,7 @@ function openAddBuy(id) {
   openModal('addBuyModal');
 }
 
-function saveAddBuy(cashOk) {
+function saveAddBuy(deposit) {
   var t = state.trades.find(function(x){ return x.id === addBuyTargetId; });
   if (!t) return;
   var qty   = parseFloat(document.getElementById('ab_qty').value);
@@ -2380,21 +2439,20 @@ function saveAddBuy(cashOk) {
   var date  = document.getElementById('ab_date') ? document.getElementById('ab_date').value : today();
   var fees  = document.getElementById('ab_fees') ? document.getElementById('ab_fees').value : '0';
   if (!qty || !price || qty <= 0) { showToast('Enter valid qty and price', 'error'); return; }
-  if (!cashOk) {
-    var _acc = state.accounts.find(function(a){ return a.id === t.accountId; });
-    if (_acc && qty * price > calcAccountCash(_acc, state.trades) + 0.005) {
-      confirmCashOrGo(_acc, qty * price, null, function(){ saveAddBuy(true); });
-      return;
-    }
+  if (deposit === undefined) {
+    confirmCashOrGo(state.accounts.find(function(a){ return a.id === t.accountId; }), qty * price, null, function(d){ saveAddBuy(d); });
+    return;
   }
   if (!t.add_buys) t.add_buys = [];
-  t.add_buys.push({id: Date.now().toString(), ts: Date.now(), qty: qty, price: price, date: date, fees: fees||'0', fees_mode: '$'});
+  var _buyId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  t.add_buys.push({id: _buyId, ts: Date.now(), qty: qty, price: price, date: date, fees: fees||'0', fees_mode: '$'});
+  if (deposit > 0) addLinkedDeposit(state.accounts.find(function(a){ return a.id === t.accountId; }), deposit, date, t.id, _buyId, t.ticker);
   save(); closeModal('addBuyModal'); closeModal('tradeDetailModal'); window._detailReturnId = null;
   renderSidebar(); renderMain();
   var abId = addBuyTargetId;
   if (abId) { openTradeDetail(abId); }
   haptic('success');
-  showToast('Position updated', 'success');
+  showToast('Position updated' + (deposit > 0 ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
 }
 
 // ==========================================================================

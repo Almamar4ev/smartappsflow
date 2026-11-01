@@ -76,19 +76,13 @@ function startTour() {
 function showTourStep() {
   var step = TOUR_STEPS[_tourStep];
   if (!step) { endTour('done'); return; }
-  var ring = document.getElementById('tourRing'), card0 = null;
+  var ring = document.getElementById('tourRing');
   var viewChanged = currentView !== step.view;
   if (viewChanged) {
-    // New screen: fade the ring out and place it once the page's enter animation
-    // (fadeIn, 0.22s, slides content 8px) and late renders (calculators) settle.
-    // Sliding it across the screen between pages looked wrong.
-    // The shield carries the dim while the ring is away, and the card waits too,
-    // so the screen never flashes undimmed and the card does not jump sides.
-    var shield = document.getElementById('tourShield');
-    if (ring) ring.classList.add('hold');
-    if (shield) shield.classList.add('dim');
-    card0 = document.getElementById('tourCard');
-    if (card0) card0.classList.add('hold');
+    // New screen: the ring jumps (no slide across the page). Page enter animations
+    // are off while html.tour-on, so the layout is final after two frames and the
+    // ring and card can be placed straight away, with no pause.
+    if (ring) ring.classList.add('jump');
     setView(step.view);
   }
   var last = _tourStep === TOUR_STEPS.length - 1;
@@ -99,20 +93,12 @@ function showTourStep() {
     '<div class="tour-actions"><button type="button" class="tour-skip" onclick="endTour(\'skipped\')">Skip</button>' +
     '<button type="button" class="tour-next" onclick="nextTourStep()">' + (last ? 'Done' : 'Next') + '</button></div>';
   card.classList.add('show');
-  if (viewChanged) {
-    var at = _tourStep;
-    setTimeout(function () {
-      if (_tourStep !== at) return;
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
       _tourReposition();
-      requestAnimationFrame(function () {
-        if (ring) ring.classList.remove('hold');
-        var sh = document.getElementById('tourShield'); if (sh) sh.classList.remove('dim');
-        var c = document.getElementById('tourCard'); if (c) c.classList.remove('hold');
-      });
-    }, 320);
-  } else {
-    requestAnimationFrame(function () { requestAnimationFrame(_tourReposition); });
-  }
+      if (viewChanged && ring) requestAnimationFrame(function () { ring.classList.remove('jump'); });
+    });
+  });
 }
 
 function _tourReposition() {
@@ -153,7 +139,7 @@ function endTour(result) {
   setTourState(result === 'done' ? 'done' : 'skipped');
   document.documentElement.classList.remove('tour-on');
   ['tourCard', 'tourRing', 'tourShield'].forEach(function (id) {
-    var el = document.getElementById(id); if (el) el.classList.remove('show', 'hold', 'dim');
+    var el = document.getElementById(id); if (el) el.classList.remove('show', 'jump');
   });
   window.removeEventListener('resize', _tourReposition);
   if (wasActive && currentView !== 'dashboard') setView('dashboard');
