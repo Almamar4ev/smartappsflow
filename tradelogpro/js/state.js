@@ -3,7 +3,7 @@
 // ==========================================================================
 var APP_NAME = 'Edgeory';
 var APP_TAGLINE = 'Your Trading Journal';
-var APP_VERSION = '1.2.1';
+var APP_VERSION = '1.2.0';
 var APP_STORE_TITLE = 'Edgeory: Trading Journal';
 var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // One-time "What's new" note for people who already used an older version.
