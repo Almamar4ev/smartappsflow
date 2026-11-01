@@ -705,7 +705,7 @@ function renderDashboard() {
     statCard('Win Rate', wr, closed.length ? plural(closed.length, 'closed trade', 'closed trades') : 'No closed trades', 'var(--blue)') +
     statCard('Total Trades', String(trades.length), plural(wins,'win','wins') + ' · ' + plural(losses,'loss','losses') + ' · ' + openCount + ' open', 'var(--blue)') +
     statCard('Avg Win/Loss', avgRr, 'Realized · closed trades', 'var(--gold)') +
-    statCard('Brokerage Fees', fmtMoney(calcTotalFees(trades)), plural(closed.length, 'closed trade', 'closed trades'), 'var(--red)') +
+    statCard('Fees paid', fmtMoney(calcTotalFees(trades)), plural(closed.length, 'closed trade', 'closed trades'), 'var(--red)') +
   '</div>' +
   '<div class="charts-row">' +
     equityPanelHtml(eqLast.length > 0) +
@@ -1789,7 +1789,7 @@ function openTradeModal(tradeId, fromDetail) {
   populateAccountSelector(tradeId ? (state.trades.find(function(t){ return t.id===tradeId; })||{}).accountId : null);
   populateTickerSuggestions();
   hideTickerSuggest();
-  var f = {ticker:'',type:'',direction:'Long',status:'open',entry_date:today(),exit_date:'',entry:'',exit:'',qty:'',fees:'',fees_mode:'%',risk:'',notes:''};
+  var f = {ticker:'',type:'',direction:'Long',status:'open',entry_date:today(),exit_date:'',entry:'',exit:'',qty:'',fees:'',fees_mode:'$',risk:'',notes:''};
   if (tradeId) {
     var t = state.trades.find(function(x){ return x.id === tradeId; });
     if (t) { f.ticker=t.ticker||''; f.type=t.type||''; f.direction=t.direction||'Long'; f.status=t.status||'open'; f.entry_date=t.entry_date||today(); f.exit_date=t.exit_date||''; f.entry=t.entry||''; f.exit=t.exit||''; f.qty=t.original_qty||t.qty||''; f.fees=t.fees||''; f.fees_mode=t.fees_mode||'%'; f.risk=t.risk||''; f.notes=t.notes||''; }
@@ -2034,6 +2034,8 @@ function saveTradeModal(deposit) {
           if (newExitDate  && pc.date && pc.date > newExitDate)  pc.date = newExitDate;
         });
       }
+      // A corrected entry price or date changes what the earlier sells cost.
+      rebuildBasis(t);
     }
   } else {
     var newTrade = {
@@ -2227,7 +2229,7 @@ function openTradeDetail(id) {
     if (t.fees_mode === '$' && feeVal > 0) {
       hint = 'Break-even <b class="n">' + fmtPrice(dca.breakEven) + '</b> with fees. Sell above it to profit' + (hasPartial ? ' on the ' + fmtQty(remainingQty) + ' shares left' : '');
     } else {
-      hint = 'Sell above <b class="n">' + fmtPrice(dca.avg) + '</b> to profit' + (hasPartial ? ' on the ' + fmtQty(remainingQty) + ' shares left' : '');
+      hint = 'Sell above <b class="n">' + fmtPrice(dca.heldAvg) + '</b> to profit' + (hasPartial ? ' on the ' + fmtQty(remainingQty) + ' shares left' : '');
     }
     html += '<div class="hint">' + cicon('bulb',16,'var(--gold)') + '<span>' + hint + '</span></div>';
   }
@@ -2282,6 +2284,7 @@ function deleteAddBuy(tradeId, buyId) {
     var t = state.trades.find(function(x){ return x.id === tradeId; });
     if (!t || !t.add_buys) return;
     t.add_buys = t.add_buys.filter(function(b){ return b.id !== buyId; });
+    rebuildBasis(t);
     var deps = removeLinkedDeposits(tradeId, buyId);
     save(); closeModal('tradeDetailModal'); renderSidebar(); renderMain();
     showToast('Position removed' + (deps.length ? ' with its ' + fmtMoney(deps.reduce(function(s, d){ return s + d.tx.amount; }, 0)) + ' deposit' : ''), 'success');
@@ -2298,6 +2301,7 @@ function _doDeletePartialClose(tradeId, pcId) {
   var t = state.trades.find(function(x){ return x.id === tradeId; });
   if (!t || !t.partial_closes) return;
   t.partial_closes = t.partial_closes.filter(function(pc){ return pc.id !== pcId; });
+  rebuildBasis(t);
   var remQty = calcTotalQty(t);
   if (remQty > 0) { t.status = 'open'; t.exit = null; t.exit_date = null; }
   save(); closeModal('tradeDetailModal'); renderSidebar(); renderMain();
@@ -2330,7 +2334,7 @@ function openPartialClose(id) {
   });
   var _pcd = document.getElementById('pc_date');
   if (_pcd) { _pcd.max = today(); var _t = state.trades.find(function(x){ return x.id === partialCloseTargetId; }); if (_t && _t.entry_date) _pcd.min = _t.entry_date; }
-  var pcFees = document.getElementById('pc_fees_mode'); if (pcFees) pcFees.value = '%';
+  var pcFees = document.getElementById('pc_fees_mode'); if (pcFees) pcFees.value = '$';
   openModal('partialCloseModal');
 }
 
@@ -2375,7 +2379,8 @@ function savePartialClose() {
   var remQty = calcTotalQty(t);
   if (qty > remQty + 0.0001) { showToast('Qty exceeds remaining ' + remQty, 'error'); return; }
   if (!t.partial_closes) t.partial_closes = [];
-  t.partial_closes.push({id: Date.now().toString(), ts: Date.now(), qty: qty, price: price, date: date, fees: fees||'0', fees_mode: fmode, basis: calcPositionState(t).avg});
+  t.partial_closes.push({id: Date.now().toString(), ts: Date.now(), qty: qty, price: price, date: date, fees: fees||'0', fees_mode: fmode, basis: null});
+  rebuildBasis(t); // basis from the buys made before this sell's date, not every buy
   var newRem = calcTotalQty(t);
   var fullyClosed = newRem <= 0.0001;
   if (fullyClosed) { t.status = 'closed'; t.exit = price; t.exit_date = date; t.qty = 0; }
@@ -2445,6 +2450,7 @@ function saveAddBuy(deposit) {
   if (!t.add_buys) t.add_buys = [];
   var _buyId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   t.add_buys.push({id: _buyId, ts: Date.now(), qty: qty, price: price, date: date, fees: fees||'0', fees_mode: '$'});
+  rebuildBasis(t); // a buy dated before an existing sell changes that sell's cost
   if (deposit > 0) addLinkedDeposit(state.accounts.find(function(a){ return a.id === t.accountId; }), deposit, date, t.id, _buyId, t.ticker);
   save(); closeModal('addBuyModal'); closeModal('tradeDetailModal'); window._detailReturnId = null;
   renderSidebar(); renderMain();
@@ -2481,32 +2487,67 @@ function openReportModal() {
   openModal('reportModal');
 }
 
-function getReportTrades() {
+// Report semantics: P&L belongs to the day it was realized. A period's P&L is the sum
+// of the sells made in it (partial sells and final closes, each on its own date), so
+// a trade opened in September and closed in October counts in October. Positions
+// still open are listed apart, with what they cost; they have no realized P&L yet.
+function reportSelection() {
   var accId = document.getElementById('rep_account') ? document.getElementById('rep_account').value : 'all';
   var from  = document.getElementById('rep_from')    ? document.getElementById('rep_from').value    : '';
   var to    = document.getElementById('rep_to')      ? document.getElementById('rep_to').value      : '';
-  var trades = accId === 'all' ? state.trades : state.trades.filter(function(t){ return t.accountId === accId; });
-  if (from) trades = trades.filter(function(t){ return t.entry_date >= from; });
-  if (to)   trades = trades.filter(function(t){ return t.entry_date <= to; });
-  return trades;
+  if (from && to && from > to) { var sw = from; from = to; to = sw; }
+  return { accId: accId, from: from, to: to };
+}
+function reportData(sel) {
+  sel = sel || reportSelection();
+  var from = sel.from, to = sel.to;
+  var inRange = function(d){ return !!d && (!from || d >= from) && (!to || d <= to); };
+  var trades = sel.accId === 'all' ? state.trades : state.trades.filter(function(t){ return t.accountId === sel.accId; });
+  var rows = [];
+  trades.forEach(function(t){
+    var evs = tradeRealizedEvents(t).filter(function(e){ return inRange(e.d); });
+    if (!evs.length) return;
+    var r = { t: t, pnl: 0, cost: 0, qty: 0, sold: 0, last: '' };
+    evs.forEach(function(e){ r.pnl += e.pnl; r.cost += e.cost; r.qty += e.qty; r.sold += e.price * e.qty; if (e.d > r.last) r.last = e.d; });
+    r.avgExit = r.qty > 0 ? r.sold / r.qty : (t.exit || 0);
+    r.closedHere = t.status === 'closed' && inRange(t.exit_date);
+    r.statusLabel = r.closedHere ? 'Closed' : 'Partly sold';
+    rows.push(r);
+  });
+  rows.sort(function(a, b){ return String(a.last).localeCompare(String(b.last)); });
+  var open = trades.filter(function(t){ return t.status === 'open' && (!to || (t.entry_date || '') <= to); }).map(function(t){
+    var st = calcPositionState(t);
+    return { t: t, qty: st.qty, avg: st.avg, cost: st.cost };
+  }).sort(function(a, b){ return String(a.t.entry_date || '').localeCompare(String(b.t.entry_date || '')); });
+  var closedRows = rows.filter(function(r){ return r.closedHere; });
+  var pnl = rows.reduce(function(s, r){ return s + r.pnl; }, 0);
+  var cost = rows.reduce(function(s, r){ return s + r.cost; }, 0);
+  return {
+    sel: sel, rows: rows, open: open, pnl: pnl, cost: cost,
+    pct: cost > 0 ? pnl / cost * 100 : null,
+    closed: closedRows.length, wins: closedRows.filter(function(r){ return isWin(r.t); }).length,
+    partly: rows.length - closedRows.length,
+    openCost: open.reduce(function(s, o){ return s + o.cost; }, 0)
+  };
+}
+function reportPeriodLabel(sel) {
+  if (sel.from && sel.to) return sel.from + ' to ' + sel.to;
+  if (sel.from) return 'From ' + sel.from;
+  if (sel.to) return 'Up to ' + sel.to;
+  return 'All time';
 }
 
 function updateReportPreview() {
-  var trades  = getReportTrades();
-  var closed  = trades.filter(function(t){ return t.status === 'closed'; });
-  var netPnl  = trades.reduce(function(s,t){ return s + calcRealizedTotal(t); }, 0);
-  var wins    = closed.filter(isWin).length;
-  var wr      = closed.length ? fmtWinRate(wins / closed.length * 100) : '—';
-  var invested = trades.reduce(function(s,t){ return s + calcInvestedValue(t); }, 0);
-  var realCost = trades.reduce(function(s,t){ return s + calcRealizedCost(t); }, 0);
-  var pct     = realCost > 0 ? fmtPct(netPnl / realCost * 100) + ' on closed' : 'Nothing closed yet';
+  var R = reportData();
   var el = document.getElementById('reportPreviewStats');
   if (!el) return;
+  var wr = R.closed ? fmtWinRate(R.wins / R.closed * 100) : '—';
   el.innerHTML =
-    '<div class="stat-card" style="--accent:var(--blue)"><div class="stat-label">Trades</div><div class="stat-value" style="color:var(--blue);font-size:calc(17px*var(--fz))">' + trades.length + '</div></div>' +
-    '<div class="stat-card" style="--accent:' + pnlColor(netPnl) + '"><div class="stat-label">Net P&L</div><div class="stat-value" style="color:' + pnlColor(netPnl) + ';font-size:calc(16px*var(--fz))">' + fmtPnl(netPnl) + '</div><div class="stat-sub" style="color:' + pnlColor(netPnl) + '">' + pct + '</div></div>' +
-    '<div class="stat-card" style="--accent:var(--blue)"><div class="stat-label">Win Rate</div><div class="stat-value" style="color:var(--blue);font-size:calc(17px*var(--fz))">' + wr + '</div><div class="stat-sub">' + closed.length + ' closed</div></div>' +
-    '<div class="stat-card" style="--accent:var(--purple)"><div class="stat-label">Invested</div><div class="stat-value" style="color:var(--purple);font-size:calc(14px*var(--fz))">' + fmtMoney(invested) + '</div></div>';
+    '<div class="stat-card" style="--accent:' + pnlColor(R.pnl) + '"><div class="stat-label">Realized P&amp;L</div><div class="stat-value" style="color:' + pnlColor(R.pnl) + ';font-size:calc(16px*var(--fz))">' + fmtPnl(R.pnl) + '</div><div class="stat-sub" style="color:' + pnlColor(R.pnl) + '">' + (R.pct != null ? fmtPct(R.pct) + ' on shares sold' : 'No sells in this period') + '</div></div>' +
+    '<div class="stat-card" style="--accent:var(--blue)"><div class="stat-label">Closed</div><div class="stat-value" style="color:var(--blue);font-size:calc(17px*var(--fz))">' + R.closed + '</div><div class="stat-sub">' + (R.partly ? R.partly + ' partly sold' : 'trades') + '</div></div>' +
+    '<div class="stat-card" style="--accent:var(--blue)"><div class="stat-label">Win Rate</div><div class="stat-value" style="color:var(--blue);font-size:calc(17px*var(--fz))">' + wr + '</div><div class="stat-sub">of trades closed</div></div>' +
+    '<div class="stat-card" style="--accent:var(--purple)"><div class="stat-label">Still open</div><div class="stat-value" style="color:var(--purple);font-size:calc(14px*var(--fz))">' + fmtMoney(R.openCost) + '</div><div class="stat-sub">' + plural(R.open.length, 'position', 'positions') + ' at cost</div></div>' +
+    '<div class="cash-note" style="grid-column:1/-1">P&amp;L counts the sells made in this period, on the day they happened. Open positions are listed separately.</div>';
 }
 
 function _b64ToBlob(b64, mime) {
@@ -2520,16 +2561,19 @@ function saveFileSmart(filename, base64, mime) {
   if (native) {
     var FS = Cap.Plugins.Filesystem;
     var Sh = Cap.Plugins.Share;
-    FS.writeFile({ path: filename, data: base64, directory: 'CACHE' })
+    // Resolves true once the file was written and shared; false if cancelled or failed.
+    return FS.writeFile({ path: filename, data: base64, directory: 'CACHE' })
       .then(function(res){
-        if (Sh) { return Sh.share({ title: filename, url: res.uri, dialogTitle: 'Save or share ' + filename }); }
+        if (Sh) { return Sh.share({ title: filename, url: res.uri, dialogTitle: 'Save or share ' + filename }).then(function(){ return true; }); }
         showToast('Saved to app storage', 'success');
+        return true;
       })
       .catch(function(e){
         var msg = (e && e.message) ? String(e.message).toLowerCase() : '';
         if (msg.indexOf('cancel') === -1 && msg.indexOf('abort') === -1 && msg.indexOf('dismiss') === -1) {
           showToast('Save failed: ' + (e && e.message ? e.message : 'unknown'), 'error');
         }
+        return false;
       });
   } else {
     try {
@@ -2539,229 +2583,134 @@ function saveFileSmart(filename, base64, mime) {
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
       showToast('Saved: ' + filename, 'success');
-    } catch(e){ showToast('Download failed: ' + e.message, 'error'); }
+      return Promise.resolve(true);
+    } catch(e){ showToast('Download failed: ' + e.message, 'error'); return Promise.resolve(false); }
   }
 }
+function reportFeeText(t) { return t.fees_mode === '%' ? (t.fees || 0) + '% of profit' : currSym() + (t.fees || 0); }
 function exportExcel() {
   if (typeof XLSX === 'undefined') { showToast('Excel library not loaded — connect to internet first', 'error'); return; }
+  var R = reportData();
+  if (!R.rows.length && !R.open.length) { showToast('No trades in this period', 'error'); return; }
   var pnlHdr = 'Net P&L' + (currCode() === 'NONE' ? '' : ' (' + currCode() + ')');
-  var trades = getReportTrades ? getReportTrades() : state.trades;
-  if (!trades.length) { showToast('No trades to export', 'error'); return; }
-  var rows = trades.map(function(t){
-    var pnl = calcRealizedTotal(t);
-    var inv = calcInvestedValue(t);
-    var pct = inv > 0 ? parseFloat((pnl/inv*100).toFixed(2)) : 0;
-    return {
-      Symbol: t.ticker,
-      Direction: t.direction,
-      Type: t.type||'',
-      Status: t.status,
-      'Entry Date': t.entry_date||'',
-      'Exit Date': t.exit_date||'',
-      'Entry Price': parseFloat((t.entry||0).toFixed(4)),
-      'Exit Price': t.exit ? parseFloat(parseFloat(t.exit).toFixed(4)) : '',
-      'Avg Entry': parseFloat(calcAvgPrice(t).toFixed(4)),
-      Qty: calcBoughtQty(t),
-      Invested: parseFloat(calcInvestedValue(t).toFixed(2)),
-      Fees: t.fees_mode === '%' ? (t.fees||0) + '%' : currSym() + (t.fees||0),
-      [pnlHdr]: parseFloat(pnl.toFixed(2)),
-      'P&L (%)': pct,
-      Notes: t.notes||''
-    };
+  var n2 = function(v){ return parseFloat((v || 0).toFixed(2)); }, n4 = function(v){ return parseFloat((v || 0).toFixed(4)); };
+  var rows = R.rows.map(function(r){
+    var o = { Symbol: r.t.ticker, Direction: r.t.direction, Type: r.t.type || '', Status: r.statusLabel,
+      'Entry Date': r.t.entry_date || '', 'Sell Date': r.last, 'Avg Entry': n4(calcAvgPrice(r.t)), 'Avg Exit': n4(r.avgExit),
+      'Shares Sold': r.qty, 'Cost of Shares Sold': n2(r.cost), Fees: reportFeeText(r.t) };
+    o[pnlHdr] = n2(r.pnl);
+    o['P&L (%)'] = r.cost > 0 ? n2(r.pnl / r.cost * 100) : 0;
+    o.Notes = r.t.notes || '';
+    return o;
   });
-  // Summary row
-  var totalPnl = trades.reduce(function(s,t){ return s+calcRealizedTotal(t); },0);
-  var totalInv = trades.reduce(function(s,t){ return s+calcInvestedValue(t); },0);
-  var totalRealCost = trades.reduce(function(s,t){ return s+calcRealizedCost(t); },0);
-  var closed = trades.filter(function(t){ return t.status==='closed'; });
-  var wins = closed.filter(isWin).length;
-
-  var ws = XLSX.utils.json_to_sheet(rows);
-  // Add summary below trades
-  var summaryStart = trades.length + 3;
+  var ws = XLSX.utils.json_to_sheet(rows.length ? rows : [{ Symbol: 'No sells in this period' }]);
   XLSX.utils.sheet_add_aoa(ws, [
-    ['SUMMARY'],
-    ['Total Trades', trades.length],
-    ['Closed Trades', closed.length],
-    ['Winning Trades', wins],
-    ['Win Rate', closed.length ? (wins/closed.length*100).toFixed(1)+'%' : '—'],
-    ['Total Invested', parseFloat(totalInv.toFixed(2))],
-    [pnlHdr, parseFloat(totalPnl.toFixed(2))],
-    ['Net P&L (%) on closed', totalRealCost > 0 ? parseFloat((totalPnl/totalRealCost*100).toFixed(2)) : 0]
-  ], {origin: {r: summaryStart, c: 0}});
-
-  // Style header row
-  var range = XLSX.utils.decode_range(ws['!ref']);
-  ws['!cols'] = [{wch:10},{wch:10},{wch:12},{wch:8},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:8},{wch:12},{wch:10},{wch:12},{wch:10},{wch:20}];
-
+    ['SUMMARY · ' + reportPeriodLabel(R.sel)],
+    ['Realized P&L', n2(R.pnl)],
+    ['P&L % on shares sold', R.pct != null ? n2(R.pct) : 0],
+    ['Trades closed', R.closed],
+    ['Partly sold', R.partly],
+    ['Win rate (trades closed)', R.closed ? (R.wins / R.closed * 100).toFixed(1) + '%' : '—'],
+    ['Open positions at cost', n2(R.openCost)],
+    ['P&L counts the sells made in this period, on the day they happened.']
+  ], { origin: { r: rows.length + 3, c: 0 } });
+  ws['!cols'] = [{wch:10},{wch:10},{wch:12},{wch:11},{wch:12},{wch:12},{wch:11},{wch:11},{wch:11},{wch:16},{wch:14},{wch:13},{wch:10},{wch:20}];
   var wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Trades');
-  var date = today();
+  XLSX.utils.book_append_sheet(wb, ws, 'Realized');
+  var ows = XLSX.utils.json_to_sheet(R.open.length ? R.open.map(function(o){
+    return { Symbol: o.t.ticker, Direction: o.t.direction, 'Entry Date': o.t.entry_date || '', 'Shares Held': o.qty,
+      'Avg Cost': n4(o.avg), 'Cost': n2(o.cost), Notes: o.t.notes || '' };
+  }) : [{ Symbol: 'No open positions' }]);
+  ows['!cols'] = [{wch:10},{wch:10},{wch:12},{wch:12},{wch:11},{wch:12},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, ows, 'Open positions');
   var b64 = XLSX.write(wb, {type:'base64', bookType:'xlsx'});
-  saveFileSmart('edgeory-report-' + date + '.xlsx', b64, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  saveFileSmart('edgeory-report-' + today() + '.xlsx', b64, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   closeModal('reportModal');
 }
 
 function exportPDF() {
   var jsPDFLib = (window.jspdf || window.jsPDF);
-  if (!jsPDFLib) { showToast('PDF library not loaded — open from GitHub Pages', 'error'); return; }
+  if (!jsPDFLib) { showToast('PDF library not loaded — connect to internet first', 'error'); return; }
   var jsPDF = jsPDFLib.jsPDF;
-  var trades = getReportTrades ? getReportTrades() : state.trades;
-  if (!trades.length) { showToast('No trades to export', 'error'); return; }
-
+  var R = reportData();
+  if (!R.rows.length && !R.open.length) { showToast('No trades in this period', 'error'); return; }
   var doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
-  var pageW = 297; var margin = 10;
-
-  // Account and date info
+  var pageW = 297, margin = 10, rowH = 7, cs = currSym();
+  var money = function(v){ return cs + fmtReportNum(v); };
+  var signed = function(v){ return (v >= 0 ? '+' : '-') + cs + fmtReportNum(Math.abs(v)); };
   var accName = (function(){
-    var sel = document.getElementById('rep_account');
-    if (!sel || sel.value === 'all') return 'All Accounts';
-    var acc = state.accounts.find(function(a){ return a.id === sel.value; });
+    if (R.sel.accId === 'all') return 'All Accounts';
+    var acc = state.accounts.find(function(a){ return a.id === R.sel.accId; });
     return acc ? acc.name : 'All Accounts';
   })();
-  var from = document.getElementById('rep_from') ? document.getElementById('rep_from').value : '';
-  var to   = document.getElementById('rep_to')   ? document.getElementById('rep_to').value   : '';
-  var dateRange = (from && to) ? from + ' to ' + to : today();
 
-  // Summary stats
-  var totalPnl = trades.reduce(function(s,t){ return s + calcRealizedTotal(t); }, 0);
-  var totalInv = trades.reduce(function(s,t){ return s + calcInvestedValue(t); }, 0);
-  var closed   = trades.filter(function(t){ return t.status === 'closed'; });
-  var wins     = closed.filter(isWin).length;
-  var wr       = closed.length ? (wins / closed.length * 100).toFixed(1) : '0.0';
-  var totalRealCost = trades.reduce(function(s, t){ return s + calcRealizedCost(t); }, 0);
-  var pct      = totalRealCost > 0 ? (totalPnl / totalRealCost * 100).toFixed(2) : '0.00';
-
-  // ── Title ──
-  doc.setFontSize(16); doc.setFont(undefined, 'bold');
+  doc.setFontSize(16); doc.setFont(undefined, 'bold'); doc.setTextColor(30, 30, 30);
   doc.text(APP_NAME + ' — Trading Report', margin, 14);
   doc.setFontSize(8); doc.setFont(undefined, 'normal');
-  doc.text('Account: ' + accName + '   |   Period: ' + dateRange + '   |   Generated: ' + today(), margin, 20);
-
-  // ── Summary row ──
-  doc.setFontSize(8);
-  var summaryItems = [
-    'Total Trades: ' + trades.length,
-    'Closed: ' + closed.length,
-    'Win Rate: ' + wr + '%',
-    'Net P&L: ' + (totalPnl >= 0 ? '+' : '') + currSym() + fmtReportNum(totalPnl),
-    'P&L % on closed: ' + (totalPnl >= 0 ? '+' : '') + pct + '%',
-    'Invested: ' + currSym() + fmtReportNum(totalInv)
+  doc.text('Account: ' + accName + '   |   Period: ' + reportPeriodLabel(R.sel) + '   |   Generated: ' + today(), margin, 20);
+  var summary = [
+    'Realized P&L: ' + signed(R.pnl),
+    'P&L % on shares sold: ' + (R.pct != null ? (R.pct >= 0 ? '+' : '') + R.pct.toFixed(2) + '%' : '—'),
+    'Win rate: ' + (R.closed ? (R.wins / R.closed * 100).toFixed(1) + '%' : '—') + ' of ' + R.closed + ' closed',
+    'Trades closed: ' + R.closed + (R.partly ? '  ·  partly sold: ' + R.partly : ''),
+    'Open positions: ' + R.open.length + ' at cost ' + money(R.openCost)
   ];
-  summaryItems.forEach(function(s, i) {
-    doc.text(s, margin + (i % 3) * 90, 28 + Math.floor(i / 3) * 6);
-  });
+  summary.forEach(function(t, k){ doc.text(t, margin + (k % 3) * 92, 28 + Math.floor(k / 3) * 6); });
+  doc.setTextColor(120, 120, 120);
+  doc.text('P&L counts the sells made in this period, on the day they happened. Open positions have no realized P&L yet.', margin, 40);
 
-  // ── Table ──
-  var cs = currSym();
-  var cols = ['Symbol','Dir','Status','Entry Date','Exit Date','Entry' + (cs ? ' $' : ''), 'Exit' + (cs ? ' $' : ''),'Qty','Invested','Fees','Net P&L','P&L%'];
-  var colW  = [22, 14, 16, 24, 24, 20, 20, 20, 22, 16, 22, 16];
-  var startY = 44;
-  var rowH = 7;
-
-  // Header — draw all rects first, then all text on top to prevent overdraw
-  doc.setFontSize(7); doc.setFont(undefined, 'bold');
-  var x = margin;
-  // Pass 1: fill all header cell backgrounds
-  doc.setFillColor(77, 159, 255);
-  for (var hi = 0; hi < cols.length; hi++) {
-    doc.rect(x, startY, colW[hi], rowH, 'F');
-    x += colW[hi];
+  var y = 46;
+  function header(cols, colW) {
+    doc.setFontSize(7); doc.setFont(undefined, 'bold');
+    var x = margin;
+    doc.setFillColor(77, 159, 255);
+    cols.forEach(function(c, k){ doc.rect(x, y, colW[k], rowH, 'F'); x += colW[k]; });
+    doc.setTextColor(255, 255, 255); x = margin;
+    cols.forEach(function(c, k){ doc.text(c, x + 1.5, y + 4.5); x += colW[k]; });
+    doc.setFont(undefined, 'normal'); y += rowH;
   }
-  // Pass 2: draw header text on top of all fills
-  doc.setTextColor(255, 255, 255);
-  x = margin;
-  for (var hi2 = 0; hi2 < cols.length; hi2++) {
-    doc.text(cols[hi2], x + 1.5, startY + 4.5);
-    x += colW[hi2];
-  }
-
-  // Rows
-  doc.setFont(undefined, 'normal');
-  var y = startY + rowH;
-  trades.forEach(function(t, ri) {
-    var pnl = calcRealizedTotal(t);
-    var inv = calcInvestedValue(t);
-    var pctRow = inv > 0 ? (pnl >= 0 ? '+' : '') + (pnl / inv * 100).toFixed(2) + '%' : '—';
-    var rowData = [
-      t.ticker,
-      t.direction,
-      t.status,
-      t.entry_date || '',
-      t.exit_date || '—',
-      currSym() + fmtReportNum(parseFloat(t.entry || 0)),
-      t.exit ? currSym() + fmtReportNum(parseFloat(t.exit)) : '—',
-      fmtReportQty(calcBoughtQty(t)),
-      currSym() + fmtReportNum(calcInvestedValue(t)),
-      t.fees_mode === '%' ? (t.fees || 0) + '%' : currSym() + (t.fees || 0),
-      (pnl >= 0 ? '+' : '-') + currSym() + fmtReportNum(Math.abs(pnl)),
-      pctRow
-    ];
-
-    // Alternate row background
-    if (ri % 2 === 0) {
-      doc.setFillColor(245, 247, 250);
-      doc.rect(margin, y, colW.reduce(function(a,b){ return a+b; }, 0), rowH, 'F');
-    }
-
-    x = margin;
-    rowData.forEach(function(cell, i) {
-      // Color P&L column
-      if (i === 10 || i === 11) {
-        if (cell.indexOf('+') === 0) { doc.setTextColor(0, 150, 80); }
-        else if (cell.indexOf('-') === 0) { doc.setTextColor(200, 50, 50); }
-        else { doc.setTextColor(60, 60, 60); }
-      } else {
-        doc.setTextColor(60, 60, 60);
-      }
-      doc.setFontSize(7);
-      doc.text(String(cell), x + 1.5, y + 4.5);
-      x += colW[i];
-    });
-
-    // Draw row border
-    doc.setDrawColor(220, 220, 220);
-    doc.setTextColor(60, 60, 60);
-    y += rowH;
-
-    // New page if needed — repeat header on new page
-    if (y > 190) {
-      doc.addPage();
-      y = 14;
-      // Redraw column headers on new page
-      doc.setFontSize(7); doc.setFont(undefined, 'bold');
-      var nx = margin;
-      doc.setFillColor(77, 159, 255);
-      for (var nhi = 0; nhi < cols.length; nhi++) {
-        doc.rect(nx, y, colW[nhi], rowH, 'F');
-        nx += colW[nhi];
-      }
-      doc.setTextColor(255, 255, 255);
-      nx = margin;
-      for (var nhi2 = 0; nhi2 < cols.length; nhi2++) {
-        doc.text(cols[nhi2], nx + 1.5, y + 4.5);
-        nx += colW[nhi2];
-      }
-      doc.setFont(undefined, 'normal');
-      doc.setTextColor(60, 60, 60);
+  function table(title, cols, colW, data, colorCols) {
+    if (y > 175) { doc.addPage(); y = 14; }
+    doc.setFontSize(10); doc.setFont(undefined, 'bold'); doc.setTextColor(30, 30, 30);
+    doc.text(title, margin, y + 4); y += 8;
+    header(cols, colW);
+    var total = colW.reduce(function(a, b){ return a + b; }, 0);
+    data.forEach(function(row, ri) {
+      if (ri % 2 === 0) { doc.setFillColor(245, 247, 250); doc.rect(margin, y, total, rowH, 'F'); }
+      var x = margin;
+      row.forEach(function(cell, k){
+        cell = String(cell);
+        if (colorCols.indexOf(k) >= 0 && cell.charAt(0) === '+') doc.setTextColor(0, 150, 80);
+        else if (colorCols.indexOf(k) >= 0 && cell.charAt(0) === '-') doc.setTextColor(200, 50, 50);
+        else doc.setTextColor(60, 60, 60);
+        doc.setFontSize(7); doc.text(cell, x + 1.5, y + 4.5); x += colW[k];
+      });
       y += rowH;
-    }
-  });
-
-  // ── Footer branding on every page ──
+      if (y > 190) { doc.addPage(); y = 14; header(cols, colW); }
+    });
+    y += 6;
+  }
+  table('Realized in this period', ['Symbol','Dir','Status','Entry Date','Sell Date','Avg Entry','Avg Exit','Shares Sold','Cost','Fees','Net P&L','P&L%'],
+    [20, 13, 20, 22, 22, 22, 22, 20, 24, 24, 24, 16],
+    R.rows.length ? R.rows.map(function(r){
+      return [r.t.ticker, r.t.direction, r.statusLabel, r.t.entry_date || '', r.last, money(calcAvgPrice(r.t)), money(r.avgExit),
+        fmtReportQty(r.qty), money(r.cost), reportFeeText(r.t), signed(r.pnl),
+        r.cost > 0 ? (r.pnl >= 0 ? '+' : '') + (r.pnl / r.cost * 100).toFixed(2) + '%' : '—'];
+    }) : [['No sells in this period', '', '', '', '', '', '', '', '', '', '', '']], [10, 11]);
+  if (R.open.length) {
+    table('Open positions (no realized P&L yet)', ['Symbol','Dir','Entry Date','Shares Held','Avg Cost','Cost'],
+      [24, 16, 26, 26, 28, 30],
+      R.open.map(function(o){ return [o.t.ticker, o.t.direction, o.t.entry_date || '', fmtReportQty(o.qty), money(o.avg), money(o.cost)]; }), []);
+  }
   var totalPages = doc.internal.getNumberOfPages();
-  doc.setFont(undefined, 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(150, 150, 150);
+  doc.setFont(undefined, 'normal'); doc.setFontSize(7); doc.setTextColor(150, 150, 150);
   for (var p = 1; p <= totalPages; p++) {
     doc.setPage(p);
     doc.text('Generated by ' + APP_NAME, pageW / 2, 203, {align: 'center'});
     doc.text('Page ' + p + ' of ' + totalPages, pageW - margin, 203, {align: 'right'});
   }
-
-  var date = today();
   var b64 = doc.output('datauristring').split('base64,').pop();
-  saveFileSmart('edgeory-report-' + date + '.pdf', b64, 'application/pdf');
+  saveFileSmart('edgeory-report-' + today() + '.pdf', b64, 'application/pdf');
   closeModal('reportModal');
 }
 
@@ -2791,8 +2740,11 @@ function downloadBackup(includePhotos) {
     var json = JSON.stringify(backup, null, 2);
     var date = localDateStr(new Date());
     var b64 = btoa(unescape(encodeURIComponent(json)));
-    saveFileSmart('edgeory-backup-' + (includePhotos?'full':'trades') + '-' + date + '.json', b64, 'application/json');
-    try { localStorage.setItem('tl_last_backup', date); } catch(e2) {}
+    saveFileSmart('edgeory-backup-' + (includePhotos?'full':'trades') + '-' + date + '.json', b64, 'application/json').then(function(ok){
+      if (!ok) return; // cancelled share sheet: not a backup
+      try { localStorage.setItem('tl_last_backup', date); } catch(e2) {}
+      if (currentView === 'more' || currentView === 'accounts') renderMain();
+    });
   } catch(e) { showToast('Backup failed: ' + e.message, 'error'); }
 }
 function backupData() {
@@ -2890,15 +2842,18 @@ function restoreData() {
       confirmSheet({ title: 'This will replace ALL current data. Continue?', ok: 'Replace', danger: true,
         extra: '<button class="btn btn-secondary" onclick="closeModal(\'confirmSheet\');backupData()">Back up first</button>' }, function() {
       if (!applyLoadedState(loaded)) { showToast('Invalid backup file', 'error'); return; }
+      // "Replace ALL": data this device has but the backup does not (an older backup
+      // without journals, templates or saved calculations) is cleared, not kept.
+      var lsDrop = function(k){ try { localStorage.removeItem(k); } catch(e) {} };
       if (backup.savedCalcs) {
         var cleanCalcs = sanitizeSavedCalcs(backup.savedCalcs);
         try { localStorage.setItem('tl_pos_calcs', JSON.stringify(cleanCalcs.pos)); } catch(e) {}
         try { localStorage.setItem('tl_comp_calcs', JSON.stringify(cleanCalcs.comp)); } catch(e) {}
         try { localStorage.setItem('tl_avg_calcs', JSON.stringify(cleanCalcs.avg)); } catch(e) {}
-      }
+      } else { lsDrop('tl_pos_calcs'); lsDrop('tl_comp_calcs'); lsDrop('tl_avg_calcs'); }
       var lsPutJson = function(k,v){ if (v == null) return; try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
-      if (backup.journals != null)  lsPutJson('tl_journals', sanitizeJournals(backup.journals));
-      if (backup.templates != null) lsPutJson('tl_templates', sanitizeTemplates(backup.templates));
+      if (backup.journals != null)  lsPutJson('tl_journals', sanitizeJournals(backup.journals)); else lsDrop('tl_journals');
+      if (backup.templates != null) lsPutJson('tl_templates', sanitizeTemplates(backup.templates)); else lsDrop('tl_templates');
       if (backup.profile != null)   lsPutJson('tl_profile', sanitizeProfile(backup.profile));
       if (backup.benchmark != null) {
         var cleanBenchmark = sanitizeBenchmark(backup.benchmark);
@@ -3589,7 +3544,7 @@ function renderAnalytics() {
       statCard('Profit Factor', pf, pf === '\u221e' ? 'No losses · closed only' : (pf >= 1 ? 'Closed trades · above 1.0 is good' : 'Closed trades · below 1.0'), pf === '\u221e' ? 'var(--green)' : (pf >= 1 ? 'var(--green)' : 'var(--red)')) +
       statCard('Avg Win', fmtPnl(avgWin), 'Per winning trade', 'var(--green)') +
       statCard('Avg Loss', (avgLoss > 0 ? '-' : '') + fmtMoney(avgLoss), 'Per losing trade', avgLoss > 0 ? 'var(--red)' : 'var(--text3)') +
-      statCard('Brokerage Fees', fmtMoney(calcTotalFees(closed)), 'Total fees paid', 'var(--red)') +
+      statCard('Fees paid', fmtMoney(calcTotalFees(closed)), 'Commissions and fees', 'var(--red)') +
     '</div>' +
     // Current streak + best/worst
     '<div class="stats-row">' +
@@ -3839,6 +3794,119 @@ function renderDurationStats(closed) {
     '</div></div>';
 }
 
+// Trading 212 CSV text -> { parsed: [trade drafts], unmatched } or { error }. Pure: no DOM.
+function parseT212Csv(text) {
+  var lines = String(text || '').split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
+  if (lines.length < 2) return { error: 'CSV appears empty' };
+  if (lines.length > 20001) return { error: 'CSV too many rows (max 20,000 trades)' };
+
+  function parseCSVLine(line) {
+    var result = [], cur = '', inQ = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
+  var headers = parseCSVLine(lines[0]).map(function(h){
+    return h.toLowerCase().replace(/"/g,'').trim();
+  });
+
+  function getCol(row, names) {
+    for (var ni = 0; ni < names.length; ni++) {
+      var ix = headers.indexOf(names[ni]);
+      if (ix >= 0 && row[ix] !== undefined) return row[ix].replace(/"/g,'').trim();
+    }
+    return '';
+  }
+
+  function normDate(d) {
+    if (!d) return today();
+    d = d.split(' ')[0].split('T')[0];
+    if (d.indexOf('/') >= 0) {
+      var p = d.split('/');
+      if (p.length === 3) {
+        var yr = p[2].length === 2 ? '20' + p[2] : p[2];
+        return yr + '-' + p[0].padStart(2,'0') + '-' + p[1].padStart(2,'0');
+      }
+    }
+    return d;
+  }
+
+  // Detect Trading 212 format
+  var hasAction  = headers.indexOf('action') >= 0;
+  var hasTicker  = headers.indexOf('ticker') >= 0;
+  var hasShares  = headers.indexOf('no. of shares') >= 0;
+  var isT212 = hasAction && hasTicker && hasShares;
+
+  var parsed = [];
+  var _unmatchedSells = 0;
+
+  if (isT212) {
+    // Trading 212: read every buy/sell row first, sort them by time (exports
+    // can be newest first), then pair each sell with the oldest open buy lot of
+    // the same ticker (FIFO: one Edgeory trade per bought lot). Fees and taxes
+    // in the row are shared out by shares.
+    var feeCols = headers.map(function(h, ix){
+      return (/fee|tax|stamp duty/.test(h) && h.indexOf('currency (') !== 0) ? ix : -1;
+    }).filter(function(ix){ return ix >= 0; });
+    var events = [];
+    for (var i = 1; i < lines.length; i++) {
+      var row = parseCSVLine(lines[i]);
+      if (!row || row.length < 4) continue;
+      var action  = getCol(row, ['action']).toLowerCase();
+      var ticker  = safeTicker(getCol(row, ['ticker']));
+      var shares  = parseFloat(getCol(row, ['no. of shares']));
+      var price   = parseFloat(getCol(row, ['price / share', 'price/share', 'price per share']));
+      var rawTime = getCol(row, ['time', 'date', 'datetime']);
+      if (!ticker || !shares || !price) continue;
+      var isBuy  = action.indexOf('buy') >= 0;
+      var isSell = action.indexOf('sell') >= 0;
+      if (!isBuy && !isSell) continue;
+      var fee = 0;
+      feeCols.forEach(function(ix){ var v = parseFloat(String(row[ix] || '').replace(/"/g, '')); if (v > 0) fee += v; });
+      var nd = normDate(rawTime);
+      events.push({ buy: isBuy, ticker: ticker, shares: shares, price: price, date: nd, time: nd + ' ' + (String(rawTime).split(/[ T]/)[1] || ''), fee: fee, n: i });
+    }
+    events.sort(function(a, b){ return a.time === b.time ? a.n - b.n : String(a.time).localeCompare(String(b.time)); });
+    var buyMap = {};
+    events.forEach(function(ev){
+      if (ev.buy) {
+        (buyMap[ev.ticker] = buyMap[ev.ticker] || []).push({ ticker: ev.ticker, shares: ev.shares, price: ev.price, date: ev.date, feePerShare: ev.fee / ev.shares });
+        return;
+      }
+      var remaining = ev.shares, sellFeePerShare = ev.fee / ev.shares;
+      while (remaining > 0.0000001 && buyMap[ev.ticker] && buyMap[ev.ticker].length) {
+        var lot = buyMap[ev.ticker][0];
+        var matchQty = Math.min(lot.shares, remaining);
+        parsed.push({ ticker: ev.ticker, dir: 'Long', entryDate: lot.date, exitDate: ev.date, entry: lot.price, exit: ev.price,
+          qty: matchQty, fees: +((lot.feePerShare + sellFeePerShare) * matchQty).toFixed(2), status: 'closed' });
+        lot.shares -= matchQty;
+        remaining -= matchQty;
+        if (lot.shares <= 0.0000001) buyMap[ev.ticker].shift();
+      }
+      if (remaining > 0.0000001) _unmatchedSells++; // bought before this file: not invented
+    });
+    // Remaining unmatched buys = open trades
+    Object.keys(buyMap).forEach(function(tkr){
+      buyMap[tkr].forEach(function(bx){
+        parsed.push({ ticker: bx.ticker, dir: 'Long', entryDate: bx.date, exitDate: null, entry: bx.price, exit: null,
+          qty: bx.shares, fees: +(bx.feePerShare * bx.shares).toFixed(2), status: 'open' });
+      });
+    });
+  } else {
+    // Unsupported platform — reject clearly
+    return { error: 'This file is not a Trading 212 CSV. Currently only Trading 212 exports are supported.' };
+  }
+
+  if (!parsed.length) return { error: 'No valid trades found. Check CSV format.' };
+  return { parsed: parsed, unmatched: _unmatchedSells };
+}
+
 function importCSV() {
   var input = document.createElement('input');
   input.type = 'file'; input.accept = '.csv';
@@ -3848,117 +3916,10 @@ function importCSV() {
     var reader = new FileReader();
     reader.onload = function(ev) {
       try {
-        var lines = ev.target.result.split('\n').map(function(l){ return l.trim(); }).filter(Boolean);
-        if (lines.length < 2) { showToast('CSV appears empty', 'error'); return; }
-        if (lines.length > 20001) { showToast('CSV too many rows (max 20,000 trades)', 'error'); return; }
-
-        function parseCSVLine(line) {
-          var result = [], cur = '', inQ = false;
-          for (var i = 0; i < line.length; i++) {
-            var ch = line[i];
-            if (ch === '"') { inQ = !inQ; }
-            else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
-            else { cur += ch; }
-          }
-          result.push(cur.trim());
-          return result;
-        }
-
-        var headers = parseCSVLine(lines[0]).map(function(h){
-          return h.toLowerCase().replace(/"/g,'').trim();
-        });
-
-        function getCol(row, names) {
-          for (var ni = 0; ni < names.length; ni++) {
-            var ix = headers.indexOf(names[ni]);
-            if (ix >= 0 && row[ix] !== undefined) return row[ix].replace(/"/g,'').trim();
-          }
-          return '';
-        }
-
-        function normDate(d) {
-          if (!d) return today();
-          d = d.split(' ')[0].split('T')[0];
-          if (d.indexOf('/') >= 0) {
-            var p = d.split('/');
-            if (p.length === 3) {
-              var yr = p[2].length === 2 ? '20' + p[2] : p[2];
-              return yr + '-' + p[0].padStart(2,'0') + '-' + p[1].padStart(2,'0');
-            }
-          }
-          return d;
-        }
-
-        // Detect Trading 212 format
-        var hasAction  = headers.indexOf('action') >= 0;
-        var hasTicker  = headers.indexOf('ticker') >= 0;
-        var hasShares  = headers.indexOf('no. of shares') >= 0;
-        var isT212 = hasAction && hasTicker && hasShares;
-
-        var parsed = [];
-        var _unmatchedSells = 0;
-
-        if (isT212) {
-          // Trading 212: pair buys with sells by ticker
-          var buyMap = {};
-          for (var i = 1; i < lines.length; i++) {
-            var row = parseCSVLine(lines[i]);
-            if (!row || row.length < 4) continue;
-            var action  = getCol(row, ['action']).toLowerCase();
-            var ticker  = safeTicker(getCol(row, ['ticker']));
-            var shares  = parseFloat(getCol(row, ['no. of shares']));
-            var price   = parseFloat(getCol(row, ['price / share', 'price/share', 'price per share']));
-            var dateStr = normDate(getCol(row, ['time', 'date', 'datetime']));
-            if (!ticker || !shares || !price) continue;
-            var isBuy  = action.indexOf('buy') >= 0;
-            var isSell = action.indexOf('sell') >= 0;
-            if (isBuy) {
-              if (!buyMap[ticker]) buyMap[ticker] = [];
-              buyMap[ticker].push({ticker:ticker, shares:shares, price:price, date:dateStr});
-            } else if (isSell) {
-              var remaining = shares;
-              while (remaining > 0.0000001 && buyMap[ticker] && buyMap[ticker].length) {
-                var lot = buyMap[ticker][0];
-                var matchQty = Math.min(lot.shares, remaining);
-                parsed.push({
-                  ticker:ticker, dir:'Long',
-                  entryDate:lot.date, exitDate:dateStr,
-                  entry:lot.price, exit:price,
-                  qty:matchQty, fees:0, status:'closed'
-                });
-                lot.shares -= matchQty;
-                remaining -= matchQty;
-                if (lot.shares <= 0.0000001) buyMap[ticker].shift();
-              }
-              if (remaining > 0.0000001) {
-                // Sell with no matching buy lot: don't fabricate a fake trade
-                _unmatchedSells++;
-              }
-            }
-          }
-          // Remaining unmatched buys = open trades
-          var tickers = Object.keys(buyMap);
-          for (var ti = 0; ti < tickers.length; ti++) {
-            var tkr = tickers[ti];
-            for (var bi = 0; bi < buyMap[tkr].length; bi++) {
-              var bx = buyMap[tkr][bi];
-              parsed.push({ticker:bx.ticker, dir:'Long', entryDate:bx.date, exitDate:null, entry:bx.price, exit:null, qty:bx.shares, fees:0, status:'open'});
-            }
-          }
-        } else {
-          // Unsupported platform — reject clearly
-          showToast('This file is not a Trading 212 CSV. Currently only Trading 212 exports are supported.', 'error');
-          return;
-        }
-
-        if (!parsed.length) {
-          showToast('No valid trades found. Check CSV format.', 'error');
-          return;
-        }
-        if (_unmatchedSells > 0) {
-          showToast(_unmatchedSells + ' sell row(s) had no matching buy and were skipped', 'error');
-        }
-        showCSVPreview(parsed);
+        var res = parseT212Csv(ev.target.result);
+        if (res.error) { showToast(res.error, 'error'); return; }
+        if (res.unmatched > 0) showToast(res.unmatched + ' sell row(s) had no buy in this file (bought earlier?) and were skipped', 'error');
+        showCSVPreview(res.parsed);
       } catch(err) { showToast('Import failed: ' + err.message, 'error'); }
     };
     reader.readAsText(file);
@@ -4039,6 +4000,21 @@ function confirmCSVImport(deposit) {
   var parsed = window._csvParsed || [];
   if (!parsed.length) { showToast('No trades to import', 'error'); return; }
   var stamp = Date.now();
+  // Importing the same file twice must not double the trades: skip any trade the
+  // account already has with the same symbol, dates, shares and prices.
+  var sig = function(ticker, ed, xd, qty, en, ex) {
+    return [String(ticker || '').toUpperCase(), ed || '', xd || '', (+qty || 0).toFixed(6), (+en || 0).toFixed(4), (+ex || 0).toFixed(4)].join('|');
+  };
+  var have = {};
+  state.trades.forEach(function(t){ if (t.accountId === accId) have[sig(t.ticker, t.entry_date, t.exit_date, t.original_qty, t.entry, t.exit)] = 1; });
+  var dupes = 0;
+  parsed = parsed.filter(function(t){
+    var k = sig(safeTicker(t.ticker), t.entryDate, t.exitDate, t.qty, t.entry, t.exit);
+    if (have[k]) { dupes++; return false; }
+    have[k] = 1;
+    return true;
+  });
+  if (!parsed.length) { showToast('These trades are already in this account. Nothing new to import.', 'info'); return; }
   var incoming = parsed.map(function(t, i) {
     return {
       id:'tr_csv_'+stamp+'_'+i, accountId:accId,
@@ -4061,7 +4037,7 @@ function confirmCSVImport(deposit) {
   if (deposit > 0) addLinkedDeposit(acc, deposit, today(), null, null, 'Trading 212 import');
   save(); renderSidebar(); renderMain();
   closeModal('csvPreviewModal');
-  showToast('Imported ' + parsed.length + ' trades' + (deposit > 0 ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
+  showToast('Imported ' + parsed.length + ' trades' + (dupes ? ' · ' + dupes + ' already here, skipped' : '') + (deposit > 0 ? ' · ' + fmtMoney(deposit) + ' deposit added' : ''), 'success');
   window._csvParsed = null;
 }
 
@@ -4945,6 +4921,7 @@ function confirmScreenshotImport(deposit) {
     return;
   }
   if (d.screen === 'xtb' && d.nameHint) rememberNameTicker(d.nameHint, ticker);
+  rebuildBasis(trade);
   state.trades.unshift(trade);
   if (deposit > 0) addLinkedDeposit(state.accounts.find(function(a){ return a.id === accId; }), deposit, first.date, trade.id, null, ticker);
   _importDraft = null;

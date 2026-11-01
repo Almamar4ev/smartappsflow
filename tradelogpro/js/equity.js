@@ -29,13 +29,23 @@ function equitySeries(trades, accounts) {
   });
   var initial = 0;
   (accounts || []).forEach(function (a) {
-    var net = 0;
+    var net = 0, first = '';
+    var seen = function (d) { if (d && (!first || d < first)) first = d; };
     (a.transactions || []).forEach(function (tx) {
       var amt = (tx.type === 'deposit' ? 1 : -1) * (parseFloat(tx.amount) || 0);
       net += amt;
+      seen(tx.date);
       if (tx.date) (days[tx.date] = days[tx.date] || { pnl: 0, flow: 0 }).flow += amt;
     });
-    initial += (parseFloat(a.startingCapital) || 0) - net; // capital before any recorded deposit
+    // Capital before any recorded deposit joins the curve when the account starts
+    // (its creation day, or its first trade or deposit if earlier, e.g. imported
+    // history), not at the first day of every account together.
+    var open = (parseFloat(a.startingCapital) || 0) - net;
+    if (Math.abs(open) < 0.005) return;
+    (trades || []).forEach(function (t) { if (t.accountId === a.id) seen(t.entry_date); });
+    seen(a.createdAt ? String(a.createdAt).slice(0, 10) : '');
+    if (first) (days[first] = days[first] || { pnl: 0, flow: 0 }).flow += open;
+    else initial += open;
   });
   var keys = Object.keys(days).sort();
   if (!keys.length) return [];

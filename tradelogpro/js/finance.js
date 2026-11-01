@@ -108,7 +108,9 @@ function calcPnl(t) {
   }
   var dir = t.direction === 'Long' ? 1 : -1;
   var st = calcPositionState(t);
-  if (st.qty <= 0.0001) return calcRealizedPnl(t) - _abFees;
+  // Closed by its last partial sell: each sell carries its own fee, and the trade
+  // own fee in $ (the buy commission) is still owed once. A % fee has no final gross here.
+  if (st.qty <= 0.0001) return calcRealizedPnl(t) - _abFees - (t.fees_mode === '$' ? (parseFloat(t.fees) || 0) : 0);
   var gross = (t.exit - st.avg) * st.qty * dir;
   return gross - calcFeesAmt(t.fees, t.fees_mode, gross) + calcRealizedPnl(t) - _abFees;
 }
@@ -158,6 +160,8 @@ function calcTradeFees(t) {
     if (st.qty > 0.0001) {
       var gross = (t.exit - st.avg) * st.qty * dir;
       total += calcFeesAmt(t.fees, t.fees_mode, gross);
+    } else if (t.fees_mode === '$') {
+      total += parseFloat(t.fees) || 0; // closed by its last partial sell: same as calcPnl
     }
   }
   // Add-position (buy-side) flat commissions
@@ -178,15 +182,19 @@ function calcDcaSummary(t) {
   var totalCost   = allBuys.reduce(function(s,b){ return s + b.qty * b.price; }, 0);
   var avg         = totalShares > 0 ? totalCost / totalShares : 0;
   var remainingQty = calcTotalQty(t);
+  // Shares still held cost their chronological average (buy 10@100, sell 5, buy 10@50
+  // leaves 15 at 66.67), which is what a sell has to beat; avg stays the lifetime one.
+  var held = calcPositionState(t);
+  var heldAvg = held.qty > 0.0000001 ? held.avg : avg;
   var feeVal = parseFloat(t.fees) || 0;
   var breakEven;
   if (t.fees_mode === '$' && feeVal > 0 && remainingQty > 0) {
     var dir2 = t.direction === 'Long' ? 1 : -1;
-    breakEven = avg + dir2 * (feeVal / remainingQty);
+    breakEven = heldAvg + dir2 * (feeVal / remainingQty);
   } else {
-    breakEven = avg;
+    breakEven = heldAvg;
   }
-  return {avg: avg, totalShares: totalShares, buys: allBuys.length, breakEven: breakEven};
+  return {avg: avg, heldAvg: heldAvg, totalShares: totalShares, buys: allBuys.length, breakEven: breakEven};
 }
 function calcTradeDuration(t) {
   if (!t.entry_date) return null;
@@ -284,7 +292,12 @@ function calcAccountCash(acc, trades, excludeId) {
   (trades || []).forEach(function(t){
     if (t.accountId !== acc.id || t.id === excludeId) return;
     cash += calcRealizedTotal(t);
-    if (t.status === 'open') cash -= calcPositionState(t).cost;
+    if (t.status === 'open') {
+      cash -= calcPositionState(t).cost;
+      // Commissions paid when buying (add-buys, and the trade fee in $) are
+      // gone from cash now; calcPnl takes them once the trade closes.
+      cash -= calcAddBuyFees(t) + (t.fees_mode === '$' ? (parseFloat(t.fees) || 0) : 0);
+    }
   });
   return cash;
 }
@@ -292,5 +305,39 @@ function calcAccountCash(acc, trades, excludeId) {
 // without either, Edgeory has no cash figure to check buys against.
 function accountTracksCash(acc) {
   return !!acc && ((parseFloat(acc.startingCapital) || 0) > 0 || !!(acc.transactions && acc.transactions.length));
+}
+
+// Re-derive every partial sell's cost basis from the trade's history, in date order.
+// Run after anything that changes that history (entry price, quantity, dates, an
+// add-buy or a sell added or removed), so a corrected buy price also corrects the
+// profit of sells already made (buy 10@100, sell 5@110 = +50; fix the buy to 120 = -50).
+function rebuildBasis(t) {
+  if (!t || !t.partial_closes || !t.partial_closes.length) return;
+  t.partial_closes.forEach(function(pc){ pc.basis = null; pc._ledgerBasis = null; });
+  calcPositionState(t);
+  t.partial_closes.forEach(function(pc){ pc.basis = pc._ledgerBasis != null ? pc._ledgerBasis : null; });
+}
+
+// Realized results of one trade, one entry per sell, on the day it happened: each
+// partial sell, then the final close. pnl is net of fees (sums to calcRealizedTotal),
+// cost is the cost of the shares sold. Reports total the entries inside their period.
+function tradeRealizedEvents(t) {
+  var out = [], dir = t.direction === 'Short' ? -1 : 1, sumPnl = 0, sumCost = 0, sumQty = 0;
+  calcPositionState(t);
+  (t.partial_closes || []).forEach(function(pc){
+    var basis = pc.basis != null ? pc.basis : (pc._ledgerBasis != null ? pc._ledgerBasis : calcAvgPrice(t));
+    var gross = (pc.price - basis) * pc.qty * dir;
+    var net = gross - calcFeesAmt(pc.fees, pc.fees_mode, gross);
+    out.push({ d: pc.date || t.exit_date || t.entry_date || '', pnl: net, cost: basis * pc.qty, qty: pc.qty, price: pc.price });
+    sumPnl += net; sumCost += basis * pc.qty; sumQty += pc.qty;
+  });
+  if (t.status === 'closed') {
+    var restQty = Math.max(0, calcBoughtQty(t) - sumQty);
+    var restPnl = calcPnl(t) - sumPnl, restCost = Math.max(0, calcRealizedCost(t) - sumCost);
+    if (restQty > 0.0000001 || Math.abs(restPnl) > 0.005) {
+      out.push({ d: t.exit_date || t.entry_date || '', pnl: restPnl, cost: restCost, qty: restQty, price: t.exit || 0 });
+    }
+  }
+  return out;
 }
 

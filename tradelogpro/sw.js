@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v27';
-const UPDATE_NOTE = 'A new interactive equity chart: drag along it, pick a period, and switch between Balance and P&L.';
+const CACHE = 'edgeory-v28';
+const UPDATE_NOTE = 'Reports now count P&L on the day you sold, fees are clearer, and charts and exports work offline.';
 
 const ASSETS = [
   './',
@@ -34,6 +34,23 @@ const ASSETS = [
   './fonts/roboto-700.woff2'
 ];
 
+// Pinned third-party libraries (Chart.js 4.4.1, SheetJS 0.18.5, jsPDF 2.5.1), same
+// files and SRI hashes as index.html. They never change between releases, so they
+// live in their own cache: fetched once, kept across updates, and the chart and
+// PDF/Excel export keep working offline on the web.
+const VENDOR_CACHE = 'edgeory-vendor-1';
+const VENDOR = ['./chart.umd.min.js', './xlsx.full.min.js', './jspdf.umd.min.js'];
+function cacheVendor() {
+  return caches.open(VENDOR_CACHE).then(function (cache) {
+    return Promise.all(VENDOR.map(function (url) {
+      return cache.match(url).then(function (hit) {
+        // Best effort: a failed library download must not block the app update.
+        return hit || cache.add(url).catch(function () {});
+      });
+    }));
+  });
+}
+
 // Releases up to edgeory-v17 have no update banner, so they get this worker straight away.
 function hasLegacyCache() {
   return caches.keys().then(function (keys) {
@@ -48,7 +65,7 @@ self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE).then(function (cache) {
       return cache.addAll(ASSETS.map(function (url) { return new Request(url, { cache: 'reload' }); }));
-    }).then(hasLegacyCache).then(function (legacy) {
+    }).then(cacheVendor).then(hasLegacyCache).then(function (legacy) {
       if (legacy) return self.skipWaiting();
     })
   );
@@ -63,7 +80,7 @@ self.addEventListener('activate', function (event) {
           key.indexOf('edgeory-') === 0 ||
           key.indexOf('trademory-') === 0 ||
           key.indexOf('tradelogpro-') === 0;
-        if (isOurs && key !== CACHE) {
+        if (isOurs && key !== CACHE && key !== VENDOR_CACHE) {
           return caches.delete(key);
         }
       }));

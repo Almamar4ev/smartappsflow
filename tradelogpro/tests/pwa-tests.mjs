@@ -104,6 +104,15 @@ const scripts = [...html.matchAll(/<script src="(js\/[^"]+)"/g)].map((m) => m[1]
 assert('every app script is precached by the service worker (' + scripts.length + ' files)',
   scripts.length > 0 && scripts.every((s) => sw.includes("'./" + s + "'")));
 
+// Web offline: the pinned chart / Excel / PDF libraries ship with the site and are
+// cached once in their own cache that survives releases.
+const vendorList = (sw.match(/const VENDOR = \[([^\]]+)\]/) || [, ''])[1];
+const vendorFiles = ['chart.umd.min.js', 'xlsx.full.min.js', 'jspdf.umd.min.js'];
+assert('the 3 libraries are in the repo, loaded by index.html, and listed in the worker',
+  vendorFiles.every((f) => existsSync(join(root, f)) && html.includes('src="' + f + '"') && vendorList.includes("'./" + f + "'")));
+assert('the library cache is kept when a release clears old caches',
+  /key !== CACHE && key !== VENDOR_CACHE/.test(sw) && /cacheVendor\)/.test(sw));
+
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
 if (failed) process.exit(1);

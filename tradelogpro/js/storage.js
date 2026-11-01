@@ -51,6 +51,9 @@ function applyLoadedState(parsed) {
     if (!t.add_buys) t.add_buys = [];
     if (!t.partial_closes) t.partial_closes = [];
     migrateBasis(t);
+    // The history is the source of truth: re-derive every sell's cost from it, so an
+    // entry corrected after a sale (or an older backup) never keeps a stale profit.
+    if (typeof rebuildBasis === 'function') rebuildBasis(t);
   });
   return true;
 }

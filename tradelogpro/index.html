@@ -232,15 +232,15 @@ function detectAppRuntime(loc, cap) {
         </div>
         <div class="section-divider">Optional</div>
         <div class="field">
-          <label>Brokerage / Fees <span class="opt">(optional)</span></label>
+          <label>Fees / commission <span class="opt">(optional)</span></label>
           <div class="input-with-select">
             <select id="f_fees_mode">
-              <option value="%">% of P&L</option>
-              <option value="$">Value</option>
+              <option value="$">$ amount</option>
+              <option value="%">% of profit</option>
             </select>
             <input id="f_fees" type="number" step="0.0001" placeholder="e.g. 1.00">
           </div>
-          <span class="field-hint">% mode: deducted from P&L on winning trades</span>
+          <span class="field-hint">$ amount: what you paid, counted on wins and losses. % of profit: taken from winning trades only (e.g. a profit share).</span>
         </div>
         <div class="field">
           <label>Trade Type <span class="opt">(optional)</span></label>
@@ -313,8 +313,8 @@ function detectAppRuntime(loc, cap) {
           <label>Fees <span class="opt">(optional)</span></label>
           <div class="input-with-select">
             <select id="pc_fees_mode" onchange="updatePartialPreview()">
-              <option value="%">% of P&L</option>
-              <option value="$">Value</option>
+              <option value="$">$ amount</option>
+              <option value="%">% of profit</option>
             </select>
             <input id="pc_fees" type="number" step="0.0001" placeholder="e.g. 1.00" oninput="updatePartialPreview()">
           </div>

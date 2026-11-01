@@ -10,8 +10,8 @@ var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // Shown once after each web release, whether the user tapped Update or the new
 // version applied by itself after the app was closed (Later). Must equal sw.js
 // CACHE / UPDATE_NOTE — tests/pwa-tests.mjs enforces it.
-var WHATS_NEW_ID = 'edgeory-v27';
-var WHATS_NEW_TEXT = 'A new interactive equity chart: drag along it, pick a period, and switch between Balance and P&L.';
+var WHATS_NEW_ID = 'edgeory-v28';
+var WHATS_NEW_TEXT = 'Reports now count P&L on the day you sold, fees are clearer, and charts and exports work offline.';
 
 // ==========================================================================
 // STATE + INDEXEDDB STORAGE
