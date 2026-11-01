@@ -36,7 +36,8 @@ const NEEDED = [
   'calcRealizedCost',
   'isWin',
   'isLoss',
-  'isBreakeven'
+  'isBreakeven',
+  'calcAccountCash'
 ];
 
 function extractFunction(src, name) {
@@ -215,6 +216,23 @@ test('8. Partial: buy 10@100, partial 5@120, final 5@130',
   const pnl = all.reduce((s, t) => s + calcRealizedTotal(t), 0);
   const cost = all.reduce((s, t) => s + calcRealizedCost(t), 0);
   test('16d. Report % = (2750 + 50) / (550 + 500) = 266.67%', pnl / cost * 100, 266.67);
+}
+
+// --- Cash available per account -----------------------------------------------
+{
+  const acc = { id: 'a1', startingCapital: 10000 };   // 10,000 after deposits/withdrawals
+  const mk = (o) => Object.assign({ direction: 'Long', fees: 0, fees_mode: '$', add_buys: [], partial_closes: [] }, o);
+  const open = mk({ id: 'o1', accountId: 'a1', status: 'open', entry: 50, qty: 100, original_qty: 100 });   // 5,000 tied up
+  const won = mk({ id: 'c1', accountId: 'a1', status: 'closed', entry: 10, exit: 12, qty: 100, original_qty: 100 }); // +200
+  const other = mk({ id: 'x1', accountId: 'b2', status: 'open', entry: 100, qty: 100, original_qty: 100 });
+  assert('cash = capital + closed P&L - open cost, other accounts ignored (5,200)',
+    Math.abs(api.calcAccountCash(acc, [open, won, other]) - 5200) < 0.01);
+  assert('the trade being edited is left out of its own cash (10,200)',
+    Math.abs(api.calcAccountCash(acc, [open, won], 'o1') - 10200) < 0.01);
+  const part = mk({ id: 'p1', accountId: 'a1', status: 'open', entry: 20, qty: 50, original_qty: 100, entry_date: '2026-01-01',
+    partial_closes: [{ id: 'pc', qty: 50, price: 30, date: '2026-01-02', fees: 0, fees_mode: '$' }] });
+  assert('a partly sold trade frees the sold cost and adds its profit (10,000 + 500 - 1,000)',
+    Math.abs(api.calcAccountCash(acc, [part]) - 9500) < 0.01);
 }
 
 console.log('\n----------------------------------------');

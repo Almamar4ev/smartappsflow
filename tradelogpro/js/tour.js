@@ -1,7 +1,7 @@
 // App tour — a short first-run walkthrough (pattern from emiGo's guide tour).
 // Classic script, loaded after app.js. State: localStorage tl_tour = 'done' | 'skipped'.
 // Offered once to a new user after their first account exists and before any trade;
-// anyone can replay it from More › App tour.
+// anyone can replay it from More › Quick tour.
 
 var TOUR_STEPS = [
   { view: 'dashboard', targets: ['#dashStatsRow'],
@@ -56,7 +56,7 @@ function maybeOfferTour() {
   if (currentView !== 'dashboard') return;
   var card = _tourEl('tourCard', 'tour-card');
   card.innerHTML = '<div class="tour-meta">Welcome to Edgeory</div>' +
-    '<div class="tour-title">Take a 30-second tour?</div>' +
+    '<div class="tour-title">Take a quick tour?</div>' +
     '<div class="tour-body">See where to log trades, read your stats and keep your data safe.</div>' +
     '<div class="tour-actions"><button type="button" class="tour-skip" onclick="endTour(\'skipped\')">Not now</button>' +
     '<button type="button" class="tour-next" onclick="startTour()">Start tour</button></div>';
@@ -76,7 +76,21 @@ function startTour() {
 function showTourStep() {
   var step = TOUR_STEPS[_tourStep];
   if (!step) { endTour('done'); return; }
-  if (currentView !== step.view) setView(step.view);
+  var ring = document.getElementById('tourRing'), card0 = null;
+  var viewChanged = currentView !== step.view;
+  if (viewChanged) {
+    // New screen: fade the ring out and place it once the page's enter animation
+    // (fadeIn, 0.22s, slides content 8px) and late renders (calculators) settle.
+    // Sliding it across the screen between pages looked wrong.
+    // The shield carries the dim while the ring is away, and the card waits too,
+    // so the screen never flashes undimmed and the card does not jump sides.
+    var shield = document.getElementById('tourShield');
+    if (ring) ring.classList.add('hold');
+    if (shield) shield.classList.add('dim');
+    card0 = document.getElementById('tourCard');
+    if (card0) card0.classList.add('hold');
+    setView(step.view);
+  }
   var last = _tourStep === TOUR_STEPS.length - 1;
   var card = _tourEl('tourCard', 'tour-card');
   card.innerHTML = '<div class="tour-meta">Step ' + (_tourStep + 1) + ' of ' + TOUR_STEPS.length + '</div>' +
@@ -85,8 +99,20 @@ function showTourStep() {
     '<div class="tour-actions"><button type="button" class="tour-skip" onclick="endTour(\'skipped\')">Skip</button>' +
     '<button type="button" class="tour-next" onclick="nextTourStep()">' + (last ? 'Done' : 'Next') + '</button></div>';
   card.classList.add('show');
-  // Two frames so a freshly rendered view has its layout before we measure it.
-  requestAnimationFrame(function () { requestAnimationFrame(_tourReposition); });
+  if (viewChanged) {
+    var at = _tourStep;
+    setTimeout(function () {
+      if (_tourStep !== at) return;
+      _tourReposition();
+      requestAnimationFrame(function () {
+        if (ring) ring.classList.remove('hold');
+        var sh = document.getElementById('tourShield'); if (sh) sh.classList.remove('dim');
+        var c = document.getElementById('tourCard'); if (c) c.classList.remove('hold');
+      });
+    }, 320);
+  } else {
+    requestAnimationFrame(function () { requestAnimationFrame(_tourReposition); });
+  }
 }
 
 function _tourReposition() {
@@ -106,8 +132,13 @@ function _tourReposition() {
   ring.style.width = (r.width + pad * 2) + 'px';
   ring.style.height = (r.height + pad * 2) + 'px';
   ring.classList.add('show');
-  // Keep the card on the other half of the screen from what it explains.
-  card.classList.toggle('top', r.top + r.height / 2 > window.innerHeight / 2);
+  // Keep the card on the other half of the screen from what it explains; a card
+  // that changes side fades in there instead of jumping.
+  var top = r.top + r.height / 2 > window.innerHeight / 2;
+  if (top !== card.classList.contains('top')) {
+    card.classList.toggle('top', top);
+    card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
+  }
 }
 
 function nextTourStep() {
@@ -122,14 +153,14 @@ function endTour(result) {
   setTourState(result === 'done' ? 'done' : 'skipped');
   document.documentElement.classList.remove('tour-on');
   ['tourCard', 'tourRing', 'tourShield'].forEach(function (id) {
-    var el = document.getElementById(id); if (el) el.classList.remove('show');
+    var el = document.getElementById(id); if (el) el.classList.remove('show', 'hold', 'dim');
   });
   window.removeEventListener('resize', _tourReposition);
   if (wasActive && currentView !== 'dashboard') setView('dashboard');
-  if (wasActive && result === 'done') showToast('You’re all set. Replay the tour any time in More.', 'success');
+  if (wasActive && result === 'done') showToast('You’re all set. Replay the quick tour any time in More.', 'success');
 }
 
-// More › App tour
+// More › Quick tour
 function replayTour() {
   if (typeof _modalStack !== 'undefined' && _modalStack.length) return;
   startTour();

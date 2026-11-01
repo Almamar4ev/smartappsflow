@@ -389,11 +389,11 @@ function renderAvgCalc() {
   var rowsHtml = _avgRows.map(function(r, i) {
     return '<div class="prow">' +
       '<div>' + (i === 0 ? '<div class="fl">Price</div>' : '') +
-        '<input class="inp" type="text" inputmode="decimal" placeholder="0.00" value="' + esc(groupNum(r.price||'')) + '" aria-label="Price ' + (i+1) + '"' +
+        '<input class="inp" type="text" inputmode="decimal" placeholder="e.g. 50.00" value="' + esc(groupNum(r.price||'')) + '" aria-label="Price ' + (i+1) + '"' +
         ' oninput="fmtNumInput(this);updateAvgRow(' + i + ',&apos;price&apos;,this.value);calcStockAvg()">' +
       '</div>' +
       '<div>' + (i === 0 ? '<div class="fl">Shares</div>' : '') +
-        '<input class="inp" type="text" inputmode="decimal" placeholder="0" value="' + esc(groupNum(r.qty||'')) + '" aria-label="Shares ' + (i+1) + '"' +
+        '<input class="inp" type="text" inputmode="decimal" placeholder="e.g. 20" value="' + esc(groupNum(r.qty||'')) + '" aria-label="Shares ' + (i+1) + '"' +
         ' oninput="fmtNumInput(this);updateAvgRow(' + i + ',&apos;qty&apos;,this.value);calcStockAvg()">' +
       '</div>' +
       '<button class="xb" onclick="removeAvgRow(' + i + ')" aria-label="Remove purchase ' + (i+1) + '">' + icon('close',16) + '</button>' +
@@ -492,7 +492,7 @@ function calcStockAvg() {
     '</section>' +
     '<section class="avg-card" style="gap:10px;padding:14px 16px" aria-label="Sell calculator">' +
       '<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center"><label for="avg_sell_price" style="font-size:calc(14px*var(--fz));color:var(--text2)">If I sell at</label>' +
-        '<input id="avg_sell_price" class="inp" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" oninput="fmtNumInput(this);calcAvgSell(' + totalShares + ',' + avgPrice + ',' + totalCost + ')"></div>' +
+        '<input id="avg_sell_price" class="inp" type="text" inputmode="decimal" placeholder="e.g. 60.00" autocomplete="off" oninput="fmtNumInput(this);calcAvgSell(' + totalShares + ',' + avgPrice + ',' + totalCost + ')"></div>' +
       '<div id="avg_sell_result"></div>' +
     '</section>';
   var sellEl2 = document.getElementById('avg_sell_price');
@@ -552,7 +552,7 @@ function saveAvgCalcAsNew() {
   promptSheet('Name this calculation', 'e.g. AAPL DCA', '', function(name) {
     if (!name || !name.trim()) return;
     var entry = {
-      id: Date.now().toString(),
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), // unique even within one millisecond
       name: name.trim(),
       date: localDateStr(new Date()),
       rows: JSON.parse(JSON.stringify(_avgRows))
@@ -1372,7 +1372,7 @@ function editAccount(id) {
   var titleEl = document.getElementById('accountModalTitle');
   if (titleEl) titleEl.textContent = 'Edit Account';
   var n = document.getElementById('f_acc_name'); if (n) n.value = acc.name || '';
-  var cap = document.getElementById('f_acc_capital'); if (cap) cap.value = acc.startingCapital ? parseFloat(acc.startingCapital).toFixed(2) : '';
+  var cap = document.getElementById('f_acc_capital'); if (cap) cap.value = acc.startingCapital ? groupNum(parseFloat(acc.startingCapital).toFixed(2)) : '';
   var broker = document.getElementById('acc_broker'); if (broker) broker.value = acc.broker || '';
 
   var txSection = document.getElementById('accTransactionSection');
@@ -1403,7 +1403,7 @@ function accTransaction(type) {
 function confirmTransaction() {
   var acc = state.accounts.find(function(a){ return a.id === editingAccountId; });
   if (!acc) return;
-  var amt = parseFloat(document.getElementById('f_acc_transaction').value);
+  var amt = numVal(document.getElementById('f_acc_transaction').value);
   if (!amt || amt <= 0) { showToast('Enter a valid amount', 'error'); return; }
   if (!acc.transactions) acc.transactions = [];
   var txDateEl = document.getElementById('f_acc_tx_date');
@@ -1411,7 +1411,7 @@ function confirmTransaction() {
   acc.transactions.push({id: Date.now().toString(), type: accTransactionType, amount: amt, date: txDate});
   acc.startingCapital = (acc.startingCapital || 0) + (accTransactionType === 'deposit' ? amt : -amt);
   var capEl = document.getElementById('f_acc_capital');
-  if (capEl) capEl.value = acc.startingCapital;
+  if (capEl) capEl.value = groupNum(String(acc.startingCapital || ''));
   var txForm = document.getElementById('accTransactionForm');
   if (txForm) txForm.style.display = 'none';
   save();
@@ -1462,7 +1462,7 @@ function deleteTransaction(txId) {
     acc.startingCapital = (acc.startingCapital || 0) + (tx.type === 'deposit' ? -tx.amount : tx.amount);
     acc.transactions = acc.transactions.filter(function(t){ return t.id !== txId; });
     var capEl = document.getElementById('f_acc_capital');
-    if (capEl) capEl.value = acc.startingCapital;
+    if (capEl) capEl.value = groupNum(String(acc.startingCapital || ''));
     save();
     renderTransactionHistory(acc, false);
     showToast('Transaction deleted', 'success');
@@ -1483,7 +1483,7 @@ function editTransaction(txId) {
       '<div style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text3);margin-bottom:10px">EDIT TRANSACTION</div>' +
       '<div class="field" style="margin-bottom:8px">' +
         '<label style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text2)">Amount</label>' +
-        '<input id="txEdit_amt_' + eid(txId) + '" type="number" step="0.01" value="' + parseFloat(tx.amount).toFixed(2) + '" style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:8px;font-size:calc(13px*var(--fz));width:100%">' +
+        '<input id="txEdit_amt_' + eid(txId) + '" type="text" inputmode="decimal" autocomplete="off" oninput="fmtNumInput(this)" value="' + groupNum(parseFloat(tx.amount).toFixed(2)) + '" style="background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:8px;font-size:calc(13px*var(--fz));width:100%">' +
       '</div>' +
       '<div class="field" style="margin-bottom:10px">' +
         '<label style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text2)">Date</label>' +
@@ -1505,7 +1505,7 @@ function saveEditTransaction(txId) {
   if (!acc || !acc.transactions) return;
   var tx = acc.transactions.find(function(t){ return t.id === txId; });
   if (!tx) return;
-  var newAmt = parseFloat(document.getElementById('txEdit_amt_' + txId).value);
+  var newAmt = numVal(document.getElementById('txEdit_amt_' + txId).value);
   var newDate = document.getElementById('txEdit_date_' + txId).value;
   if (!newAmt || newAmt <= 0) { showToast('Enter a valid amount', 'error'); return; }
   if (!newDate) { showToast('Enter a valid date', 'error'); return; }
@@ -1516,7 +1516,7 @@ function saveEditTransaction(txId) {
   tx.amount = newAmt;
   tx.date = newDate;
   var capEl = document.getElementById('f_acc_capital');
-  if (capEl) capEl.value = acc.startingCapital;
+  if (capEl) capEl.value = groupNum(String(acc.startingCapital || ''));
   save();
   renderTransactionHistory(acc, false);
   showToast('Transaction updated', 'success');
@@ -1525,7 +1525,7 @@ function saveEditTransaction(txId) {
 function saveAccount() {
   var name = _sname(document.getElementById('f_acc_name').value.trim(), 60);
   if (!name) { showToast('Please enter an account name', 'error'); return; }
-  var capital = parseFloat(document.getElementById('f_acc_capital').value) || 0;
+  var capital = numVal(document.getElementById('f_acc_capital').value) || 0;
   if (editingAccountId) {
     var acc = state.accounts.find(function(a){ return a.id === editingAccountId; });
     if (acc) {
@@ -1822,6 +1822,37 @@ function updateInvestedPreview() {
   } else {
     if (field) field.style.display = 'none';
   }
+  var note = document.getElementById('investedCashNote');
+  var stEl = document.getElementById('f_status');
+  if (note) note.innerHTML = (stEl && stEl.value === 'open') ? cashNoteHtml(tradeFormAccount(), entry * qty, editingTradeId) : '';
+}
+// Account picked in the Log/Edit trade form.
+function tradeFormAccount() {
+  var sel = document.getElementById('f_account');
+  var id = sel ? sel.value : '';
+  return state.accounts.find(function(a){ return a.id === id; }) || null;
+}
+// "Main has $X cash" under a buy's cost; red when the buy needs more than that.
+function cashNoteHtml(acc, cost, excludeId) {
+  if (!acc || !(cost > 0)) return '';
+  var cash = calcAccountCash(acc, state.trades, excludeId);
+  if (cost > cash + 0.005) {
+    return '<span style="color:var(--red)">' + esc(acc.name) + ' has ' + (cash > 0 ? fmtMoney(cash) : 'no') + ' cash available.</span> ' +
+      'Record a deposit if you added money.';
+  }
+  return esc(acc.name) + ' has ' + fmtMoney(cash) + ' cash available · ' + fmtMoney(cash - cost) + ' left after this buy';
+}
+// Warn (never block: margin accounts can buy past their cash) when a buy costs more
+// than the account's cash. onGo runs when the user saves anyway.
+function confirmCashOrGo(acc, cost, excludeId, onGo) {
+  var cash = acc ? calcAccountCash(acc, state.trades, excludeId) : 0;
+  if (!acc || !(cost > cash + 0.005)) { onGo(); return; }
+  confirmSheet({
+    title: 'More than the cash in ' + acc.name,
+    body: 'This buy costs ' + fmtMoney(cost) + ', but ' + acc.name + ' has ' + (cash > 0 ? fmtMoney(cash) : 'no') +
+      ' cash available (capital, deposits and closed P&L, minus open trades). If you added money, record a deposit in Accounts so your balance stays right. On margin? Save anyway.',
+    ok: 'Save anyway'
+  }, onGo);
 }
 function calcInvestedPreview() { updateInvestedPreview(); }
 
@@ -1892,7 +1923,7 @@ function removePendingPhoto(idx) {
   renderPhotoPreviews();
 }
 
-function saveTradeModal() {
+function saveTradeModal(cashOk) {
   var ticker = safeTicker(document.getElementById('f_ticker').value);
   var entry = parseFloat(document.getElementById('f_entry').value);
   var qty = parseFloat(document.getElementById('f_qty').value);
@@ -1913,6 +1944,15 @@ function saveTradeModal() {
   if (_entryD && _entryD > _td) { showToast('Entry date cannot be in the future', 'error'); return; }
   if (_exitD && _exitD > _td) { showToast('Exit date cannot be in the future', 'error'); return; }
   if (_entryD && _exitD && _exitD < _entryD) { showToast('Exit date cannot be before the entry date', 'error'); return; }
+  // Only a new open buy spends cash today; a closed or edited trade is history.
+  if (!cashOk && !editingTradeId && status === 'open') {
+    var _acc = state.accounts.find(function(a){ return a.id === accId; });
+    var _cost = entry * qty;
+    if (_acc && _cost > calcAccountCash(_acc, state.trades) + 0.005) {
+      confirmCashOrGo(_acc, _cost, null, function(){ saveTradeModal(true); });
+      return;
+    }
+  }
   if (editingTradeId) {
     var t = state.trades.find(function(x){ return x.id === editingTradeId; });
     if (t) {
@@ -2309,7 +2349,8 @@ function updateAddBuyPreview() {
   var col = newAvg < oldAvg ? 'var(--green)' : (newAvg > oldAvg ? 'var(--red)' : 'var(--text2)');
   box.innerHTML = '<div style="background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:calc(12px*var(--fz));color:var(--text2)">' +
     'New avg: <b style="color:' + col + ';font-family:var(--mono)">' + fmtPrice(newAvg) + ' ' + arrow + '</b>' +
-    ' &nbsp;·&nbsp; Total: <b style="font-family:var(--mono);color:var(--text)">' + fmtQty(newQty) + '</b> shares</div>';
+    ' &nbsp;·&nbsp; Total: <b style="font-family:var(--mono);color:var(--text)">' + fmtQty(newQty) + '</b> shares' +
+    '<div class="cash-note">' + cashNoteHtml(state.accounts.find(function(a){ return a.id === t.accountId; }), price * qty, null) + '</div></div>';
 }
 function openAddBuy(id) {
   addBuyTargetId = id;
@@ -2331,7 +2372,7 @@ function openAddBuy(id) {
   openModal('addBuyModal');
 }
 
-function saveAddBuy() {
+function saveAddBuy(cashOk) {
   var t = state.trades.find(function(x){ return x.id === addBuyTargetId; });
   if (!t) return;
   var qty   = parseFloat(document.getElementById('ab_qty').value);
@@ -2339,6 +2380,13 @@ function saveAddBuy() {
   var date  = document.getElementById('ab_date') ? document.getElementById('ab_date').value : today();
   var fees  = document.getElementById('ab_fees') ? document.getElementById('ab_fees').value : '0';
   if (!qty || !price || qty <= 0) { showToast('Enter valid qty and price', 'error'); return; }
+  if (!cashOk) {
+    var _acc = state.accounts.find(function(a){ return a.id === t.accountId; });
+    if (_acc && qty * price > calcAccountCash(_acc, state.trades) + 0.005) {
+      confirmCashOrGo(_acc, qty * price, null, function(){ saveAddBuy(true); });
+      return;
+    }
+  }
   if (!t.add_buys) t.add_buys = [];
   t.add_buys.push({id: Date.now().toString(), ts: Date.now(), qty: qty, price: price, date: date, fees: fees||'0', fees_mode: '$'});
   save(); closeModal('addBuyModal'); closeModal('tradeDetailModal'); window._detailReturnId = null;
@@ -2920,9 +2968,9 @@ function renderPnlCalc() {
   return '<div class="calc-stack"><section class="calc-card">' +
     segBtns('pnl_side_seg', [{v:'Long', label:'Long · bought first'}, {v:'Short', label:'Short · sold first'}], _pnlCalcSide, 'setPnlCalcSide') +
     '<div class="calc-grid2">' +
-      '<div class="field"><label>Entry price' + currLbl() + '</label><input id="cl_entry"' + num + ' step="0.0001" placeholder="100.00"></div>' +
-      '<div class="field"><label>Exit price' + currLbl() + '</label><input id="cl_exit"' + num + ' step="0.0001" placeholder="120.00"></div>' +
-      '<div class="field"><label>Shares</label><input id="cl_qty"' + num + ' step="0.0001" placeholder="10"></div>' +
+      '<div class="field"><label>Entry price' + currLbl() + '</label><input id="cl_entry"' + num + ' step="0.0001" placeholder="e.g. 100.00"></div>' +
+      '<div class="field"><label>Exit price' + currLbl() + '</label><input id="cl_exit"' + num + ' step="0.0001" placeholder="e.g. 120.00"></div>' +
+      '<div class="field"><label>Shares</label><input id="cl_qty"' + num + ' step="0.0001" placeholder="e.g. 10"></div>' +
       '<div class="field"><label>Total fees' + currLbl() + '</label><input id="cl_fees"' + num + ' step="0.01" placeholder="Optional"></div>' +
     '</div>' +
   '</section>' +
@@ -2981,8 +3029,8 @@ function renderPosCalc() {
   '<section class="calc-card">' +
     '<div class="calc-card-h"><span class="calc-card-t">Your account</span></div>' +
     '<div class="calc-grid2">' +
-      '<div class="field"><label for="ps_balance">Balance' + currLbl() + '</label>' + inp('ps_balance', '10,000', 'Balance') + '</div>' +
-      '<div class="field"><label for="ps_risk_val">Risk per trade</label><div class="ps-unit-wrap">' + inp('ps_risk_val', '1', 'Risk per trade') +
+      '<div class="field"><label for="ps_balance">Balance' + currLbl() + '</label>' + inp('ps_balance', 'e.g. 10,000', 'Balance') + '</div>' +
+      '<div class="field"><label for="ps_risk_val">Risk per trade</label><div class="ps-unit-wrap">' + inp('ps_risk_val', 'e.g. 1', 'Risk per trade') +
         psMini('ps_risk_seg', [{v:'%', label:'%'}, {v:'$', label:esc(cs)}], _psRiskMode, 'setPsRiskMode') + '</div></div>' +
     '</div>' +
     '<div class="calc-conv" id="ps_risk_conv"></div>' +
@@ -2995,9 +3043,9 @@ function renderPosCalc() {
       '<div class="ps-rail" aria-hidden="true"><div class="g" id="ps_rail_g"></div><div class="r" id="ps_rail_r"></div></div>' +
       lvl('tp', psLevelName('tp'), inp('ps_tp_price', 'Optional', 'Target price', !pm) + inp('ps_tp_pct', 'Optional', 'Target distance in %', pm)) +
       '<div class="ps-gap g" id="ps_gap_g"></div>' +
-      lvl('en', 'Entry', inp('ps_entry', '100.00', 'Entry price', !pm) + '<div class="ps-en-note' + (pm ? ' ps-off' : '') + '" id="ps_en_note">Long or short. Sized by distance</div>') +
+      lvl('en', 'Entry', inp('ps_entry', 'e.g. 100.00', 'Entry price', !pm) + '<div class="ps-en-note' + (pm ? ' ps-off' : '') + '" id="ps_en_note">Long or short. Sized by distance</div>') +
       '<div class="ps-gap r" id="ps_gap_r"></div>' +
-      lvl('sl', psLevelName('sl'), inp('ps_stop_price', '95.00', 'Stop price', !pm) + inp('ps_stop_pct', '5', 'Stop distance in %', pm)) +
+      lvl('sl', psLevelName('sl'), inp('ps_stop_price', 'e.g. 95.00', 'Stop price', !pm) + inp('ps_stop_pct', 'e.g. 5', 'Stop distance in %', pm)) +
     '</div>' +
     '<div class="ps-after">' +
       '<div><div class="k">Account if target hits</div><div class="v" id="ps_af_tp" style="color:var(--green)">—</div></div>' +
@@ -3032,7 +3080,7 @@ function setPsRiskMode(m, keepValue) {
   }
   _psRiskMode = m;
   segSet('ps_risk_seg', m);
-  if (inp) inp.placeholder = m === '$' ? '100' : '1';
+  if (inp) inp.placeholder = m === '$' ? 'e.g. 100' : 'e.g. 1';
   calcPositionSize();
 }
 function setPsAcctType2(t) {
@@ -3254,11 +3302,11 @@ function renderCompoundCalc() {
   var num = ' type="text" inputmode="decimal" autocomplete="off" oninput="fmtNumInput(this);calcCompound()"';
   return '<div class="calc-stack"><section class="calc-card">' +
     '<div class="calc-grid2">' +
-      '<div class="field"><label>Starting capital' + currLbl() + '</label><input id="cg_capital"' + num + ' step="0.01" placeholder="10,000"></div>' +
+      '<div class="field"><label>Starting capital' + currLbl() + '</label><input id="cg_capital"' + num + ' step="0.01" placeholder="e.g. 10,000"></div>' +
       '<div class="field"><label>Monthly deposit</label><input id="cg_deposit"' + num + ' step="0.01" placeholder="Optional"></div>' +
-      '<div class="field"><label>Return (%)</label><input id="cg_rate"' + num + ' step="0.01" placeholder="10"></div>' +
+      '<div class="field"><label>Return (%)</label><input id="cg_rate"' + num + ' step="0.01" placeholder="e.g. 10"></div>' +
       '<div class="field"><label>Return period</label><select id="cg_rate_period" onchange="calcCompound()"><option value="annual">Per year</option><option value="monthly">Per month</option><option value="weekly">Per week</option></select></div>' +
-      '<div class="field"><label>Duration</label><input id="cg_duration" type="number" inputmode="numeric" step="1" placeholder="10" oninput="calcCompound()"></div>' +
+      '<div class="field"><label>Duration</label><input id="cg_duration" type="number" inputmode="numeric" step="1" placeholder="e.g. 10" oninput="calcCompound()"></div>' +
       '<div class="field"><label>Duration unit</label><select id="cg_dur_unit" onchange="calcCompound()"><option value="years" selected>Years</option><option value="months">Months</option></select></div>' +
     '</div>' +
     '<div class="field"><label>Compounding</label><select id="cg_freq" onchange="calcCompound()"><option value="12">Monthly</option><option value="4">Quarterly</option><option value="52">Weekly</option><option value="365">Daily</option><option value="1">Yearly</option></select></div>' +
@@ -4276,10 +4324,9 @@ function renderMore() {
   }).join('');
   return '<div class="cap" style="padding:2px 4px 0">Tools</div>' +
     '<div class="grp">' +
+      moreItem("setView('accounts')", icon('user',18), 'Accounts<span class="it-cap">Deposits and withdrawals</span>', state.accounts.length + ' ›', 'var(--blue)') +
       moreItem("setView('journal')", icon('book',18), 'Daily journal', 'Today ›', 'var(--blue)') +
-      moreItem("setView('accounts')", icon('user',18), 'Accounts', state.accounts.length + ' ›', 'var(--blue)') +
-      moreItem("setView('formulas')", icon('ruler',18), 'Formulas &amp; definitions', '›', 'var(--blue)') +
-      moreItem("replayTour()", icon('bulb',18), 'App tour', '1 min ›', 'var(--blue)') +
+      moreItem("openReportModal()", icon('trending',18), 'Export report', 'PDF · Excel ›', 'var(--blue)') +
     '</div>' +
     '<div class="cap" style="padding:2px 4px 0">Your data</div>' +
     '<div class="grp">' +
@@ -4287,7 +4334,6 @@ function renderMore() {
       moreItem("restoreData()", icon('folder',18), 'Restore backup', '›', 'var(--green)') +
       moreItem("setView('import')", icon('camera',18), 'Import from screenshot', (isNativeApp() ? '4 brokers' : 'Android app') + ' ›', 'var(--green)') +
       moreItem("importCSV()", icon('doc',18), 'Import from Trading 212', 'CSV ›', 'var(--green)') +
-      moreItem("openReportModal()", icon('trending',18), 'Export report', 'Excel · PDF ›', 'var(--green)') +
     '</div>' +
     '<div class="cap" style="padding:2px 4px 0">Preferences</div>' +
     '<div class="grp" style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">' +
@@ -4302,8 +4348,10 @@ function renderMore() {
       '<label class="more-row"><span>Currency</span><select class="more-sel" aria-label="Currency" onchange="setCurrency(this.value)">' + curOpts + '</select></label>' +
       '<button class="more-row" onclick="openProfileModal()"><span>Your name</span><span class="s">' + esc(profile.name || 'Not set') + ' ›</span></button>' +
     '</div>' +
-    '<div class="cap" style="padding:2px 4px 0">App</div>' +
+    '<div class="cap" style="padding:2px 4px 0">Help &amp; app</div>' +
     '<div class="grp">' +
+      moreItem("replayTour()", icon('compass',18), 'Quick tour', '1 min ›', 'var(--blue)') +
+      moreItem("setView('formulas')", icon('ruler',18), 'Formulas &amp; definitions', '›', 'var(--blue)') +
       moreItem("openFeedbackModal()", icon('message',18), 'Send feedback') +
       moreItem("shareApp()", icon('link',18), 'Share app') +
       moreItem("rateApp()", icon('trophy',18), 'Rate Edgeory', '›', 'var(--gold)') +

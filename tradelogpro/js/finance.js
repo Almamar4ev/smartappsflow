@@ -273,3 +273,19 @@ function calcCompoundPlan(o) {
   return { finalBalance: bal, totalMonths: totalMonths, totalDeposited: totalDeposited, totalInvested: totalInvested,
     totalGrowth: totalGrowth, roi: totalInvested !== 0 ? totalGrowth / totalInvested * 100 : 0, rows: rows };
 }
+
+// Cash an account still has for new buys: its capital (starting amount + deposits
+// − withdrawals, kept in startingCapital) + realized P&L of its trades − what is
+// still tied up in open positions (shares held, at their average cost).
+// excludeId leaves one trade out (the one being edited).
+function calcAccountCash(acc, trades, excludeId) {
+  if (!acc) return 0;
+  var cash = parseFloat(acc.startingCapital) || 0;
+  (trades || []).forEach(function(t){
+    if (t.accountId !== acc.id || t.id === excludeId) return;
+    cash += calcRealizedTotal(t);
+    if (t.status === 'open') cash -= calcPositionState(t).cost;
+  });
+  return cash;
+}
+

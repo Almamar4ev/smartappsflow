@@ -177,7 +177,7 @@ function detectAppRuntime(loc, cap) {
         <div class="section-divider">Required</div>
         <div class="field form-full">
           <label>Account <span class="req">*</span></label>
-          <select id="f_account" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;width:100%;font-size:calc(14px*var(--fz))"></select>
+          <select id="f_account" onchange="updateInvestedPreview()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;width:100%;font-size:calc(14px*var(--fz))"></select>
         </div>
         <div class="field">
           <label>Stock / Symbol <span class="req">*</span></label>
@@ -187,7 +187,7 @@ function detectAppRuntime(loc, cap) {
         </div>
         <div class="field">
           <label>Trade Status</label>
-          <select id="f_status" onchange="toggleExitFields()">
+          <select id="f_status" onchange="toggleExitFields();updateInvestedPreview()">
             <option value="open">Open — Still Running</option>
             <option value="closed">Closed — Complete</option>
           </select>
@@ -205,11 +205,11 @@ function detectAppRuntime(loc, cap) {
         </div>
         <div class="field">
           <label>Entry Price <span class="req">*</span></label>
-          <input id="f_entry" type="number" step="0.0001" placeholder="0.00" oninput="calcInvestedPreview()">
+          <input id="f_entry" type="number" step="0.0001" placeholder="e.g. 150.00" oninput="calcInvestedPreview()">
         </div>
         <div class="field">
           <label>Quantity / Shares <span class="req">*</span></label>
-          <input id="f_qty" type="number" step="0.0001" placeholder="0" oninput="calcInvestedPreview()">
+          <input id="f_qty" type="number" step="0.0001" placeholder="e.g. 10" oninput="calcInvestedPreview()">
         </div>
         <div class="field form-full" id="investedPreviewField" style="display:none">
           <div class="calc-result-box" style="padding:10px 14px;margin-top:0">
@@ -217,6 +217,7 @@ function detectAppRuntime(loc, cap) {
               <span class="calc-result-label">Invested Value</span>
               <span class="calc-result-value" id="investedPreviewVal" style="color:var(--blue)">$0.00</span>
             </div>
+            <div class="cash-note" id="investedCashNote"></div>
           </div>
         </div>
         <div class="field" id="exitDateField" style="display:none">
@@ -225,7 +226,7 @@ function detectAppRuntime(loc, cap) {
         </div>
         <div class="field" id="exitPriceField" style="display:none">
           <label>Exit Price <span class="req">*</span></label>
-          <input id="f_exit" type="number" step="0.0001" placeholder="0.00">
+          <input id="f_exit" type="number" step="0.0001" placeholder="e.g. 165.00">
         </div>
         <div class="section-divider">Optional</div>
         <div class="field">
@@ -235,7 +236,7 @@ function detectAppRuntime(loc, cap) {
               <option value="%">% of P&L</option>
               <option value="$">Value</option>
             </select>
-            <input id="f_fees" type="number" step="0.0001" placeholder="0.00">
+            <input id="f_fees" type="number" step="0.0001" placeholder="e.g. 1.00">
           </div>
           <span class="field-hint">% mode: deducted from P&L on winning trades</span>
         </div>
@@ -249,7 +250,7 @@ function detectAppRuntime(loc, cap) {
         </div>
         <div class="field">
           <label>Risk<span class="cur-lbl"> ($)</span> <span class="opt">(optional)</span></label>
-          <input id="f_risk" type="number" step="0.01" placeholder="0.00">
+          <input id="f_risk" type="number" step="0.01" placeholder="e.g. 100">
         </div>
         <div class="field form-full">
           <label>Notes / Setup <span class="opt">(optional)</span></label>
@@ -258,11 +259,11 @@ function detectAppRuntime(loc, cap) {
         <div class="section-divider">Target &amp; Stop</div>
         <div class="field">
           <label style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Target Price <span class="opt">(take profit)</span></label>
-          <input id="f_target" type="number" step="0.0001" placeholder="0.00">
+          <input id="f_target" type="number" step="0.0001" placeholder="e.g. 165.00">
         </div>
         <div class="field">
           <label style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Stop Loss <span class="opt">(risk management)</span></label>
-          <input id="f_stoploss" type="number" step="0.0001" placeholder="0.00">
+          <input id="f_stoploss" type="number" step="0.0001" placeholder="e.g. 142.00">
         </div>
         <div class="field form-full">
           <label>Trade Screenshots <span class="opt">(optional)</span></label>
@@ -296,11 +297,11 @@ function detectAppRuntime(loc, cap) {
       <div class="form-grid">
         <div class="field">
           <label>Shares to Close <span class="req">*</span></label>
-          <input id="pc_qty" type="number" step="0.0001" placeholder="0" oninput="updatePartialPreview()">
+          <input id="pc_qty" type="number" step="0.0001" placeholder="e.g. 5" oninput="updatePartialPreview()">
         </div>
         <div class="field">
           <label>Exit Price <span class="req">*</span></label>
-          <input id="pc_price" type="number" step="0.0001" placeholder="0.00" oninput="updatePartialPreview()">
+          <input id="pc_price" type="number" step="0.0001" placeholder="e.g. 160.00" oninput="updatePartialPreview()">
         </div>
         <div class="field">
           <label>Exit Date <span class="req">*</span></label>
@@ -313,7 +314,7 @@ function detectAppRuntime(loc, cap) {
               <option value="%">% of P&L</option>
               <option value="$">Value</option>
             </select>
-            <input id="pc_fees" type="number" step="0.0001" placeholder="0.00" oninput="updatePartialPreview()">
+            <input id="pc_fees" type="number" step="0.0001" placeholder="e.g. 1.00" oninput="updatePartialPreview()">
           </div>
         </div>
         <div class="field form-full" id="partialPreview"></div>
@@ -340,11 +341,11 @@ function detectAppRuntime(loc, cap) {
       <div class="form-grid">
         <div class="field">
           <label>Additional Shares <span class="req">*</span></label>
-          <input id="ab_qty" type="number" step="0.0001" placeholder="0" oninput="updateAddBuyPreview()">
+          <input id="ab_qty" type="number" step="0.0001" placeholder="e.g. 5" oninput="updateAddBuyPreview()">
         </div>
         <div class="field">
           <label>Buy Price <span class="req">*</span></label>
-          <input id="ab_price" type="number" step="0.0001" placeholder="0.00" oninput="updateAddBuyPreview()">
+          <input id="ab_price" type="number" step="0.0001" placeholder="e.g. 145.00" oninput="updateAddBuyPreview()">
         </div>
         <div class="field">
           <label>Date <span class="req">*</span></label>
@@ -352,7 +353,7 @@ function detectAppRuntime(loc, cap) {
         </div>
         <div class="field">
           <label>Fees <span class="opt">(optional)</span></label>
-          <input id="ab_fees" type="number" step="0.01" placeholder="0.00">
+          <input id="ab_fees" type="number" step="0.01" placeholder="e.g. 1.00">
         </div>
         <div class="field form-full" id="addBuyPreview"></div>
       </div>
@@ -376,7 +377,7 @@ function detectAppRuntime(loc, cap) {
     <div class="modal-body">
       <div style="display:flex;flex-direction:column;gap:14px">
         <div class="field"><label>Account Name <span class="req">*</span></label><input id="f_acc_name" type="text" placeholder="e.g. Main, Crypto…"></div>
-        <div class="field"><label>Capital <span class="opt">(optional)</span></label><input id="f_acc_capital" type="number" step="0.01" placeholder="10000.00"></div>
+        <div class="field"><label>Capital <span class="opt">(optional)</span></label><input id="f_acc_capital" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 10,000" oninput="fmtNumInput(this)"></div>
         <div class="field"><label>Broker / Platform <span class="opt">(optional)</span></label><input id="acc_broker" type="text" placeholder="e.g. Binance, TD…"></div>
         <div id="accTransactionSection" style="display:none">
           <div style="margin-bottom:8px;font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text3);text-transform:uppercase">Deposit / Withdraw</div>
@@ -387,7 +388,7 @@ function detectAppRuntime(loc, cap) {
           <div id="accTransactionForm" style="display:none">
             <div class="field">
               <label id="accTransactionLabel">Amount</label>
-              <input id="f_acc_transaction" type="number" step="0.01" placeholder="0.00">
+              <input id="f_acc_transaction" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 1,000" oninput="fmtNumInput(this)">
             </div>
             <div class="field" style="margin-top:8px">
               <label style="font-family:var(--sans);font-size:calc(12px*var(--fz));letter-spacing:.2px;color:var(--text2);font-weight:600">Date</label>
