@@ -128,6 +128,7 @@ function _sanTrade(t) {
     notes: _sstr(t.notes, 5000),
     // Broker order ID of the sell this trade came from (import de-duplication).
     extSell: (typeof t.extSell === 'string' && /^t212:[A-Za-z0-9_.-]{1,60}$/.test(t.extSell)) ? t.extSell : undefined,
+    entryApprox: t.entryApprox === true ? true : undefined, // buy date unknown (before an imported file)
     createdAt: _siso(t.createdAt),
     photos: Array.isArray(t.photos) ? t.photos.map(safePhoto).filter(Boolean).slice(0, 20) : [],
     add_buys: Array.isArray(t.add_buys) ? t.add_buys.map(function(b){ return _sanEvent(b, 'ab_'); }).slice(0, 5000) : [],

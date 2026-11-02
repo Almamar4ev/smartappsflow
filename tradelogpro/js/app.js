@@ -2185,6 +2185,7 @@ function openTradeDetail(id) {
     return '<div class="fact"><span class="k">' + k + '</span><span class="v' + (long ? ' long' : '') + '">' + v + '</span></div>';
   }
   var heldTxt = tradeDays == null ? '—' : (tradeDays === 0 ? 'Same day' : plural(tradeDays, 'day', 'days'));
+  if (t.entryApprox && tradeDays != null) heldTxt = 'At least ' + plural(tradeDays, 'day', 'days'); // bought before the imported file
   // A fully closed trade has no shares left, so the ledger avg falls back to the first
   // entry; show the average cost of every buy instead, and the average of every sell.
   var entryAvg = isOpen ? (avg || dca.avg) : calcAvgPrice(t);
@@ -2236,7 +2237,7 @@ function openTradeDetail(id) {
     if (ev.kind === 'buy') {
       runQty += ev.qty; runCost += ev.qty * ev.price;
       title = fmtQty(ev.qty) + ' @ ' + fmtPrice(ev.price);
-      meta = ev.first ? 'entry' : 'avg now ' + fmtPrice(runQty ? runCost / runQty : 0);
+      meta = ev.first ? (t.entryApprox ? 'bought on or before this date' : 'entry') : 'avg now ' + fmtPrice(runQty ? runCost / runQty : 0);
       amt = fmtMoney(ev.qty * ev.price);
     } else {
       var basis = ev.pc.basis != null ? ev.pc.basis : (ev.pc._ledgerBasis != null ? ev.pc._ledgerBasis : (runQty ? runCost / runQty : avg));
@@ -3865,7 +3866,7 @@ function parseT212Csv(text) {
   }
 
   function normDate(d) {
-    if (!d) return today();
+    if (!d) return '';
     d = d.split(' ')[0].split('T')[0];
     if (d.indexOf('/') >= 0) {
       var p = d.split('/');
@@ -3874,7 +3875,10 @@ function parseT212Csv(text) {
         return yr + '-' + p[0].padStart(2,'0') + '-' + p[1].padStart(2,'0');
       }
     }
-    return d;
+    // Only a real YYYY-MM-DD date gets through; anything else (text, markup) rejects the row.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return '';
+    var chk = new Date(d + 'T12:00:00Z');
+    return (!isNaN(chk.getTime()) && chk.toISOString().slice(0, 10) === d) ? d : '';
   }
 
   // Detect Trading 212 format
@@ -3884,7 +3888,7 @@ function parseT212Csv(text) {
   var isT212 = hasAction && hasTicker && hasShares;
 
   var parsed = [];
-  var _unmatchedSells = 0, _otherCurrency = 0, _fromBroker = 0, _splits = 0;
+  var _unmatchedSells = 0, _otherCurrency = 0, _fromBroker = 0, _splits = 0, _badDate = 0;
 
   if (isT212) {
     // Trading 212: read every buy/sell row first, sort them by time (exports
@@ -3893,8 +3897,10 @@ function parseT212Csv(text) {
     // in the row are shared out by shares.
     // Trading 212 exports at most 12 months, so a sell may be of shares bought
     // before the file starts. Its row carries the broker's own Result (realized
-    // P&L) and Total (proceeds): cost = Total - Result, so that sell is recorded
-    // whole at the broker's cost, dated from the file's first day, with a note.
+    // P&L) and Total (proceeds), both in the account currency: that sell is
+    // recorded whole with exit = Total / shares and entry = (Total - Result) /
+    // shares and no extra fee, so its P&L is exactly the broker's Result. The buy
+    // date is unknown: it is set to the file's first day and marked approximate.
     // A stock split (close + open rows) rescales the open lots: same cost, new
     // share count and price. Deposits, withdrawals, dividends and interest rows
     // are not trades and are skipped.
@@ -3920,14 +3926,19 @@ function parseT212Csv(text) {
       // Fees are in the account currency; a price in another currency (exchange
       // rate not 1) would mix two units, so that row's fees are left out.
       var fx = parseFloat(getCol(row, ['exchange rate']));
-      if (fx > 0 && Math.abs(fx - 1) > 1e-9) { _otherCurrency++; fee = 0; }
+      var priceCur = getCol(row, ['currency (price / share)']), totalCur = getCol(row, ['currency (total)']);
+      // Edgeory keeps one currency per account and never converts. A row whose share
+      // price is in another currency than its total (or with an exchange rate) cannot
+      // be reconciled with the broker's result, so it is not imported, and counted.
+      if ((priceCur && totalCur && priceCur !== totalCur) || (fx > 0 && Math.abs(fx - 1) > 1e-9)) { _otherCurrency++; continue; }
       var nd = normDate(rawTime);
+      if (!nd) { _badDate++; continue; }
       var resultV = parseFloat(getCol(row, ['result'])), totalV = parseFloat(getCol(row, ['total']));
       var sameCur = (getCol(row, ['currency (result)']) || '') === (getCol(row, ['currency (total)']) || '');
       events.push({ buy: isBuy, split: isSplit ? (action.indexOf('open') >= 0 ? 'open' : 'close') : '', ticker: ticker, shares: shares, price: price,
         date: nd, time: nd + ' ' + (String(rawTime).split(/[ T]/)[1] || ''), fee: fee, n: i,
         orderId: String(getCol(row, ['id']) || '').replace(/[^A-Za-z0-9_.-]/g, '').slice(0, 60),
-        brokerCost: (!isBuy && !isSplit && sameCur && isFinite(resultV) && totalV > 0) ? totalV - resultV : null });
+        total: totalV, brokerCost: (!isBuy && !isSplit && sameCur && isFinite(resultV) && totalV > 0) ? totalV - resultV : null });
     }
     events.sort(function(a, b){ return a.time === b.time ? a.n - b.n : String(a.time).localeCompare(String(b.time)); });
     var buyMap = {}, splitHalf = {}, fileStart = events.length ? events[0].date : '';
@@ -3955,8 +3966,9 @@ function parseT212Csv(text) {
         var lots = buyMap[ev.ticker] || [], firstLot = lots.length ? lots[0].date : '';
         while (remaining > 0.0000001 && lots.length) { var l0 = lots[0], q0 = Math.min(l0.shares, remaining); l0.shares -= q0; remaining -= q0; if (l0.shares <= 0.0000001) lots.shift(); }
         parsed.push({ ticker: ev.ticker, dir: 'Long', entryDate: firstLot && firstLot < fileStart ? firstLot : fileStart, exitDate: ev.date,
-          entry: +(ev.brokerCost / ev.shares).toFixed(6), exit: ev.price, qty: ev.shares, fees: +(sellFeePerShare * ev.shares).toFixed(2),
-          status: 'closed', sellId: ev.orderId, note: 'Bought before ' + fileStart + '. Cost and result from Trading 212.' });
+          entry: +(ev.brokerCost / ev.shares).toFixed(6), exit: +(ev.total / ev.shares).toFixed(6), qty: ev.shares, fees: 0,
+          status: 'closed', sellId: ev.orderId, approxEntry: true,
+          note: 'Bought on or before ' + fileStart + ' (before this file). Cost, proceeds and result from Trading 212.' });
         _fromBroker++;
         return;
       }
@@ -3983,8 +3995,8 @@ function parseT212Csv(text) {
     return { error: 'This file is not a Trading 212 CSV. Currently only Trading 212 exports are supported.' };
   }
 
-  if (!parsed.length) return { error: 'No valid trades found. Check CSV format.' };
-  return { parsed: parsed, unmatched: _unmatchedSells, otherCurrency: _otherCurrency, fromBroker: _fromBroker, splits: _splits };
+  if (!parsed.length) return { error: _otherCurrency ? 'No trades in this account\u2019s currency were found. Edgeory does not convert currencies.' : (_badDate ? 'No valid dates found. Check this is a Trading 212 export.' : 'No valid trades found. Check CSV format.') };
+  return { parsed: parsed, unmatched: _unmatchedSells, otherCurrency: _otherCurrency, fromBroker: _fromBroker, splits: _splits, badDate: _badDate };
 }
 
 function importCSV() {
@@ -4000,7 +4012,8 @@ function importCSV() {
         if (res.error) { showToast(res.error, 'error'); return; }
         if (res.unmatched > 0) showToast(res.unmatched + ' sell row(s) had no buy in this file (bought earlier?) and were skipped', 'error');
         if (res.fromBroker > 0) showToast(plural(res.fromBroker, 'sell', 'sells') + ' of shares bought before this file use Trading 212’s cost and result', 'info');
-        if (res.otherCurrency > 0) showToast(res.otherCurrency + ' row(s) are priced in another currency than your account. Prices stay as in the file and their fees were left out. Use one Edgeory account per currency.', 'error');
+        if (res.otherCurrency > 0) showToast(res.otherCurrency + ' row(s) are in another currency than the account total and were not imported. Edgeory does not convert currencies.', 'error');
+        if (res.badDate > 0) showToast(res.badDate + ' row(s) had no valid date and were not imported', 'error');
         showCSVPreview(res.parsed);
       } catch(err) { showToast('Import failed: ' + err.message, 'error'); }
     };
@@ -4050,11 +4063,11 @@ function showCSVPreview(parsed) {
   var preview = parsed.slice(0,5).map(function(t){
     return '<tr>' +
       '<td style="padding:5px 8px;font-family:var(--mono);font-size:calc(12px*var(--fz))">' + esc(t.ticker) + '</td>' +
-      '<td style="padding:5px 8px;font-size:calc(12px*var(--fz))">' + t.dir + '</td>' +
+      '<td style="padding:5px 8px;font-size:calc(12px*var(--fz))">' + esc(t.dir) + '</td>' +
       '<td style="padding:5px 8px;font-family:var(--mono);font-size:calc(12px*var(--fz))">' + fmtPrice(t.entry) + '</td>' +
       '<td style="padding:5px 8px;font-family:var(--mono);font-size:calc(12px*var(--fz))">' + fmtQty(t.qty) + '</td>' +
-      '<td style="padding:5px 8px;font-size:calc(12px*var(--fz))">' + (t.entryDate||'--') + '</td>' +
-      '<td style="padding:5px 8px"><span class="badge ' + (t.status==='closed'?'badge-closed':'badge-open') + '">' + t.status + '</span></td>' +
+      '<td style="padding:5px 8px;font-size:calc(12px*var(--fz))">' + esc(t.entryDate || '--') + (t.approxEntry ? ' ≈' : '') + '</td>' +
+      '<td style="padding:5px 8px"><span class="badge ' + (t.status==='closed'?'badge-closed':'badge-open') + '">' + esc(t.status) + '</span></td>' +
     '</tr>';
   }).join('');
   document.getElementById('csvPreviewBody').innerHTML =
@@ -4124,6 +4137,7 @@ function planCsvImport(trades, accId, parsed, stamp) {
       entry: pc.entry, exit: pc.exit, qty: pc.qty, original_qty: pc.qty,
       fees: pc.fees, fees_mode: '$', notes: 'Imported from CSV' + (pc.note ? '. ' + pc.note : ''),
       extSell: pc.sellId ? 't212:' + pc.sellId : undefined,
+      entryApprox: pc.approxEntry ? true : undefined,
       photos: [], add_buys: [], partial_closes: [], createdAt: new Date().toISOString() };
   };
   // Sells first: they may close what an earlier import left open.

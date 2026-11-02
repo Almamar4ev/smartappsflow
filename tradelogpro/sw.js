@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v33';
-const UPDATE_NOTE = 'Trading 212 imports read real exports correctly: dates, splits, and sells of shares bought before the file.';
+const CACHE = 'edgeory-v34';
+const UPDATE_NOTE = 'Safer Trading 212 import: rows in another currency or with an invalid date are skipped with a clear reason.';
 
 const ASSETS = [
   './',

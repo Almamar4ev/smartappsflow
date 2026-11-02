@@ -253,7 +253,8 @@ const csv = [
   const f = ['Action,Time,ISIN,Ticker,Name,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Total,Currency conversion fee',
     'Market buy,2026-05-01 10:00:00,X,EU,EU,10,100,USD,1.0850,,921.66,1.38'].join('\n');
   const res = run('parseT212Csv(' + JSON.stringify(f) + ')');
-  assert('R2-13 other-currency row: fee not mixed in, and counted for the warning', res.otherCurrency === 1 && res.parsed[0].fees === 0, res);
+  // Third audit: such a row is not imported at all (Edgeory does not convert currencies).
+  assert('R2-13 other-currency row is rejected with a clear reason', !!res.error && /convert currencies/.test(res.error), res);
 }
 // A trade entered by hand that looks like a broker lot is never changed by an import.
 {
@@ -286,7 +287,7 @@ const csv = [
   assert('partly before the file: one closed trade for all 30 at broker cost, P&L -300', by('BBB').length === 1 && by('BBB')[0].qty === 30 && near(pnl(by('BBB')[0]), -300), by('BBB'));
   assert('stock split: 40 @ 5 becomes 2 @ 100, cost unchanged', by('SPL').length === 1 && near(by('SPL')[0].qty, 2) && near(by('SPL')[0].entry, 100), by('SPL'));
   assert('deposit and withdrawal rows are not trades; counts reported', r.parsed.length === 3 && r.fromBroker === 2 && r.splits === 1 && r.unmatched === 0, r);
-  assert('trades from before the file say so in their note', /Bought before 2025-11-03/.test(by('AAA')[0].note));
+  assert('trades from before the file say so in their note and are marked approximate', /on or before 2025-11-03/.test(by('AAA')[0].note) && by('AAA')[0].approxEntry === true);
 }
 
 // Overlapping 12-month exports: a sell of shares bought before both files gets a
@@ -303,6 +304,42 @@ const csv = [
   const olds = ctx.state.trades.filter((t) => t.ticker === 'OLD');
   assert('overlapping exports: the same broker sell is imported once', olds.length === 1 && olds[0].extSell === 't212:EOF900', olds.map((t) => [t.entry_date, t.extSell]));
   assert('overlapping exports: the new buy of the second file is added', ctx.state.trades.length === 3, ctx.state.trades.map((t) => t.ticker));
+}
+
+// Third audit (v33) release gates.
+{
+  const H = 'Action,Time (UTC),ISIN,Ticker,Name,Notes,ID,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Currency (Result),Total,Currency (Total)';
+  // T3-01: EUR price, USD total/result, FX 1.1, no buy in file -> not imported (never P&L 40)
+  const t301 = [H, 'Market sell,2026-03-02 10:00:00+00:00,X,XYZ,XYZ,,E301,5,120,EUR,1.1,100,USD,660,USD',
+    'Market buy,2026-03-03 10:00:00+00:00,X,USS,USS,,E302,2,50,USD,1,,,100,USD'].join('\n');
+  const r1 = run('parseT212Csv(' + JSON.stringify(t301) + ')');
+  assert('T3-01 mixed-currency sell is not imported (no P&L of 40 in mixed units)', !r1.parsed.some((p) => p.ticker === 'XYZ') && r1.otherCurrency === 1, r1);
+  assert('T3-01 the same-currency row in that file still imports', r1.parsed.some((p) => p.ticker === 'USS'));
+  // T3-02: imported twice -> once
+  ctx.state.trades = []; ctx.state.accounts = [{ id: 'a1', name: 'T', type: 'cash', startingCapital: 0, transactions: [] }];
+  dom.csvTargetAccount = { value: 'a1' };
+  for (let k = 0; k < 2; k++) { ctx.window = { _csvParsed: run('parseT212Csv(' + JSON.stringify(t301) + ')').parsed }; run('confirmCSVImport()'); }
+  assert('T3-02 re-import adds nothing and XYZ never appears', ctx.state.trades.length === 1 && ctx.state.trades[0].ticker === 'USS', ctx.state.trades.map((t) => t.ticker));
+  // T3-03: markup in the date -> row rejected, nothing to render
+  const r3 = run('parseT212Csv(' + JSON.stringify(['Action,Time (UTC),Ticker,No. of shares,Price / share', 'Market buy,2026-01-01<svg/onload=alert(1)>,TEST,1,10', 'Market buy,2026-02-30 10:00:00,TEST,1,10'].join('\n')) + ')');
+  assert('T3-03 a date with markup, or an impossible date, rejects the row', !!r3.error && !(r3.parsed || []).length, r3);
+  // T3-03 preview: every CSV value goes through esc()
+  const prevSrc = (() => { const st = appJs.indexOf('function showCSVPreview('); return appJs.slice(st, appJs.indexOf('\nfunction ', st + 10)); })();
+  assert('T3-03 preview escapes date, direction and status (no raw CSV in innerHTML)',
+    /esc\(t\.entryDate/.test(prevSrc) && /esc\(t\.dir\)/.test(prevSrc) && /esc\(t\.status\)/.test(prevSrc) && /esc\(t\.ticker\)/.test(prevSrc) && !/\+ \(t\.entryDate/.test(prevSrc));
+  // T3-05: old sell with a fee column -> P&L is exactly the broker Result (fee not deducted twice)
+  const H5 = H + ',Transaction fee';
+  const r5 = run('parseT212Csv(' + JSON.stringify([H5, 'Market sell,2026-04-01 10:00:00+00:00,X,FEE,FEE,,E501,5,120,USD,1,100,USD,598,USD,2'].join('\n')) + ')');
+  const p5 = r5.parsed[0], pnl5 = (p5.exit - p5.entry) * p5.qty - p5.fees;
+  assert('T3-05 old sell: P&L equals the broker Result (100), fee not taken again', near(pnl5, 100) && p5.fees === 0, p5);
+  // T3-07: split then sell of the post-split shares
+  const r7 = run('parseT212Csv(' + JSON.stringify([H,
+    'Market buy,2026-01-05 10:00:00+00:00,X,SPX,SPX,,E701,40,5,USD,1,,,200,USD',
+    'Stock split close,2026-02-01 06:00:00+00:00,X,SPX,SPX,,E702,40,5,USD,1,0,USD,200,USD',
+    'Stock split open,2026-02-01 06:00:00+00:00,X,SPX,SPX,,E703,2,100,USD,1,,,200,USD',
+    'Market sell,2026-03-01 10:00:00+00:00,X,SPX,SPX,,E704,2,130,USD,1,60,USD,260,USD'].join('\n')) + ')');
+  const p7 = r7.parsed.filter((p) => p.ticker === 'SPX');
+  assert('T3-07 split then sell: 2 shares at 100 sold at 130 = +60 (matches broker)', p7.length === 1 && near(p7[0].qty, 2) && near((p7[0].exit - p7[0].entry) * p7[0].qty, 60), p7);
 }
 
 // P2 Balance curve: each account's capital starts with that account.
