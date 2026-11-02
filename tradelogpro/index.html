@@ -642,7 +642,7 @@ function detectAppRuntime(loc, cap) {
 
       <div class="formula-card">
         <div class="formula-name">Avg Win/Loss (Realized)</div>
-        <div class="formula-formula">Avg Win/Loss = Average Win ÷ Average Loss</div>
+        <div class="formula-formula">Avg Win/Loss = Average Win ÷ Average Loss (shown as 1.87×)</div>
         <div class="formula-desc">From closed trades only: average winning P&amp;L divided by average losing P&amp;L (absolute). This is a realized outcome ratio — not the planned Risk:Reward from Entry / Stop / Target on a single trade. A value of 2 means your average win was about twice your average loss.</div>
       </div>
 
@@ -665,6 +665,24 @@ function detectAppRuntime(loc, cap) {
       </div>
 
       <div class="formula-card">
+        <div class="formula-name">Fees</div>
+        <div class="formula-formula">$ amount: deducted when you sell, on wins and losses<br>% of profit: Fee = Profit × %, winning sells only</div>
+        <div class="formula-desc">Enter the trade's total fees (buy and sell). Edgeory deducts them once, when the trade is sold: a partial sell's own fee with that sell, the trade's fees at the final close. Nothing is deducted while a trade is open.</div>
+      </div>
+
+      <div class="formula-card">
+        <div class="formula-name">Total Balance</div>
+        <div class="formula-formula">Total Balance = Capital + Realized P&amp;L</div>
+        <div class="formula-desc">Capital is the money you put in (starting amount + deposits − withdrawals). Realized P&amp;L comes from closed trades and partial sells. Open trades' gains or losses are not included, so this is not your broker's live account value.</div>
+      </div>
+
+      <div class="formula-card">
+        <div class="formula-name">Cash (Accounts)</div>
+        <div class="formula-formula">Cash = Capital + Realized P&amp;L − Cost of open shares</div>
+        <div class="formula-desc">An estimate of the cash left for new buys. Fees count when you sell, so a broker that charges at purchase will show a little less. Below zero, the card reads "Cash −$X": you bought more than this account's recorded money (add the missing deposit, or set the account to Margin).</div>
+      </div>
+
+      <div class="formula-card">
         <div class="formula-name">Avg Entry Price (Dollar Cost Averaging)</div>
         <div class="formula-formula">Avg Entry = Total Cost ÷ Total Shares<br>Total Cost = Σ (Price × Qty) for each buy</div>
         <div class="formula-desc">When you buy the same stock multiple times at different prices, your average entry is the weighted average across all purchases.</div>
@@ -673,7 +691,7 @@ function detectAppRuntime(loc, cap) {
       <div class="formula-card">
         <div class="formula-name">Unrealized P&amp;L</div>
         <div class="formula-formula">Unrealized P&amp;L = (Current Price − Avg Entry) × Remaining Shares × Direction</div>
-        <div class="formula-desc">P&amp;L on positions still open. Direction = +1 for Long, −1 for Short. Not realized until you close.</div>
+        <div class="formula-desc">P&amp;L on positions still open, after the trade's fees: what selling now would give. Direction = +1 for Long, −1 for Short. Not realized until you close.</div>
       </div>
 
       <!-- CALCULATOR FORMULAS -->

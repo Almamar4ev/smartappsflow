@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v38';
-const UPDATE_NOTE = 'Clearer numbers: the chart shows the period P&L with the all-time total beside it, and cash below zero reads plainly.';
+const CACHE = 'edgeory-v39';
+const UPDATE_NOTE = 'Formulas now explain Total Balance, Cash and when fees are deducted.';
 
 const ASSETS = [
   './',

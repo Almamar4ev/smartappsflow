@@ -3996,7 +3996,7 @@ function parseT212Csv(text) {
     return { error: 'This file is not a Trading 212 CSV. Currently only Trading 212 exports are supported.' };
   }
 
-  if (!parsed.length) return { error: _otherCurrency ? 'No trades in this account\u2019s currency were found. Edgeory does not convert currencies.' : (_badDate ? 'No valid dates found. Check this is a Trading 212 export.' : 'No valid trades found. Check CSV format.') };
+  if (!parsed.length) return { error: _otherCurrency ? 'Nothing imported: every trade in this file is priced in a different currency from your Trading 212 account total. Edgeory does not convert currencies, so log these trades by hand.' : (_badDate ? 'No valid dates found. Check this is a Trading 212 export.' : 'No valid trades found. Check CSV format.') };
   return { parsed: parsed, unmatched: _unmatchedSells, otherCurrency: _otherCurrency, fromBroker: _fromBroker, splits: _splits, badDate: _badDate };
 }
 
