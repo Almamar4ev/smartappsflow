@@ -85,7 +85,7 @@ function equityPanelHtml(hasData) {
   var range = _eqPref('tl_eq_range', 'ALL', EQ_RANGES.map(function (r) { return r[0]; }));
   return '<div class="panel eq-panel">' +
     '<div class="eq-head">' +
-      '<div class="eq-top"><span class="eq-label" id="eqLabel">Balance</span><div class="eq-mode" id="eqMode"></div></div>' +
+      '<div class="eq-top"><span class="eq-label" id="eqLabel">Realized P&amp;L</span><div class="eq-mode" id="eqMode"></div></div>' +
       '<div class="eq-value n" id="eqValue">—</div>' +
       '<div class="eq-change n" id="eqChange"></div>' +
     '</div>' +
@@ -105,7 +105,9 @@ function drawEquity(trades, accounts) {
   var canBal = (accounts || []).some(accountTracksCash);
   _eq = { pts: pts, canBal: canBal,
     range: _eqPref('tl_eq_range', 'ALL', EQ_RANGES.map(function (r) { return r[0]; })),
-    mode: canBal ? _eqPref('tl_eq_mode', 'bal', ['bal', 'pnl']) : 'pnl' };
+    // The chart shows realized P&L only (owner's decision): the account balance is on
+    // the Total Balance card, and a balance line looked the same apart from deposits.
+    mode: 'pnl' };
   _eqRenderMode();
   _eqPaint();
 }
@@ -128,11 +130,7 @@ function _eqRenderMode() {
   var lbl = document.getElementById('eqLabel');
   if (lbl) lbl.textContent = _eq.mode === 'bal' ? 'Balance' : 'Realized P&L';
   if (!box) return;
-  box.innerHTML = _eq.canBal
-    ? ['bal', 'pnl'].map(function (m) {
-        return '<button type="button" class="' + (m === _eq.mode ? 'on' : '') + '" onclick="setEquityMode(\'' + m + '\')">' + (m === 'bal' ? 'Balance' : 'P&amp;L') + '</button>';
-      }).join('')
-    : '';
+  box.innerHTML = ''; // no Balance / P&L switch: the chart is P&L only
 }
 function _eqY(p) { return _eq.mode === 'bal' ? p.bal : p.pnl; }
 function _eqColor(name) { return getComputedStyle(document.body).getPropertyValue(name).trim() || (name === '--red' ? '#e5484d' : '#00b37a'); }
@@ -154,7 +152,7 @@ function _eqHeader(p) {
   ch.innerHTML = '<span style="color:' + pnlColor(diff) + '">' + (diff > 0.005 ? '▲ ' : (diff < -0.005 ? '▼ ' : '')) + fmtPnl(diff) + pct + '</span>' +
     '<span class="eq-when">' + esc(when) + '</span>';
   var note = document.getElementById('eqNote');
-  if (note) note.textContent = _eq.mode === 'bal' ? 'The change is trading P&L only. Deposits and withdrawals never count as gains.' : '';
+  if (note) note.textContent = '';
 }
 
 function _eqPaint() {

@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v36';
-const UPDATE_NOTE = 'Update notices now appear only when the new version is ready to install.';
+const CACHE = 'edgeory-v37';
+const UPDATE_NOTE = 'The dashboard chart now shows your realized P&L only.';
 
 const ASSETS = [
   './',
