@@ -223,7 +223,7 @@ textarea{resize:vertical;min-height:70px;}
 
 /* Fee/Risk input with type selector */
 .input-with-select{display:flex;gap:6px;}
-.input-with-select select{width:72px;flex-shrink:0;padding:10px 8px;font-size:calc(14px*var(--fz));}
+.input-with-select select{width:auto;max-width:50%;flex-shrink:0;padding:10px 10px;font-size:calc(14px*var(--fz));} /* sized to its longest option, so "$ amount" is never cut */
 .input-with-select input{flex:1;}
 .field-hint{font-size:calc(12px*var(--fz));color:var(--text3);margin-top:3px;}
 

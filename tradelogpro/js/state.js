@@ -10,8 +10,8 @@ var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // Shown once after each web release, whether the user tapped Update or the new
 // version applied by itself after the app was closed (Later). Must equal sw.js
 // CACHE / UPDATE_NOTE — tests/pwa-tests.mjs enforces it.
-var WHATS_NEW_ID = 'edgeory-v41';
-var WHATS_NEW_TEXT = 'Card labels fit the screen: Total Balance notes it excludes open trades.';
+var WHATS_NEW_ID = 'edgeory-v42';
+var WHATS_NEW_TEXT = 'Fee type now shows in full, and restoring a backup asks with a neutral button.';
 
 // ==========================================================================
 // STATE + INDEXEDDB STORAGE

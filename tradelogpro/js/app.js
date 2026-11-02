@@ -2881,7 +2881,7 @@ function restoreData() {
       var raw = backup.state || backup;
       if (!raw || !Array.isArray(raw.accounts) || !Array.isArray(raw.trades)) { showToast('Invalid backup file', 'error'); return; }
       var loaded = sanitizeState(raw);
-      confirmSheet({ title: 'This will replace ALL current data. Continue?', ok: 'Replace', danger: true,
+      confirmSheet({ title: 'This will replace ALL current data. Continue?', ok: 'Replace', neutral: true,
         extra: '<button class="btn btn-secondary" onclick="closeModal(\'confirmSheet\');backupData()">Back up first</button>' }, function() {
       if (!applyLoadedState(loaded)) { showToast('Invalid backup file', 'error'); return; }
       // "Replace ALL": data this device has but the backup does not (an older backup
@@ -4496,7 +4496,7 @@ function confirmSheet(opts, cb) {
   if (body) body.innerHTML = (opts.body ? '<p style="font-size:calc(14px*var(--fz));color:var(--text2);margin-bottom:10px">' + esc(opts.body) + '</p>' : '') + (opts.extra || '');
   if (ok) {
     ok.textContent = opts.ok || 'OK';
-    ok.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+    ok.className = 'btn ' + (opts.danger ? 'btn-danger' : opts.neutral ? 'btn-secondary' : 'btn-primary');
     ok.onclick = function() {
       closeModal('confirmSheet');
       var fn = _confirmSheetCb; _confirmSheetCb = null;
