@@ -10,8 +10,8 @@ var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // Shown once after each web release, whether the user tapped Update or the new
 // version applied by itself after the app was closed (Later). Must equal sw.js
 // CACHE / UPDATE_NOTE — tests/pwa-tests.mjs enforces it.
-var WHATS_NEW_ID = 'edgeory-v35';
-var WHATS_NEW_TEXT = 'Fees now count when you sell, in your P&L and your cash alike.';
+var WHATS_NEW_ID = 'edgeory-v36';
+var WHATS_NEW_TEXT = 'Update notices now appear only when the new version is ready to install.';
 
 // ==========================================================================
 // STATE + INDEXEDDB STORAGE

@@ -5366,8 +5366,8 @@ function watchWebUpdates() {
     check();
     reg.addEventListener('updatefound', function() {
       var nw = reg.installing; if (!nw) return;
-      // Say so as soon as the download starts; the button turns on once it is ready.
-      if (navigator.serviceWorker.controller) showUpdateBanner(nw, true);
+      // The new version downloads in the background; the banner appears only when it
+      // is fully ready, with Update working at once (as other apps do).
       nw.addEventListener('statechange', function() {
         if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(nw);
         if (nw.state === 'redundant' && _swWaiting === nw) { var b = document.getElementById('updateBanner'); if (b) b.remove(); _swWaiting = null; }
