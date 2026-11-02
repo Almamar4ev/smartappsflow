@@ -3996,7 +3996,7 @@ function parseT212Csv(text) {
     return { error: 'This file is not a Trading 212 CSV. Currently only Trading 212 exports are supported.' };
   }
 
-  if (!parsed.length) return { error: _otherCurrency ? 'Nothing imported: every trade in this file is priced in a different currency from your Trading 212 account total. Edgeory does not convert currencies, so log these trades by hand.' : (_badDate ? 'No valid dates found. Check this is a Trading 212 export.' : 'No valid trades found. Check CSV format.') };
+  if (!parsed.length) return { error: _otherCurrency ? 'Nothing imported: every order in this file is priced in a different currency from your Trading 212 account. Edgeory does not convert currencies. Add these trades manually, using the amounts in your account currency.' : (_badDate ? 'No valid dates found. Check this is a Trading 212 export.' : 'No valid trades found. Check CSV format.') };
   return { parsed: parsed, unmatched: _unmatchedSells, otherCurrency: _otherCurrency, fromBroker: _fromBroker, splits: _splits, badDate: _badDate };
 }
 
@@ -4013,8 +4013,8 @@ function importCSV() {
         if (res.error) { showToast(res.error, 'error'); return; }
         if (res.unmatched > 0) showToast(res.unmatched + ' sell row(s) had no buy in this file (bought earlier?) and were skipped', 'error');
         if (res.fromBroker > 0) showToast(plural(res.fromBroker, 'sell', 'sells') + ' of shares bought before this file use Trading 212’s cost and result', 'info');
-        if (res.otherCurrency > 0) showToast(res.otherCurrency + ' row(s) are in another currency than the account total and were not imported. Edgeory does not convert currencies.', 'error');
-        if (res.badDate > 0) showToast(res.badDate + ' row(s) had no valid date and were not imported', 'error');
+        if (res.otherCurrency > 0) showToast(plural(res.otherCurrency, 'order', 'orders') + ' in another currency not imported. Add them manually in your account currency.', 'error');
+        if (res.badDate > 0) showToast(plural(res.badDate, 'order', 'orders') + ' with no valid date not imported', 'error');
         showCSVPreview(res.parsed, res);
       } catch(err) { showToast('Import failed: ' + err.message, 'error'); }
     };
@@ -4040,8 +4040,9 @@ function importCSV() {
 function csvSkippedHtml(info) {
   if (!info) return '';
   var lines = [];
-  if (info.otherCurrency > 0) lines.push(plural(info.otherCurrency, 'row is', 'rows are') + ' in another currency than the account total. Edgeory does not convert currencies, so ' + (info.otherCurrency === 1 ? 'it is' : 'they are') + ' not imported. Log ' + (info.otherCurrency === 1 ? 'it' : 'them') + ' by hand in an account kept in that currency.');
-  if (info.badDate > 0) lines.push(plural(info.badDate, 'row has', 'rows have') + ' no valid date and ' + (info.badDate === 1 ? 'is' : 'are') + ' not imported.');
+  // Counted per order (each buy or sell is one row in a Trading 212 file).
+  if (info.otherCurrency > 0) lines.push(plural(info.otherCurrency, 'order is', 'orders are') + ' priced in a different currency from your account, so ' + (info.otherCurrency === 1 ? 'it is' : 'they are') + ' not imported. Edgeory does not convert currencies. Add ' + (info.otherCurrency === 1 ? 'it' : 'them') + ' manually, using the amounts in your account currency. Changing the currency in the file would not convert the prices.');
+  if (info.badDate > 0) lines.push(plural(info.badDate, 'order has', 'orders have') + ' no valid date and ' + (info.badDate === 1 ? 'is' : 'are') + ' not imported.');
   if (info.unmatched > 0) lines.push(plural(info.unmatched, 'sell has', 'sells have') + ' no matching buy and no broker result, and ' + (info.unmatched === 1 ? 'is' : 'are') + ' not imported.');
   if (!lines.length) return '';
   return '<div style="margin:0 0 14px;padding:10px 12px;border:1px solid var(--gold);border-radius:10px;font-size:calc(12px*var(--fz));color:var(--text2);line-height:1.45">' +

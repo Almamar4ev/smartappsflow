@@ -359,6 +359,24 @@ const csv = [
   assert('V37-06 the big number is the period P&L and "All time" is labelled', /val\.textContent = fmtPnl\(diff\)/.test(src) && /All time/.test(src));
 }
 
+// Owner's scenario: 10 round-trip trades, 3 of them priced in EUR in a USD account.
+{
+  const H = 'Action,Time (UTC),ISIN,Ticker,Name,Notes,ID,No. of shares,Price / share,Currency (Price / share),Exchange rate,Result,Currency (Result),Total,Currency (Total)';
+  const f = [H];
+  for (let k = 1; k <= 10; k++) {
+    const eur = k > 7, cur = eur ? 'EUR' : 'USD', fx = eur ? '1.08' : '1';
+    f.push(`Market buy,2026-0${1 + (k % 8)}-0${k % 9 + 1} 10:00:00+00:00,X,S${k},S${k},,B${k},10,10,${cur},${fx},,,${eur ? 92.59 : 100},USD`);
+    f.push(`Market sell,2026-0${1 + (k % 8)}-2${k % 9} 10:00:00+00:00,X,S${k},S${k},,C${k},10,12,${cur},${fx},20,USD,${eur ? 111.11 : 120},USD`);
+  }
+  const r = run('parseT212Csv(' + JSON.stringify(f.join('\n')) + ')');
+  assert('10 trades, 3 in EUR: the 7 USD trades import', r.parsed.length === 7 && r.parsed.every((p) => !['S8', 'S9', 'S10'].includes(p.ticker)), r.parsed.map((p) => p.ticker));
+  assert('the 3 EUR trades are counted as 6 orders (a buy and a sell each)', r.otherCurrency === 6, r.otherCurrency);
+  ctx.esc = (v) => String(v).replace(/</g, '&lt;');
+  vm.runInContext(extractFunction(appJs, 'csvSkippedHtml'), ctx);
+  const box = run('csvSkippedHtml(' + JSON.stringify(r) + ')');
+  assert('the preview says 6 orders not imported, and to add them manually', /6 orders are priced in a different currency/.test(box) && /Add them manually/.test(box) && !/by hand/.test(box), box);
+}
+
 // P2 Balance curve: each account's capital starts with that account.
 {
   const accounts = [
