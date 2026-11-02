@@ -132,7 +132,9 @@ function _eqRenderMode() {
   if (!box) return;
   box.innerHTML = ''; // no Balance / P&L switch: the chart is P&L only
 }
-function _eqY(p) { return _eq.mode === 'bal' ? p.bal : p.pnl; }
+// Realized P&L made inside the selected range, up to p: the line starts at 0 on the
+// range's first day, so for YTD the chart and the big number read "this year".
+function _eqY(p) { return p.pnl - (_eq.view && _eq.range !== 'ALL' ? _eq.view[0].pnl : 0); }
 function _eqColor(name) { return getComputedStyle(document.body).getPropertyValue(name).trim() || (name === '--red' ? '#e5484d' : '#00b37a'); }
 
 // Header for point p (null = latest): value, change since the range start, when.
@@ -140,17 +142,19 @@ function _eqHeader(p) {
   var v = _eq.view, start = v[0], end = p || v[v.length - 1];
   var val = document.getElementById('eqValue'), ch = document.getElementById('eqChange');
   if (!val || !ch) return;
-  var y = _eqY(end);
-  val.textContent = _eq.mode === 'bal' ? fmtMoney(y) : fmtPnl(y);
   var diff = end.pnl - start.pnl; // trading result only, never deposits
+  // Big number = P&L of the selected period (to the touched day); the all-time
+  // cumulative total is written next to it, so the two are never confused.
+  val.textContent = fmtPnl(diff);
   // Return on the money at work: balance at the range start plus what was deposited
   // (net) during the range, so All time reads as return on your deposits.
   var flowIn = (end.bal - end.pnl) - (start.bal - start.pnl);
   var base = _eq.canBal ? start.bal + Math.max(flowIn, 0) : 0;
   var pct = base > 0 ? ' (' + fmtPct(diff / base * 100) + ')' : '';
   var when = p ? fmtDateLong(_eqDay(p.t)) : EQ_RANGES.filter(function (r) { return r[0] === _eq.range; })[0][1];
-  ch.innerHTML = '<span style="color:' + pnlColor(diff) + '">' + (diff > 0.005 ? '▲ ' : (diff < -0.005 ? '▼ ' : '')) + fmtPnl(diff) + pct + '</span>' +
-    '<span class="eq-when">' + esc(when) + '</span>';
+  var allTime = _eq.range !== 'ALL' ? ' · All time ' + fmtPnl(end.pnl) : '';
+  ch.innerHTML = (pct ? '<span style="color:' + pnlColor(diff) + '">' + (diff > 0.005 ? '▲ ' : (diff < -0.005 ? '▼ ' : '')) + pct.replace(/[()]/g, '').trim() + '</span>' : '') +
+    '<span class="eq-when">' + esc(when) + esc(allTime) + '</span>';
   var note = document.getElementById('eqNote');
   if (note) note.textContent = '';
 }

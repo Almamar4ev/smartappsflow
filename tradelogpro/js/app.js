@@ -692,7 +692,7 @@ function renderDashboard() {
   var openCount = trades.filter(function(t){ return t.status === 'open'; }).length;
   var avgWin = wins ? closed.filter(isWin).reduce(function(s,t){ return s+calcPnl(t); },0)/wins : 0;
   var avgLoss = losses ? Math.abs(closed.filter(isLoss).reduce(function(s,t){ return s+calcPnl(t); },0)/losses) : 0;
-  var avgRr = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : '—';
+  var avgRr = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) + '×' : '—'; // a ratio, not money
   var recent = trades.slice().sort(function(a,b){ return String(b.entry_date||'').localeCompare(String(a.entry_date||'')); }).slice(0,5);
   var pnlSub = (closed.length || Math.abs(netPnl) > BE_EPS)
     ? (capital > 0 ? fmtPct(netPnl/capital*100) + ' of capital' : (netPnl >= 0 ? 'Profitable' : 'In drawdown'))
@@ -700,11 +700,11 @@ function renderDashboard() {
   var eqLast = realizedEquityEvents(trades);
   var eqLastVal = eqLast.length ? eqLast[eqLast.length - 1].pnlRun : 0;
   return '<div id="dashContent"><div class="stats-row" id="dashStatsRow">' +
-    statCard('Total Balance', fmtMoney(balance), 'Capital ' + (capital ? fmtMoney(capital) : 'not set'), balance < 0 ? 'var(--red)' : 'var(--purple)') +
+    statCard('Total Balance', fmtMoney(balance), (capital ? 'Capital ' + fmtMoney(capital) : 'Capital not set') + ' · closed trades only', balance < 0 ? 'var(--red)' : 'var(--purple)') +
     statCard('Net P&L', fmtPnl(netPnl), pnlSub, pnlColor(netPnl)) +
     statCard('Win Rate', wr, closed.length ? plural(closed.length, 'closed trade', 'closed trades') : 'No closed trades', 'var(--blue)') +
     statCard('Total Trades', String(trades.length), plural(wins,'win','wins') + ' · ' + plural(losses,'loss','losses') + ' · ' + openCount + ' open', 'var(--blue)') +
-    statCard('Avg Win/Loss', avgRr, 'Realized · closed trades', 'var(--gold)') +
+    statCard('Avg Win/Loss', avgRr, 'Avg win ÷ avg loss', 'var(--gold)') +
     statCard('Fees paid', fmtMoney(calcTotalFees(trades)), plural(closed.length, 'closed trade', 'closed trades'), 'var(--red)') +
   '</div>' +
   '<div class="charts-row">' +
@@ -1048,7 +1048,7 @@ function accountCashLine(acc) {
   var tag = acc.type === 'margin' ? ' <span class="badge" style="font-size:calc(10px*var(--fz));margin-left:4px">Margin</span>' : '';
   if (cash >= -0.005) return '<div class="n" style="' + st + ';color:var(--text2)">Cash ' + fmtMoney(cash) + tag + '</div>';
   if (acc.type === 'margin') return '<div class="n" style="' + st + ';color:var(--gold)">' + fmtMoney(-cash) + ' on margin' + tag + '</div>';
-  return '<div class="n" style="' + st + ';color:var(--red)">Short ' + fmtMoney(-cash) + ' · ' +
+  return '<div class="n" style="' + st + ';color:var(--red)">Cash ' + fmtMoney(cash) + ' · ' +
     '<button type="button" onclick="event.stopPropagation();openAccountMoney(\'' + eid(acc.id) + '\',' + (Math.round(-cash * 100) / 100) + ')" style="background:none;border:0;padding:0;color:var(--blue);font:inherit;font-weight:700;cursor:pointer">Add deposit</button></div>';
 }
 function renderAccountsList() {
@@ -1318,6 +1318,7 @@ function renderAccountsView() {
     statCard('Total Withdrawals', fmtMoney(totalWithdrawals), totalWithdrawals ? '' : 'None recorded', 'var(--blue)') +
   '</div>' +
   '<div class="cap" style="padding:2px 2px 0">Your accounts</div>' +
+  '<div class="cash-note" style="margin:-4px 2px 2px">Cash is an estimate: capital and closed P&amp;L, minus open trades at cost. Fees count when you sell. Your broker\u2019s figure can differ.</div>' +
   '<div id="accountsListSection">' + renderAccountsList() + '</div>';
   return html;
 }
@@ -3580,7 +3581,7 @@ function renderAnalytics() {
     // Summary stats
     '<div class="stats-row">' +
       statCard('Win Rate', wr, plural(wins.length,'win','wins') + ' · ' + plural(losses.length,'loss','losses'), 'var(--blue)') +
-      statCard('Avg Win/Loss', rr, 'Realized · closed trades', 'var(--gold)') +
+      statCard('Avg Win/Loss', (rr !== '—' && String(rr).indexOf('×') < 0 ? rr + '×' : rr), 'Avg win ÷ avg loss', 'var(--gold)') +
       statCard('ROI', roi, 'On invested trade value', pnlColor(totalPnl)) +
       statCard('Profit Factor', pf, pf === '\u221e' ? 'No losses · closed only' : (pf >= 1 ? 'Closed trades · above 1.0 is good' : 'Closed trades · below 1.0'), pf === '\u221e' ? 'var(--green)' : (pf >= 1 ? 'var(--green)' : 'var(--red)')) +
       statCard('Avg Win', fmtPnl(avgWin), 'Per winning trade', 'var(--green)') +
@@ -4014,7 +4015,7 @@ function importCSV() {
         if (res.fromBroker > 0) showToast(plural(res.fromBroker, 'sell', 'sells') + ' of shares bought before this file use Trading 212’s cost and result', 'info');
         if (res.otherCurrency > 0) showToast(res.otherCurrency + ' row(s) are in another currency than the account total and were not imported. Edgeory does not convert currencies.', 'error');
         if (res.badDate > 0) showToast(res.badDate + ' row(s) had no valid date and were not imported', 'error');
-        showCSVPreview(res.parsed);
+        showCSVPreview(res.parsed, res);
       } catch(err) { showToast('Import failed: ' + err.message, 'error'); }
     };
     reader.readAsText(file);
@@ -4035,9 +4036,20 @@ function importCSV() {
   });
 }
 
+// Rows the parser left out, said in the preview so nothing disappears unexplained.
+function csvSkippedHtml(info) {
+  if (!info) return '';
+  var lines = [];
+  if (info.otherCurrency > 0) lines.push(plural(info.otherCurrency, 'row is', 'rows are') + ' in another currency than the account total. Edgeory does not convert currencies, so ' + (info.otherCurrency === 1 ? 'it is' : 'they are') + ' not imported. Log ' + (info.otherCurrency === 1 ? 'it' : 'them') + ' by hand in an account kept in that currency.');
+  if (info.badDate > 0) lines.push(plural(info.badDate, 'row has', 'rows have') + ' no valid date and ' + (info.badDate === 1 ? 'is' : 'are') + ' not imported.');
+  if (info.unmatched > 0) lines.push(plural(info.unmatched, 'sell has', 'sells have') + ' no matching buy and no broker result, and ' + (info.unmatched === 1 ? 'is' : 'are') + ' not imported.');
+  if (!lines.length) return '';
+  return '<div style="margin:0 0 14px;padding:10px 12px;border:1px solid var(--gold);border-radius:10px;font-size:calc(12px*var(--fz));color:var(--text2);line-height:1.45">' +
+    '<b style="color:var(--gold)">Not imported</b><br>' + lines.map(esc).join('<br>') + '</div>';
+}
 // How to export from Trading 212 (More row caption and the import preview).
 var T212_EXPORT_TIP = 'In Trading 212: History, then Export history. Tick <b>Orders</b> only. One file covers up to 12 months; import a newer file any time and trades already here are skipped. Sells of shares bought before the file use Trading 212’s own cost and result.';
-function showCSVPreview(parsed) {
+function showCSVPreview(parsed, info) {
   var modal = document.getElementById('csvPreviewModal');
   if (!modal) {
     modal = document.createElement('div');
@@ -4072,6 +4084,7 @@ function showCSVPreview(parsed) {
   }).join('');
   document.getElementById('csvPreviewBody').innerHTML =
     '<div class="cash-note" style="margin:0 0 14px">' + T212_EXPORT_TIP + '</div>' +
+    csvSkippedHtml(info) +
     '<div class="field" style="margin-bottom:16px">' +
       '<label style="font-family:var(--mono);font-size:calc(12px*var(--fz));letter-spacing:.6px;color:var(--text3)">IMPORT INTO ACCOUNT</label>' +
       '<select id="csvTargetAccount" style="width:100%;margin-top:6px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px;font-size:calc(14px*var(--fz))">' +

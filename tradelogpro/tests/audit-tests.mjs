@@ -343,6 +343,22 @@ const csv = [
   assert('T3-07 split then sell: 2 shares at 100 sold at 130 = +60 (matches broker)', p7.length === 1 && near(p7[0].qty, 2) && near((p7[0].exit - p7[0].entry) * p7[0].qty, 60), p7);
 }
 
+// V37-06: +1,000 realized last year, +100 this year. YTD shows +100 (the period);
+// the all-time cumulative +1,100 is shown beside it, never as the YTD figure.
+{
+  const tr = [
+    mk({ status: 'closed', entry: 10, qty: 100, original_qty: 100, entry_date: '2025-03-01', exit: 20, exit_date: '2025-06-01' }),
+    mk({ status: 'closed', entry: 10, qty: 10, original_qty: 10, entry_date: '2026-02-01', exit: 20, exit_date: '2026-03-01' })];
+  ctx.trades3 = tr;
+  const pts = run('equitySeries(trades3, [])');
+  ctx.pts3 = pts;
+  const v = run("_eqView(pts3, 'YTD')");
+  const period = v[v.length - 1].pnl - v[0].pnl, cumulative = v[v.length - 1].pnl;
+  assert('V37-06 YTD period P&L = +100, cumulative = +1,100', near(period, 100) && near(cumulative, 1100), [period, cumulative]);
+  const src = (() => { const st = read('equity.js').indexOf('function _eqHeader('); return read('equity.js').slice(st, read('equity.js').indexOf('\nfunction ', st + 5)); })();
+  assert('V37-06 the big number is the period P&L and "All time" is labelled', /val\.textContent = fmtPnl\(diff\)/.test(src) && /All time/.test(src));
+}
+
 // P2 Balance curve: each account's capital starts with that account.
 {
   const accounts = [
