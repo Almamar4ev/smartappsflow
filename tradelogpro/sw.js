@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v42';
-const UPDATE_NOTE = 'Fee type now shows in full, and restoring a backup asks with a neutral button.';
+const CACHE = 'edgeory-v43';
+const UPDATE_NOTE = 'Accounts explain a negative cash figure in plain words.';
 
 const ASSETS = [
   './',

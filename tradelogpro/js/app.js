@@ -1049,7 +1049,9 @@ function accountCashLine(acc) {
   if (cash >= -0.005) return '<div class="n" style="' + st + ';color:var(--text2)">Cash ' + fmtMoney(cash) + tag + '</div>';
   if (acc.type === 'margin') return '<div class="n" style="' + st + ';color:var(--gold)">' + fmtMoney(-cash) + ' on margin' + tag + '</div>';
   return '<div class="n" style="' + st + ';color:var(--red)">Cash ' + fmtMoney(cash) + ' · ' +
-    '<button type="button" onclick="event.stopPropagation();openAccountMoney(\'' + eid(acc.id) + '\',' + (Math.round(-cash * 100) / 100) + ')" style="background:none;border:0;padding:0;color:var(--blue);font:inherit;font-weight:700;cursor:pointer">Add deposit</button></div>';
+    '<button type="button" onclick="event.stopPropagation();openAccountMoney(\'' + eid(acc.id) + '\',' + (Math.round(-cash * 100) / 100) + ')" style="background:none;border:0;padding:0;color:var(--blue);font:inherit;font-weight:700;cursor:pointer">Add deposit</button></div>' +
+    // Say what the negative number means, in plain words.
+    '<div class="n" style="font-size:calc(11px*var(--fz));margin-top:2px;color:var(--text3);line-height:1.4">Open trades cost ' + fmtMoney(-cash) + ' more than this account’s recorded cash.</div>';
 }
 function renderAccountsList() {
   var html = '';
