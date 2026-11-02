@@ -700,7 +700,7 @@ function renderDashboard() {
   var eqLast = realizedEquityEvents(trades);
   var eqLastVal = eqLast.length ? eqLast[eqLast.length - 1].pnlRun : 0;
   return '<div id="dashContent"><div class="stats-row" id="dashStatsRow">' +
-    statCard('Total Balance', fmtMoney(balance), (capital ? 'Capital ' + fmtMoney(capital) : 'Capital not set') + ' · closed trades only', balance < 0 ? 'var(--red)' : 'var(--purple)') +
+    statCard('Total Balance', fmtMoney(balance), (capital ? 'Capital ' + fmtMoney(capital) : 'Capital not set') + '<br>Excludes open trades', balance < 0 ? 'var(--red)' : 'var(--purple)') +
     statCard('Net P&L', fmtPnl(netPnl), pnlSub, pnlColor(netPnl)) +
     statCard('Win Rate', wr, closed.length ? plural(closed.length, 'closed trade', 'closed trades') : 'No closed trades', 'var(--blue)') +
     statCard('Total Trades', String(trades.length), plural(wins,'win','wins') + ' · ' + plural(losses,'loss','losses') + ' · ' + openCount + ' open', 'var(--blue)') +
@@ -3583,7 +3583,7 @@ function renderAnalytics() {
       statCard('Win Rate', wr, plural(wins.length,'win','wins') + ' · ' + plural(losses.length,'loss','losses'), 'var(--blue)') +
       statCard('Avg Win/Loss', (rr !== '—' && String(rr).indexOf('×') < 0 ? rr + '×' : rr), 'Avg win ÷ avg loss', 'var(--gold)') +
       statCard('ROI', roi, 'On invested trade value', pnlColor(totalPnl)) +
-      statCard('Profit Factor', pf, pf === '\u221e' ? 'No losses · closed only' : (pf >= 1 ? 'Closed trades · above 1.0 is good' : 'Closed trades · below 1.0'), pf === '\u221e' ? 'var(--green)' : (pf >= 1 ? 'var(--green)' : 'var(--red)')) +
+      statCard('Profit Factor', pf, pf === '\u221e' ? 'No losses · closed only' : (pf >= 1 ? 'Above 1.0 is good' : 'Below 1.0: losing'), pf === '\u221e' ? 'var(--green)' : (pf >= 1 ? 'var(--green)' : 'var(--red)')) +
       statCard('Avg Win', fmtPnl(avgWin), 'Per winning trade', 'var(--green)') +
       statCard('Avg Loss', (avgLoss > 0 ? '-' : '') + fmtMoney(avgLoss), 'Per losing trade', avgLoss > 0 ? 'var(--red)' : 'var(--text3)') +
       statCard('Fees paid', fmtMoney(calcTotalFees(closed)), 'Total fees paid', 'var(--red)') +

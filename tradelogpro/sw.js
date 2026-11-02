@@ -9,8 +9,8 @@
 //   - A new release installs and waits. The page shows "Update available" and
 //     sends SKIP_WAITING when the user taps Update.
 
-const CACHE = 'edgeory-v40';
-const UPDATE_NOTE = 'Clearer import messages: orders in another currency are listed, with how to add them manually.';
+const CACHE = 'edgeory-v41';
+const UPDATE_NOTE = 'Card labels fit the screen: Total Balance notes it excludes open trades.';
 
 const ASSETS = [
   './',
