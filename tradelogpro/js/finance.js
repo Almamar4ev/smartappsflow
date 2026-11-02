@@ -100,14 +100,13 @@ function calcAddBuyFees(t) {
   if (t.add_buys) t.add_buys.forEach(function(b){ total += calcFeesAmt(b.fees, b.fees_mode, 0); });
   return total;
 }
-// FEE POLICY (one rule for every number in the app):
-//  - A buy fee in $ (the trade fee, and each add-buy fee) leaves cash on the day it is
-//    paid and is part of the trade's cost while the trade is open. It enters realized
-//    P&L, and Fees paid, once: when the trade is fully closed.
-//  - A sell fee counts with its sell (partial sell or final close).
+// FEE POLICY (one rule for every number in the app): fees count when you sell.
+//  - The trade fee and add-buy fees ($) are taken once, when the trade is fully closed:
+//    from realized P&L, Fees paid and cash together. Nothing is taken while it is open.
+//  - A partial sell's own fee counts with that sell.
 //  - A % fee is a share of profit, taken from winning sells only.
-// So: Balance (capital + realized P&L) = Cash + cost of open shares + buy fees paid on
-// open trades, and the sum of a trade's realized events equals its final P&L.
+// So: Balance (capital + realized P&L) = Cash + cost of open shares, always, and the
+// sum of a trade's realized events equals its final P&L.
 function calcOpenBuyFees(t) {
   return calcAddBuyFees(t) + (t.fees_mode === '$' ? (parseFloat(t.fees) || 0) : 0);
 }
@@ -306,10 +305,7 @@ function calcAccountCash(acc, trades, excludeId) {
     if (t.accountId !== acc.id || t.id === excludeId) return;
     cash += calcRealizedTotal(t);
     if (t.status === 'open') {
-      cash -= calcPositionState(t).cost;
-      // Commissions paid when buying (add-buys, and the trade fee in $) are
-      // gone from cash now; calcPnl takes them once the trade closes.
-      cash -= calcOpenBuyFees(t);
+      cash -= calcPositionState(t).cost; // fees are taken at the sale (fee policy)
     }
   });
   return cash;

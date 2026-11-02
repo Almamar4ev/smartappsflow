@@ -10,8 +10,8 @@ var APP_PACKAGE_ID = 'com.tradelog.pro'; // Play package — never rename
 // Shown once after each web release, whether the user tapped Update or the new
 // version applied by itself after the app was closed (Later). Must equal sw.js
 // CACHE / UPDATE_NOTE — tests/pwa-tests.mjs enforces it.
-var WHATS_NEW_ID = 'edgeory-v34';
-var WHATS_NEW_TEXT = 'Safer Trading 212 import: rows in another currency or with an invalid date are skipped with a clear reason.';
+var WHATS_NEW_ID = 'edgeory-v35';
+var WHATS_NEW_TEXT = 'Fees now count when you sell, in your P&L and your cash alike.';
 
 // ==========================================================================
 // STATE + INDEXEDDB STORAGE

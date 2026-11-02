@@ -86,7 +86,8 @@ console.log('Edgeory — code audit regression tests\n');
   const t = mk({ status: 'open', entry: 50, qty: 20, original_qty: 10, fees: 5, fees_mode: '$', entry_date: '2026-01-01',
     add_buys: [{ id: 'b1', qty: 10, price: 50, date: '2026-01-02', fees: '10', fees_mode: '$' }] });
   ctx.acc = acc; ctx.t = t;
-  assert('Cash: 2,000 - 1,000 shares - 15 fees = 985 while open', near(run('calcAccountCash(acc, [t])'), 985), run('calcAccountCash(acc, [t])'));
+  // Fees count when you sell (fee policy): nothing is taken from cash while open.
+  assert('Cash while open: 2,000 - 1,000 shares = 1,000 (fees wait for the sale)', near(run('calcAccountCash(acc, [t])'), 1000), run('calcAccountCash(acc, [t])'));
   t.status = 'closed'; t.exit = 50; t.exit_date = '2026-01-05';
   assert('Cash after selling all 20 flat at 50: 2,000 - 15 fees = 1,985 (fees counted once)', near(run('calcAccountCash(acc, [t])'), 1985), run('calcAccountCash(acc, [t])'));
 }
@@ -198,20 +199,20 @@ const csv = [
     after.length === 2 && keep && keep.status === 'open' && keep.original_qty === 6 && sold && sold.status === 'closed' && sold.qty === 4, after);
 }
 
-// Second audit R2-01..R2-03: one fee policy. Buy fees leave cash when paid and
-// enter realized P&L (and Fees paid) once, when the trade fully closes.
+// One fee policy (owner's rule): fees count when you sell, in P&L, Fees paid and cash
+// together. Balance = cash + cost of open shares at every step.
 {
   const acc = { id: 'a1', startingCapital: 2000 };
   const t = mk({ status: 'open', entry: 100, qty: 10, original_qty: 10, fees: 5, fees_mode: '$', current_price: 100, entry_date: '2026-01-01' });
   ctx.acc = acc; ctx.t = t;
   const bal = () => 2000 + run('calcRealizedTotal(t)');
-  const openBook = () => (t.status === 'open' ? run('calcPositionState(t).cost') + run('calcOpenBuyFees(t)') : 0);
-  assert('R2-01 open: cash 995', near(run('calcAccountCash(acc, [t])'), 995));
-  assert('R2-01 open: Balance = cash + open cost + buy fee paid (2000 = 995 + 1000 + 5)', near(bal(), run('calcAccountCash(acc, [t])') + openBook()));
+  const openBook = () => (t.status === 'open' ? run('calcPositionState(t).cost') : 0);
+  assert('R2-01 open: cash 1,000 (the $5 fee is taken at the sale)', near(run('calcAccountCash(acc, [t])'), 1000));
+  assert('R2-01 open: Balance = cash + open cost (2000 = 1000 + 1000)', near(bal(), run('calcAccountCash(acc, [t])') + openBook()));
   assert('R2-01 open: nothing realized yet, so P&L 0 and Fees paid 0 (fee is in the open cost)', near(run('calcRealizedTotal(t)'), 0) && near(run('calcTradeFees(t)'), 0));
   assert('R2-01 open with a price: P&L if sold now = -5 (the buy fee)', near(run('calcPnl(t)'), -5), run('calcPnl(t)'));
   t.partial_closes = [{ id: 'p1', qty: 5, price: 110, date: '2026-01-05', fees: 0, fees_mode: '$' }]; t.qty = 5; run('rebuildBasis(t)');
-  assert('R2-02 after selling 5@110: realized +50, cash 1545, Balance reconciles', near(run('calcRealizedTotal(t)'), 50) && near(run('calcAccountCash(acc, [t])'), 1545) && near(bal(), run('calcAccountCash(acc, [t])') + openBook()));
+  assert('R2-02 after selling 5@110: realized +50, cash 1,550, Balance reconciles', near(run('calcRealizedTotal(t)'), 50) && near(run('calcAccountCash(acc, [t])'), 1550) && near(bal(), run('calcAccountCash(acc, [t])') + openBook()));
   t.partial_closes.push({ id: 'p2', qty: 5, price: 120, date: '2026-01-09', fees: 0, fees_mode: '$' }); t.qty = 0; t.status = 'closed'; t.exit = 120; t.exit_date = '2026-01-09'; run('rebuildBasis(t)');
   const evs = run('tradeRealizedEvents(t)');
   assert('R2-02 closed: P&L = 50 + 100 - 5 fee once = 145, Fees paid 5', near(run('calcPnl(t)'), 145) && near(run('calcTradeFees(t)'), 5));
@@ -221,7 +222,7 @@ const csv = [
     add_buys: [{ id: 'b', qty: 10, price: 100, date: '2026-01-02', fees: '10', fees_mode: '$' }] });
   ctx.u = u;
   assert('R2-03 open with add-buy fee: realized 0 and Fees paid 0, same rule for both buy fees', near(run('calcRealizedTotal(u)'), 0) && near(run('calcTradeFees(u)'), 0) && near(run('calcPnl(u)'), 0));
-  assert('R2-03 cash 2000 - 2000 cost - 15 fees = -15; Balance reconciles', near(run('calcAccountCash(acc, [u])'), -15) && near(2000, run('calcAccountCash(acc, [u])') + run('calcPositionState(u).cost') + run('calcOpenBuyFees(u)')));
+  assert('R2-03 cash 2000 - 2000 cost = 0 while open; Balance reconciles', near(run('calcAccountCash(acc, [u])'), 0) && near(2000, run('calcAccountCash(acc, [u])') + run('calcPositionState(u).cost')));
   u.status = 'closed'; u.exit = 100; u.exit_date = '2026-01-05';
   assert('R2-03 closed flat: P&L -15 and Fees paid 15, each fee once', near(run('calcPnl(u)'), -15) && near(run('calcTradeFees(u)'), 15));
 }
