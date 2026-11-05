@@ -5,7 +5,9 @@
 // tests follow shipped code. Covers: nothing saved is ever deleted automatically,
 // "New calculation" keeps the profile, amount inputs accept decimals and Arabic
 // digits, editing the profile returns to where it started, every saved loan is an
-// independent plan, and old data migrates to the manual existing-payments field.
+// independent plan, old data migrates to the manual existing-payments field, money
+// shows the right decimals, the simulator matches the report, and the service
+// worker never stores a bad response.
 //
 // Run:  node tests/data-safety-tests.mjs
 // ==========================================================================
@@ -60,6 +62,9 @@ const REAL = [
   'planWithinBankLimit', 'savedPlansTitle', 'planTermText', 'renderCompare', 'editSavedLoan',
   'migrateToPlans', 'applyLoadedState', 'sanitizeSaved', 'blankProfile', 'buildDemoBundle',
   'showExistingNotice', 'closeExistingNotice', 'existingNoticeOk', 'existingNoticeReview',
+  'fmtAmtDec', 'fmtPay', 'fmtRangeDec', 'payTolerance', 'withCurrency', 'getCurrencySymbol',
+  'niceStep', 'simAmountBounds', 'syncSimToForm', 'simSlide', 'toggleManual', 'applyManual',
+  'simUpdate', 'firstSentence', 'getStartDate',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
   'syncProfileToInputs', 'goStep', 'calculate', 'openSavedDetail', 'goHome',
@@ -70,7 +75,8 @@ const STATE = `
   const PROFILE_KEYS=['salary','income','expenses','variable','existing','employment','risk'];
   const MAX_SAVED_PLANS=4, PLANS_MODEL=1, RISK_LEVELS=['safe','moderate','risky'];
   let lang='en',currency='USD',results=null,saved=[],extraLoans=[],isPremium=false;
-  let currentTheme='light',_existingNotice=false,_demo=false;
+  let currentTheme='light',_existingNotice=false,_demo=false,_sim={amt:50000,per:36,rate:8.5};
+  const CURRENCIES=[{id:'USD',symbol:'$'},{id:'OMR',symbol:'ر.ع'},{id:'IDR',symbol:'Rp'},{id:'KWD',symbol:'د.ك'},{id:'BHD',symbol:'د.ب'},{id:'NONE',symbol:''}];
   let profileSaved=true,_editingLoanIdx=null,_viewingSavedLoan=false,_savedSnap=null;
   let _viewingSavedIdx=-1,_profileReturn=null,_lastSaveClick=0,_guideTourActive=false;
   let profile,form;
@@ -92,7 +98,7 @@ function newPage() {
   const elements = {};
   const el = (id) => (elements[id] ??= {
     id, value: '', style: {}, textContent: '', dir: '', onclick: null,
-    classList: { add() {}, remove() {} },
+    classList: { add() {}, remove() {}, toggle() {} },
     focus() {}, select() {}, scrollIntoView() {},
   });
   el('s3-back').onclick = 'original-back';
@@ -537,6 +543,172 @@ check('no activate-scenario code remains', !/activateScenario|confirmActivate/.t
 check('no "replaces" banner remains', !/scenario-replace-banner|_replacedLoan/.test(html));
 check('the save button says plan', ["saveScenario:'Save plan'", "saveScenario:'حفظ الخطة'", "saveScenario:'Guardar plan'"].every((x) => html.includes(x)));
 check('the hint is in all languages', ['أقساط قروض تدفعها حالياً فقط', 'Only loans you are paying now', 'Solo préstamos que pagas ahora'].every((x) => html.includes(x)));
+
+// ── Money shows the decimals of its currency ───────────────────────────────
+console.log('\nCurrency decimals');
+{
+  const p = newPage();
+  const pay = (cur, n) => { p.run(`currency='${cur}'`); return p.run(`fmtPay(${n})`); };
+  check('OMR installment has three decimals', pay('OMR', 156.5287) === '156.529 ر.ع');
+  check('KWD and BHD too', pay('KWD', 1.5).startsWith('1.500') && pay('BHD', 1.5).startsWith('1.500'));
+  check('USD has two', pay('USD', 156.5287) === '$ 156.53');
+  check('IDR has none', pay('IDR', 156.6) === '157 Rp');
+  check('no currency has two', pay('NONE', 12.5) === '12.50');
+  p.run(`currency='OMR'`);
+  check('the range card follows the currency', p.run('fmtRangeDec(154.96,158.094)').startsWith('154.960 – 158.094'));
+  check('an explicit decimal count still wins', p.run('fmtAmtDec(1.5,1)').startsWith('1.5 '));
+  // salary 3000, limit 40% -> room of 1200 when existing is 2200-1000 below
+  p.run(`profile.existing='1099.8'`); // room = 100.2
+  check('OMR: 0.4 over the limit is over the limit', p.run('planWithinBankLimit(100.6)') === false);
+  check('OMR: a difference too small to show is within', p.run('planWithinBankLimit(100.2004)') === true);
+  p.run(`currency='IDR'`);
+  check('IDR: under half a unit still rounds to within', p.run('planWithinBankLimit(100.6)') === true);
+}
+for (const [needle, label] of [
+  ['val:fmtPay(r.monthly)', 'report KPI'], ['<div class="saved-mini-amt">${fmtPay(s.results.monthly)}', 'plan card'],
+  ['fmt:v=>fmtPay(v)', 'compare row'], ['${fmtPay(reqPay)}', 'bank-limit sentence'], ['fmtPay(existingPmt)', 'existing payments tile'],
+  ['· ${fmtPay(monthly)}/', 'schedule summary'], ['val:fmtPay(c.monthly)', 'simulator KPI'],
+]) check(`installment decimals in: ${label}`, html.includes(needle));
+check('big totals stay whole', html.includes('val:fmtAmt(r.total)') && html.includes('val:fmtAmt(r.interest)'));
+
+// ── Simulator ──────────────────────────────────────────────────────────────
+console.log('\nSimulator');
+{
+  const p = newPage();
+  const bounds = (a) => JSON.parse(p.run(`JSON.stringify(simAmountBounds(${a}))`));
+  for (const a of [4500000, 500000, 8000.5, 500, 1, 1234567890]) {
+    const b = bounds(a);
+    check(`range holds ${a}`, b.min <= a && a <= b.max && b.step > 0 && b.min > 0);
+  }
+  const big = bounds(4500000);
+  check('range runs from about a quarter to double', big.min === 1100000 && big.max === 9000000);
+  check('steps are round numbers', ['1', '2', '5'].includes(String(big.step)[0]) && /^.0+$/.test(String(big.step)));
+
+  const open = (amount, period, rate) => {
+    p.run(`form.amount='${amount}';form.period='${period}';form.rate='${rate}';syncSimToForm();simUpdate()`);
+  };
+  open('4500000', '240', '8.5');
+  check('a big loan is not capped', p.run('_sim.amt') === 4500000);
+  check('the slider moves to the loan', p.el('sim-range-amt').value === 4500000 && p.el('sim-range-amt').max === 9000000);
+  p.run(`currency='OMR'`);
+  open('8000.5', '60', '6.555');
+  const shown = p.el('sim-kpi').innerHTML;
+  const exact = p.run(`fmtPay(calcLoan(8000.5,0.06555,60).monthly)`);
+  check('simulator opens on the exact report payment', shown.includes(`>${exact}<`));
+  check('the exact amount survives the slider step', p.run('_sim.amt') === 8000.5);
+  check('the exact rate survives the slider step', p.run('_sim.rate') === 6.555);
+  p.run(`simSlide('amt','9000')`);
+  check('dragging changes the amount', p.run('_sim.amt') === 9000);
+  p.run(`currency='USD'`);
+  open('1000', '36', '8.5');
+  p.el('manual-amt').style.display = 'none';
+  p.el('manual-inp-amt').value = '';
+  p.run(`toggleManual('amt')`);
+  check('the manual box opens on the exact value', p.el('manual-inp-amt').value === 1000);
+  p.el('manual-inp-amt').value = '7000000';
+  p.run(`applyManual('amt')`);
+  check('typing above the range is never clamped', p.run('_sim.amt') === 7000000);
+  check('the slider widens up to it', +p.el('sim-range-amt').max === 7000000);
+  p.el('manual-inp-amt').value = '3';
+  p.run(`applyManual('amt')`);
+  check('typing below the range widens it too', p.run('_sim.amt') === 3 && +p.el('sim-range-amt').min === 3);
+  p.el('manual-inp-per').value = '999';
+  p.el('per-unit').value = 'months';
+  p.run(`applyManual('per')`);
+  check('the period stays within 360 months', p.run('_sim.per') === 360);
+}
+check('no fixed 500,000 clamp remains', !/Math\.min\(500000/.test(html));
+for (const word of ["'اكتب'", "'Escribir'", "'Type'"]) check(`edit button says ${word}`, html.includes(word));
+check('edit buttons get an icon and a name', /b\.innerHTML=PENCIL_ICON/.test(html) && /b\.setAttribute\('aria-label'/.test(html));
+
+// ── Report details ─────────────────────────────────────────────────────────
+console.log('\nReport details');
+check('the percent ring shows a whole number that fits it', html.includes('${Math.round(remPct)}%</span>'));
+check('no invalid color like var(--x)40 is built', !/\$\{[a-zA-Z_]+\}[0-9a-fA-F]{2}[;"' )]/.test(html));
+check('the Arabic question mark is Arabic only', html.includes(`\${lang==='ar'?'؟':'?'}</span>`));
+check('the last payment is start + N-1 in report and PDF',
+  (html.match(/endDate\.setMonth\(endDate\.getMonth\(\)\+months-1\)/g) || []).length === 2
+  && !/endDate\.getMonth\(\)\+months\)/.test(html));
+for (const label of ["'آخر قسط'", "'Última cuota'", "'Last payment'"]) {
+  check(`the row is named ${label} in report and PDF`, html.split(label).length - 1 === 2);
+}
+{
+  const p = newPage();
+  p.run(`form.startMonth=9;form.startYear=2026;var e=getStartDate();e.setMonth(e.getMonth()+60-1);`);
+  check('60 months from Oct 2026 ends in Sep 2031', p.run('e.getMonth()') === 8 && p.run('e.getFullYear()') === 2031);
+}
+check('compare header clears the status bar', /padding:calc\(18px \+ var\(--safe-top\)\) 20px 0;flex-shrink:0">\s*<button class="back-btn" onclick="goHome\(\)" id="compare-back"/.test(html));
+check('compare body clears the home bar', /id="compare-body"[^>]*padding-bottom:calc\(30px \+ var\(--safe-bottom\)\)/.test(html));
+
+// ── What's new card ────────────────────────────────────────────────────────
+console.log("\nWhat's new card");
+{
+  const p = newPage();
+  const first = (t) => p.run(`firstSentence(${JSON.stringify(t)})`);
+  check('English body is the first sentence', first('One thing. Two things.\n\nThree.') === 'One thing.');
+  check('Arabic body is the first sentence', first('جملة أولى. جملة ثانية.') === 'جملة أولى.');
+  check('a decimal number does not end the sentence', first('Costs 1.5 more. Later.') === 'Costs 1.5 more.');
+  check('no period keeps the whole line', first('Just a line') === 'Just a line');
+}
+check('the body is no longer the title', html.includes('firstSentence(guidePick(feat.body))') && !html.includes("guide-whatsnew-body').textContent=formatGuideText(guidePick(feat.title))"));
+check('the brand is isolated in the Arabic title', html.includes('جديد في \\u2068emiGo\\u2069:'));
+check('the card is RTL in Arabic', /el\.dir=lang==='ar'\?'rtl':'ltr';\s*document\.getElementById\('guide-whatsnew-title'\)/.test(html));
+check('the card hides when leaving home', /function showScreen\(id\)\{[\s\S]{0,200}?id!=='home'[\s\S]{0,120}?guide-whatsnew/.test(html));
+check('Arabic spelling is fixed', !/ارقاما|بايقونة|مغلقا،/.test(html));
+
+// ── Service worker: the real file, run against a fake network ──────────────
+console.log('\nService worker');
+function loadWorker(fetchImpl) {
+  const listeners = {};
+  const store = new Map();
+  const key = (k) => (typeof k === 'string' ? k : k.url);
+  const sandbox = {
+    self: { addEventListener: (type, fn) => { listeners[type] = fn; }, location: { origin: 'https://emigo.test' }, clients: { claim() {} } },
+    caches: {
+      match: async (k) => store.get(key(k)),
+      open: async () => ({ put: async (k, v) => { store.set(key(k), v); }, addAll: async () => {} }),
+      keys: async () => [], delete: async () => true,
+    },
+    fetch: fetchImpl, URL, Response: { error: () => ({ isNetworkError: true }) }, console,
+  };
+  vm.runInNewContext(sw, sandbox);
+  const request = async (url, mode = 'cors') => {
+    let answer;
+    listeners.fetch({ request: { method: 'GET', url, mode }, respondWith: (p) => { answer = p; } });
+    const res = await answer;
+    await new Promise((r) => setTimeout(r, 0));
+    return res;
+  };
+  return { request, store };
+}
+const sw = readFileSync(join(here, '..', 'service-worker.js'), 'utf8');
+const response = (ok, type) => ({ ok, type, clone() { return this; } });
+{
+  const w = loadWorker(async () => response(true, 'basic'));
+  await w.request('https://emigo.test/a.png');
+  check('a good response is cached', w.store.has('https://emigo.test/a.png'));
+}
+{
+  const w = loadWorker(async () => response(false, 'basic'));
+  const res = await w.request('https://emigo.test/missing.png');
+  check('a 404 is returned but never cached', res.ok === false && w.store.size === 0);
+}
+{
+  const w = loadWorker(async () => response(true, 'opaque'));
+  await w.request('https://emigo.test/x.png');
+  check('an opaque response is never cached', w.store.size === 0);
+}
+{
+  const offline = async () => { throw new Error('offline'); };
+  const w = loadWorker(offline);
+  w.store.set('./index.html', 'THE APP');
+  check('offline navigation falls back to the app', (await w.request('https://emigo.test/', 'navigate')) === 'THE APP');
+  check('an offline image does not get the app as its content',
+    (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
+}
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-1.3e'"));
+check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
+  && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);

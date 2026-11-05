@@ -90,7 +90,7 @@ check('guide strips Arabic tashkeel for plain copy',
 check('demo help card uses experimental demo title in Arabic',
   /helpDemo:'وضع العرض التجريبي'/.test(html) &&
   /title:'وضع العرض التجريبي'/.test(html) &&
-  /ملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز/.test(html) &&
+  /ملفك الحقيقي يبقى مغلقاً، تعود إليه بعد البصمة ورمز الجهاز/.test(html) &&
   !/على الهاتف المقفل تعود إليه/.test(html));
 check('guide no longer lists the hidden Refinance page',
   !/• Refinance|• إعادة الجدولة|• Refinanciar/.test(html));

@@ -276,7 +276,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .sim-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .sim-label-row .lbl{color:var(--txt);font-size:14px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
 .sim-val{color:var(--txt);font-weight:800;font-size:15px}
-.edit-btn{background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid color-mix(in srgb,var(--acc) 35%,transparent);border-radius:7px;color:var(--acc);font-size:12px;padding:4px 9px;cursor:pointer;transition:all .2s}
+.edit-btn{display:inline-flex;align-items:center;gap:4px;font-weight:700;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid color-mix(in srgb,var(--acc) 35%,transparent);border-radius:7px;color:var(--acc);font-size:12px;padding:4px 9px;cursor:pointer;transition:all .2s}
 .edit-btn.active{border-color:var(--acc)}
 .manual-wrap{margin-top:7px}
 .manual-inp{width:100%;padding:11px 13px;background:var(--bg3);border:1.5px solid var(--acc);border-radius:10px;color:var(--txt);font-size:15px;outline:none;appearance:none;-webkit-appearance:none}
@@ -674,9 +674,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   <div class="tab-content" id="tc-simulate">
     <div class="card">
       <p class="card-label" id="lbl-sim">SCENARIO SIMULATOR</p>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt"></button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simUpdate()"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="number" id="manual-inp-amt" inputmode="numeric" oninput="applyManual('amt')"></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simUpdate()"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" id="opt-years">Years</option></select></div></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0" max="40" step="0.01" value="8.5" id="sim-range-rate" oninput="simUpdate()"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt"></button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simSlide('amt',this.value)"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="number" id="manual-inp-amt" step="any" inputmode="decimal" oninput="applyManual('amt')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simSlide('per',this.value)"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" id="opt-years">Years</option></select></div></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0" max="40" step="0.01" value="8.5" id="sim-range-rate" oninput="simSlide('rate',this.value)"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
     </div>
     <div class="kpi-grid" id="sim-kpi"></div>
   </div>
@@ -832,11 +832,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 
 <!-- ══ COMPARE ══ -->
 <div class="screen" id="compare-screen" style="height:auto;min-height:100vh;min-height:100dvh;overflow-y:auto">
-  <div style="display:flex;align-items:center;gap:12px;padding:18px 20px 0;flex-shrink:0">
+  <div style="display:flex;align-items:center;gap:12px;padding:calc(18px + var(--safe-top)) 20px 0;flex-shrink:0">
     <button class="back-btn" onclick="goHome()" id="compare-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
     <span style="font-size:19px;font-weight:800;color:var(--txt)" id="compare-title">Compare Loans</span>
   </div>
-  <div id="compare-body" style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;padding-bottom:30px"></div>
+  <div id="compare-body" style="padding:14px 20px;display:flex;flex-direction:column;gap:12px;padding-bottom:calc(30px + var(--safe-bottom))"></div>
 </div>
 
 </div><!-- #app -->
@@ -845,6 +845,8 @@ let lang='en',results=null,saved=[],extraLoans=[],settingsPrev='home',currentThe
 let _viewingSavedLoan=false,_savedSnap=null,_viewingSavedIdx=-1;
 // تعديل الملف المالي من شاشة أخرى: {screen,profile,s3back,direct} — null في المسار العادي
 let _profileReturn=null;
+// قيم المحاكاة الدقيقة: الشريط يقرّب لأقرب خطوة، فلو قُرئت منه لاختلف القسط عن التقرير
+let _sim={amt:50000,per:36,rate:8.5};
 let currency=''; // set on first launch by user
 let isPremium=false; // false=free, true=premium
 let _lastSaveClick=0; // debounce حماية من الضغط المزدوج على زر الحفظ
@@ -895,6 +897,7 @@ const CUR_FLAG={USD:'us',EUR:'eu',SAR:'sa',OMR:'om',AED:'ae',KWD:'kw',BHD:'bh',Q
 function flagSvg(key){return FLAGS[key]||'';}
 // خانات المبلغ حسب العملة: الريال العماني والدينار الكويتي والبحريني 3، الروبية الإندونيسية بلا كسور
 const CUR_DEC={OMR:3,KWD:3,BHD:3,IDR:0};
+const PENCIL_ICON='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
 function curDec(){return CUR_DEC[currency]??2;}
 function getCurrencySymbol(){
   return CURRENCIES.find(c=>c.id===currency)?.symbol||'';
@@ -922,16 +925,20 @@ function withCurrency(num){
   if(lang==='en'&&sym==='$') return sym+' '+num;
   return num+' '+sym;
 }
-// مثل fmtAmt لكن بخانتين عشريتين — تُستخدم في مقارنة قسط البنك فقط، لأن الفرق بين
-// قسطنا وقسط البنك أصغر من وحدة واحدة عادةً فيختفي لو قُرِّب. الملخص يبقى مقرّباً.
+// مثل fmtAmt لكن بخانات العملة. المبالغ بحجم القسط تحتاجها لأن الفرق بين قسطنا وقسط البنك
+// أصغر من وحدة واحدة عادةً فيختفي لو قُرِّب. الإجماليات الكبيرة تبقى مقرّبة عبر fmtAmt.
 function fmtAmtDec(n,dec){
-  const d=(dec==null)?2:dec;
+  const d=(dec==null)?curDec():dec;
   return withCurrency(Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}));
 }
+function fmtPay(n){return fmtAmtDec(n);}
+// الفرق الذي لا يظهر بعد التقريب: لا نعلن تجاوز الحد لرقمين يظهران متساويين
+function payTolerance(){return 0.5/10**curDec();}
 // نطاق «من – إلى» برمز عملة واحد في الطرف؛ تكرار الرمز مع كل رقم يطيل النص
 // فينكسر إلى سطرين على شاشة الجوال
 function fmtRangeDec(a,b){
-  const num=x=>Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const d=curDec();
+  const num=x=>Number(x).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
   return withCurrency(num(a)+' – '+num(b));
 }
 
@@ -1375,7 +1382,7 @@ function renderBankLimitCard(r){
   const maxPayTotal=baseIncome*limitPct/100;
   const maxPayAvail=Math.max(0,maxPayTotal-existing);
   const reqPay=r.monthly;
-  const within=reqPay<=maxPayAvail+0.5;
+  const within=reqPay<=maxPayAvail+payTolerance();
   const maxLoan=maxPrincipal(maxPayAvail,rate,period);
 
   const title=isAr?'الحد الأقصى للقسط حسب بنكك':isEs?'Límite máximo de cuota (banco)':'Maximum Installment Limit (Bank)';
@@ -1391,9 +1398,9 @@ function renderBankLimitCard(r){
   if(within){
     const badge=isAr?'✓ ضمن الحد':isEs?'✓ Dentro del límite':'✓ Within limit';
     const h1=isAr?'قسطك ضمن الحد المسموح':isEs?'Tu cuota está dentro del límite':'Your installment is within the limit';
-    const h2=isAr?`قسطك ${fmtAmt(reqPay)} من أصل ${fmtAmt(maxPayAvail)} مسموح شهرياً`
-      :isEs?`Cuota ${fmtAmt(reqPay)} de ${fmtAmt(maxPayAvail)} permitido/mes`
-      :`Installment ${fmtAmt(reqPay)} of ${fmtAmt(maxPayAvail)} allowed/mo`;
+    const h2=isAr?`قسطك ${fmtPay(reqPay)} من أصل ${fmtPay(maxPayAvail)} مسموح شهرياً`
+      :isEs?`Cuota ${fmtPay(reqPay)} de ${fmtPay(maxPayAvail)} permitido/mes`
+      :`Installment ${fmtPay(reqPay)} of ${fmtPay(maxPayAvail)} allowed/mo`;
     hero=`<div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;margin-top:11px;background:color-mix(in srgb,var(--safe) 12%,transparent)">
         <div style="width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:#fff;background:var(--safe)">✓</div>
         <div style="flex:1"><div style="font-size:14px;font-weight:800;line-height:1.35;color:var(--safe)">${h1}</div>
@@ -1405,9 +1412,9 @@ function renderBankLimitCard(r){
   } else {
     const badge=isAr?'⚠ يتجاوز الحد':isEs?'⚠ Excede el límite':'⚠ Over limit';
     const h1=isAr?'قسطك يتجاوز الحد المسموح':isEs?'Tu cuota excede el límite':'Your installment exceeds the limit';
-    const h2=isAr?`قسطك ${fmtAmt(reqPay)} والحد الأقصى ${fmtAmt(maxPayAvail)} شهرياً`
-      :isEs?`Cuota ${fmtAmt(reqPay)}, máximo ${fmtAmt(maxPayAvail)}/mes`
-      :`Installment ${fmtAmt(reqPay)}, max ${fmtAmt(maxPayAvail)}/mo`;
+    const h2=isAr?`قسطك ${fmtPay(reqPay)} والحد الأقصى ${fmtPay(maxPayAvail)} شهرياً`
+      :isEs?`Cuota ${fmtPay(reqPay)}, máximo ${fmtPay(maxPayAvail)}/mes`
+      :`Installment ${fmtPay(reqPay)}, max ${fmtPay(maxPayAvail)}/mo`;
     hero=`<div style="display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;margin-top:11px;background:color-mix(in srgb,var(--risk) 12%,transparent)">
         <div style="width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:#fff;background:var(--risk)">!</div>
         <div style="flex:1"><div style="font-size:14px;font-weight:800;line-height:1.35;color:var(--risk)">${h1}</div>
@@ -1431,9 +1438,9 @@ function renderBankLimitCard(r){
       const intNew=calcLoan(reqAmt,rate,nUp).interest;
       const extra=Math.max(0,intNew-intNow);
       const monthsW=isAr?'شهراً':isEs?'meses':'months';
-      const msg=isAr?`💡 أو زِد المدة إلى <b style="color:var(--txt)">${nUp} ${monthsW}</b> لتأخذ كامل المبلغ (القسط ينزل إلى ${fmtAmt(newPay)}). <span style="color:var(--risk);font-weight:800">لكن</span> ستدفع فائدة أعلى بـ <b style="color:var(--txt)">${fmtAmt(extra)}</b> تقريباً.`
-        :isEs?`💡 O amplía el período de pago a <b style="color:var(--txt)">${nUp} ${monthsW}</b> para el monto completo (la cuota baja a ${fmtAmt(newPay)}). <span style="color:var(--risk);font-weight:800">Pero</span> pagarás ~<b style="color:var(--txt)">${fmtAmt(extra)}</b> más en intereses.`
-        :`💡 Or extend the repayment period to <b style="color:var(--txt)">${nUp} ${monthsW}</b> to fit the full amount (installment drops to ${fmtAmt(newPay)}). <span style="color:var(--risk);font-weight:800">But</span> you'll pay ~<b style="color:var(--txt)">${fmtAmt(extra)}</b> more in interest.`;
+      const msg=isAr?`💡 أو زِد المدة إلى <b style="color:var(--txt)">${nUp} ${monthsW}</b> لتأخذ كامل المبلغ (القسط ينزل إلى ${fmtPay(newPay)}). <span style="color:var(--risk);font-weight:800">لكن</span> ستدفع فائدة أعلى بـ <b style="color:var(--txt)">${fmtAmt(extra)}</b> تقريباً.`
+        :isEs?`💡 O amplía el período de pago a <b style="color:var(--txt)">${nUp} ${monthsW}</b> para el monto completo (la cuota baja a ${fmtPay(newPay)}). <span style="color:var(--risk);font-weight:800">Pero</span> pagarás ~<b style="color:var(--txt)">${fmtAmt(extra)}</b> más en intereses.`
+        :`💡 Or extend the repayment period to <b style="color:var(--txt)">${nUp} ${monthsW}</b> to fit the full amount (installment drops to ${fmtPay(newPay)}). <span style="color:var(--risk);font-weight:800">But</span> you'll pay ~<b style="color:var(--txt)">${fmtAmt(extra)}</b> more in interest.`;
       sugg=`<div style="margin-top:13px;font-size:11px;color:var(--txt3);line-height:1.75;background:color-mix(in srgb,var(--mod) 12%,transparent);padding:10px 12px;border-radius:12px">${msg}</div>`;
     }
   }
@@ -1473,6 +1480,8 @@ function safeRate(v){return (v===''||v==null||isNaN(+v))?8.5:+v;}
 function fmt(n){return Number(n).toLocaleString('en-US')}
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function showScreen(id){
+  // بطاقة «ما الجديد» تخص الرئيسية: تُخفى عند مغادرتها وتبقى غير مقروءة
+  if(id!=='home'){const wn=document.getElementById('guide-whatsnew');if(wn)wn.style.display='none';}
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   const el=document.getElementById(id);
   el.classList.add('active');
@@ -1803,7 +1812,7 @@ function renderHome(){
         {lbl:tc.profileIncome,  val:fmtAmt(totalInc),  c:'var(--txt)'},
         {lbl:tc.profileExpenses,val:fmtAmt(totalExp),  c:'var(--risk)'},
         {lbl:netLbl,            val:fmtAmt(netInc),    c:'var(--safe)'},
-        {lbl:existLbl,          val:fmtAmt(existingPmt),c:'var(--txt)'},
+        {lbl:existLbl,          val:fmtPay(existingPmt),c:'var(--txt)'},
       ].map(r=>`
         <div style="background:var(--bg3);border-radius:10px;padding:9px 11px">
           <div style="font-size:11px;color:var(--lbl);font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:.4px">${r.lbl}</div>
@@ -1829,7 +1838,7 @@ function renderHome(){
     const rem=totalInc-totalExp-totalLoans; // قد يكون سالباً = عجز شهري (لا نقصّه إلى صفر)
     const remPct=totalInc>0?parseFloat(((rem/totalInc)*100).toFixed(2)):0;
     const remIsDeficit=rem<0;
-    const remColor=remIsDeficit?'var(--risk)':remPct>30?'var(--safe)':remPct>15?'#f59e0b':'var(--risk)';
+    const remColor=remIsDeficit?'var(--risk)':remPct>30?'var(--safe)':remPct>15?'var(--mod)':'var(--risk)';
     const remLabel=remIsDeficit
       ? (lang==='ar'?'عجز شهري':lang==='es'?'Déficit mensual':'Monthly Deficit')
       : (lang==='ar'?'يتبقى لك شهرياً':lang==='es'?'Te queda al mes':'Monthly Remainder');
@@ -1842,7 +1851,7 @@ function renderHome(){
          `${remPct}% of your income available after all payments`);
     remainingCard.style.display='block';
     remainingCard.innerHTML=`
-      <div style="background:var(--bg2);border-radius:16px;padding:14px 16px;border:1.5px solid ${remColor}40;position:relative;overflow:hidden">
+      <div style="background:var(--bg2);border-radius:16px;padding:14px 16px;border:1.5px solid color-mix(in srgb,${remColor} 25%,transparent);position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${remColor}"></div>
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
@@ -1850,8 +1859,8 @@ function renderHome(){
             <div style="font-size:24px;font-weight:900;color:${remIsDeficit?'var(--risk)':'var(--txt)'}">${fmtAmt(Math.abs(rem))}</div>
             <div style="font-size:11px;color:var(--txt3);margin-top:3px">${remDesc}</div>
           </div>
-          <div style="width:52px;height:52px;border-radius:50%;border:3px solid ${remColor}40;display:flex;align-items:center;justify-content:center;background:${remColor}15;flex-shrink:0">
-            <span style="font-size:16px;font-weight:900;color:var(--txt)">${remPct}%</span>
+          <div style="width:52px;height:52px;border-radius:50%;border:3px solid color-mix(in srgb,${remColor} 25%,transparent);display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,${remColor} 15%,transparent);flex-shrink:0">
+            <span style="font-size:${String(Math.round(remPct)).length>3?13:16}px;font-weight:900;color:var(--txt)">${Math.round(remPct)}%</span>
           </div>
         </div>
       </div>`;
@@ -1898,7 +1907,7 @@ function planWithinBankLimit(monthly){
   const gross=(+profile.salary||0)+(+profile.income||0);
   const base=profile.limitBasis==='net'?Math.max(0,gross-((+profile.expenses||0)+(+profile.variable||0))):gross;
   const room=Math.max(0,base*limit/100-(+profile.existing||0));
-  return (monthly||0)<=room+0.5;
+  return (monthly||0)<=room+payTolerance();
 }
 function savedPlansTitle(){
   const title=t().savedScenarios, n=saved.length;
@@ -1942,7 +1951,7 @@ function renderHomeSaved(){
           <span style="display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,${badgeColor} 14%,transparent);color:${badgeColor};border:1px solid color-mix(in srgb,${badgeColor} 38%,transparent);margin-top:4px">${badgeText}</span>
         </div>
         <div class="saved-mini-right">
-          <div class="saved-mini-amt">${fmtAmt(s.results.monthly)}</div>
+          <div class="saved-mini-amt">${fmtPay(s.results.monthly)}</div>
         </div>
       </div>
       <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
@@ -2279,27 +2288,27 @@ function renderResults(){
   const estChip=`<button onclick="showBankPayInfo()" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:color-mix(in srgb,var(--mod) 14%,transparent);color:var(--mod);border:0;border-radius:999px;padding:3px 9px 3px 7px;font:inherit;font-size:10.5px;font-weight:800;cursor:pointer">
       <span style="display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;border:1.3px solid currentColor;font-size:9px;flex:none">i</span>${tc.bpChip}</button>`;
   document.getElementById('kpi-grid').innerHTML=[
-    {label:tc.monthlyInstallment, val:fmtAmt(r.monthly),  edge:'var(--acc)',  vc:'var(--txt)', extra:estChip},
+    {label:tc.monthlyInstallment, val:fmtPay(r.monthly),  edge:'var(--acc)',  vc:'var(--txt)', extra:estChip},
     {label:tc.totalCost,          val:fmtAmt(r.total),    edge:'var(--acc2)', vc:'var(--txt)'},
     {label:tc.totalInterest,      val:fmtAmt(r.interest), edge:'var(--risk)', vc:'var(--txt)'},
     {label:remainingLabel,        val:remainingVal,       edge:remainingColor, vc:isDeficit?'var(--risk)':'var(--txt)'},
   ].map(k=>`<div class="kpi-card" style="border-top-color:${k.edge}"><p class="kpi-label">${k.label}</p><p class="kpi-val" style="color:${k.vc}">${k.val}</p>${k.extra||''}</div>`).join('');
   document.getElementById('lbl-basis').textContent=tc.basisTitle;
-  // calculate expected end date
+  // القسط الأول في شهر البداية، فالأخير بعده بـ N−1 شهراً ويطابق آخر سطر في الجدول
   const months=+form.period||36;
   const endDate=getStartDate();
-  endDate.setMonth(endDate.getMonth()+months);
+  endDate.setMonth(endDate.getMonth()+months-1);
   const endStr=endDate.toLocaleDateString(lang==='ar'?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long'});
   document.getElementById('basis-rows').innerHTML=`
     <div class="basis-row"><span class="basis-lbl">${tc.grossIncome}</span><span class="basis-val">${fmtAmt(r.grossIncome)}</span></div>
     <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'المصروفات':lang==='es'?'Gastos':'Expenses'}</span><span class="basis-val" style="color:var(--risk)">${fmtAmt(r.expenses+r.variable)}</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.netIncome}</span><span class="basis-val" style="color:var(--safe);font-weight:800">${fmtAmt(r.netIncome)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${tc.newInstall}</span><span class="basis-val">${fmtAmt(r.monthly)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${tc.existingLoans}</span><span class="basis-val">${fmtAmt(r.existing)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.newInstall}</span><span class="basis-val">${fmtPay(r.monthly)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.existingLoans}</span><span class="basis-val">${fmtPay(r.existing)}</span></div>
     <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'معدل الفائدة السنوي':lang==='es'?'Tasa de interés anual':'Annual Interest Rate'}</span><span class="basis-val" style="color:var(--acc);font-weight:800">${safeRate(form.rate)}%</span></div>
     <div class="basis-row"><span class="basis-lbl">${CAL_ICON}${lang==='ar'?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period'}</span><span class="basis-val">${months} ${tc.months}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'تاريخ الانتهاء المتوقع':lang==='es'?'Fecha de fin prevista':'Expected End Date'}</span><span class="basis-val" style="color:var(--txt);font-weight:800">${endStr}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl} <span onclick="showRiskInfo()" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1.3px solid var(--txt3);color:var(--txt3);font-size:11px;font-weight:800;cursor:pointer;vertical-align:middle">؟</span></span><span class="basis-hi" style="color:var(--txt)">${r.dtiGross.toFixed(2)}%</span></div>
+    <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'آخر قسط':lang==='es'?'Última cuota':'Last payment'}</span><span class="basis-val" style="color:var(--txt);font-weight:800">${endStr}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl} <span onclick="showRiskInfo()" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1.3px solid var(--txt3);color:var(--txt3);font-size:11px;font-weight:800;cursor:pointer;vertical-align:middle">${lang==='ar'?'؟':'?'}</span></span><span class="basis-hi" style="color:var(--txt)">${r.dtiGross.toFixed(2)}%</span></div>
     <div class="basis-row"><span class="basis-lbl">${tc.dtiNetLbl}</span><span class="basis-hi" style="color:var(--txt)">${r.dtiNet.toFixed(2)}%</span></div>`;
   try{ renderBankLimitCard(r); }catch(e){ const _b=document.getElementById('banklimit-card'); if(_b)_b.style.display='none'; }
   try{ renderBankNoteCard(r); renderBankCompareCard(r); }catch(e){
@@ -2321,9 +2330,14 @@ function renderResults(){
   document.getElementById('sim-lbl-per').textContent=tc.sim_per;
   document.getElementById('sim-lbl-rate').textContent=tc.sim_rate;
   const _bal=document.getElementById('btn-add-loan');if(_bal)_bal.textContent=tc.addLoan;
-  document.getElementById('sim-range-amt').value=form.amount||50000;
-  document.getElementById('sim-range-per').value=form.period||36;
-  document.getElementById('sim-range-rate').value=safeRate(form.rate);
+  const editLbl=lang==='ar'?'اكتب':lang==='es'?'Escribir':'Type';
+  [['amt',tc.sim_amt],['per',tc.sim_per],['rate',tc.sim_rate]].forEach(([f,name])=>{
+    const b=document.getElementById('edit-btn-'+f);
+    if(!b) return;
+    b.innerHTML=PENCIL_ICON+'<span>'+editLbl+'</span>';
+    b.setAttribute('aria-label',editLbl+' '+name);
+  });
+  syncSimToForm();
   simUpdate();renderSavedTab();renderMultiLoans();
   // إذا كنا في وضع تعديل قرض محفوظ — نُظهر زر الحفظ دائماً
   if(_editingLoanIdx!==null && !_viewingSavedLoan){
@@ -2709,7 +2723,7 @@ function renderSchedule(){
   document.getElementById('sh-interest').textContent=isAr?'الفائدة':isEs?'Interés':'Interest';
   document.getElementById('sh-balance').textContent=isAr?'الرصيد':isEs?'Saldo':'Balance';
   const sumEl=document.getElementById('sched-summary');
-  if(sumEl)sumEl.textContent=`${months} ${tc.months} · ${fmtAmt(monthly)}/${isAr?'شهر':isEs?'mes':'mo'}`;
+  if(sumEl)sumEl.textContent=`${months} ${tc.months} · ${fmtPay(monthly)}/${isAr?'شهر':isEs?'mes':'mo'}`;
 
   // ── حساب الشهر الحالي في القرض ──────────────────────────────────────────
   const startM=form.startMonth??new Date().getMonth();
@@ -2809,10 +2823,65 @@ function renderSchedule(){
 }
 
 // ── SIMULATE ──────────────────────────────────────────────────────────────────
-function toggleManual(field){const wrap=document.getElementById('manual-'+field);const btn=document.getElementById('edit-btn-'+field);const inp=document.getElementById('manual-inp-'+field);const hidden=wrap.style.display==='none';wrap.style.display=hidden?'block':'none';btn.classList.toggle('active',hidden);if(hidden&&inp){const sl=document.getElementById('sim-range-'+field);if(field==='per'){const u=document.getElementById('per-unit').value;inp.value=u==='years'?Math.round(+sl.value/12):sl.value;}else inp.value=sl.value;inp.focus();}}
-function applyManual(field){const inp=document.getElementById('manual-inp-'+field);let val=+inp.value;if(!val||isNaN(val))return;const sl=document.getElementById('sim-range-'+field);if(field==='per'){const u=document.getElementById('per-unit').value;if(u==='years')val=Math.round(val*12);val=Math.min(360,Math.max(1,val));sl.value=val;}else if(field==='rate'){val=Math.min(40,Math.max(0.1,val));sl.value=val;}else if(field==='amt'){val=Math.min(500000,Math.max(1000,val));sl.value=val;}simUpdate();}
+// أبسط خطوة تقارب x: 1 أو 2 أو 5 مضروبة في قوة للعشرة
+function niceStep(x){
+  const p=10**Math.floor(Math.log10(x));
+  const n=x/p;
+  return (n<=1?1:n<=2?2:n<=5?5:10)*p;
+}
+// نطاق الشريط يتبع مبلغ القرض: من الربع إلى الضعف
+function simAmountBounds(a){
+  const step=Math.max(1,niceStep(a/200));
+  return {step,min:Math.max(step,Math.floor(a*0.25/step)*step),max:Math.ceil(a*2/step)*step};
+}
+function syncSimToForm(){
+  _sim={amt:+form.amount||50000,per:+form.period||36,rate:safeRate(form.rate)};
+  const sl=document.getElementById('sim-range-amt');
+  const b=simAmountBounds(_sim.amt);
+  sl.step=b.step;sl.min=b.min;sl.max=b.max;sl.value=_sim.amt;
+  document.getElementById('sim-range-per').value=_sim.per;
+  document.getElementById('sim-range-rate').value=_sim.rate;
+}
+function simSlide(field,v){
+  _sim[field]=+v;
+  simUpdate();
+}
+function toggleManual(field){
+  const wrap=document.getElementById('manual-'+field);
+  const btn=document.getElementById('edit-btn-'+field);
+  const inp=document.getElementById('manual-inp-'+field);
+  const hidden=wrap.style.display==='none';
+  wrap.style.display=hidden?'block':'none';
+  btn.classList.toggle('active',hidden);
+  if(hidden&&inp){
+    if(field==='per'){
+      const u=document.getElementById('per-unit').value;
+      inp.value=u==='years'?Math.round(_sim.per/12):_sim.per;
+    }else inp.value=_sim[field];
+    inp.focus();
+  }
+}
+function applyManual(field){
+  const inp=document.getElementById('manual-inp-'+field);
+  let val=+inp.value;
+  if(!val||isNaN(val))return;
+  const sl=document.getElementById('sim-range-'+field);
+  if(field==='per'){
+    const u=document.getElementById('per-unit').value;
+    if(u==='years')val=Math.round(val*12);
+    val=Math.min(360,Math.max(1,val));
+  }else if(field==='rate'){
+    val=Math.min(40,Math.max(0.1,val));
+  }else{
+    if(val<+sl.min)sl.min=val;
+    if(val>+sl.max)sl.max=val;
+  }
+  _sim[field]=val;
+  sl.value=val;
+  simUpdate();
+}
 function simUpdate(){
-  const tc=t(),amt=+document.getElementById('sim-range-amt').value,per=+document.getElementById('sim-range-per').value,rate=+document.getElementById('sim-range-rate').value;
+  const tc=t(),{amt,per,rate}=_sim;
   document.getElementById('sim-amt-val').textContent=fmtAmt(amt);
   document.getElementById('sim-per-val').textContent=per+' '+tc.months;
   document.getElementById('sim-rate-val').textContent=rate.toFixed(2)+'%';
@@ -2820,7 +2889,7 @@ function simUpdate(){
   const oy=document.getElementById('opt-years');if(oy)oy.textContent=lang==='ar'?'سنة':lang==='es'?'Años':'Years';
   const c=calcLoan(amt,rate/100,per);
   document.getElementById('sim-kpi').innerHTML=[
-    {label:tc.monthlyInstallment,val:fmtAmt(c.monthly),edge:'var(--acc)',vc:'var(--txt)'},
+    {label:tc.monthlyInstallment,val:fmtPay(c.monthly),edge:'var(--acc)',vc:'var(--txt)'},
     {label:tc.totalCost,val:fmtAmt(c.total),edge:'var(--acc2)',vc:'var(--txt)'},
     {label:tc.totalInterest,val:fmtAmt(c.interest),edge:'var(--risk)',vc:'var(--txt)'},
     {label:tc.sim_rate,val:rate.toFixed(2)+'%',edge:'var(--safe)',vc:'var(--txt)'},
@@ -2835,7 +2904,7 @@ function renderMultiLoans(){
   const tc=t(),r=results;if(!r)return;const cur=tc.currency;
   const mainCard=`<div class="loan-card" style="border-color:var(--acc)">
     <p class="loan-card-title">${tc.mainLoan} — ${T[lang]['lt_'+form.loanType]}</p>
-    <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:14px;font-weight:800">${fmtAmt(r.monthly)}</span></div>
+    <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:14px;font-weight:800">${fmtPay(r.monthly)}</span></div>
     <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'المبلغ':lang==='es'?'Monto':'Amount'}</span><span class="saved-val">${fmtAmt(+form.amount||0)}</span></div>
     <div class="saved-row"><span class="saved-lbl">${lang==='ar'?'الفائدة':lang==='es'?'Tasa':'Rate'}</span><span class="saved-val">${safeRate(form.rate).toFixed(2)}%</span></div>
   </div>`;
@@ -2848,7 +2917,7 @@ function renderMultiLoans(){
         <div><label class="lbl" style="font-size:9px">${lang==='ar'?'المبلغ':lang==='es'?'Monto':'Amount'}</label><input class="inp" type="number" inputmode="numeric" placeholder="50000" value="${el.amount}" oninput="updateExtraLoan(${i},'amount',this.value)" style="padding:9px;font-size:14px"></div>
         <div><label class="lbl" style="font-size:9px">${lang==='ar'?'الفائدة%':lang==='es'?'Tasa %':'Rate %'}</label><input class="inp" type="number" inputmode="decimal" step="0.01" placeholder="8.5" value="${el.rate}" oninput="updateExtraLoan(${i},'rate',this.value)" style="padding:9px;font-size:14px"></div>
         <div><label class="lbl" style="font-size:9px">${lang==='ar'?'المدة شهر':lang==='es'?'Período m':'Period mo'}</label><input class="inp" type="number" inputmode="numeric" placeholder="36" value="${el.period}" oninput="updateExtraLoan(${i},'period',this.value)" style="padding:9px;font-size:14px"></div>
-        <div style="display:flex;flex-direction:column;justify-content:flex-end"><p class="kpi-label">${tc.monthlyInstallment}</p><p style="color:var(--acc);font-weight:800;font-size:15px">${fmtAmt(c.monthly)}</p></div>
+        <div style="display:flex;flex-direction:column;justify-content:flex-end"><p class="kpi-label">${tc.monthlyInstallment}</p><p style="color:var(--acc);font-weight:800;font-size:15px">${fmtPay(c.monthly)}</p></div>
       </div>
     </div>`;
   }).join('');
@@ -2961,7 +3030,7 @@ function renderSavedTab(){
         <p class="saved-name" style="margin:0">${displayName}</p>
         <span style="color:var(--txt2);font-size:12px">${safeRate(s.form?.rate)}% ${lang==='ar'?'فائدة':lang==='es'?'interés':'APR'}</span>
       </div>
-      <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:15px">${fmtAmt(s.results.monthly)}</span></div>
+      <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:15px">${fmtPay(s.results.monthly)}</span></div>
       <div class="saved-row"><span class="saved-lbl">${tc.totalInterest}</span><span class="saved-val" style="color:var(--risk)">${fmtAmt(s.results.interest)}</span></div>
       <div class="saved-row"><span class="saved-lbl">${tc.dtiRatio}</span><span class="saved-val" style="color:${dtiCol}">${s.results.dtiGross.toFixed(2)}%</span></div>
       <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--brd);padding-top:10px">
@@ -3166,7 +3235,7 @@ function renderCompare(){
   const calcDti=s=>((s.loanMonthly+cmpExisting)/Math.max(cmpCurGross,1))*100;
 
   const fields=[
-    {key:'monthly',label:tc.monthlyInstallment,fmt:v=>fmtAmt(v),best:'min'},
+    {key:'monthly',label:tc.monthlyInstallment,fmt:v=>fmtPay(v),best:'min'},
     {key:'total',label:tc.totalCost,fmt:v=>fmtAmt(v),best:'min'},
     {key:'interest',label:tc.totalInterest,fmt:v=>fmtAmt(v),best:'min'},
     {key:'dtiGross',label:tc.dtiRatio,fmt:v=>v.toFixed(2)+'%',best:'min'},
@@ -3212,7 +3281,7 @@ function renderCompare(){
   html+=`<div class="card" style="border-inline-start:4px solid var(--safe)">
     <p class="card-label" style="color:var(--safe)">${lang==='ar'?'الأفضل بأقل قسط شهري':lang==='es'?'Mejor por cuota mensual más baja':'Best by Lowest Monthly Payment'}</p>
     <p style="font-size:19px;font-weight:800;color:var(--txt)">${escapeHtml(savedLoanDisplayName(winner))}</p>
-    <p style="font-size:16px;color:var(--txt2);margin-top:5px;font-weight:600">${fmtAmt(winner.results.monthly)} / ${tc.months}</p>
+    <p style="font-size:16px;color:var(--txt2);margin-top:5px;font-weight:600">${fmtPay(winner.results.monthly)} / ${tc.months}</p>
   </div>`;
   document.getElementById('compare-body').innerHTML=html;
 }
@@ -3485,7 +3554,7 @@ function exportPDF(){
   const dir=isAr?'rtl':'ltr';
   const months=+form.period||36;
   const endDate=getStartDate();
-  endDate.setMonth(endDate.getMonth()+months);
+  endDate.setMonth(endDate.getMonth()+months-1);
   const endStr=endDate.toLocaleDateString(isAr?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long'});
   const loanTypeName=T[lang]['lt_'+form.loanType]||form.loanType;
 
@@ -3527,10 +3596,10 @@ function exportPDF(){
     [tc.grossIncome,                          fmtAmt(r.grossIncome),         '#111'],
     [isAr?'المصروفات':lang==='es'?'Gastos':'Expenses',             fmtAmt(r.expenses+r.variable), 'var(--risk)'],
     [tc.netIncome,                            fmtAmt(r.netIncome),           'var(--safe)'],
-    [tc.newInstall,                           fmtAmt(r.monthly),             '#111'],
-    [tc.existingLoans,                        fmtAmt(r.existing),            '#111'],
+    [tc.newInstall,                           fmtPay(r.monthly),             '#111'],
+    [tc.existingLoans,                        fmtPay(r.existing),            '#111'],
     [isAr?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period',    months+' '+tc.months,          '#111'],
-    [isAr?'تاريخ الانتهاء':lang==='es'?'Fecha de fin':'End Date',        endStr,                        '#f59e0b'],
+    [isAr?'آخر قسط':lang==='es'?'Última cuota':'Last payment',        endStr,                        '#f59e0b'],
     [tc.dtiGrossLbl,                          r.dtiGross.toFixed(2)+'%',     color],
     [tc.dtiNetLbl,                            r.dtiNet.toFixed(2)+'%',       color],
   ].map(([l,v,c])=>`
@@ -3597,7 +3666,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
   <div class="kpi">
     <div class="kpi-card" style="border-top-color:#6366f1">
       <div class="kpi-label">${tc.monthlyInstallment}</div>
-      <div class="kpi-val" style="color:#111">${fmtAmt(r.monthly)}</div>
+      <div class="kpi-val" style="color:#111">${fmtPay(r.monthly)}</div>
     </div>
     <div class="kpi-card" style="border-top-color:#0891b2">
       <div class="kpi-label">${tc.totalCost}</div>
@@ -4271,7 +4340,7 @@ const GUIDE_HELP={
   loan:{en:{title:'Create a loan',body:'From Home tap Get Started, then enter:\n\n• Loan type\n• Loan amount\n• Repayment period\n• Annual interest rate\n• Optional start date\n\nTap Calculate to open the four result pages.'},ar:{title:'إنشاء قرض',body:'من الرئيسية اضغط ابدأ ثم أدخل:\n\n• نوع القرض\n• مبلغ القرض\n• مدة السداد\n• معدل الفائدة السنوي\n• تاريخ البداية إن احتجت\n\nثم اضغط احسب قرضي لفتح صفحات النتائج الأربع.'},es:{title:'Crear un préstamo',body:'En Inicio toca Empezar e ingresa:\n\n• Tipo de préstamo\n• Monto\n• Plazo\n• Tasa anual\n• Fecha de inicio opcional\n\nToca Calcular para abrir las cuatro páginas de resultados.'}},
   results:{en:{title:'Understand results',body:'After Calculate you get four pages:\n\n• Report — installment, cost, interest, affordability\n• Charts — principal vs interest visually\n• Schedule — month-by-month table\n• Simulate — what-if changes instantly\n\nThe intro tour gives a short overview; open this Help topic anytime for the full list.'},ar:{title:'فهم النتائج',body:'بعد الحساب تظهر أربع صفحات:\n\n• التقرير — القسط والتكلفة والفائدة والقدرة على السداد\n• الرسوم — توزيع الأصل والفائدة بصرياً\n• الجدول — أقساط شهرية ورصيد متبقٍ\n• المحاكاة — ماذا لو تغيّر المبلغ أو الفائدة أو المدة\n\nالجولة التعريفية تعطي نظرة عامة قصيرة؛ افتح هذا الموضوع من الدليل في أي وقت للقائمة كاملة.'},es:{title:'Entender resultados',body:'Tras Calcular tienes cuatro páginas:\n\n• Informe — cuota, costo, interés y asequibilidad\n• Gráficos — capital frente a interés\n• Tabla — mes a mes\n• Simular — cambios al instante\n\nEl tour da un resumen breve; abre este tema de la guía cuando quieras la lista completa.'}},
   save:{en:{title:'Save & compare',body:'On the Report page tap Save plan to keep it on Home. You can keep up to 4 plans. With two or more, use Compare to see them side by side.\n\nA saved plan is not a debt: it never changes your existing payments.'},ar:{title:'الحفظ والمقارنة',body:'من صفحة التقرير اضغط حفظ الخطة لتظهر في الرئيسية. يمكنك الاحتفاظ بـ 4 خطط. عند وجود خطتين أو أكثر استخدم مقارنة لعرضهما جنباً إلى جنب.\n\nالخطة المحفوظة ليست ديناً: لا تغيّر أقساطك القائمة أبداً.'},es:{title:'Guardar y comparar',body:'En Informe toca Guardar plan para dejarlo en Inicio. Puedes tener hasta 4 planes. Con dos o más usa Comparar para verlos juntos.\n\nUn plan guardado no es una deuda: nunca cambia tus cuotas actuales.'}},
-  demo:{en:{title:'Demo mode',body:'Demo mode protects your privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. You return to it after biometrics or device PIN. Find Demo on Home (eye icon) or in Settings.'},ar:{title:'وضع العرض التجريبي',body:'هدف وضع العرض التجريبي حماية خصوصيتك وخصوصية ملفك المالي. يفتح ارقاما تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك الحقيقي.\n\nملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بايقونة العين أو من الإعدادات.'},es:{title:'Modo demo',body:'El modo demo protege tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. Vuelves a él con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'}}
+  demo:{en:{title:'Demo mode',body:'Demo mode protects your privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. You return to it after biometrics or device PIN. Find Demo on Home (eye icon) or in Settings.'},ar:{title:'وضع العرض التجريبي',body:'هدف وضع العرض التجريبي حماية خصوصيتك وخصوصية ملفك المالي. يفتح أرقاماً تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك الحقيقي.\n\nملفك الحقيقي يبقى مغلقاً، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بأيقونة العين أو من الإعدادات.'},es:{title:'Modo demo',body:'El modo demo protege tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. Vuelves a él con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'}}
 };
 
 const GUIDE_TOUR_STEPS=[
@@ -4294,11 +4363,11 @@ const GUIDE_TOUR_STEPS=[
 
 const GUIDE_FEATURES=[
   {id:'demo_mode',
-    teaser:{en:'New in emiGo: Demo mode',ar:'جديد في emiGo: وضع العرض التجريبي',es:'Nuevo en emiGo: Modo demo'},
+    teaser:{en:'New in emiGo: Demo mode',ar:'جديد في \u2068emiGo\u2069: وضع العرض التجريبي',es:'Nuevo en emiGo: Modo demo'},
     title:{en:'Demo mode',ar:'وضع العرض التجريبي',es:'Modo demo'},
     body:{
       en:'Demo mode is built for privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. You return to it after biometrics or device PIN. Find it on Home (eye icon) or in Settings.',
-      ar:'وضع العرض التجريبي مصمم لحماية خصوصيتك. يفتح ارقاما تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك المالي الحقيقي.\n\nملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بايقونة العين أو من الإعدادات.',
+      ar:'وضع العرض التجريبي مصمم لحماية خصوصيتك. يفتح أرقاماً تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك المالي الحقيقي.\n\nملفك الحقيقي يبقى مغلقاً، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بأيقونة العين أو من الإعدادات.',
       es:'El modo demo está pensado para tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. Vuelves a él con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'
     }}
 ];
@@ -4594,6 +4663,11 @@ function nextUnseenFeature(){
 function markFeatureSeen(id){
   patchGuideState(function(st){ st.featuresSeen[id]=true; });
 }
+function firstSentence(text){
+  const para=String(text||'').split('\n')[0];
+  const m=para.match(/^.*?[.!?؟](?=\s|$)/);
+  return m?m[0]:para;
+}
 function maybeShowWhatsNew(){
   if(isGuideBlocked()||_guideTourActive) return;
   const home=document.getElementById('home');
@@ -4605,8 +4679,9 @@ function maybeShowWhatsNew(){
   _pendingWhatsNewId=feat.id;
   const ui=guideUi();
   const el=document.getElementById('guide-whatsnew');
+  el.dir=lang==='ar'?'rtl':'ltr';
   document.getElementById('guide-whatsnew-title').textContent=formatGuideText(guidePick(feat.teaser));
-  document.getElementById('guide-whatsnew-body').textContent=formatGuideText(guidePick(feat.title));
+  document.getElementById('guide-whatsnew-body').textContent=formatGuideText(firstSentence(guidePick(feat.body)));
   document.getElementById('guide-whatsnew-later').textContent=formatGuideText(ui.later);
   document.getElementById('guide-whatsnew-open').textContent=formatGuideText(ui.learnMore);
   el.style.display='block';
@@ -4910,6 +4985,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
   }
 
   window.addEventListener('load', function(){
+    var hadController = !!navigator.serviceWorker.controller;
     navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(function(reg){
       var checkWaiting = function(){
         if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
@@ -4933,6 +5009,8 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
     // One reload when the new worker takes control (after the user consents).
     var refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', function(){
+      // أول زيارة: العامل يتسلّم الصفحة بلا أي تحديث، وإعادة التحميل تمسح ما يكتبه المستخدم
+      if (!hadController) { hadController = true; return; }
       if (refreshing) return;
       refreshing = true;
       window.location.reload();

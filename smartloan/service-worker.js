@@ -25,7 +25,7 @@ const CHANGELOG = {
   ])
 };
 
-const CACHE = 'smartloan-1.3d';
+const CACHE = 'smartloan-1.3e';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 // Install: pre-cache core, then WAIT. No skipWaiting() here on purpose — the new
@@ -67,10 +67,13 @@ self.addEventListener('fetch', (e) => {
     caches.match(req).then((hit) => {
       if (hit) return hit;
       return fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        // Never keep an error page: cache-first would serve it forever.
+        if (res.ok && res.type === 'basic') {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
         return res;
-      }).catch(() => caches.match('./index.html'));
+      }).catch(() => (req.mode === 'navigate' ? caches.match('./index.html') : Response.error()));
     })
   );
 });
