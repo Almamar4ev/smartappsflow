@@ -6,8 +6,9 @@
 // "New calculation" keeps the profile, amount inputs accept decimals and Arabic
 // digits, editing the profile returns to where it started, every saved loan is an
 // independent plan, old data migrates to the manual existing-payments field, money
-// shows the right decimals, the simulator matches the report, and the service
-// worker never stores a bad response.
+// shows the right decimals, the simulator matches the report, the service worker
+// never stores a bad response, confirmations use the app's own sheet, and the
+// Android back button behaves like the on-screen arrow.
 //
 // Run:  node tests/data-safety-tests.mjs
 // ==========================================================================
@@ -33,9 +34,16 @@ function check(name, condition) {
 }
 
 function extractFunction(name) {
-  const start = html.indexOf(`function ${name}(`);
+  let start = html.indexOf(`function ${name}(`);
   if (start < 0) throw new Error(`Function not found in index.html: ${name}`);
-  let i = html.indexOf('{', start);
+  if (html.slice(start - 6, start) === 'async ') start -= 6;
+  // Skip the parameter list first: it may hold destructuring braces.
+  let i = html.indexOf('(', start);
+  for (let parens = 0; i < html.length; i++) {
+    if (html[i] === '(') parens++;
+    if (html[i] === ')' && --parens === 0) break;
+  }
+  i = html.indexOf('{', i);
   let depth = 0;
   let quote = null;
   for (; i < html.length; i++) {
@@ -65,6 +73,7 @@ const REAL = [
   'fmtAmtDec', 'fmtPay', 'fmtRangeDec', 'payTolerance', 'withCurrency', 'getCurrencySymbol',
   'niceStep', 'simAmountBounds', 'syncSimToForm', 'simSlide', 'toggleManual', 'applyManual',
   'simUpdate', 'firstSentence', 'getStartDate',
+  'confirmSheet', 'closeConfirmSheet', 'isOverlayOpen', 'handleBackButton', 'registerBackButton',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
   'syncProfileToInputs', 'goStep', 'calculate', 'openSavedDetail', 'goHome',
@@ -75,7 +84,7 @@ const STATE = `
   const PROFILE_KEYS=['salary','income','expenses','variable','existing','employment','risk'];
   const MAX_SAVED_PLANS=4, PLANS_MODEL=1, RISK_LEVELS=['safe','moderate','risky'];
   let lang='en',currency='USD',results=null,saved=[],extraLoans=[],isPremium=false;
-  let currentTheme='light',_existingNotice=false,_demo=false,_sim={amt:50000,per:36,rate:8.5};
+  let _confirmResolve=null,currentTheme='light',_existingNotice=false,_demo=false,_sim={amt:50000,per:36,rate:8.5};
   const CURRENCIES=[{id:'USD',symbol:'$'},{id:'OMR',symbol:'ر.ع'},{id:'IDR',symbol:'Rp'},{id:'KWD',symbol:'د.ك'},{id:'BHD',symbol:'د.ب'},{id:'NONE',symbol:''}];
   let profileSaved=true,_editingLoanIdx=null,_viewingSavedLoan=false,_savedSnap=null;
   let _viewingSavedIdx=-1,_profileReturn=null,_lastSaveClick=0,_guideTourActive=false;
@@ -96,21 +105,26 @@ const STATE = `
 // One fresh page per test: fake DOM, stubbed drawing, real logic.
 function newPage() {
   const elements = {};
+  const makeClassList = () => {
+    const set = new Set();
+    return { add: (c) => set.add(c), remove: (c) => set.delete(c), toggle() {}, contains: (c) => set.has(c) };
+  };
   const el = (id) => (elements[id] ??= {
-    id, value: '', style: {}, textContent: '', dir: '', onclick: null,
-    classList: { add() {}, remove() {}, toggle() {} },
-    focus() {}, select() {}, scrollIntoView() {},
+    id, value: '', style: {}, textContent: '', dir: '', onclick: null, clicks: 0,
+    classList: makeClassList(),
+    focus() {}, select() {}, scrollIntoView() {}, click() { this.clicks++; },
   });
   el('s3-back').onclick = 'original-back';
   const activeRef = { value: 'home' };
   const sandbox = {
     console,
     window: { scrollTo() {} },
-    confirm: () => true,
+    confirm: () => { throw new Error('native confirm() must not be used'); },
+    calls: [],
     setTimeout: () => 0,
     requestAnimationFrame: () => 0,
     document: {
-      getElementById: el,
+      getElementById: (id) => (id === undefined ? null : el(id)),
       querySelector: (q) => (q === '.screen.active' ? { id: activeRef.value } : null),
       querySelectorAll: () => [],
     },
@@ -129,7 +143,13 @@ function newPage() {
     function renderStep3Dynamic(){renderCalls.push('step3');}
     function renderResults(){renderCalls.push('results');}
     function maybeShowResultTip(){} function showToast(){}
+    function hideGuideSheet(){calls.push('guide-sheet');} function hideBankPayInfo(){calls.push('bankpay');}
+    function hideRiskInfo(){calls.push('risk');} function hidePremiumSheet(){calls.push('premium');}
+    function hideExportSheet(){calls.push('export');} function skipGuideTour(){calls.push('skip-tour');}
+    function dismissGuideNudge(){calls.push('nudge');} function dismissWhatsNew(){calls.push('whatsnew');}
+    function closeLangMenu(){calls.push('lang-menu');}
     ${REAL.map(extractFunction).join('\n')}
+    ${html.slice(html.indexOf('const BACK_LAYERS='), html.indexOf('function handleBackButton('))}
   `, ctx);
   const run = (code) => vm.runInContext(code, ctx);
   run(`profile={salary:'3000',income:'0',expenses:'500',variable:'200',existing:'0',employment:'full',risk:'medium',bankLimit:'40',limitBasis:'gross'};
@@ -141,6 +161,7 @@ function plan(type, monthly, amount = 1000) {
   return `{type:'${type}',loanType:'personal',loanAmount:${amount},loanMonthly:${monthly},name:'p${monthly}',
     results:{monthly:${monthly}},form:{amount:'${amount}',period:'12',rate:'5',loanType:'personal'}}`;
 }
+const settle = () => new Promise((r) => setTimeout(r, 0));
 function typeAmount(page, id, key, value) {
   const input = page.el(id);
   input.value = value;
@@ -430,6 +451,8 @@ const oldState = (over = '') => `({lang:'ar',currency:'OMR',profileSaved:true,
   const p = newPage();
   p.run(`profile.existing='80';saved=[${plan('active', 600)},${plan('active', 300)}]`);
   p.run('confirmDeleteLoan(0)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
   check('deleting a plan leaves existing payments alone', p.run('saved.length') === 1 && p.run('profile.existing') === '80');
   p.run(`results={monthly:150};form.amount='4242';saved=[];_lastSaveClick=0`);
   p.run('saveScenario()');
@@ -709,6 +732,125 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
 check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-1.3e'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
+
+// ── Confirmation sheet ─────────────────────────────────────────────────────
+console.log('\nConfirmation sheet');
+check('no native browser dialog remains', !/(?<![A-Za-z_.])(confirm|alert|prompt)\(/.test(html));
+{
+  const p = newPage();
+  p.run(`saved=[${plan('active', 600)},${plan('active', 300)}];lang='ar'`);
+  p.run('confirmDeleteLoan(0)');
+  check('nothing is deleted before the answer', p.run('saved.length') === 2);
+  check('the sheet opens', p.el('confirm-sheet').style.display === 'flex');
+  check('the sheet is RTL in Arabic', p.el('confirm-sheet').dir === 'rtl');
+  check('the sheet names the plan', p.el('confirm-sheet-body').textContent.startsWith('p600'));
+  check('delete uses the danger color', p.el('confirm-sheet-ok').style.background === 'var(--risk)');
+  check('cancel has a default label', p.el('confirm-sheet-cancel').textContent === 'إلغاء');
+  p.run('closeConfirmSheet(false)');
+  await settle();
+  check('cancel keeps the plan', p.run('saved.length') === 2);
+  check('cancel closes the sheet', p.el('confirm-sheet').style.display === 'none');
+  p.run('confirmDeleteLoan(1)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('confirm deletes the right plan', p.run('saved.length') === 1 && p.run('saved[0].loanMonthly') === 600);
+  check('the deletion is stored', p.sandbox.persisted >= 1);
+}
+{
+  const p = newPage();
+  p.run(`var _a='?',_b='?';confirmSheet({title:'A',okLabel:'x'}).then(v=>{_a=v});confirmSheet({title:'B',okLabel:'y'}).then(v=>{_b=v});`);
+  await settle();
+  check('a second sheet answers the first with no', p.run('_a') === false);
+  check('a sheet without a body hides it', (p.run('closeConfirmSheet(true)'), p.el('confirm-sheet-body').style.display === 'none'));
+  await settle();
+  check('the second sheet gets the real answer', p.run('_b') === true);
+  p.run(`closeConfirmSheet(true)`);
+  check('closing with nothing open is harmless', true);
+}
+check('restore asks first', /const ok=await confirmSheet\(\{\s*title:isAr\?'استعادة البيانات؟'/.test(html));
+check('demo without a screen lock asks first', /const ok=await confirmSheet\(\{\s*title:isAr\?'هذا الهاتف بلا قفل شاشة'/.test(html));
+check('leaving demo asks first', /const ok=await confirmSheet\(\{\s*title:isAr\?'العودة إلى ملفك؟'/.test(html));
+check('a tap outside the sheet cancels', /id="confirm-sheet" onclick="if\(event\.target===this\)closeConfirmSheet\(false\)"/.test(html));
+check('the guide stays away from an open sheet', html.includes("'confirm-sheet','guide-sheet'].some(isOverlayOpen)"));
+
+// ── Android back button ────────────────────────────────────────────────────
+console.log('\nAndroid back button');
+function nativePage(active) {
+  const p = newPage();
+  p.setActive(active);
+  p.sandbox.window.Capacitor = { Plugins: { App: { exitApp() { p.sandbox.exits = (p.sandbox.exits || 0) + 1; } } } };
+  return p;
+}
+for (const [screen, arrow] of [['step1', 's1-back'], ['step2', 's2-back'], ['step3', 's3-back'], ['results-screen', 'res-back'],
+  ['settings-screen', 'settings-back-btn'], ['compare-screen', 'compare-back'], ['saved-detail', 'detail-back']]) {
+  const p = nativePage(screen);
+  p.run('handleBackButton()');
+  check(`${screen} uses its own back arrow`, p.el(arrow).clicks === 1 && !p.sandbox.exits);
+  check(`${arrow} exists on the page`, html.includes(`id="${arrow}"`));
+}
+for (const screen of ['home', 'splash']) {
+  const p = nativePage(screen);
+  p.run('handleBackButton()');
+  check(`${screen} leaves the app`, p.sandbox.exits === 1);
+}
+for (const [layer, call] of [['guide-sheet', 'guide-sheet'], ['bankpay-overlay', 'bankpay'], ['risk-info-overlay', 'risk'],
+  ['premium-overlay', 'premium'], ['export-sheet', 'export'], ['guide-welcome', 'skip-tour'], ['guide-tour-card', 'skip-tour'],
+  ['guide-nudge', 'nudge'], ['guide-whatsnew', 'whatsnew']]) {
+  const p = nativePage('home');
+  p.el(layer).style.display = 'block';
+  p.run('handleBackButton()');
+  check(`${layer} closes first and the app stays`, p.sandbox.calls.includes(call) && !p.sandbox.exits);
+}
+{
+  const p = nativePage('results-screen');
+  p.run(`saved=[${plan('active', 1)},${plan('active', 2)},${plan('active', 3)},${plan('active', 4)}];showSavedLimitSheet()`);
+  p.run('handleBackButton()');
+  check('the limit sheet closes first', p.el('limit-overlay').style.display === 'none' && p.el('res-back').clicks === 0);
+}
+{
+  const p = nativePage('home');
+  p.el('risk-info-overlay').style.display = 'flex';
+  p.run(`var _r='?';confirmSheet({title:'x',okLabel:'y'}).then(v=>{_r=v})`);
+  p.run('handleBackButton()');
+  await settle();
+  check('the confirmation is on top and means no', p.run('_r') === false && p.sandbox.calls.length === 0);
+}
+{
+  const p = nativePage('home');
+  p.el('existing-notice-overlay').style.display = 'flex';
+  p.run('handleBackButton()');
+  check('the migration notice waits for a decision', p.el('existing-notice-overlay').style.display === 'flex' && !p.sandbox.exits);
+}
+{
+  const p = nativePage('home');
+  p.el('lang-dd-menu').classList.add('open');
+  p.run('handleBackButton()');
+  check('an open language menu closes first', p.sandbox.calls.includes('lang-menu') && !p.sandbox.exits);
+}
+{
+  const p = newPage();
+  p.run('registerBackButton()');
+  check('the web has no Capacitor and stays quiet', true);
+  const seen = [];
+  p.sandbox.window.Capacitor = { Plugins: { App: { addListener: (e, f) => seen.push([e, f]) } } };
+  p.run('registerBackButton()');
+  check('the Android app registers the listener', seen.length === 1 && seen[0][0] === 'backButton');
+  p.sandbox.window.Capacitor = { Plugins: {} };
+  p.run('registerBackButton()');
+  check('a missing plugin does not crash', seen.length === 1);
+}
+check('the listener is registered at startup', /function initApp\(\)\{\s*registerBackButton\(\);/.test(html));
+{
+  const pkg = JSON.parse(readFileSync(join(here, '..', 'package.json'), 'utf8'));
+  check('the App plugin ships with the Android build', pkg.dependencies['@capacitor/app'] === '6.0.3');
+}
+
+// ── Header ─────────────────────────────────────────────────────────────────
+console.log('\nHeader');
+check('home shows emiGo in every language', html.includes('id="home-app-name">emiGo</span>')
+  && !/home-app-name'\)\.textContent=/.test(html));
+check('the tagline is still translated', html.includes("document.getElementById('home-tagline').textContent=tc.appTagline"));
+check('the PDF keeps the translated app name', html.includes('<h1>${tc.appName}</h1>'));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);

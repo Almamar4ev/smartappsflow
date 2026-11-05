@@ -438,7 +438,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <div class="screen" id="home" style="height:auto;min-height:100vh;min-height:100dvh;padding-bottom:calc(20px + var(--safe-bottom))">
   <div class="home-top">
     <div class="home-top-row">
-      <span class="home-app-name" id="home-app-name">Smart Loan Calculator</span>
+      <span class="home-app-name" id="home-app-name">emiGo</span>
       <div class="home-actions">
         <div class="lang-dd" id="lang-dd">
           <button class="icon-btn lang-dd-btn" onclick="toggleLangMenu(event)" id="home-lang-btn" aria-label="Language">
@@ -1775,7 +1775,6 @@ function goStep(n){
 // ── HOME ──────────────────────────────────────────────────────────────────────
 function renderHome(){
   const tc=t();
-  document.getElementById('home-app-name').textContent=tc.appName;
   document.getElementById('home-tagline').textContent=tc.appTagline;
   const langCode=document.getElementById('home-lang-code');
   if(langCode) langCode.textContent=lang.toUpperCase();
@@ -1870,23 +1869,22 @@ function renderHome(){
 
   renderHomeSaved();
 }
-function confirmDeleteLoan(i){
+async function confirmDeleteLoan(i){
   const s=saved[i]; if(!s) return;
-  // الاسم يُحسب هنا لا يُمرَّر عبر سمة onclick — كي لا يكسر اسم غريب من نسخة مستوردة السمة
-  const name=savedLoanDisplayName(s);
-  const isAr=lang==='ar';
-  const msg=isAr?`هل تريد حذف خطة "${name}"؟\nلا يمكن التراجع عن هذا الإجراء.`
-                 :lang==='es'?`¿Eliminar el plan "${name}"?\nEsta acción no se puede deshacer.`
-                 :`Delete plan "${name}"?\nThis cannot be undone.`;
-  if(confirm(msg)){
-    saved.splice(i,1);
-    persistState();
-    renderHome();renderHomeSaved();renderSavedTab();
-    const cmpBtn=document.getElementById('home-compare-btn');
-    if(cmpBtn)cmpBtn.style.display=saved.length>=2?'block':'none';
-    // tab-saved removed
-    // tab-saved removed
-  }
+  const isAr=lang==='ar', isEs=lang==='es';
+  const ok=await confirmSheet({
+    title:isAr?'حذف هذه الخطة؟':isEs?'¿Eliminar este plan?':'Delete this plan?',
+    body:savedLoanDisplayName(s)+'\n'+(isAr?'لا يمكن التراجع عن هذا الإجراء.':isEs?'Esta acción no se puede deshacer.':'This cannot be undone.'),
+    okLabel:isAr?'حذف':isEs?'Eliminar':'Delete',
+    danger:true
+  });
+  const idx=saved.indexOf(s);
+  if(!ok||idx<0) return;
+  saved.splice(idx,1);
+  persistState();
+  renderHome();renderHomeSaved();renderSavedTab();
+  const cmpBtn=document.getElementById('home-compare-btn');
+  if(cmpBtn)cmpBtn.style.display=saved.length>=2?'block':'none';
 }
 
 // ── اسم القرض المحفوظ يُبنى ديناميكياً حسب اللغة والعملة الحاليين ──────────
@@ -3003,12 +3001,15 @@ function saveScenario(){
   setTimeout(()=>{goHome();},700);
 }
 
-function clearSaved(){
-  const isAr=lang==='ar';
-  const msg=isAr?'هل تريد مسح جميع القروض المحفوظة؟\nلا يمكن التراجع عن هذا الإجراء.'
-                :lang==='es'?'¿Eliminar todos los préstamos guardados?\nEsta acción no se puede deshacer.'
-                :'Delete all saved loans?\nThis cannot be undone.';
-  if(!confirm(msg)) return;
+async function clearSaved(){
+  const isAr=lang==='ar', isEs=lang==='es';
+  const ok=await confirmSheet({
+    title:isAr?'مسح كل الخطط؟':isEs?'¿Eliminar todos los planes?':'Delete all plans?',
+    body:isAr?'لا يمكن التراجع عن هذا الإجراء.':isEs?'Esta acción no se puede deshacer.':'This cannot be undone.',
+    okLabel:isAr?'مسح الكل':isEs?'Eliminar todo':'Delete all',
+    danger:true
+  });
+  if(!ok) return;
   saved=[];
   persistState();
   renderHome();renderHomeSaved();renderSavedTab();
@@ -3044,17 +3045,7 @@ function renderSavedTab(){
 }
 
 function confirmDeleteSavedFromTab(i){
-  const s=saved[i];
-  const isAr=lang==='ar';
-  const displayName=savedLoanDisplayName(s);
-  const msg=isAr?`هل تريد حذف "${displayName}"؟`:lang==='es'?`¿Eliminar "${displayName}"?`:`Delete "${displayName}"?`;
-  if(confirm(msg)){
-    saved.splice(i,1);
-    renderHome();renderHomeSaved();renderSavedTab();
-    const cmpBtn=document.getElementById('home-compare-btn');
-    if(cmpBtn)cmpBtn.style.display=saved.length>=2?'block':'none';
-    const _ts=document.getElementById('tab-saved');if(_ts)_ts.textContent=T[lang].tab_saved+(saved.length?' ('+saved.length+')':'');
-  }
+  confirmDeleteLoan(i);
 }
 
 // ── SAVED DETAIL — full results view ──────────────────────────────────────────
@@ -3486,6 +3477,31 @@ function sendFeedback(){
   document.body.removeChild(a);
 }
 
+// نافذة تأكيد بتصميم التطبيق: نافذة المتصفح تتجاهل الثيم والاتجاه وتعرض اسم الموقع
+let _confirmResolve=null;
+function confirmSheet({title,body='',okLabel,cancelLabel,danger=false}){
+  closeConfirmSheet(false);
+  const ov=document.getElementById('confirm-sheet');
+  const bodyEl=document.getElementById('confirm-sheet-body');
+  const okBtn=document.getElementById('confirm-sheet-ok');
+  ov.dir=lang==='ar'?'rtl':'ltr';
+  document.getElementById('confirm-sheet-title').textContent=title;
+  bodyEl.textContent=body;
+  bodyEl.style.display=body?'block':'none';
+  okBtn.textContent=okLabel;
+  okBtn.style.background=danger?'var(--risk)':'linear-gradient(135deg,var(--acc),var(--acc2))';
+  document.getElementById('confirm-sheet-cancel').textContent=cancelLabel||(lang==='ar'?'إلغاء':lang==='es'?'Cancelar':'Cancel');
+  ov.style.display='flex';
+  return new Promise(resolve=>{_confirmResolve=resolve;});
+}
+function closeConfirmSheet(result){
+  const ov=document.getElementById('confirm-sheet');
+  if(ov) ov.style.display='none';
+  const resolve=_confirmResolve;
+  _confirmResolve=null;
+  if(resolve) resolve(!!result);
+}
+
 // رسالة الترحيل: تظهر مرة واحدة ولا تُغلق إلا بقرار من المستخدم
 function showExistingNotice(){
   const ov=document.getElementById('existing-notice-overlay');
@@ -3846,18 +3862,17 @@ function importBackup(input){
     return;
   }
   const reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=async function(e){
     try{
       const s=JSON.parse(e.target.result);
       // تقبل النسخ القديمة (SmartLoanCalculator) والجديدة (emiGo) حتى لا تنكسر استعادة المستخدمين
       if(s._app!=='emiGo' && s._app!=='SmartLoanCalculator') throw new Error('wrong app');
-      const ok=confirm(
-        lang==='ar'
-          ? 'هل تريد استعادة البيانات؟ سيتم استبدال البيانات الحالية.'
-          : lang==='es'
-          ? '¿Restaurar datos? Esto reemplazará los datos actuales.'
-          : 'Restore this backup? Current data will be replaced.'
-      );
+      const isAr=lang==='ar', isEs=lang==='es';
+      const ok=await confirmSheet({
+        title:isAr?'استعادة البيانات؟':isEs?'¿Restaurar datos?':'Restore this backup?',
+        body:isAr?'سيتم استبدال البيانات الحالية.':isEs?'Esto reemplazará los datos actuales.':'Current data will be replaced.',
+        okLabel:isAr?'استعادة':isEs?'Restaurar':'Restore'
+      });
       if(!ok){ input.value=''; return; }
       setGuideBlocked(true);
       hideGuideChrome();
@@ -4086,11 +4101,14 @@ async function enterDemoMode(){
   }
   const available=authStatus==='available';
   if(!available){
-    const ok=confirm(lang==='ar'
-      ?'هذا الهاتف بلا قفل شاشة، لذلك يمكن الخروج من وضع العرض بدون بصمة. لا تسلّم هاتفك لغيرك إن كنت لا تريد أن يرى ملفك.'
-      :lang==='es'
-      ?'Este teléfono no tiene bloqueo de pantalla, así que se puede salir del modo demo sin biometría. No entregues el teléfono si no quieres que vean tu archivo.'
-      :'This phone has no screen lock, so Demo Mode can be left without biometrics. Do not hand over your phone if you do not want someone to see your file.');
+    const isAr=lang==='ar', isEs=lang==='es';
+    const ok=await confirmSheet({
+      title:isAr?'هذا الهاتف بلا قفل شاشة':isEs?'Este teléfono no tiene bloqueo de pantalla':'This phone has no screen lock',
+      body:isAr?'لذلك يمكن الخروج من وضع العرض بدون بصمة. لا تسلّم هاتفك لغيرك إن كنت لا تريد أن يرى ملفك.'
+        :isEs?'Así que se puede salir del modo demo sin biometría. No entregues el teléfono si no quieres que vean tu archivo.'
+        :'So Demo Mode can be left without biometrics. Do not hand over your phone if you do not want someone to see your file.',
+      okLabel:isAr?'متابعة':isEs?'Continuar':'Continue'
+    });
     if(!ok) return;
   }else if(!isNativeApp()){
     try{ await ensureWebAuthn(); }
@@ -4125,7 +4143,11 @@ async function enterDemoMode(){
 async function requestExitDemo(){
   if(!isDemoMode()) return;
   if(!demoIsProtected()){
-    const ok=confirm(lang==='ar'?'العودة إلى ملفك؟':lang==='es'?'¿Volver a tu archivo?':'Return to your file?');
+    const isAr=lang==='ar', isEs=lang==='es';
+    const ok=await confirmSheet({
+      title:isAr?'العودة إلى ملفك؟':isEs?'¿Volver a tu archivo?':'Return to your file?',
+      okLabel:isAr?'عودة':isEs?'Volver':'Return'
+    });
     if(!ok) return;
     _demoExitAuthorized=true;
     finishExitDemo();
@@ -4401,14 +4423,14 @@ function patchGuideState(fn){
   return st;
 }
 function setGuideBlocked(v){ _guideBlocked=!!v; }
+function isOverlayOpen(id){
+  const el=document.getElementById(id);
+  return !!(el && el.style.display && el.style.display!=='none');
+}
 function isGuideBlocked(){
   if(_guideBlocked) return true;
   try{
-    const ids=['export-sheet','premium-overlay','risk-info-overlay','bankpay-overlay','limit-overlay','existing-notice-overlay','guide-sheet'];
-    for(let i=0;i<ids.length;i++){
-      const el=document.getElementById(ids[i]);
-      if(el && el.style.display && el.style.display!=='none') return true;
-    }
+    return ['export-sheet','premium-overlay','risk-info-overlay','bankpay-overlay','limit-overlay','existing-notice-overlay','confirm-sheet','guide-sheet'].some(isOverlayOpen);
   }catch(e){}
   return false;
 }
@@ -4787,7 +4809,38 @@ function runGuideHelpAction(action){
 }
 
 // ── APP INIT ──────────────────────────────────────────────────────────────────
+// زر الرجوع في أندرويد: يغلق النافذة المفتوحة أولاً، ثم يتصرف مثل سهم الرجوع الظاهر في الشاشة
+const BACK_LAYERS=[
+  ['confirm-sheet',()=>closeConfirmSheet(false)],
+  ['guide-sheet',()=>hideGuideSheet()],
+  ['existing-notice-overlay',()=>{}], // تحتاج قراراً من المستخدم
+  ['limit-overlay',()=>hideSavedLimitSheet()],
+  ['bankpay-overlay',()=>hideBankPayInfo()],
+  ['risk-info-overlay',()=>hideRiskInfo()],
+  ['premium-overlay',()=>hidePremiumSheet()],
+  ['export-sheet',()=>hideExportSheet()],
+  ['guide-welcome',()=>skipGuideTour()],
+  ['guide-tour-card',()=>skipGuideTour()],
+  ['guide-nudge',()=>dismissGuideNudge()],
+  ['guide-whatsnew',()=>dismissWhatsNew()]
+];
+const BACK_ARROWS={step1:'s1-back',step2:'s2-back',step3:'s3-back','results-screen':'res-back','settings-screen':'settings-back-btn','compare-screen':'compare-back','saved-detail':'detail-back'};
+function handleBackButton(){
+  const layer=BACK_LAYERS.find(([id])=>isOverlayOpen(id));
+  if(layer){layer[1]();return;}
+  const menu=document.getElementById('lang-dd-menu');
+  if(menu&&menu.classList.contains('open')){closeLangMenu();return;}
+  const arrow=document.getElementById(BACK_ARROWS[document.querySelector('.screen.active')?.id]);
+  if(arrow){arrow.click();return;}
+  window.Capacitor.Plugins.App.exitApp();
+}
+function registerBackButton(){
+  if(!window.Capacitor) return;
+  const app=window.Capacitor.Plugins&&window.Capacitor.Plugins.App;
+  if(app&&app.addListener) app.addListener('backButton',handleBackButton);
+}
 function initApp(){
+  registerBackButton();
   // ── V20: تتبع تاريخ التثبيت لمنح Premium مجاناً لمستخدمي Coming Soon لاحقاً ──
   try{
     if(!localStorage.getItem('install_date')){
@@ -5085,6 +5138,15 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
   </div>
 </div>
 <!-- نافذة توضيح فرق قسط البنك -->
+<div id="confirm-sheet" onclick="if(event.target===this)closeConfirmSheet(false)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:10005;align-items:flex-end">
+  <div style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));border-top:1px solid var(--brd)">
+    <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
+    <p id="confirm-sheet-title" style="font-size:19px;font-weight:900;color:var(--txt);margin-bottom:8px"></p>
+    <p id="confirm-sheet-body" style="font-size:14px;color:var(--txt2);line-height:1.7;white-space:pre-line"></p>
+    <button onclick="closeConfirmSheet(true)" id="confirm-sheet-ok" style="width:100%;margin-top:20px;padding:15px;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit"></button>
+    <button onclick="closeConfirmSheet(false)" id="confirm-sheet-cancel" style="width:100%;margin-top:10px;padding:14px;background:var(--bg3);color:var(--txt2);border:1px solid var(--brd);border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit"></button>
+  </div>
+</div>
 <div id="existing-notice-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
   <div style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));border-top:1px solid var(--brd)">
     <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
