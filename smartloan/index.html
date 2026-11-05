@@ -505,7 +505,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ STEP 1 ══ -->
 <div class="screen step-screen" id="step1">
   <div class="step-header">
-    <button class="back-btn" onclick="goHome()" id="s1-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+    <button class="back-btn" onclick="s1Back()" id="s1-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
     <span class="step-indicator" id="s1-ind">Step 1 of 3</span>
     <span></span>
   </div>
@@ -514,11 +514,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <h2 class="step-title" id="s1-title">Income Details</h2>
     <div class="field-wrap" data-guide-id="salary">
       <div class="lbl-with-tip"><label class="lbl" id="lbl-salary">MONTHLY SALARY</label><button type="button" class="guide-tip-btn" onclick="openGuideTip('salary')" aria-label="Help">?</button></div>
-      <div class="input-wrap"><span class="input-prefix" id="pfx1"></span><input class="inp has-prefix" id="inp-salary" type="text" inputmode="numeric" placeholder="e.g. 5000" oninput="fmtAmountInput(this,'salary')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx1"></span><input class="inp has-prefix" id="inp-salary" type="text" inputmode="decimal" placeholder="e.g. 5000" oninput="fmtAmountInput(this,'salary')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-income">ADDITIONAL INCOME</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx2"></span><input class="inp has-prefix" id="inp-income" type="text" inputmode="numeric" placeholder="0" value="0" oninput="fmtAmountInput(this,'income')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx2"></span><input class="inp has-prefix" id="inp-income" type="text" inputmode="decimal" placeholder="0" value="0" oninput="fmtAmountInput(this,'income')"></div>
     </div>
   </div>
   <div class="btn-footer"><button class="primary-btn" id="s1-next" onclick="goStep(2)">Next</button></div>
@@ -527,7 +527,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 <!-- ══ STEP 2 ══ -->
 <div class="screen step-screen" id="step2">
   <div class="step-header">
-    <button class="back-btn" onclick="goStep(1)" id="s2-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
+    <button class="back-btn" onclick="s2Back()" id="s2-back" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button>
     <span class="step-indicator" id="s2-ind">Step 2 of 3</span>
     <span></span>
   </div>
@@ -536,15 +536,15 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <h2 class="step-title" id="s2-title">Monthly Expenses</h2>
     <div class="field-wrap" data-guide-id="expenses">
       <div class="lbl-with-tip"><label class="lbl" id="lbl-exp">FIXED EXPENSES</label><button type="button" class="guide-tip-btn" onclick="openGuideTip('expenses')" aria-label="Help">?</button></div>
-      <div class="input-wrap"><span class="input-prefix" id="pfx3"></span><input class="inp has-prefix" id="inp-expenses" type="text" inputmode="numeric" placeholder="e.g. 1500" oninput="fmtAmountInput(this,'expenses')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx3"></span><input class="inp has-prefix" id="inp-expenses" type="text" inputmode="decimal" placeholder="e.g. 1500" oninput="fmtAmountInput(this,'expenses')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-var">VARIABLE EXPENSES</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx4"></span><input class="inp has-prefix" id="inp-variable" type="text" inputmode="numeric" placeholder="e.g. 800" oninput="fmtAmountInput(this,'variable')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx4"></span><input class="inp has-prefix" id="inp-variable" type="text" inputmode="decimal" placeholder="e.g. 800" oninput="fmtAmountInput(this,'variable')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-exist">EXISTING LOAN PAYMENTS</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx5"></span><input class="inp has-prefix" id="inp-existing" type="number" inputmode="numeric" placeholder="0" value="0" readonly style="opacity:.7;cursor:not-allowed;background:var(--bg3)"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx5"></span><input class="inp has-prefix" id="inp-existing" type="text" inputmode="decimal" placeholder="0" value="0" readonly style="opacity:.7;cursor:not-allowed;background:var(--bg3)"></div>
       <p style="font-size:11px;color:var(--txt3);margin-top:5px" id="lbl-exist-hint">يُحسب تلقائياً من القروض النشطة — لا يمكن تعديله يدوياً</p>
     </div>
     <div class="field-wrap">
@@ -557,7 +557,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       </div>
     </div>
   </div>
-  <div class="btn-footer"><button class="primary-btn" id="s2-next" onclick="goStep(3)">Next</button></div>
+  <div class="btn-footer"><button class="primary-btn" id="s2-next" onclick="s2Next()">Next</button></div>
 </div>
 
 <!-- ══ STEP 3 ══ -->
@@ -576,7 +576,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
     <div class="field-wrap" data-guide-id="amount">
       <div class="lbl-with-tip"><label class="lbl" id="lbl-amount">LOAN AMOUNT</label><button type="button" class="guide-tip-btn" onclick="openGuideTip('amount')" aria-label="Help">?</button></div>
-      <div class="input-wrap"><span class="input-prefix" id="pfx6"></span><input class="inp has-prefix" id="inp-amount" type="text" inputmode="numeric" placeholder="e.g. 50,000" oninput="fmtAmountInput(this,'amount')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx6"></span><input class="inp has-prefix" id="inp-amount" type="text" inputmode="decimal" placeholder="e.g. 50,000" oninput="fmtAmountInput(this,'amount')"></div>
     </div>
     <!-- PERIOD: compact -->
     <div class="field-wrap" data-guide-id="period">
@@ -648,7 +648,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <button class="home-btn" onclick="goHome()" id="btn-go-home">Home</button>
     </div>
     <button class="pdf-btn" onclick="exportPDF()" id="btn-pdf">Export PDF</button>
-    <button class="restart-btn" onclick="restart()" id="btn-restart">Start Over</button>
+    <button class="restart-btn" onclick="restart()" id="btn-restart">New calculation</button>
   </div>
   <!-- CHARTS -->
   <div class="tab-content" id="tc-charts">
@@ -844,7 +844,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 </div><!-- #app -->
 <script>
 let lang='en',results=null,saved=[],extraLoans=[],settingsPrev='home',currentTheme='light',_editingLoanIdx=null;
-let _viewingSavedLoan=false,_savedSnap=null;
+let _viewingSavedLoan=false,_savedSnap=null,_viewingSavedIdx=-1;
+// تعديل الملف المالي من شاشة أخرى: {screen,profile,s3back,direct} — null في المسار العادي
+let _profileReturn=null;
 let currency=''; // set on first launch by user
 let isPremium=false; // false=free, true=premium
 let _lastSaveClick=0; // debounce حماية من الضغط المزدوج على زر الحفظ
@@ -893,6 +895,9 @@ const FLAGS={
 };
 const CUR_FLAG={USD:'us',EUR:'eu',SAR:'sa',OMR:'om',AED:'ae',KWD:'kw',BHD:'bh',QAR:'qa',INR:'in',GBP:'gb',EGP:'eg',PKR:'pk',TRY:'tr',CAD:'ca',AUD:'au',BDT:'bd',IDR:'id'};
 function flagSvg(key){return FLAGS[key]||'';}
+// خانات المبلغ حسب العملة: الريال العماني والدينار الكويتي والبحريني 3، الروبية الإندونيسية بلا كسور
+const CUR_DEC={OMR:3,KWD:3,BHD:3,IDR:0};
+function curDec(){return CUR_DEC[currency]??2;}
 function getCurrencySymbol(){
   return CURRENCIES.find(c=>c.id===currency)?.symbol||'';
 }
@@ -1035,7 +1040,7 @@ const T={
     adv_great:'This loan fits your financial profile comfortably',
     adv_moderate:'This loan is feasible but monitor your budget closely',
     rec_safe:'This loan is suitable for your income',rec_mod:'Feasible with careful budgeting',rec_moderate:'Feasible with careful budgeting',rec_risky:'This loan may put financial pressure on your budget',
-    saveScenario:'Save Loan',goHome:'Home',restart:'Start Over',
+    saveScenario:'Save Loan',goHome:'Home',restart:'New calculation',
     profileTitle:'Financial Profile',editProfile:'Edit',
     profileIncome:'Income',profileExpenses:'Expenses',profileExisting:'Existing Loans',
     newLoanBtn:'+ New Loan',
@@ -1115,7 +1120,7 @@ const T={
     adv_great:'هذا القرض يتناسب مع ملفك المالي',
     adv_moderate:'هذا القرض ممكن لكن راقب ميزانيتك',
     rec_safe:'هذا القرض مناسب لدخلك',rec_mod:'ممكن مع إدارة دقيقة للميزانية',rec_moderate:'ممكن مع إدارة دقيقة للميزانية',rec_risky:'هذا القرض قد يُشكّل ضغطاً مالياً',
-    saveScenario:'حفظ القرض',goHome:'الرئيسية',restart:'البداية من جديد',
+    saveScenario:'حفظ القرض',goHome:'الرئيسية',restart:'حساب جديد',
     profileTitle:'ملفك المالي',editProfile:'تعديل',
     profileIncome:'الدخل',profileExpenses:'المصروفات',profileExisting:'أقساط قائمة',
     newLoanBtn:'+ قرض جديد',
@@ -1191,7 +1196,7 @@ const T={
     adv_reduce:'Considera reducir el monto un 15–20%',adv_down:'Aumenta el enganche para reducir las cuotas',adv_extend:'Amplía el plazo para aligerar la carga mensual',
     adv_avoid:'Evita este préstamo — el riesgo financiero es muy alto',adv_great:'Este préstamo se adapta perfectamente a tu perfil',adv_moderate:'Es viable, pero controla tu presupuesto de cerca',
     rec_safe:'Este préstamo es adecuado para tus ingresos',rec_mod:'Viable con una gestión cuidadosa',rec_moderate:'Viable con una gestión cuidadosa',rec_risky:'Este préstamo puede presionar tu economía',
-    saveScenario:'Guardar',goHome:'Inicio',restart:'Reiniciar',
+    saveScenario:'Guardar',goHome:'Inicio',restart:'Nuevo cálculo',
     profileTitle:'Perfil financiero',editProfile:'Editar',profileIncome:'Ingresos',profileExpenses:'Gastos',profileExisting:'Cuotas actuales',newLoanBtn:'+ Nuevo préstamo',
     noSavedHome:'Aún no tienes préstamos guardados.\nCalcula uno y pulsa Guardar.',noSaved:'Sin préstamos guardados.',clearAll:'Borrar todo',
     tab_report:'Informe',tab_charts:'Gráficos',tab_simulate:'Simular',tab_restructure:'Refinanciar',tab_loans:'Préstamos',tab_saved:'Guardados',
@@ -1640,6 +1645,7 @@ function goHome(){
 }
 function startForm(){
   _editingLoanIdx=null;
+  _profileReturn=null;
   // Reset only loan fields, keep profile
   form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
   extraLoans=[];
@@ -1662,53 +1668,88 @@ function startForm(){
     showScreen('step1');
   }
 }
-function editProfile(){
+// يبدأ تعديل الملف المالي من الشاشة الحالية ويحفظ ما يلزم للعودة إليها كما كانت.
+// direct=true عندما يفتح التعديل على الخطوة 2 مباشرة فيعود زر الرجوع لشاشة المنشأ فوراً
+function beginProfileEdit(direct){
+  const s3back=document.getElementById('s3-back');
+  _profileReturn={
+    screen:document.querySelector('.screen.active')?.id||'home',
+    profile:{...profile},
+    s3back:s3back?s3back.onclick:null,
+    direct:!!direct
+  };
   syncProfileToInputs();
   renderStepLabels();
-  // Override step 2 next button to return home after saving
+}
+function endProfileEdit(){
+  const back=_profileReturn;
+  _profileReturn=null;
+  // goStep يعيد ضبط زر رجوع الخطوة 3 أثناء التعديل
+  const s3back=document.getElementById('s3-back');
+  if(s3back) s3back.onclick=back.s3back;
+  return back;
+}
+function cancelProfileEdit(){
+  const back=endProfileEdit();
+  profile=back.profile;
+  if(back.screen==='home') goHome();
+  else showScreen(back.screen);
+}
+function editProfile(){
+  beginProfileEdit(false);
   showScreen('step1');
-  // Set step2 next button to save profile and go home
-  const s2next=document.getElementById('s2-next');
-  if(s2next){
-    s2next.onclick=()=>{
-      const ev=document.getElementById('inp-expenses');if(ev)profile.expenses=cleanNum(ev.value)||profile.expenses||'';
-      const vv=document.getElementById('inp-variable');if(vv)profile.variable=cleanNum(vv.value)||profile.variable||'';
-      const xv=document.getElementById('inp-existing');if(xv)profile.existing=cleanNum(xv.value)||profile.existing||'';
-      const blv=document.getElementById('inp-banklimit');if(blv){const bn=Math.min(100,Math.max(1,+blv.value||40));profile.bankLimit=String(bn);}
-      profileSaved=true;persistState();
-      renderHome();
-      goHome();
-    };
-  }
 }
 function editProfileBankLimit(){
-  syncProfileToInputs();
-  renderStepLabels();
-  const s2next=document.getElementById('s2-next');
-  if(s2next){
-    s2next.onclick=()=>{
-      const ev=document.getElementById('inp-expenses');if(ev)profile.expenses=cleanNum(ev.value)||profile.expenses||'';
-      const vv=document.getElementById('inp-variable');if(vv)profile.variable=cleanNum(vv.value)||profile.variable||'';
-      const xv=document.getElementById('inp-existing');if(xv)profile.existing=cleanNum(xv.value)||profile.existing||'';
-      const blv=document.getElementById('inp-banklimit');if(blv){const bn=Math.min(100,Math.max(1,+blv.value||40));profile.bankLimit=String(bn);}
-      profileSaved=true;persistState();
-      renderHome();
-      goHome();
-    };
-  }
+  beginProfileEdit(true);
   showScreen('step2');
   const bl=document.getElementById('inp-banklimit');
   if(bl){setTimeout(()=>{bl.focus();bl.select&&bl.select();bl.scrollIntoView({block:'center',behavior:'smooth'});},120);}
 }
+function s1Back(){
+  if(_profileReturn) cancelProfileEdit();
+  else goHome();
+}
+function s2Back(){
+  if(_profileReturn&&_profileReturn.direct) cancelProfileEdit();
+  else goStep(1);
+}
+function s2Next(){
+  if(!_profileReturn){goStep(3);return;}
+  const back=endProfileEdit();
+  const fromReport=back.screen==='results-screen';
+  // عرض قرض محفوظ يعمل على نسخة مؤقتة: نخرج منه قبل الحفظ كي لا تُخزَّن بيانات العرض
+  const wasViewing=fromReport&&_viewingSavedLoan&&!!_savedSnap;
+  if(wasViewing){
+    results=_savedSnap.results;
+    form=_savedSnap.form;
+    _savedSnap=null;
+    _viewingSavedLoan=false;
+  }
+  saveStep2Inputs();
+  if(wasViewing) openSavedDetail(_viewingSavedIdx);
+  else if(fromReport) calculate();
+  else if(back.screen==='step3'){renderStep3Dynamic();showScreen('step3');}
+  else goHome();
+}
+// الحقل الفارغ يعني صفراً. الأقساط القائمة لا تُقرأ هنا: الحقل للعرض فقط ومقرّب
+function saveStep2Inputs(){
+  const ev=document.getElementById('inp-expenses');if(ev)profile.expenses=cleanNum(ev.value)||'0';
+  const vv=document.getElementById('inp-variable');if(vv)profile.variable=cleanNum(vv.value)||'0';
+  const blv=document.getElementById('inp-banklimit');if(blv){const bn=Math.min(100,Math.max(1,+blv.value||40));profile.bankLimit=String(bn);}
+  profileSaved=true;persistState();
+  renderHome();
+}
 function syncProfileToInputs(){
   // Sync saved profile values into the input fields
-  const fmt=v=>{const c=cleanNum(v);return c===''?'':Number(c).toLocaleString('en-US');};
+  const fmt=v=>groupAmountText(cleanNum(v));
   const s=document.getElementById('inp-salary');if(s)s.value=fmt(profile.salary);
   const inc=document.getElementById('inp-income');if(inc)inc.value=profile.income?fmt(profile.income):'0';
   const exp=document.getElementById('inp-expenses');if(exp)exp.value=fmt(profile.expenses);
   const vr=document.getElementById('inp-variable');if(vr)vr.value=fmt(profile.variable);
   // الأقساط القائمة: تُحسب دائماً من القروض النشطة الفعلية (ليس من profile.existing)
-  const realExisting=saved.filter(x=>x.type!=='scenario').reduce((sum,x)=>sum+x.loanMonthly,0);
+  // أثناء تعديل قرض محفوظ يبقى مستثنى، وإلا احتُسب قسطه مرتين عند العودة إليه
+  const skipIdx=_viewingSavedLoan?-1:_editingLoanIdx;
+  const realExisting=saved.filter((x,i)=>x.type!=='scenario'&&i!==skipIdx).reduce((sum,x)=>sum+x.loanMonthly,0);
   profile.existing=String(realExisting);
   const ex=document.getElementById('inp-existing');if(ex)ex.value=Number(realExisting).toLocaleString('en-US');
   const bl=document.getElementById('inp-banklimit');if(bl)bl.value=profile.bankLimit||'40';
@@ -1717,16 +1758,9 @@ function goStep(n){
   // Save profile data when leaving steps 1 or 2
   if(n===2||n===3){
     const sv=document.getElementById('inp-salary');if(sv)profile.salary=cleanNum(sv.value)||profile.salary||'';
-    const iv=document.getElementById('inp-income');if(iv)profile.income=cleanNum(iv.value);
+    const iv=document.getElementById('inp-income');if(iv)profile.income=cleanNum(iv.value)||'0';
   }
-  if(n===3){
-    const ev=document.getElementById('inp-expenses');if(ev)profile.expenses=cleanNum(ev.value)||profile.expenses||'';
-    const vv=document.getElementById('inp-variable');if(vv)profile.variable=cleanNum(vv.value)||profile.variable||'';
-    const xv=document.getElementById('inp-existing');if(xv)profile.existing=cleanNum(xv.value)||profile.existing||'';
-    const blv=document.getElementById('inp-banklimit');if(blv){const bn=Math.min(100,Math.max(1,+blv.value||40));profile.bankLimit=String(bn);}
-    profileSaved=true;persistState();
-    renderHome(); // refresh home profile card in background
-  }
+  if(n===3) saveStep2Inputs();
   renderStepLabels();
   if(n===3){renderStep3Dynamic();}
   // Update step 3 back button: if came from profile edit → go to step2, if skipped → go home
@@ -2083,8 +2117,7 @@ function renderStep3Dynamic(){
   // تعبئة حقل المبلغ بالقيمة المنسّقة بالفاصلة الألفية (مهم عند التعديل أو العودة)
   const amtEl=document.getElementById('inp-amount');
   if(amtEl){
-    const cleanAmt=String(form.amount||'').replace(/[^0-9]/g,'');
-    amtEl.value=cleanAmt===''?'':Number(cleanAmt).toLocaleString('en-US');
+    amtEl.value=groupAmountText(cleanNum(form.amount));
   }
   // تعبئة النسبة والمدة لتطابق النموذج
   const rateEl=document.getElementById('form-inp-rate');
@@ -2150,14 +2183,32 @@ function updateForm(k,v){
 }
 // تنسيق المبلغ بفاصلة ألفية حيّة أثناء الكتابة مع تخزين الرقم النظيف
 // تنظيف نص رقمي من الفواصل وأي رموز (للحقول المنسّقة بفاصلة ألفية)
-function cleanNum(v){return String(v==null?'':v).replace(/[^0-9.]/g,'');}
+function cleanNum(v){return cleanAmountText(v,Infinity).replace(/\.$/,'');}
+// الأرقام العربية والفارسية إلى لاتينية، والفاصلة العشرية العربية إلى نقطة
+function normalizeDigits(v){
+  return String(v==null?'':v)
+    .replace(/[٠-٩]/g,d=>String(d.charCodeAt(0)-0x0660))
+    .replace(/[۰-۹]/g,d=>String(d.charCodeAt(0)-0x06F0))
+    .replace(/٫/g,'.');
+}
+// نص رقمي بنقطة واحدة وبحد أقصى من الخانات. يبقى نصاً حتى لا تضيع «850.» و«850.50» أثناء الكتابة
+function cleanAmountText(v,maxDec){
+  const s=normalizeDigits(v).replace(/[^0-9.]/g,'');
+  const dot=s.indexOf('.');
+  const whole=(dot<0?s:s.slice(0,dot)).replace(/^0+(?=[0-9])/,'');
+  if(dot<0||maxDec===0) return whole;
+  return (whole||'0')+'.'+s.slice(dot+1).replace(/\./g,'').slice(0,maxDec);
+}
+function groupAmountText(s){
+  const parts=String(s).split('.');
+  return parts[0].replace(/\B(?=([0-9]{3})+(?![0-9]))/g,',')+(parts.length>1?'.'+parts[1]:'');
+}
 function fmtAmountInput(el,key){
-  // أزل كل ما عدا الأرقام
-  let digits=el.value.replace(/[^0-9]/g,'');
-  // احفظ القيمة النظيفة في النموذج
-  updateForm(key,digits);
-  // اعرضها بفاصلة ألفية
-  el.value=digits===''?'':Number(digits).toLocaleString('en-US');
+  // لوحة الأرقام الإسبانية قد لا تعرض إلا الفاصلة كعلامة عشرية
+  const raw=lang==='es'?el.value.replace(/,$/,'.'):el.value;
+  const text=cleanAmountText(raw,curDec());
+  updateForm(key,text.replace(/\.$/,''));
+  el.value=groupAmountText(text);
 }
 function updatePeriodSlider(v){
   const pu=document.getElementById('form-per-unit');const unit=pu?pu.value:'months';
@@ -2714,6 +2765,7 @@ function saveRefinanceAsScenario(){
   const isAr=lang==='ar',isEs=lang==='es';
   const d=window._rstData;
   if(!d.newPmt||d.newPmt<=0)return;
+  if(!hasRoomToSave())return;
 
   // بيانات القرض الجديد
   const newForm={...form,
@@ -2741,7 +2793,6 @@ function saveRefinanceAsScenario(){
     time:new Date().toLocaleTimeString()
   });
 
-  if(saved.length>8)saved.pop();
   persistState();
   renderHome();renderHomeSaved();renderSavedTab();
 
@@ -2972,6 +3023,7 @@ function saveScenario(){
     return;
   }
 
+  if(!hasRoomToSave()) return;
   if(!canSave()) return;
 
   // إذا كان تعديلاً على قرض موجود — أظهر رسالة توضيحية
@@ -3000,7 +3052,6 @@ function saveScenario(){
     type:'active',
     time:new Date().toLocaleTimeString()
   });
-  if(saved.length>8)saved.pop();
 
   // مجموع أقساط القروض النشطة فقط
   const totalExisting=saved.filter(s=>s.type!=='scenario').reduce((sum,s)=>sum+s.loanMonthly,0);
@@ -3022,11 +3073,11 @@ function saveScenario(){
 }
 
 function saveRefinanceScenario(origIdx,newLoanData){
+  if(!hasRoomToSave()) return;
   // الأصل → سيناريو
   if(saved[origIdx]) saved[origIdx].type='scenario';
   // الجديد → نشط
   saved.unshift({...newLoanData, type:'active', time:new Date().toLocaleTimeString()});
-  if(saved.length>8)saved.pop();
   const totalExisting=saved.filter(s=>s.type!=='scenario').reduce((sum,s)=>sum+s.loanMonthly,0);
   profile.existing=String(totalExisting);
   persistState();
@@ -3173,6 +3224,7 @@ function openSavedDetail(i){
 
   _savedSnap={results:prevResults,form:prevForm,profile:prevProfile};
   _viewingSavedLoan=true;
+  _viewingSavedIdx=i;
   renderResults();
   showScreen('results-screen');
 }
@@ -3427,6 +3479,7 @@ function renderCompare(){
 }
 
 // ── PREMIUM GATE ─────────────────────────────────────────────────────────────
+const MAX_SAVED_PLANS = 8;   // upper bound of the saved list; saving stops here, nothing is auto-deleted
 const FREE_SAVE_LIMIT = 2;   // max saved loans for free users
 const FREE_CMP_LIMIT  = 2;   // max compare for free users
 
@@ -3627,6 +3680,32 @@ function sendFeedback(){
   document.body.removeChild(a);
 }
 
+// لا نحذف أي عنصر محفوظ تلقائياً: عند امتلاء القائمة نوقف الحفظ ونخبر المستخدم
+function hasRoomToSave(){
+  if(saved.length<MAX_SAVED_PLANS) return true;
+  showSavedLimitSheet();
+  return false;
+}
+function showSavedLimitSheet(){
+  const ov=document.getElementById('limit-overlay');
+  if(!ov) return;
+  const isAr=lang==='ar', isEs=lang==='es';
+  ov.dir=isAr?'rtl':'ltr';
+  document.getElementById('limit-title').textContent=isAr?`وصلت إلى ${MAX_SAVED_PLANS} خطط`:isEs?`Has llegado a ${MAX_SAVED_PLANS} planes`:`You've reached ${MAX_SAVED_PLANS} plans`;
+  document.getElementById('limit-body').textContent=isAr?'احذف خطة لتحفظ جديدة':isEs?'Elimina un plan para guardar uno nuevo':'Delete a plan to save a new one';
+  document.getElementById('limit-view').textContent=isAr?'عرض خططي':isEs?'Ver mis planes':'View my plans';
+  document.getElementById('limit-cancel').textContent=isAr?'إلغاء':isEs?'Cancelar':'Cancel';
+  ov.style.display='flex';
+}
+function hideSavedLimitSheet(e){
+  const ov=document.getElementById('limit-overlay');
+  if(!e||e.target===ov) ov.style.display='none';
+}
+function limitViewSaved(){
+  hideSavedLimitSheet();
+  goHome();
+}
+
 function canSave(){
   if(isPremium) return true;
   const editingIdx=_editingLoanIdx;
@@ -3811,13 +3890,11 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;padding:
     setTimeout(()=>URL.revokeObjectURL(url),2000);
   }
 }
+// حساب جديد: الملف المالي يبقى كما هو، ويُصفَّر القرض الحالي فقط
 function restart(){
-  profile={salary:'',income:'0',expenses:'',variable:'',existing:'0',employment:'full',risk:'medium',bankLimit:'40',limitBasis:'gross'};
-  form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
-  profileSaved=false;
-  results=null;extraLoans=[];
+  results=null;
+  startForm();
   persistState();
-  renderHome();showScreen('home');
 }
 
 // ── BACKUP BANNER ─────────────────────────────────────────────────────────────
@@ -4486,7 +4563,7 @@ function setGuideBlocked(v){ _guideBlocked=!!v; }
 function isGuideBlocked(){
   if(_guideBlocked) return true;
   try{
-    const ids=['export-sheet','premium-overlay','risk-info-overlay','bankpay-overlay','guide-sheet'];
+    const ids=['export-sheet','premium-overlay','risk-info-overlay','bankpay-overlay','limit-overlay','guide-sheet'];
     for(let i=0;i<ids.length;i++){
       const el=document.getElementById(ids[i]);
       if(el && el.style.display && el.style.display!=='none') return true;
@@ -5157,6 +5234,15 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
   </div>
 </div>
 <!-- نافذة توضيح فرق قسط البنك -->
+<div id="limit-overlay" onclick="hideSavedLimitSheet(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
+  <div onclick="event.stopPropagation()" style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));border-top:1px solid var(--brd)">
+    <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
+    <p id="limit-title" style="font-size:19px;font-weight:900;color:var(--txt);margin-bottom:8px"></p>
+    <p id="limit-body" style="font-size:14px;color:var(--txt2);margin-bottom:20px;line-height:1.7"></p>
+    <button onclick="limitViewSaved()" id="limit-view" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit"></button>
+    <button onclick="hideSavedLimitSheet()" id="limit-cancel" style="width:100%;margin-top:10px;padding:14px;background:var(--bg3);color:var(--txt2);border:1px solid var(--brd);border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit"></button>
+  </div>
+</div>
 <div id="bankpay-overlay" onclick="hideBankPayInfo(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:flex-end">
   <div onclick="event.stopPropagation()" style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(36px + var(--safe-bottom));border-top:1px solid var(--brd);max-height:90vh;overflow-y:auto">
     <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
