@@ -93,8 +93,9 @@ html.guide-tour-on .screen{animation:none!important}
 #home{flex-direction:column;overflow-y:auto}
 .home-top{position:relative;padding:calc(20px + var(--safe-top)) 20px 0;flex-shrink:0}
 .home-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.home-app-name{font-size:17px;font-weight:800;color:var(--txt)}
+.home-app-name{font-size:25px;font-weight:900;line-height:1.1;color:var(--txt)}
 .home-actions{display:flex;gap:8px;align-items:center}
+@media(max-width:339px){.home-app-name{font-size:21px}.home-actions{gap:5px}.home-actions .icon-btn{padding:7px 7px}}
 #demo-banner{display:none;position:relative;flex-shrink:0;z-index:5;align-items:center;justify-content:space-between;gap:10px;padding:calc(8px + var(--safe-top)) 14px 8px;background:#f5e6b8;color:#5c4813;font-size:13px;font-weight:800;box-shadow:0 1px 0 rgba(92,72,19,.15)}
 #demo-banner button{background:#fff;color:#5c4813;border:1px solid rgba(92,72,19,.25);border-radius:10px;padding:7px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
 #app.demo-on{height:auto;max-height:none;min-height:100dvh;overflow:visible;padding-top:0}
@@ -656,23 +657,23 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <!-- PERIOD: compact -->
     <div class="field-wrap" data-guide-id="period">
       <div class="lbl-with-tip"><label class="lbl" id="lbl-period">REPAYMENT PERIOD</label><button type="button" class="guide-tip-btn" onclick="openGuideTip('period')" aria-label="Help">?</button></div>
-      <input type="range" min="1" max="360" step="1" value="36" id="range-period" oninput="updatePeriodSlider(this.value)">
-      <div class="range-labels"><span>1</span><span id="period-max-lbl">360</span></div>
+      <input type="range" min="1" max="30" step="1" value="3" id="range-period" oninput="updatePeriodSlider(this.value)">
+      <div class="range-labels"><span>1</span><span id="period-max-lbl">30</span></div>
       <div class="period-row">
-        <input class="period-num" type="number" id="form-inp-per" value="36" min="1" inputmode="numeric" oninput="updatePeriodInput(this.value)">
+        <input class="period-num" type="number" id="form-inp-per" value="3" step="0.5" min="0.5" inputmode="numeric" oninput="updatePeriodInput(this.value)">
         <select class="period-unit" id="form-per-unit" onchange="updatePeriodUnit()">
           <option value="months" id="form-opt-months">Months</option>
-          <option value="years" id="form-opt-years">Years</option>
+          <option value="years" id="form-opt-years" selected>Years</option>
         </select>
       </div>
     </div>
     <!-- RATE: compact -->
     <div class="field-wrap" data-guide-id="rate">
       <div class="lbl-with-tip"><label class="lbl" id="lbl-rate">ANNUAL INTEREST RATE</label><button type="button" class="guide-tip-btn" onclick="openGuideTip('rate')" aria-label="Help">?</button></div>
-      <input type="range" min="0" max="40" step="0.01" value="8.5" id="range-rate" oninput="updateRateSlider(this.value)">
+      <input type="range" min="0" max="40" step="0.01" value="5" id="range-rate" oninput="updateRateSlider(this.value)">
       <div class="range-labels"><span>0%</span><span>40%</span></div>
       <div class="rate-row">
-        <input class="rate-num" type="number" id="form-inp-rate" value="8.5" min="0" max="40" step="0.01" inputmode="decimal" oninput="updateRateInput(this.value)">
+        <input class="rate-num" type="number" id="form-inp-rate" value="5" min="0" max="40" step="0.01" inputmode="decimal" oninput="updateRateInput(this.value)">
         <span class="rate-pct-badge">%</span>
       </div>
     </div>
@@ -759,8 +760,8 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="card">
       <p class="card-label" id="lbl-sim">SCENARIO SIMULATOR</p>
       <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt"></button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simSlide('amt',this.value)"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="number" id="manual-inp-amt" step="any" inputmode="decimal" oninput="applyManual('amt')"></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simSlide('per',this.value)"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" id="opt-years">Years</option></select></div></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0" max="40" step="0.01" value="8.5" id="sim-range-rate" oninput="simSlide('rate',this.value)"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simSlide('per',this.value)"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" selected id="opt-years">Years</option></select></div></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0" max="40" step="0.01" value="5" id="sim-range-rate" oninput="simSlide('rate',this.value)"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
     </div>
     <div class="kpi-grid" id="sim-kpi"></div>
   </div>
@@ -932,7 +933,8 @@ let _homeOpen=readHomeOpen();
 // تعديل الملف المالي من شاشة أخرى: {screen,profile,s3back,direct} — null في المسار العادي
 let _profileReturn=null;
 // قيم المحاكاة الدقيقة: الشريط يقرب لأقرب خطوة، فلو قرئت منه لاختلف القسط عن التقرير
-let _sim={amt:50000,per:36,rate:8.5};
+const DEFAULT_RATE=5;
+let _sim={amt:50000,per:36,rate:DEFAULT_RATE};
 let currency=''; // set on first launch by user
 let isPremium=false; // false=free, true=premium
 let _lastSaveClick=0; // debounce حماية من الضغط المزدوج على زر الحفظ
@@ -1022,7 +1024,7 @@ let profile={salary:'',income:'0',expenses:'',variable:'',existing:'0',employmen
 let profileSaved=false; // هل سبق وحفظ المستخدم ملفه؟
 
 // ── بيانات القرض فقط (تتجدد مع كل قرض جديد) ─────────────────────────────────
-let form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
+let form={loanType:'personal',amount:'',period:'36',rate:String(DEFAULT_RATE),startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
 
 // ── THEMES ────────────────────────────────────────────────────────────────────
 const THEMES=[
@@ -1557,7 +1559,7 @@ function analyse(){
   const amount=+form.amount||10000,period=+form.period||36;
   const grossIncome=Math.max(salary+income,1);
   const netIncome=Math.max(0,grossIncome-expenses-variable);
-  const ratePct=(form.rate===''||form.rate==null||isNaN(+form.rate))?8.5:+form.rate;
+  const ratePct=(form.rate===''||form.rate==null||isNaN(+form.rate))?DEFAULT_RATE:+form.rate;
   const rate=Math.max(0,ratePct/100);
   const{monthly,total,interest}=calcLoan(amount,rate,period);
   const dtiGross=((monthly+existing)/grossIncome)*100;
@@ -1576,7 +1578,7 @@ function amortize(amount,annualRate,months){
   for(let i=1;i<=Math.min(months,48);i++){const ip=balance*r;const pp=monthly-ip;balance-=pp;sched.push({m:i,p:Math.round(pp),i:Math.round(ip),b:Math.max(0,Math.round(balance))});}
   return sched;
 }
-function safeRate(v){return (v===''||v==null||isNaN(+v))?8.5:+v;}
+function safeRate(v){return (v===''||v==null||isNaN(+v))?DEFAULT_RATE:+v;}
 function fmt(n){return Number(n).toLocaleString('en-US')}
 // ── NAVIGATION ────────────────────────────────────────────────────────────────
 function showScreen(id){
@@ -1755,8 +1757,10 @@ function startForm(){
   setPlanLabelInput('');
   _profileReturn=null;
   // Reset only loan fields, keep profile
-  form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
+  form={loanType:'personal',amount:'',period:'36',rate:String(DEFAULT_RATE),startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
   extraLoans=[];
+  const perUnit=document.getElementById('form-per-unit');
+  if(perUnit){perUnit.value='years';updatePeriodUnit();}
   renderStepLabels();
   renderStep3Dynamic();
   if(profileSaved){
@@ -2236,8 +2240,8 @@ function renderStepLabels(){
   document.getElementById('form-opt-months').textContent=lang==='ar'?'شهر':lang==='es'?'Meses':'Months';
   document.getElementById('form-opt-years').textContent=lang==='ar'?'سنة':lang==='es'?'Años':'Years';
   // sync period/rate display
-  const rp=document.getElementById('range-period');if(rp)rp.value=form.period;
-  const pu=document.getElementById('form-per-unit');const unit=pu?pu.value:'months';
+  const pu=document.getElementById('form-per-unit');const unit=pu?pu.value:'years';
+  const rp=document.getElementById('range-period');if(rp)rp.value=unit==='years'?Math.round(form.period/12):form.period;
   const fip=document.getElementById('form-inp-per');if(fip)fip.value=unit==='years'?parseFloat((form.period/12).toFixed(2)):form.period;
   const rr=document.getElementById('range-rate');if(rr)rr.value=safeRate(form.rate);
   const fir=document.getElementById('form-inp-rate');if(fir)fir.value=safeRate(form.rate);
@@ -3038,7 +3042,7 @@ function toggleManual(field){
   if(hidden&&inp){
     if(field==='per'){
       const u=document.getElementById('per-unit').value;
-      inp.value=u==='years'?Math.round(_sim.per/12):_sim.per;
+      inp.value=u==='years'?parseFloat((_sim.per/12).toFixed(2)):_sim.per;
     }else inp.value=_sim[field];
     inp.focus();
   }
@@ -3079,7 +3083,7 @@ function simUpdate(){
 }
 
 // ── MULTI-LOANS ───────────────────────────────────────────────────────────────
-function addExtraLoan(){extraLoans.push({amount:'',period:'36',rate:'8.5'});renderMultiLoans();}
+function addExtraLoan(){extraLoans.push({amount:'',period:'36',rate:String(DEFAULT_RATE)});renderMultiLoans();}
 function removeExtraLoan(i){extraLoans.splice(i,1);renderMultiLoans();}
 function updateExtraLoan(i,k,v){extraLoans[i][k]=v;renderMultiLoans();}
 function renderMultiLoans(){
@@ -3097,7 +3101,7 @@ function renderMultiLoans(){
       <p class="loan-card-title">${tc.loanN} ${i+2}</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
         <div><label class="lbl" style="font-size:12px">${lang==='ar'?'المبلغ':lang==='es'?'Monto':'Amount'}</label><input class="inp" type="number" inputmode="numeric" placeholder="50000" value="${el.amount}" oninput="updateExtraLoan(${i},'amount',this.value)" style="padding:9px;font-size:14px"></div>
-        <div><label class="lbl" style="font-size:12px">${lang==='ar'?'الفائدة%':lang==='es'?'Tasa %':'Rate %'}</label><input class="inp" type="number" inputmode="decimal" step="0.01" placeholder="8.5" value="${el.rate}" oninput="updateExtraLoan(${i},'rate',this.value)" style="padding:9px;font-size:14px"></div>
+        <div><label class="lbl" style="font-size:12px">${lang==='ar'?'الفائدة%':lang==='es'?'Tasa %':'Rate %'}</label><input class="inp" type="number" inputmode="decimal" step="0.01" placeholder="5" value="${el.rate}" oninput="updateExtraLoan(${i},'rate',this.value)" style="padding:9px;font-size:14px"></div>
         <div><label class="lbl" style="font-size:12px">${lang==='ar'?'المدة شهر':lang==='es'?'Período m':'Period mo'}</label><input class="inp" type="number" inputmode="numeric" placeholder="36" value="${el.period}" oninput="updateExtraLoan(${i},'period',this.value)" style="padding:9px;font-size:14px"></div>
         <div style="display:flex;flex-direction:column;justify-content:flex-end"><p class="kpi-label">${tc.monthlyInstallment}</p><p style="color:var(--acc);font-weight:800;font-size:15px">${fmtPay(c.monthly)}</p></div>
       </div>
@@ -4271,7 +4275,7 @@ function resetWorkingMemory(){
   profileSaved=false;
   saved=[];
   myLoans=[];
-  form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
+  form={loanType:'personal',amount:'',period:'36',rate:String(DEFAULT_RATE),startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
   results=null;
   extraLoans=[];
   _viewingSavedLoan=false;
@@ -4538,6 +4542,7 @@ function sanitizeSaved(arr){
         const n=Number(x.results[k]);
         x.results[k]=Number.isFinite(n)?n:0;
       });
+      if(x.form.rate===''||x.form.rate==null) x.form.rate=String(+(x.results.rate*100).toFixed(4));
       const lt=x.loanType||x.form.loanType;
       if(!T.en['lt_'+lt]){ x.loanType='personal'; x.form.loanType='personal'; }
       if(typeof x.name!=='string') delete x.name;
