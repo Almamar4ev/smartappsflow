@@ -5203,7 +5203,15 @@ function initApp(){
 window.addEventListener('DOMContentLoaded', initApp);
 window.addEventListener('load', function(){ setTimeout(showIosInstallIfNeeded, 1800); });
 // إعادة ضبط شريط الحالة بعد جاهزية جسر Capacitor (التطبيق الأصلي)
-window.addEventListener('load', function(){ setTimeout(function(){ try{ applyStatusBar(currentTheme); }catch(e){} }, 300); });
+// شاشة البداية تعيد أيقونات النظام إلى البيضاء عند اختفائها، فتختفي فوق الثيم الأبيض. الأوقات تغطي الأجهزة البطيئة
+window.addEventListener('load', function(){
+  [300,1200,2200,3200,4500].forEach(function(ms){
+    setTimeout(function(){ try{ applyStatusBar(currentTheme); }catch(e){} }, ms);
+  });
+});
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden){ try{ applyStatusBar(currentTheme); }catch(e){} }
+});
 document.addEventListener('deviceready', function(){ try{ applyStatusBar(currentTheme); }catch(e){} });
 
 // ── iOS "Add to Home Screen" hint (Apple users, web only) ────────────────────

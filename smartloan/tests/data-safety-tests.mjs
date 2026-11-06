@@ -1342,6 +1342,9 @@ for (const id of ['inp-banklimit', 'form-inp-per', 'form-inp-rate', 'manual-inp-
   check(`${id} is a clean text field`, tag.includes('type="text"') && tag.includes('data-digits') && tag.includes('inputmode="decimal"'));
 }
 
+check('system bars are set again after the splash', /\[300,1200,2200,3200,4500\]\.forEach/.test(html));
+check('system bars are set again on return', /visibilitychange[^\n]*\n\s*if\(!document\.hidden\)\{ try\{ applyStatusBar/.test(html));
+
 // ── The compare table on small phones ──────────────────────────────────────
 console.log('\nCompare width');
 {
