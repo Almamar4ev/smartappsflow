@@ -56,7 +56,7 @@ check('contextual tip buttons and result tip hooks exist',
 check('tour step 4 is Calculate overview (not live result tabs)',
   /id:'results'[\s\S]*?target:'calculate'/.test(html) &&
   /بعد الضغط على «احسب» تظهر أربع صفحات|After you tap Calculate, four pages appear/.test(html) &&
-  !/لا تحتاج قرضاً محفوظاً الآن|you do not need a saved loan yet/.test(html));
+  !/لا تحتاج قرضا محفوظا الآن|you do not need a saved loan yet/.test(html));
 check('tour Next keeps card and avoids smooth scroll shake',
   /Same screen: do not reset scrollTop/.test(html) &&
   /update copy in place/.test(html) &&
@@ -90,7 +90,7 @@ check('guide strips Arabic tashkeel for plain copy',
 check('demo help card uses experimental demo title in Arabic',
   /helpDemo:'وضع العرض التجريبي'/.test(html) &&
   /title:'وضع العرض التجريبي'/.test(html) &&
-  /ملفك الحقيقي يبقى مغلقاً، تعود إليه بعد البصمة ورمز الجهاز/.test(html) &&
+  /ملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز/.test(html) &&
   !/على الهاتف المقفل تعود إليه/.test(html));
 check('guide no longer lists the hidden Refinance page',
   !/• Refinance|• إعادة الجدولة|• Refinanciar/.test(html));

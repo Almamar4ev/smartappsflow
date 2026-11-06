@@ -70,7 +70,8 @@ const REAL = [
   'planWithinBankLimit', 'savedPlansTitle', 'planTermText', 'renderCompare', 'editSavedLoan',
   'migrateToPlans', 'applyLoadedState', 'sanitizeSaved', 'blankProfile', 'buildDemoBundle',
   'showExistingNotice', 'closeExistingNotice', 'existingNoticeOk', 'existingNoticeReview',
-  'fmtAmtDec', 'fmtPay', 'fmtRangeDec', 'payTolerance', 'withCurrency', 'getCurrencySymbol',
+  'numText', 'fmtNum', 'fmtPayNum', 'fmtPct', 'fmtAmt', 'fmtPay', 'fmtRangeDec', 'payTolerance',
+  'withCurrency', 'getCurrencySymbol',
   'niceStep', 'simAmountBounds', 'syncSimToForm', 'simSlide', 'toggleManual', 'applyManual',
   'simUpdate', 'firstSentence', 'getStartDate',
   'confirmSheet', 'closeConfirmSheet', 'isOverlayOpen', 'handleBackButton', 'registerBackButton',
@@ -94,7 +95,6 @@ const STATE = `
     monthlyInstallment:'Monthly',totalCost:'Total',totalInterest:'Interest',dtiRatio:'DTI',compareTitle:'Compare'};}
   function savedLoanDisplayName(s){return s.name||'';}
   function escapeHtml(v){return String(v);}
-  function fmtAmt(v){return String(Math.round(v));}
   function isDemoMode(){return _demo;}
   function isKnownLang(l){return !!T[l];}
   function isKnownCurrency(){return true;}
@@ -436,13 +436,13 @@ const oldState = (over = '') => `({lang:'ar',currency:'OMR',profileSaved:true,
   p.run('renderCompare()');
   const body = p.el('compare-body').innerHTML;
   // net 3000-500-200 = 2300; each plan alone after real payments of 80
-  check('compare: first plan is alone against the real profile', body.includes('>1620'));
-  check('compare: second plan is alone against the real profile', body.includes('>1920'));
+  check('compare: first plan is alone against the real profile', body.includes('>1,620<'));
+  check('compare: second plan is alone against the real profile', body.includes('>1,920<'));
   check('compare: debt ratio ignores the other plan', body.includes('22.67%') && body.includes('12.67%'));
   check('compare: nothing about replacing or activating', !/Replaces|activate/i.test(body));
   p.run(`profile.existing='0'`);
   p.run('renderCompare()');
-  check('compare: real payments of 0 change nothing else', p.el('compare-body').innerHTML.includes('>1700'));
+  check('compare: real payments of 0 change nothing else', p.el('compare-body').innerHTML.includes('>1,700<'));
   p.run(`saved=[${[1, 2, 3].map((n) => plan('active', n)).join(',')}]`);
   p.run('renderCompare()');
   check('compare: three plans open without a coming-soon screen', !/soon|development/i.test(p.el('compare-body').innerHTML));
@@ -494,7 +494,7 @@ const oldState = (over = '') => `({lang:'ar',currency:'OMR',profileSaved:true,
   const term = (m) => p.run(`planTermText(${m})`);
   p.run(`lang='ar'`);
   const ar = [[12, 'سنة'], [24, 'سنتان'], [36, '3 سنوات'], [120, '10 سنوات'], [132, '11 سنة'], [240, '20 سنة'],
-    [1, 'شهر'], [2, 'شهران'], [18, '18 شهراً'], [7, '7 أشهر']];
+    [1, 'شهر'], [2, 'شهران'], [18, '18 شهرا'], [7, '7 أشهر']];
   for (const [m, want] of ar) check(`Arabic term ${m} months: ${want}`, term(m) === want);
   p.run(`lang='en'`);
   check('English term', term(12) === '1 year' && term(240) === '20 years' && term(18) === '18 months' && term(1) === '1 month');
@@ -565,21 +565,28 @@ check('the reschedule tab is hidden', /id="tab-restructure" style="display:none"
 check('no activate-scenario code remains', !/activateScenario|confirmActivate/.test(html));
 check('no "replaces" banner remains', !/scenario-replace-banner|_replacedLoan/.test(html));
 check('the save button says plan', ["saveScenario:'Save plan'", "saveScenario:'حفظ الخطة'", "saveScenario:'Guardar plan'"].every((x) => html.includes(x)));
-check('the hint is in all languages', ['أقساط قروض تدفعها حالياً فقط', 'Only loans you are paying now', 'Solo préstamos que pagas ahora'].every((x) => html.includes(x)));
+check('the hint is in all languages', ['أقساط قروض تدفعها حاليا فقط', 'Only loans you are paying now', 'Solo préstamos que pagas ahora'].every((x) => html.includes(x)));
 
 // ── Money shows the decimals of its currency ───────────────────────────────
 console.log('\nCurrency decimals');
 {
   const p = newPage();
   const pay = (cur, n) => { p.run(`currency='${cur}'`); return p.run(`fmtPay(${n})`); };
-  check('OMR installment has three decimals', pay('OMR', 156.5287) === '156.529 ر.ع');
-  check('KWD and BHD too', pay('KWD', 1.5).startsWith('1.500') && pay('BHD', 1.5).startsWith('1.500'));
-  check('USD has two', pay('USD', 156.5287) === '$ 156.53');
-  check('IDR has none', pay('IDR', 156.6) === '157 Rp');
-  check('no currency has two', pay('NONE', 12.5) === '12.50');
+  const amt = (cur, n) => { p.run(`currency='${cur}'`); return p.run(`fmtAmt(${n})`); };
+  check('OMR installment keeps three decimals', pay('OMR', 156.5287) === '156.529 ر.ع');
+  check('KWD and BHD too', pay('KWD', 1.2345).startsWith('1.235') && pay('BHD', 1.2345).startsWith('1.235'));
+  check('a whole installment has no zeros', pay('OMR', 157) === '157 ر.ع');
+  check('USD installment has two', pay('USD', 156.5287) === '$ 156.53');
+  check('IDR installment has none', pay('IDR', 156.6) === '157 Rp');
+  check('no currency has two', pay('NONE', 12.256) === '12.26');
+  check('other amounts round to two', amt('OMR', 100.2253) === '100.23 ر.ع');
+  check('a whole amount has no zeros', amt('OMR', 100) === '100 ر.ع');
+  check('a whole amount with thousands', amt('USD', 1234567) === '$ 1,234,567');
+  check('IDR amounts stay whole', amt('IDR', 100.6) === '101 Rp');
+  check('percentages round to two', p.run('fmtPct(7.8866)') === '7.89%');
+  check('a whole percentage has no zeros', p.run('fmtPct(22)') === '22%');
   p.run(`currency='OMR'`);
-  check('the range card follows the currency', p.run('fmtRangeDec(154.96,158.094)').startsWith('154.960 – 158.094'));
-  check('an explicit decimal count still wins', p.run('fmtAmtDec(1.5,1)').startsWith('1.5 '));
+  check('the range card uses two decimals', p.run('fmtRangeDec(154.964,158.094)').startsWith('154.96 – 158.09'));
   // salary 3000, limit 40% -> room of 1200 when existing is 2200-1000 below
   p.run(`profile.existing='1099.8'`); // room = 100.2
   check('OMR: 0.4 over the limit is over the limit', p.run('planWithinBankLimit(100.6)') === false);
@@ -589,10 +596,15 @@ console.log('\nCurrency decimals');
 }
 for (const [needle, label] of [
   ['val:fmtPay(r.monthly)', 'report KPI'], ['<div class="saved-mini-amt">${fmtPay(s.results.monthly)}', 'plan card'],
-  ['fmt:v=>fmtPay(v)', 'compare row'], ['${fmtPay(reqPay)}', 'bank-limit sentence'], ['fmtPay(existingPmt)', 'existing payments tile'],
+  ['fmt:v=>fmtPayNum(v)', 'compare row'], ['${fmtPay(reqPay)}', 'bank-limit sentence'],
   ['· ${fmtPay(monthly)}/', 'schedule summary'], ['val:fmtPay(c.monthly)', 'simulator KPI'],
 ]) check(`installment decimals in: ${label}`, html.includes(needle));
-check('big totals stay whole', html.includes('val:fmtAmt(r.total)') && html.includes('val:fmtAmt(r.interest)'));
+for (const [needle, label] of [
+  ['val:fmtAmt(r.total)', 'total cost'], ['val:fmtAmt(r.interest)', 'total interest'], ['${fmtAmt(maxPayAvail)}', 'allowed limit'],
+  ['fmtAmt(existingPmt)', 'existing payments tile'], ['fmtAmt(r.existing)', 'existing payments row'],
+]) check(`two decimals at most in: ${label}`, html.includes(needle));
+check('the old fixed-decimals formatter is gone', !html.includes('fmtAmtDec'));
+check('no percentage keeps forced zeros', !/toFixed\(2\)\+'%'|toFixed\(2\)\}%/.test(html));
 
 // ── Simulator ──────────────────────────────────────────────────────────────
 console.log('\nSimulator');
@@ -677,7 +689,7 @@ check('the body is no longer the title', html.includes('firstSentence(guidePick(
 check('the brand is isolated in the Arabic title', html.includes('جديد في \\u2068emiGo\\u2069:'));
 check('the card is RTL in Arabic', /el\.dir=lang==='ar'\?'rtl':'ltr';\s*document\.getElementById\('guide-whatsnew-title'\)/.test(html));
 check('the card hides when leaving home', /function showScreen\(id\)\{[\s\S]{0,200}?id!=='home'[\s\S]{0,120}?guide-whatsnew/.test(html));
-check('Arabic spelling is fixed', !/ارقاما|بايقونة|مغلقا،/.test(html));
+check('Arabic hamza spelling is fixed', !/ارقاما|بايقونة/.test(html));
 
 // ── Service worker: the real file, run against a fake network ──────────────
 console.log('\nService worker');
@@ -851,6 +863,36 @@ check('home shows emiGo in every language', html.includes('id="home-app-name">em
   && !/home-app-name'\)\.textContent=/.test(html));
 check('the tagline is still translated', html.includes("document.getElementById('home-tagline').textContent=tc.appTagline"));
 check('the PDF keeps the translated app name', html.includes('<h1>${tc.appName}</h1>'));
+
+// ── Report layout and readable sizes ───────────────────────────────────────
+console.log('\nLayout');
+{
+  const start = html.indexOf('id="tc-report"');
+  const order = ['id="kpi-grid"', 'id="banklimit-card"', 'id="lbl-basis"', 'id="bankpay-card"', 'id="bankcmp-card"', 'id="btn-save"', 'id="btn-go-home"', 'id="btn-restart"']
+    .map((id) => html.indexOf(id, start));
+  check('report follows the agreed order', order.every((v, i) => v > 0 && (i === 0 || v > order[i - 1])));
+}
+check('the bank estimate is one compact row', html.includes('${tc.bpWhyShort}') && !html.includes('bpStatusT'));
+check('"Why?" exists in every language', ["bpWhyShort:'لماذا؟'", "bpWhyShort:'Why?'", "bpWhyShort:'¿Por qué?'"].every((x) => html.includes(x)));
+check('compare with a bank offer starts collapsed', html.includes(`<details class="bankcmp"\${_bankOffer?' open':''}>`));
+{
+  const pdfStart = html.indexOf('function exportPDF(){');
+  const pdfEnd = html.indexOf('function restart(){');
+  const appOnly = html.slice(0, pdfStart) + html.slice(pdfEnd);
+  check('no app text is under 12px', !/font-size:(?:[0-9]|1[01])(?:\.\d+)?px/.test(appOnly));
+}
+{
+  const card = extractFunction('renderHomeSaved');
+  check('plan card buttons are at least 40px', (card.match(/min-height:40px/g) || []).length === 3);
+}
+
+// ── Arabic text and guide ──────────────────────────────────────────────────
+console.log('\nArabic text and guide');
+check('no Arabic diacritics in the app', !/[\u064B-\u0652\u0670]/.test(html));
+check('no Arabic diacritics in update notes', !/[\u064B-\u0652\u0670]/.test(sw));
+check('the tour teaches plans', html.includes("title:{en:'Plans, compare & Demo'") && html.includes('احفظ حتى 4 خطط في الرئيسية'));
+check('the tour mentions the payments you enter', html.includes('وأقساطك الحالية وحد القسط البنكي'));
+check('what is new announces plans first', html.indexOf("id:'plans_model'") < html.indexOf("id:'demo_mode'") && html.includes("id:'plans_model'"));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
