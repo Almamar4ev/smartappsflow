@@ -713,11 +713,6 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   </div>
   <!-- REPORT -->
   <div class="tab-content active" id="tc-report">
-    <div class="plan-actions" id="plan-actions">
-      <button class="plan-act take" id="btn-take-plan" onclick="takePlan(_viewingSavedIdx)"></button>
-      <button class="plan-act edit" id="btn-edit-plan" onclick="editViewedPlan()"></button>
-      <button class="plan-act del" id="btn-delete-plan" onclick="deleteViewedPlan()"></button>
-    </div>
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="card" id="banklimit-card" style="padding-top:16px"></div>
     <div class="basis-card"><p class="card-label" id="lbl-basis">HOW YOUR LOAN IS CALCULATED</p><div id="basis-rows"></div></div>
@@ -726,6 +721,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="field-wrap" id="plan-label-box" style="margin-bottom:0">
       <label class="lbl" id="lbl-plan-label" for="inp-plan-label"></label>
       <input class="inp" id="inp-plan-label" type="text" maxlength="24" autocomplete="off">
+    </div>
+    <div class="plan-actions" id="plan-actions">
+      <button class="plan-act take" id="btn-take-plan" onclick="takePlan(_viewingSavedIdx)"></button>
+      <button class="plan-act edit" id="btn-edit-plan" onclick="editViewedPlan()"></button>
+      <button class="plan-act del" id="btn-delete-plan" onclick="deleteViewedPlan()"></button>
     </div>
     <div class="action-row" data-guide-id="save">
       <button class="save-btn" onclick="saveScenario()" id="btn-save">Save as plan</button>

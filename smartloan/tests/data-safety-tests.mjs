@@ -899,6 +899,7 @@ check('compare with a bank offer starts collapsed', html.includes(`<details clas
   check('no app text is under 12px', !/font-size:(?:[0-9]|1[01])(?:\.\d+)?px/.test(appOnly));
 }
 check('plan rows are easy to tap', /\.plan-row\{width:100%;min-height:60px/.test(html));
+check('plan actions come after the report details', html.indexOf('id="bankcmp-card"') < html.indexOf('id="plan-actions"') && html.indexOf('id="plan-actions"') < html.indexOf('id="btn-go-home"'));
 check('plan action buttons are at least 44px', /\.plan-act\{min-height:44px/.test(html));
 
 // ── Arabic text and guide ──────────────────────────────────────────────────
