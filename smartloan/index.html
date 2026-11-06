@@ -126,6 +126,7 @@ html.guide-tour-on .screen{animation:none!important}
 .hero-btn{display:inline-block;background:#fff;color:var(--acc);font-size:14px;font-weight:800;padding:10px 20px;border-radius:12px;border:none;cursor:pointer}
 /* Saved mini list on home */
 .home-section-title{font-size:13px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;padding:0 20px;margin-bottom:10px}
+.home-section-sub{font-size:12px;color:var(--txt3);margin:3px 0 0;line-height:1.5}
 .saved-mini-list{padding:0 20px;display:flex;flex-direction:column;gap:10px;padding-bottom:8px}
 .saved-mini-card{background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:13px 15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:border-color .2s}
 .saved-mini-card:active{border-color:var(--acc)}
@@ -485,9 +486,20 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <div id="home-profile-rows" style="display:grid;grid-template-columns:1fr 1fr;gap:6px"></div>
     </div>
   </div>
+  <!-- Real loans the user took -->
+  <div id="home-loans-section" style="display:none;margin-bottom:14px">
+    <div style="padding:0 20px;margin-bottom:10px">
+      <p class="home-section-title" id="home-loans-title" style="margin-bottom:0;padding:0"></p>
+      <p class="home-section-sub" id="home-loans-sub"></p>
+    </div>
+    <div class="saved-mini-list" id="home-loans-list"></div>
+  </div>
   <!-- Saved loans on home -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px;margin-bottom:10px">
-    <p class="home-section-title" id="home-saved-title" style="margin-bottom:0;padding:0" data-guide-id="saved">SAVED LOANS</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 20px;margin-bottom:10px">
+    <div style="min-width:0">
+      <p class="home-section-title" id="home-saved-title" style="margin-bottom:0;padding:0" data-guide-id="saved">SAVED LOANS</p>
+      <p class="home-section-sub" id="home-saved-sub"></p>
+    </div>
     <button id="home-compare-btn" data-guide-id="compare" onclick="openCompare()" style="display:none;padding:7px 14px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;cursor:pointer">Compare</button>
   </div>
   <div class="saved-mini-list" id="home-saved-list" data-guide-id="saved-list">
@@ -845,8 +857,8 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 
 </div><!-- #app -->
 <script>
-let lang='en',results=null,saved=[],extraLoans=[],settingsPrev='home',currentTheme='light',_editingLoanIdx=null;
-let _viewingSavedLoan=false,_savedSnap=null,_viewingSavedIdx=-1;
+let lang='en',results=null,saved=[],myLoans=[],extraLoans=[],settingsPrev='home',currentTheme='light',_editingLoanIdx=null;
+let _viewingSavedLoan=false,_savedSnap=null,_viewingSavedIdx=-1,_viewingMyLoan=false;
 // تعديل الملف المالي من شاشة أخرى: {screen,profile,s3back,direct} — null في المسار العادي
 let _profileReturn=null;
 // قيم المحاكاة الدقيقة: الشريط يقرب لأقرب خطوة، فلو قرئت منه لاختلف القسط عن التقرير
@@ -1435,9 +1447,12 @@ function renderBankLimitCard(r){
     ${hero}${key}${sugg}
     <a onclick="editProfileBankLimit()" style="display:block;text-align:${isAr?'left':'right'};margin-top:13px;font-size:12px;color:var(--acc);font-weight:700;text-decoration:none;cursor:pointer">${changeLink}</a>`;
 }
+// الأقساط الحقيقية = ما يكتبه المستخدم في ملفه + أقساط قسم قروضي. الخطط لا تدخل هنا أبدا
+function myLoansTotal(){return myLoans.reduce((sum,x)=>sum+(+x.loanMonthly||0),0);}
+function realPayments(){return (+profile.existing||0)+myLoansTotal();}
 function analyse(){
   const salary=+profile.salary||0,income=+profile.income||0,expenses=+profile.expenses||0;
-  const variable=+profile.variable||0,existing=+profile.existing||0;
+  const variable=+profile.variable||0,existing=realPayments();
   const amount=+form.amount||10000,period=+form.period||36;
   const grossIncome=Math.max(salary+income,1);
   const netIncome=Math.max(0,grossIncome-expenses-variable);
@@ -1714,7 +1729,7 @@ function s2Next(){
     _viewingSavedLoan=false;
   }
   saveStep2Inputs();
-  if(wasViewing) openSavedDetail(_viewingSavedIdx);
+  if(wasViewing) openSavedDetail(_viewingSavedIdx,_viewingMyLoan);
   else if(fromReport) calculate();
   else if(back.screen==='step3'){renderStep3Dynamic();showScreen('step3');}
   else goHome();
@@ -1788,7 +1803,7 @@ function renderHome(){
       const totalInc=(+profile.salary||0)+(+profile.income||0);
       const totalExp=(+profile.expenses||0)+(+profile.variable||0);
       const netInc=Math.max(0,totalInc-totalExp);
-      const existingPmt=+profile.existing||0;
+      const existingPmt=realPayments();
       const netLbl=lang==='ar'?'صافي الدخل':lang==='es'?'Ingreso neto':'Net Income';
       const existLbl=lang==='ar'?'أقساط قائمة':lang==='es'?'Cuotas actuales':'Existing Payments';
       profileRows.innerHTML=[
@@ -1817,7 +1832,7 @@ function renderHome(){
   if(profileSaved&&profile.salary){
     const totalInc=(+profile.salary||0)+(+profile.income||0);
     const totalExp=(+profile.expenses||0)+(+profile.variable||0);
-    const totalLoans=+profile.existing||0;
+    const totalLoans=realPayments();
     const rem=totalInc-totalExp-totalLoans; // قد يكون سالبا = عجز شهري (لا نقصه إلى صفر)
     const remPct=totalInc>0?parseFloat(((rem/totalInc)*100).toFixed(2)):0;
     const remIsDeficit=rem<0;
@@ -1888,7 +1903,7 @@ function planWithinBankLimit(monthly){
   const limit=Math.min(100,Math.max(1,+profile.bankLimit||40));
   const gross=(+profile.salary||0)+(+profile.income||0);
   const base=profile.limitBasis==='net'?Math.max(0,gross-((+profile.expenses||0)+(+profile.variable||0))):gross;
-  const room=Math.max(0,base*limit/100-(+profile.existing||0));
+  const room=Math.max(0,base*limit/100-realPayments());
   return (monthly||0)<=room+payTolerance();
 }
 function savedPlansTitle(){
@@ -1908,11 +1923,89 @@ function planTermText(period){
   if(lang==='es') return whole?`${c} ${c===1?'año':'años'}`:`${c} ${c===1?'mes':'meses'}`;
   return whole?`${c} ${c===1?'year':'years'}`:`${c} ${c===1?'month':'months'}`;
 }
+function loanLastPayment(s){
+  const f=s.form||{};
+  const d=new Date(+f.startYear||new Date().getFullYear(),(f.startMonth??new Date().getMonth())+(+f.period||1)-1,1);
+  return d.toLocaleDateString(lang==='ar'?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US',{year:'numeric',month:'long'});
+}
+function renderHomeLoans(){
+  const section=document.getElementById('home-loans-section');
+  if(!section) return;
+  section.style.display=myLoans.length?'block':'none';
+  if(!myLoans.length) return;
+  const isAr=lang==='ar', isEs=lang==='es';
+  document.getElementById('home-loans-title').textContent=`${isAr?'قروضي':isEs?'MIS PRÉSTAMOS':'MY LOANS'} (${myLoans.length})`;
+  const other=+profile.existing||0;
+  document.getElementById('home-loans-sub').textContent=
+    (isAr?'قروض حقيقية تدفعها، وأقساطها تحسب من ملفك المالي':isEs?'Préstamos reales que pagas; sus cuotas cuentan en tu perfil':'Real loans you pay; their payments count in your profile')
+    +(other>0?` · ${isAr?'أقساط أخرى':isEs?'Otras cuotas':'Other payments'}: ${fmtAmt(other)}`:'');
+  document.getElementById('home-loans-list').innerHTML=myLoans.map((s,i)=>`<div class="saved-mini-card" style="position:relative;flex-direction:column;align-items:stretch;gap:8px;border-color:color-mix(in srgb,var(--safe) 45%,var(--brd))">
+      <div onclick="openSavedDetail(${i},true)" style="display:flex;justify-content:space-between;align-items:center">
+        <div class="saved-mini-left">
+          <div class="saved-mini-name" style="display:flex;align-items:center;gap:8px"><span style="color:var(--safe);display:inline-flex">${ltIcon(s.loanType||s.form?.loanType,18)}</span><span>${escapeHtml(savedLoanDisplayName(s))}</span></div>
+          <div class="saved-mini-sub">${safeRate(s.form?.rate)}% ${isAr?'فائدة':isEs?'interés':'APR'} · ${planTermText(s.form?.period)}</div>
+          <div class="saved-mini-sub">${isAr?'آخر قسط':isEs?'Última cuota':'Last payment'}: ${loanLastPayment(s)}</div>
+        </div>
+        <div class="saved-mini-right">
+          <div class="saved-mini-amt">${fmtPay(s.results.monthly)}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
+        <button onclick="event.stopPropagation();openSavedDetail(${i},true)"
+          style="flex:1;min-height:40px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 31%,transparent);color:var(--acc);font-size:12px;font-weight:700;cursor:pointer">
+          ${isAr?'التفاصيل':isEs?'Detalles':'Details'}
+        </button>
+        <button onclick="event.stopPropagation();confirmDeleteMyLoan(${i})"
+          style="min-height:40px;padding:6px 12px;border-radius:8px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid color-mix(in srgb,var(--risk) 31%,transparent);color:var(--risk);font-size:12px;font-weight:700;cursor:pointer">
+          ${isAr?'حذف':isEs?'Eliminar':'Delete'}
+        </button>
+      </div>
+    </div>`).join('');
+}
+// الخطة تصبح قرضا حقيقيا بقرار صريح فقط. ما كان محسوبا في الرقم اليدوي بعد الترحيل يخصم منه كي لا يتكرر
+async function takePlan(i){
+  const s=saved[i]; if(!s) return;
+  const isAr=lang==='ar', isEs=lang==='es';
+  const pay=fmtPay(s.results.monthly);
+  const ok=await confirmSheet({
+    title:isAr?'هل أخذت هذا القرض فعلا؟':isEs?'¿Tomaste este préstamo de verdad?':'Did you really take this loan?',
+    body:savedLoanDisplayName(s)+'\n'+(isAr?`سينتقل إلى قروضي، ويضاف قسطه ${pay} إلى أقساطك.`:isEs?`Pasará a Mis préstamos y su cuota de ${pay} se sumará a tus cuotas.`:`It moves to My loans, and its payment of ${pay} is added to your payments.`),
+    okLabel:isAr?'نعم، أخذته':isEs?'Sí, lo tomé':'Yes, I took it'
+  });
+  const idx=saved.indexOf(s);
+  if(!ok||idx<0) return;
+  saved.splice(idx,1);
+  if(s.countedMonthly) profile.existing=String(+Math.max(0,(+profile.existing||0)-s.countedMonthly).toFixed(3));
+  delete s.countedMonthly;
+  myLoans.unshift(s);
+  persistState();
+  renderHome();renderHomeSaved();
+}
+async function confirmDeleteMyLoan(i){
+  const s=myLoans[i]; if(!s) return;
+  const isAr=lang==='ar', isEs=lang==='es';
+  const ok=await confirmSheet({
+    title:isAr?'حذف هذا القرض؟':isEs?'¿Eliminar este préstamo?':'Delete this loan?',
+    body:savedLoanDisplayName(s)+'\n'+(isAr?'سينقص قسطه من أقساطك. استخدم هذا عند انتهاء القرض.':isEs?'Su cuota se restará de tus cuotas. Úsalo cuando termine el préstamo.':'Its payment is removed from your payments. Use this when the loan ends.'),
+    okLabel:isAr?'حذف':isEs?'Eliminar':'Delete',
+    danger:true
+  });
+  const idx=myLoans.indexOf(s);
+  if(!ok||idx<0) return;
+  myLoans.splice(idx,1);
+  persistState();
+  renderHome();renderHomeSaved();
+}
 function renderHomeSaved(){
   const tc=t();
   const listEl=document.getElementById('home-saved-list');
   const cmpBtn=document.getElementById('home-compare-btn');
   if(cmpBtn) cmpBtn.style.display=saved.length>=2?'block':'none';
+  renderHomeLoans();
+  const planSub=document.getElementById('home-saved-sub');
+  if(planSub) planSub.textContent=!saved.length?'':lang==='ar'?'للمقارنة فقط: ليست قروضا حقيقية ولا تخصم من ملفك المالي'
+    :lang==='es'?'Solo para comparar: no son préstamos reales y no se descuentan de tu perfil'
+    :'For comparison only: not real loans, and not deducted from your profile';
   if(!saved.length){
     listEl.innerHTML=`<div class="no-saved-home">${tc.noSavedHome.replace('\n','<br>')}</div>`;
     return;
@@ -1936,6 +2029,10 @@ function renderHomeSaved(){
           <div class="saved-mini-amt">${fmtPay(s.results.monthly)}</div>
         </div>
       </div>
+      <button onclick="event.stopPropagation();takePlan(${i})"
+        style="min-height:40px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--safe) 12%,transparent);border:1px solid color-mix(in srgb,var(--safe) 38%,transparent);color:var(--safe);font-size:13px;font-weight:800;cursor:pointer">
+        ${isAr?'أخذت هذا القرض':isEs?'Tomé este préstamo':'I took this loan'}
+      </button>
       <div style="display:flex;gap:7px;border-top:1px solid var(--brd);padding-top:8px">
         <button onclick="event.stopPropagation();openSavedDetail(${i})"
           style="flex:1;min-height:40px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--acc) 10%,transparent);border:1px solid color-mix(in srgb,var(--acc) 31%,transparent);color:var(--acc);font-size:12px;font-weight:700;cursor:pointer">
@@ -2017,6 +2114,10 @@ function renderStepLabels(){
   if(existHint) existHint.textContent=lang==='ar'?'أقساط قروض تدفعها حاليا فقط':
     lang==='es'?'Solo préstamos que pagas ahora':
     'Only loans you are paying now';
+  if(existHint&&myLoans.length){
+    const sum=fmtPay(myLoansTotal());
+    existHint.textContent+=lang==='ar'?` · قروضي تضيف ${sum} تلقائيا، فلا تكررها هنا`:lang==='es'?` · Mis préstamos suman ${sum} solos, no los repitas`:` · My loans add ${sum} automatically, do not repeat them`;
+  }
   const bl=document.getElementById('lbl-banklimit');if(bl)bl.textContent=tc.q_bankLimit;
   const blh=document.getElementById('lbl-banklimit-hint');if(blh)blh.textContent=lang==='ar'
     ?'أعلى نسبة من دخلك الشهري يقبلها بنكك لقسط القرض. مثال: 40% تعني ألا يتجاوز القسط 40% من دخلك.'
@@ -2968,7 +3069,11 @@ function saveScenario(){
     lang,
     time:new Date().toLocaleTimeString()
   };
-  if(editing) saved[_editingLoanIdx]=plan;
+  if(editing){
+    const old=saved[_editingLoanIdx];
+    if(old.countedMonthly) plan.countedMonthly=old.countedMonthly;
+    saved[_editingLoanIdx]=plan;
+  }
   else saved.unshift(plan);
   _editingLoanIdx=null;
 
@@ -3033,16 +3138,16 @@ function confirmDeleteSavedFromTab(i){
 }
 
 // ── SAVED DETAIL — full results view ──────────────────────────────────────────
-function openSavedDetail(i){
-  const s=saved[i]; if(!s) return;
+function openSavedDetail(i,fromMyLoans=false){
+  const s=(fromMyLoans?myLoans:saved)[i]; if(!s) return;
 
   // حفظ الحالة السابقة
   const prevResults=results;
   const prevForm={...form};
   const prevProfile={...profile};
 
-  // الخطة تقاس وحدها مع الأقساط التي يدفعها المستخدم فعلا
-  const currentExisting=+prevProfile.existing||0;
+  // الخطة تقاس وحدها مع الأقساط الحقيقية. قرض من قروضي داخل المجموع أصلا فيستثنى كي لا يتكرر
+  const currentExisting=realPayments()-(fromMyLoans?(+s.loanMonthly||0):0);
 
   // الملف المالي الحالي (وليس القديم المحفوظ)
   const curSalary =+prevProfile.salary  ||0;
@@ -3076,7 +3181,7 @@ function openSavedDetail(i){
     income:String(curIncome),
     expenses:String(curExpenses),
     variable:String(curVariable),
-    existing:String(currentExisting),
+    existing:prevProfile.existing,
     employment:prevProfile.employment||'full',
     risk:prevProfile.risk||'medium',
     bankLimit:prevProfile.bankLimit||'40',
@@ -3086,6 +3191,7 @@ function openSavedDetail(i){
   _savedSnap={results:prevResults,form:prevForm,profile:prevProfile};
   _viewingSavedLoan=true;
   _viewingSavedIdx=i;
+  _viewingMyLoan=fromMyLoans;
   renderResults();
   showScreen('results-screen');
 }
@@ -3205,7 +3311,7 @@ function renderCompare(){
   const cmpCurNet=Math.max(0,cmpCurGross-(+profile.expenses||0)-(+profile.variable||0));
 
   // كل خطة تقاس وحدها مقابل الملف الحقيقي، بدون بقية الخطط
-  const cmpExisting=+profile.existing||0;
+  const cmpExisting=realPayments();
   const calcRemaining=s=>cmpCurNet-s.loanMonthly-cmpExisting; // قد يكون سالبا = عجز
   const calcDti=s=>((s.loanMonthly+cmpExisting)/Math.max(cmpCurGross,1))*100;
 
@@ -3494,9 +3600,9 @@ function showExistingNotice(){
   ov.dir=isAr?'rtl':'ltr';
   document.getElementById('existing-notice-title').textContent=isAr?'أقساطك الحالية أصبحت تكتب يدويا':isEs?'Ahora escribes tus cuotas actuales a mano':'You now enter your current payments yourself';
   document.getElementById('existing-notice-body').textContent=isAr
-    ?'إذا كانت قروضك المحفوظة عروضا فقط اجعل الرقم صفرا. وإذا كان بينها قرض تدفعه فعلا فاحذفه من خططك.'
-    :isEs?'Si tus préstamos guardados eran solo ofertas, pon el número en cero. Si alguno es un préstamo que ya pagas, elimínalo de tus planes.'
-    :'If your saved loans were only offers, set the number to zero. If one of them is a loan you actually pay, delete it from your plans.';
+    ?'إذا كانت قروضك المحفوظة عروضا فقط اجعل الرقم صفرا. وإذا كان بينها قرض تدفعه فعلا فاضغط «أخذت هذا القرض» في بطاقته.'
+    :isEs?'Si tus préstamos guardados eran solo ofertas, pon el número en cero. Si alguno es un préstamo que ya pagas, pulsa «Tomé este préstamo» en su tarjeta.'
+    :'If your saved loans were only offers, set the number to zero. If one of them is a loan you actually pay, tap «I took this loan» on its card.';
   document.getElementById('existing-notice-review').textContent=isAr?'راجع ملفي':isEs?'Revisar mi perfil':'Review my profile';
   document.getElementById('existing-notice-ok').textContent=isAr?'تمام':isEs?'Entendido':'OK';
   ov.style.display='flex';
@@ -3766,7 +3872,7 @@ function exportBackup(){
     const state={
       lang, currency, currentTheme,
       profile, profileSaved,
-      saved, form,
+      saved, myLoans, form,
       plansModel:PLANS_MODEL,
       _backup_version:1,
       _backup_date: new Date().toISOString(),
@@ -3861,7 +3967,7 @@ function importBackup(input){
       setGuideBlocked(true);
       hideGuideChrome();
       // لقطة للحالة الحالية: إن فشل الرسم بالبيانات الجديدة نرجع إليها بدل أن نبقى على تطبيق فارغ
-      const snap={currency,profile:{...profile},profileSaved,saved,form:{...form},notice:_existingNotice};
+      const snap={currency,profile:{...profile},profileSaved,saved,myLoans,form:{...form},notice:_existingNotice};
       try{
         // ملاحظة: لا نغير اللغة ولا الثيم عند الاستيراد — كلاهما تفضيل عرض للجهاز الحالي
         // ويبقى كما اختاره المستخدم، بينما العملة جزء من بيانات القرض فتستورد
@@ -3869,6 +3975,7 @@ function importBackup(input){
         if(s.profile&&typeof s.profile==='object') profile={...profile,...s.profile};
         if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
         if(Array.isArray(s.saved)) saved=sanitizeSaved(s.saved);
+        myLoans=sanitizeSaved(s.myLoans);
         if(s.form&&typeof s.form==='object') form={...form,...s.form};
         migrateToPlans(s);
         applyTheme(currentTheme);
@@ -3877,7 +3984,7 @@ function importBackup(input){
         showScreen('home');
         renderHome();
       }catch(renderErr){
-        ({currency,profileSaved,saved}=snap); profile=snap.profile; form=snap.form; _existingNotice=snap.notice;
+        ({currency,profileSaved,saved,myLoans}=snap); profile=snap.profile; form=snap.form; _existingNotice=snap.notice;
         rerenderAll(); showScreen('home'); renderHome();
         throw renderErr;
       }
@@ -3956,6 +4063,7 @@ function resetWorkingMemory(){
   profile=blankProfile();
   profileSaved=false;
   saved=[];
+  myLoans=[];
   form={loanType:'personal',amount:'',period:'36',rate:'8.5',startMonth:new Date().getMonth(),startYear:new Date().getFullYear()};
   results=null;
   extraLoans=[];
@@ -4055,6 +4163,8 @@ function buildDemoBundle(prefs){
   const savedLoans=[];
   const realProfile=profile;
   const realForm=form;
+  const realLoans=myLoans;
+  myLoans=[];
   function pushLoan(type, amount, months, ratePct){
     profile={...profileSnap};
     form={loanType:type, amount:String(Math.round(amount)), period:String(months), rate:String(ratePct), startMonth:new Date().getMonth(), startYear:new Date().getFullYear()};
@@ -4071,6 +4181,7 @@ function buildDemoBundle(prefs){
   }finally{
     profile=realProfile;
     form=realForm;
+    myLoans=realLoans;
   }
   return {lang:prefs.lang, currency:'USD', currentTheme:prefs.currentTheme, profile:profileSnap, profileSaved:true, saved:savedLoans, form:savedLoans[0].form, plansModel:PLANS_MODEL};
 }
@@ -4195,6 +4306,7 @@ function persistState(){
       lang, currency, currentTheme,
       profile, profileSaved,
       saved,
+      myLoans,
       form,
       plansModel:PLANS_MODEL,
       existingNotice:_existingNotice,
@@ -4236,8 +4348,12 @@ function isKnownTheme(th){return THEMES.some(x=>x.id===th);}
 function migrateToPlans(s){
   if(s.plansModel===PLANS_MODEL||!Array.isArray(s.saved)) return;
   const oldSum=saved.filter(x=>x.type!=='scenario').reduce((sum,x)=>sum+(+x.loanMonthly||0),0);
-  saved.forEach(x=>{delete x.type;});
-  if(isDemoMode()){profile.existing='0';return;}
+  const demo=isDemoMode();
+  saved.forEach(x=>{
+    if(!demo&&x.type!=='scenario') x.countedMonthly=x.loanMonthly;
+    delete x.type;
+  });
+  if(demo){profile.existing='0';return;}
   profile.existing=String(+oldSum.toFixed(curDec()));
   if(oldSum>0) _existingNotice=true;
 }
@@ -4249,6 +4365,7 @@ function applyLoadedState(s){
   if(s.profile&&typeof s.profile==='object') profile={...blankProfile(),...s.profile};
   if(typeof s.profileSaved==='boolean') profileSaved=s.profileSaved;
   if(Array.isArray(s.saved)) saved=sanitizeSaved(s.saved);
+  myLoans=sanitizeSaved(s.myLoans);
   if(s.form&&typeof s.form==='object') form={...form,...s.form};
   _existingNotice=!!s.existingNotice;
   migrateToPlans(s);
@@ -4345,7 +4462,7 @@ const GUIDE_HELP={
   profile:{en:{title:'Financial profile',body:'Your financial file holds the numbers emiGo reuses for every loan:\n\n• Monthly salary and extra income\n• Fixed and variable expenses\n• Existing loan payments you are paying now (you enter them)\n• Bank installment limit percentage and whether it is on gross or net income\n\nSave this file once so each new loan uses realistic limits.'},ar:{title:'الملف المالي',body:'ملفك المالي يجمع الأرقام التي يعيد تطبيق emiGo استخدامها مع كل قرض:\n\n• الراتب الشهري والدخل الإضافي\n• المصروفات الثابتة والمتغيرة\n• أقساط القروض التي تدفعها حاليا وتكتبها بنفسك\n• حد القسط البنكي كنسبة مئوية وعلى أساس الدخل الإجمالي أو الصافي\n\nاحفظ الملف مرة واحدة ليحسب كل قرض جديد بحدود واقعية.'},es:{title:'Perfil financiero',body:'Tu archivo financiero guarda los números que emiGo reutiliza en cada préstamo:\n\n• Salario mensual e ingresos extra\n• Gastos fijos y variables\n• Cuotas de préstamos que pagas ahora (las escribes tú)\n• Límite bancario de cuota en porcentaje y si aplica sobre ingreso bruto o neto\n\nGuárdalo una vez para que cada préstamo nuevo use límites realistas.'}},
   loan:{en:{title:'Create a loan',body:'From Home tap Get Started, then enter:\n\n• Loan type\n• Loan amount\n• Repayment period\n• Annual interest rate\n• Optional start date\n\nTap Calculate to open the four result pages.'},ar:{title:'إنشاء قرض',body:'من الرئيسية اضغط ابدأ ثم أدخل:\n\n• نوع القرض\n• مبلغ القرض\n• مدة السداد\n• معدل الفائدة السنوي\n• تاريخ البداية إن احتجت\n\nثم اضغط احسب قرضي لفتح صفحات النتائج الأربع.'},es:{title:'Crear un préstamo',body:'En Inicio toca Empezar e ingresa:\n\n• Tipo de préstamo\n• Monto\n• Plazo\n• Tasa anual\n• Fecha de inicio opcional\n\nToca Calcular para abrir las cuatro páginas de resultados.'}},
   results:{en:{title:'Understand results',body:'After Calculate you get four pages:\n\n• Report — installment, cost, interest, affordability\n• Charts — principal vs interest visually\n• Schedule — month-by-month table\n• Simulate — what-if changes instantly\n\nThe intro tour gives a short overview; open this Help topic anytime for the full list.'},ar:{title:'فهم النتائج',body:'بعد الحساب تظهر أربع صفحات:\n\n• التقرير — القسط والتكلفة والفائدة والقدرة على السداد\n• الرسوم — توزيع الأصل والفائدة بصريا\n• الجدول — أقساط شهرية ورصيد متبق\n• المحاكاة — ماذا لو تغير المبلغ أو الفائدة أو المدة\n\nالجولة التعريفية تعطي نظرة عامة قصيرة؛ افتح هذا الموضوع من الدليل في أي وقت للقائمة كاملة.'},es:{title:'Entender resultados',body:'Tras Calcular tienes cuatro páginas:\n\n• Informe — cuota, costo, interés y asequibilidad\n• Gráficos — capital frente a interés\n• Tabla — mes a mes\n• Simular — cambios al instante\n\nEl tour da un resumen breve; abre este tema de la guía cuando quieras la lista completa.'}},
-  save:{en:{title:'Save & compare',body:'On the Report page tap Save plan to keep it on Home. You can keep up to 4 plans. With two or more, use Compare to see them side by side.\n\nA saved plan is not a debt: it never changes your existing payments.'},ar:{title:'الحفظ والمقارنة',body:'من صفحة التقرير اضغط حفظ الخطة لتظهر في الرئيسية. يمكنك الاحتفاظ بـ 4 خطط. عند وجود خطتين أو أكثر استخدم مقارنة لعرضهما جنبا إلى جنب.\n\nالخطة المحفوظة ليست دينا: لا تغير أقساطك القائمة أبدا.'},es:{title:'Guardar y comparar',body:'En Informe toca Guardar plan para dejarlo en Inicio. Puedes tener hasta 4 planes. Con dos o más usa Comparar para verlos juntos.\n\nUn plan guardado no es una deuda: nunca cambia tus cuotas actuales.'}},
+  save:{en:{title:'Save & compare',body:'On the Report page tap Save plan to keep it on Home. You can keep up to 4 plans. With two or more, use Compare to see them side by side.\n\nA saved plan is not a debt: it never changes your payments. When you really take a loan, tap I took this loan on its card: it moves to My loans with all its details, and its payment counts in your profile.'},ar:{title:'الحفظ والمقارنة',body:'من صفحة التقرير اضغط حفظ الخطة لتظهر في الرئيسية. يمكنك الاحتفاظ بـ 4 خطط. عند وجود خطتين أو أكثر استخدم مقارنة لعرضهما جنبا إلى جنب.\n\nالخطة المحفوظة ليست دينا: لا تغير أقساطك. وعندما تأخذ قرضا فعلا اضغط أخذت هذا القرض في بطاقته، فينتقل إلى قروضي بكل تفاصيله ويحسب قسطه من ملفك المالي.'},es:{title:'Guardar y comparar',body:'En Informe toca Guardar plan para dejarlo en Inicio. Puedes tener hasta 4 planes. Con dos o más usa Comparar para verlos juntos.\n\nUn plan guardado no es una deuda: no cambia tus cuotas. Cuando tomes un préstamo de verdad pulsa Tomé este préstamo en su tarjeta: pasa a Mis préstamos con sus detalles y su cuota cuenta en tu perfil.'}},
   demo:{en:{title:'Demo mode',body:'Demo mode protects your privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. You return to it after biometrics or device PIN. Find Demo on Home (eye icon) or in Settings.'},ar:{title:'وضع العرض التجريبي',body:'هدف وضع العرض التجريبي حماية خصوصيتك وخصوصية ملفك المالي. يفتح أرقاما تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك الحقيقي.\n\nملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بأيقونة العين أو من الإعدادات.'},es:{title:'Modo demo',body:'El modo demo protege tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. Vuelves a él con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'}}
 };
 
@@ -4372,9 +4489,9 @@ const GUIDE_FEATURES=[
     teaser:{en:'New in emiGo: Saved plans',ar:'جديد في \u2068emiGo\u2069: الخطط المحفوظة',es:'Nuevo en emiGo: Planes guardados'},
     title:{en:'Saved plans',ar:'الخطط المحفوظة',es:'Planes guardados'},
     body:{
-      en:'Every loan you save is now a plan to compare before you go to the bank, not a debt.\n\nYou enter the payments you make today in your profile, and they never change when you save or delete a plan. Keep up to 4 plans, and each one shows if it fits your bank limit.',
-      ar:'كل قرض تحفظه أصبح خطة تقارنها قبل الذهاب إلى البنك، وليس دينا عليك.\n\nأقساطك الحالية تكتبها بنفسك في ملفك المالي، ولا تتغير عند حفظ خطة أو حذفها. يمكنك الاحتفاظ بـ 4 خطط، وكل خطة توضح هل هي ضمن حد البنك.',
-      es:'Cada préstamo que guardas ahora es un plan para comparar antes de ir al banco, no una deuda.\n\nEscribes tus cuotas actuales en tu perfil y no cambian al guardar o eliminar un plan. Guarda hasta 4 planes y cada uno muestra si cabe en el límite del banco.'
+      en:'Every loan you save is now a plan to compare before you go to the bank, not a debt.\n\nYou enter the payments you make today in your profile, and they never change when you save or delete a plan. Keep up to 4 plans, and each one shows if it fits your bank limit. When you really take one, it moves to My loans with all its details.',
+      ar:'كل قرض تحفظه أصبح خطة تقارنها قبل الذهاب إلى البنك، وليس دينا عليك.\n\nأقساطك الحالية تكتبها بنفسك في ملفك المالي، ولا تتغير عند حفظ خطة أو حذفها. يمكنك الاحتفاظ بـ 4 خطط، وكل خطة توضح هل هي ضمن حد البنك. وعندما تأخذ قرضا فعلا ينتقل إلى قسم قروضي بكل تفاصيله.',
+      es:'Cada préstamo que guardas ahora es un plan para comparar antes de ir al banco, no una deuda.\n\nEscribes tus cuotas actuales en tu perfil y no cambian al guardar o eliminar un plan. Guarda hasta 4 planes y cada uno muestra si cabe en el límite del banco. Cuando tomes uno de verdad, pasa a Mis préstamos con sus detalles.'
     }},
   {id:'demo_mode',
     teaser:{en:'New in emiGo: Demo mode',ar:'جديد في \u2068emiGo\u2069: وضع العرض التجريبي',es:'Nuevo en emiGo: Modo demo'},

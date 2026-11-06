@@ -75,6 +75,7 @@ const REAL = [
   'niceStep', 'simAmountBounds', 'syncSimToForm', 'simSlide', 'toggleManual', 'applyManual',
   'simUpdate', 'firstSentence', 'getStartDate',
   'confirmSheet', 'closeConfirmSheet', 'isOverlayOpen', 'handleBackButton', 'registerBackButton',
+  'myLoansTotal', 'realPayments', 'takePlan', 'confirmDeleteMyLoan', 'renderHomeLoans', 'loanLastPayment',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
   'syncProfileToInputs', 'goStep', 'calculate', 'openSavedDetail', 'goHome',
@@ -84,7 +85,7 @@ const STATE = `
   const CUR_DEC={OMR:3,KWD:3,BHD:3,IDR:0};
   const PROFILE_KEYS=['salary','income','expenses','variable','existing','employment','risk'];
   const MAX_SAVED_PLANS=4, PLANS_MODEL=1, RISK_LEVELS=['safe','moderate','risky'];
-  let lang='en',currency='USD',results=null,saved=[],extraLoans=[],isPremium=false;
+  let lang='en',currency='USD',results=null,saved=[],myLoans=[],extraLoans=[],isPremium=false,_viewingMyLoan=false;
   let _confirmResolve=null,currentTheme='light',_existingNotice=false,_demo=false,_sim={amt:50000,per:36,rate:8.5};
   const CURRENCIES=[{id:'USD',symbol:'$'},{id:'OMR',symbol:'ر.ع'},{id:'IDR',symbol:'Rp'},{id:'KWD',symbol:'د.ك'},{id:'BHD',symbol:'د.ب'},{id:'NONE',symbol:''}];
   let profileSaved=true,_editingLoanIdx=null,_viewingSavedLoan=false,_savedSnap=null;
@@ -95,6 +96,7 @@ const STATE = `
     monthlyInstallment:'Monthly',totalCost:'Total',totalInterest:'Interest',dtiRatio:'DTI',compareTitle:'Compare'};}
   function savedLoanDisplayName(s){return s.name||'';}
   function escapeHtml(v){return String(v);}
+  function ltIcon(){return '';}
   function isDemoMode(){return _demo;}
   function isKnownLang(l){return !!T[l];}
   function isKnownCurrency(){return true;}
@@ -512,7 +514,7 @@ const oldState = (over = '') => `({lang:'ar',currency:'OMR',profileSaved:true,
   check('migration: the notice is pending', p.run('_existingNotice') === true);
   p.run('showExistingNotice()');
   check('notice: tells people to delete loans they really pay',
-    p.el('existing-notice-body').textContent.includes('فاحذفه من خططك'));
+    p.el('existing-notice-body').textContent.includes('أخذت هذا القرض'));
   check('notice: RTL in Arabic', p.el('existing-notice-overlay').dir === 'rtl');
   p.run('closeExistingNotice()');
   check('notice: closes and clears', p.run('_existingNotice') === false
@@ -556,9 +558,12 @@ const oldState = (over = '') => `({lang:'ar',currency:'OMR',profileSaved:true,
   check('demo: plans are measured alone', p.run('_b.saved.every(s=>s.results.existing===0)') === true);
   check('demo: bundle is on the plans model', p.run('_b.plansModel') === 1);
   check('demo: bundle keeps two plans', p.run('_b.saved.length') === 2);
+  p.run(`_demo=false;myLoans=[${plan('active', 500)}];var _c=buildDemoBundle({lang:'en',currentTheme:'light'});`);
+  check('demo: real loans never reach the sample numbers', p.run('_c.saved.every(s=>s.results.existing===0)') === true);
+  check('demo: building it leaves the real loans in place', p.run('myLoans.length') === 1);
 }
-check('backup restore runs the same migration', /sanitizeSaved\(s\.saved\);\s*if\(s\.form[^\n]*\n\s*migrateToPlans\(s\)/.test(html));
-check('backups record the plans model', /saved, form,\s*plansModel:PLANS_MODEL/.test(html));
+check('backup restore runs the same migration', /sanitizeSaved\(s\.saved\);\s*myLoans=sanitizeSaved\(s\.myLoans\);\s*if\(s\.form[^\n]*\n\s*migrateToPlans\(s\)/.test(html));
+check('backups record the plans model', /saved, myLoans, form,\s*plansModel:PLANS_MODEL/.test(html));
 check('saved state records the plans model', /form,\s*plansModel:PLANS_MODEL,\s*existingNotice:_existingNotice/.test(html));
 check('storage key is unchanged', /const STORAGE_KEY='sla_v1'/.test(html));
 check('the reschedule tab is hidden', /id="tab-restructure" style="display:none"/.test(html));
@@ -665,7 +670,7 @@ check('the last payment is start + N-1 in report and PDF',
   (html.match(/endDate\.setMonth\(endDate\.getMonth\(\)\+months-1\)/g) || []).length === 2
   && !/endDate\.getMonth\(\)\+months\)/.test(html));
 for (const label of ["'آخر قسط'", "'Última cuota'", "'Last payment'"]) {
-  check(`the row is named ${label} in report and PDF`, html.split(label).length - 1 === 2);
+  check(`the row is named ${label} in report and PDF`, html.split(label).length - 1 >= 2);
 }
 {
   const p = newPage();
@@ -883,7 +888,7 @@ check('compare with a bank offer starts collapsed', html.includes(`<details clas
 }
 {
   const card = extractFunction('renderHomeSaved');
-  check('plan card buttons are at least 40px', (card.match(/min-height:40px/g) || []).length === 3);
+  check('plan card buttons are at least 40px', (card.match(/min-height:40px/g) || []).length === 4);
 }
 
 // ── Arabic text and guide ──────────────────────────────────────────────────
@@ -893,6 +898,103 @@ check('no Arabic diacritics in update notes', !/[\u064B-\u0652\u0670]/.test(sw))
 check('the tour teaches plans', html.includes("title:{en:'Plans, compare & Demo'") && html.includes('احفظ حتى 4 خطط في الرئيسية'));
 check('the tour mentions the payments you enter', html.includes('وأقساطك الحالية وحد القسط البنكي'));
 check('what is new announces plans first', html.indexOf("id:'plans_model'") < html.indexOf("id:'demo_mode'") && html.includes("id:'plans_model'"));
+
+// ── My loans: real loans, chosen on purpose ────────────────────────────────
+console.log('\nMy loans');
+{
+  const p = newPage();
+  p.run(`profile.existing='100';saved=[${plan('active', 150, 5000)},${plan('active', 300)}];`);
+  check('a saved plan is not a real payment', p.run('realPayments()') === 100);
+  p.run('takePlan(0)');
+  check('taking asks first', p.el('confirm-sheet').style.display === 'flex' && p.run('myLoans.length') === 0);
+  check('the question is explicit', p.el('confirm-sheet-title').textContent === 'Did you really take this loan?');
+  p.run('closeConfirmSheet(false)');
+  await settle();
+  check('cancel changes nothing', p.run('saved.length') === 2 && p.run('myLoans.length') === 0);
+  p.run('takePlan(0)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('the plan leaves the four', p.run('saved.length') === 1);
+  check('the loan keeps every detail', p.run('myLoans[0].loanAmount') === 5000 && p.run('myLoans[0].form.period') === '12');
+  check('the total is the manual number plus the loan', p.run('realPayments()') === 250);
+  check('the manual number is not touched', p.run('profile.existing') === '100');
+  check('the taking is stored', p.sandbox.persisted >= 1);
+  check('new calculations count it', p.run('analyse().existing') === 250);
+  check('the bank room counts it', p.run('planWithinBankLimit(951)') === false && p.run('planWithinBankLimit(950)') === true);
+  p.run('renderCompare()');
+  p.run(`saved=[${plan('active', 600)},${plan('active', 300)}];renderCompare()`);
+  check('compare counts it and does not list it', p.el('compare-body').innerHTML.includes('>1,450<'));
+  p.run('renderHomeLoans()');
+  check('the section appears', p.el('home-loans-section').style.display === 'block');
+  check('the section shows the other payments', p.el('home-loans-sub').textContent.includes('Other payments: $ 100'));
+  check('the loan card shows its payment', p.el('home-loans-list').innerHTML.includes('$ 150'));
+  p.run('openSavedDetail(0,true)');
+  check('a loan opened from My loans does not count itself', +p.run('results.existing') === 100);
+  check('the view knows where it came from', p.run('_viewingMyLoan') === true);
+  check('its real profile stays manual', p.run('profile.existing') === '100');
+  p.run(`_savedSnap=null;_viewingSavedLoan=false`);
+  p.run('openSavedDetail(0)');
+  check('a plan opened counts every real payment', +p.run('results.existing') === 250);
+  p.run(`_savedSnap=null;_viewingSavedLoan=false`);
+  p.run('confirmDeleteMyLoan(0)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('deleting a finished loan lowers the total', p.run('realPayments()') === 100 && p.run('myLoans.length') === 0);
+  p.run('renderHomeLoans()');
+  check('an empty section hides', p.el('home-loans-section').style.display === 'none');
+}
+{
+  const p = newPage();
+  p.run(`saved=[${[1, 2, 3, 4].map((n) => plan('active', n)).join(',')}]`);
+  p.run('takePlan(0)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  p.run(`results={monthly:9};form.amount='4321';_lastSaveClick=0`);
+  p.run('saveScenario()');
+  check('taking frees a place among the four', p.run('saved.length') === 4 && p.run('myLoans.length') === 1);
+  p.run(`myLoans=[${Array.from({ length: 9 }, (_, n) => plan('active', n + 1)).join(',')}];saved=[]`);
+  check('My loans has no limit', p.run('myLoans.length') === 9 && p.run('hasRoomToSave()') === true);
+}
+{
+  // An old user: the manual number already holds their real loan.
+  const p = newPage();
+  p.run(`applyLoadedState(${oldState()})`);
+  check('migration remembers what it counted', p.run('saved[0].countedMonthly') === 100.1234 && p.run('saved[2].countedMonthly') === undefined);
+  p.run('takePlan(0)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('taking it does not count it twice', Math.abs(p.run('realPayments()') - 150.1234) < 0.001);
+  check('the leftover number is right', p.run('profile.existing') === '50');
+  check('the marker does not stay on the loan', p.run('myLoans[0].countedMonthly') === undefined);
+  p.run('takePlan(1)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('a scenario was never counted so it adds in full', Math.abs(p.run('realPayments()') - 1149.1234) < 0.001);
+}
+{
+  const p = newPage();
+  p.run(`applyLoadedState(${oldState()})`);
+  p.run(`profile.existing='0'`);
+  p.run('takePlan(0)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('a zeroed number never goes negative', p.run('profile.existing') === '0');
+}
+{
+  const p = newPage();
+  p.run(`applyLoadedState({plansModel:1,saved:[],form:{},myLoans:[${plan('active', 70)}]})`);
+  check('saved loans come back on load', p.run('myLoans.length') === 1);
+  p.run(`applyLoadedState({plansModel:1,saved:[],form:{}})`);
+  check('a file without the section loads empty', p.run('myLoans.length') === 0);
+  p.run(`applyLoadedState({plansModel:1,saved:[],form:{},myLoans:'bad'})`);
+  check('a damaged section is ignored', p.run('myLoans.length') === 0);
+}
+check('the sentence explains the plans', html.includes('للمقارنة فقط: ليست قروضا حقيقية ولا تخصم من ملفك المالي'));
+check('backups include My loans', /saved, myLoans, form,/.test(html));
+check('saved state includes My loans', /saved,\s*myLoans,\s*form,/.test(html));
+check('restore puts My loans back on failure', /\(\{currency,profileSaved,saved,myLoans\}=snap\)/.test(html));
+check('leaving demo clears My loans first', /saved=\[\];\s*myLoans=\[\];/.test(html));
+check('a plan edit keeps what migration counted', html.includes('if(old.countedMonthly) plan.countedMonthly=old.countedMonthly;'));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
