@@ -1,31 +1,31 @@
 /* emiGo: EMI & Loan — service worker
-   On a real release: bump VERSION (1.0, 1.1, 1.2…) and rewrite CHANGELOG.
+   On a real release: set VERSION to the app version (4.1, 4.2…) and rewrite CHANGELOG.
    VERSION is shown to users, so it is a product release, not a running fix counter.
    Quiet polish can keep VERSION and bump CACHE only so PWA clients refresh. */
-const VERSION = '1.3';
+const VERSION = '4.1';
 
 // Each sentence is its own line. U+2028 breaks the line even in the current
 // banner, and the RTL mark keeps every Arabic period with its sentence.
 function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
   ar: updateNote([
-    'تقرير أوضح يركز على الأرقام الأساسية.\u200F',
-    'مقارنة أوضح لخيارات القرض.\u200F',
-    'تحسينات عامة على سلاسة الاستخدام.\u200F'
+    'قسم جديد لقروضك الحقيقية.\u200F',
+    'مقارنة أوضح بين عروض البنوك.\u200F',
+    'شاشة رئيسية أبسط وإصلاحات عامة.\u200F'
   ]),
   en: updateNote([
-    'A clearer report focused on the numbers that matter.',
-    'Clearer loan comparisons when exploring options.',
-    'General usability improvements.'
+    'A new section for your real loans.',
+    'Clearer comparison of bank offers.',
+    'A simpler home screen and general fixes.'
   ]),
   es: updateNote([
-    'Informe más claro, centrado en lo esencial.',
-    'Comparaciones de préstamos más claras.',
-    'Mejoras generales de usabilidad.'
+    'Nueva sección para tus préstamos reales.',
+    'Comparación más clara de ofertas bancarias.',
+    'Inicio más simple y mejoras generales.'
   ])
 };
 
-const CACHE = 'smartloan-1.3e';
+const CACHE = 'smartloan-4.1';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 // Install: pre-cache core, then WAIT. No skipWaiting() here on purpose — the new
