@@ -626,7 +626,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-banklimit">MAX INSTALLMENT LIMIT (BANK)</label>
-      <div class="input-wrap"><span class="input-suffix">%</span><input class="inp has-suffix" id="inp-banklimit" type="text" inputmode="decimal" data-digits dir="ltr" placeholder="40" value="40"></div>
+      <div class="input-wrap"><span class="input-suffix">%</span><input class="inp has-suffix" id="inp-banklimit" type="text" inputmode="decimal" data-digits placeholder="40" value="40"></div>
       <p style="font-size:12px;color:var(--txt3);margin-top:5px" id="lbl-banklimit-hint">أعلى نسبة من دخلك الشهري يقبلها بنكك لقسط القرض. مثال: 40% تعني ألا يتجاوز القسط 40% من دخلك.</p>
       <div style="display:flex;gap:8px;margin-top:10px" id="basis-toggle">
         <button type="button" class="basis-opt" id="basis-gross" onclick="setLimitBasis('gross')" style="flex:1;border:1.5px solid var(--brd);background:var(--bg2);color:var(--txt);border-radius:11px;padding:9px 6px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer"></button>
@@ -2219,8 +2219,10 @@ function renderStepLabels(){
     lang==='es'?'Solo préstamos que pagas ahora':
     'Only loans you are paying now';
   if(existHint&&myLoans.length){
-    const sum=fmtPay(myLoansTotal());
-    existHint.textContent+=lang==='ar'?` · قروضي تضيف ${sum} تلقائيا، فلا تكررها هنا`:lang==='es'?` · Mis préstamos suman ${sum} solos, no los repitas`:` · My loans add ${sum} automatically, do not repeat them`;
+    const sum=fmtAmt(myLoansTotal());
+    existHint.textContent=lang==='ar'?`اكتب هنا فقط الأقساط غير المسجلة في قروضي. أقساط قروضي (${sum}) تحسب تلقائيا.`
+      :lang==='es'?`Escribe aquí solo las cuotas que no están en Mis préstamos. Mis préstamos (${sum}) ya se cuentan solos.`
+      :`Enter only payments that are not in My loans. My loans (${sum}) are counted automatically.`;
   }
   const bl=document.getElementById('lbl-banklimit');if(bl)bl.textContent=tc.q_bankLimit;
   const blh=document.getElementById('lbl-banklimit-hint');if(blh)blh.textContent=lang==='ar'
@@ -4697,7 +4699,7 @@ const GUIDE_TOUR_STEPS=[
     body:{en:'Start with salary, expenses, the payments you make today, and your bank limit. emiGo keeps this file so every plan uses realistic limits.',ar:'ابدأ بالراتب والمصروفات وأقساطك الحالية وحد القسط البنكي. يحفظ تطبيق emiGo هذا الملف ليحسب كل خطة بحدود واقعية.',es:'Empieza con salario, gastos, las cuotas que pagas hoy y el límite bancario. emiGo guarda este archivo para límites reales.'}},
   {id:'loan',target:'amount',fallback:'hero',
     title:{en:'Calculate a loan',ar:'حساب قرض',es:'Calcular un préstamo'},
-    body:{en:'Enter the loan amount here. Tap Calculate a loan on Home anytime to open this form.',ar:'أدخل مبلغ القرض هنا. من الرئيسية اضغط احسب قرضا في أي وقت لفتح هذا النموذج.',es:'Ingresa el monto aquí. En Inicio toca Calcula un préstamo cuando quieras abrir este formulario.'}},
+    body:{en:'This is the loan form. You always reach it from Calculate a loan on Home. Start here by entering the loan amount.',ar:'هذا نموذج حساب القرض، وتصل إليه دائما من زر احسب قرضا في الرئيسية. ابدأ هنا بكتابة مبلغ القرض.',es:'Este es el formulario del préstamo. Siempre llegas a él desde Calcula un préstamo en Inicio. Empieza aquí con el monto.'}},
   {id:'rate_period',target:'rate',fallback:'period',
     title:{en:'Rate & period',ar:'الفائدة والمدة',es:'Tasa y plazo'},
     body:{en:'Set the annual rate and repayment length. Small changes here can change the installment a lot.',ar:'اضبط النسبة السنوية ومدة السداد. تغيير بسيط هنا قد يغير القسط كثيرا.',es:'Define la tasa anual y el plazo. Un cambio pequeño puede alterar mucho la cuota.'}},

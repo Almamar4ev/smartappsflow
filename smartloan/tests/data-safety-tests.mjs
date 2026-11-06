@@ -1338,6 +1338,10 @@ console.log('\nNumber fields');
   check('plain digits untouched', clean('4.5') === '4.5');
 }
 check('number fields clean themselves on every input', /addEventListener\('input',e=>\{\s*if\(e\.target\.matches&&e\.target\.matches\('\[data-digits\]'\)\) cleanDigitsField/.test(html));
+check('a field with a suffix keeps the page direction', !/<input[^>]*has-suffix[^>]*dir="ltr"/.test(html));
+check('the hint says what to enter', html.includes('اكتب هنا فقط الأقساط غير المسجلة في قروضي'));
+check('the hint total follows the two-decimal rule', html.includes('const sum=fmtAmt(myLoansTotal());'));
+check('the tour says the form is reached from Home', html.includes('هذا نموذج حساب القرض، وتصل إليه دائما من زر احسب قرضا في الرئيسية'));
 for (const id of ['inp-banklimit', 'form-inp-per', 'form-inp-rate', 'manual-inp-amt', 'manual-inp-per', 'manual-inp-rate', 'bank-offer-inp']) {
   const tag = html.match(new RegExp(`<input[^>]*id="${id}"[^>]*>`))[0];
   check(`${id} is a clean text field`, tag.includes('type="text"') && tag.includes('data-digits') && tag.includes('inputmode="decimal"'));
