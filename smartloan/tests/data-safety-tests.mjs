@@ -81,6 +81,7 @@ const REAL = [
   'leaveDetailBeforeChange', 'editViewedPlan', 'deleteViewedPlan', 'applyResultsActions', 'leaveSavedDetail',
   'readHomeOpen', 'applyHomeOpen', 'setHomeOpen', 'toggleHomeSection', 'thinRemainder', 'remainderAfter',
   'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit', 'cleanDigitsField',
+  'biometricPlugin', 'deviceAuthStatus', 'authenticateForExit', 'authErrorKind', 'isNativeApp',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
   'syncProfileToInputs', 'goStep', 'calculate', 'openSavedDetail', 'goHome',
@@ -1349,6 +1350,28 @@ for (const id of ['inp-banklimit', 'form-inp-per', 'form-inp-rate', 'manual-inp-
 
 check('system bars are set again after the splash', /\[300,1200,2200,3200,4500\]\.forEach/.test(html));
 check('system bars are set again on return', /visibilitychange[^\n]*\n\s*if\(!document\.hidden\)\{ try\{ applyStatusBar/.test(html));
+
+// ── Device check for Demo mode on Android ──────────────────────────────────
+console.log('\nDevice check');
+check('no code asks for the npm-only plugin name', !html.includes('Plugins.BiometricAuth;') && !html.includes('.BiometricAuth '));
+{
+  const p = newPage();
+  const asked = [];
+  const native = (check_, auth) => ({ isNativePlatform: () => true, Plugins: { BiometricAuthNative: { checkBiometry: check_, internalAuthenticate: auth } } });
+  p.sandbox.window.Capacitor = native(async () => ({ isAvailable: true, deviceIsSecure: true }), async (o) => { asked.push(o); });
+  check('a secure phone is available', (await p.run('deviceAuthStatus()')) === 'available');
+  check('a successful check lets the user out', (await p.run('authenticateForExit()')) === 'success');
+  check('the device PIN is allowed as well', asked[0].allowDeviceCredential === true);
+  p.sandbox.window.Capacitor = native(async () => ({ isAvailable: false, deviceIsSecure: false }), async () => { throw Object.assign(new Error('x'), { code: 'userCancel' }); });
+  check('a phone with no lock says so', (await p.run('deviceAuthStatus()')) === 'unavailable');
+  check('cancelling keeps the user in demo', (await p.run('authenticateForExit()')) === 'fail');
+  p.sandbox.window.Capacitor = native(async () => ({}), async () => { throw Object.assign(new Error('x'), { code: 'biometryNotAvailable' }); });
+  check('an odd answer is an error', (await p.run('deviceAuthStatus()')) === 'error');
+  check('no biometrics at exit is unavailable', (await p.run('authenticateForExit()')) === 'unavailable');
+  p.sandbox.window.Capacitor = { isNativePlatform: () => true, Plugins: {} };
+  check('a missing plugin is an error, never a pass', (await p.run('deviceAuthStatus()')) === 'error');
+  check('a missing plugin never unlocks the exit', (await p.run('authenticateForExit()')) === 'unavailable');
+}
 
 // ── The compare table on small phones ──────────────────────────────────────
 console.log('\nCompare width');

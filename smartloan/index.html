@@ -4305,9 +4305,15 @@ function bufFromB64(b64){
   return a;
 }
 function randomBytes(n){ const a=new Uint8Array(n); crypto.getRandomValues(a); return a; }
+// اسم الإضافة في أندرويد BiometricAuthNative. الاسم BiometricAuth موجود في حزمة npm فقط،
+// وهذا التطبيق بلا حزم، لذلك نصل إلى الطبقة الأصلية ودالتها internalAuthenticate مباشرة
+function biometricPlugin(){
+  const plugins=window.Capacitor && window.Capacitor.Plugins;
+  return (plugins && plugins.BiometricAuthNative) || null;
+}
 async function deviceAuthStatus(){
   if(isNativeApp()){
-    const p=window.Capacitor.Plugins && window.Capacitor.Plugins.BiometricAuth;
+    const p=biometricPlugin();
     if(!p || !p.checkBiometry) return 'error';
     try{
       const r=await p.checkBiometry();
@@ -4358,10 +4364,10 @@ function authErrorKind(err){
 }
 async function authenticateForExit(){
   if(isNativeApp()){
-    const p=window.Capacitor.Plugins && window.Capacitor.Plugins.BiometricAuth;
-    if(!p || !p.authenticate) return 'unavailable';
+    const p=biometricPlugin();
+    if(!p || !p.internalAuthenticate) return 'unavailable';
     try{
-      await p.authenticate({
+      await p.internalAuthenticate({
         reason: lang==='ar'?'للعودة إلى ملفك':lang==='es'?'Para volver a tu archivo':'To return to your file',
         cancelTitle: lang==='ar'?'إلغاء':lang==='es'?'Cancelar':'Cancel',
         allowDeviceCredential:true,
