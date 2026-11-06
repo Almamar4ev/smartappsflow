@@ -79,6 +79,8 @@ const REAL = [
   'planTitle', 'planAmount', 'planLabelInput', 'setPlanLabelInput', 'planRow',
   'comparePlans', 'compareSide', 'compareVerdict',
   'leaveDetailBeforeChange', 'editViewedPlan', 'deleteViewedPlan', 'applyResultsActions', 'leaveSavedDetail',
+  'readHomeOpen', 'applyHomeOpen', 'setHomeOpen', 'toggleHomeSection', 'thinRemainder', 'remainderAfter',
+  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
   'syncProfileToInputs', 'goStep', 'calculate', 'openSavedDetail', 'goHome',
@@ -94,6 +96,8 @@ const STATE = `
   let profileSaved=true,_editingLoanIdx=null,_viewingSavedLoan=false,_savedSnap=null;
   let _viewingSavedIdx=-1,_profileReturn=null,_lastSaveClick=0,_guideTourActive=false;
   let profile,form;
+  const HOME_OPEN_KEY='emigo_home_open';
+  let _homeOpen={loans:false,plans:false};
   const T={en:{lt_personal:'Personal',lt_car:'Car'},ar:{lt_personal:'x',lt_car:'y'},es:{lt_personal:'x',lt_car:'y'}};
   function t(){return {saveScenario:'Save',savedScenarios:'My saved plans',months:'mo',noSaved:'none',
     monthlyInstallment:'Monthly',totalCost:'Total',totalInterest:'Interest',dtiRatio:'DTI',compareTitle:'Compare'};}
@@ -121,6 +125,7 @@ function newPage() {
     id, value: '', style: {}, textContent: '', dir: '', onclick: null, clicks: 0,
     classList: makeClassList(),
     focus() {}, select() {}, scrollIntoView() {}, click() { this.clicks++; },
+    setAttribute(k, v) { this[k] = v; },
   });
   el('s3-back').onclick = 'original-back';
   const activeRef = { value: 'home' };
@@ -575,7 +580,7 @@ check('storage key is unchanged', /const STORAGE_KEY='sla_v1'/.test(html));
 check('the reschedule tab is hidden', /id="tab-restructure" style="display:none"/.test(html));
 check('no activate-scenario code remains', !/activateScenario|confirmActivate/.test(html));
 check('no "replaces" banner remains', !/scenario-replace-banner|_replacedLoan/.test(html));
-check('the save button says plan', ["saveScenario:'Save plan'", "saveScenario:'حفظ الخطة'", "saveScenario:'Guardar plan'"].every((x) => html.includes(x)));
+check('the save button says plan', ["saveScenario:'Save as plan'", "saveScenario:'حفظ كخطة'", "saveScenario:'Guardar como plan'"].every((x) => html.includes(x)));
 check('the hint is in all languages', ['أقساط قروض تدفعها حاليا فقط', 'Only loans you are paying now', 'Solo préstamos que pagas ahora'].every((x) => html.includes(x)));
 
 // ── Money shows the decimals of its currency ───────────────────────────────
@@ -931,7 +936,7 @@ console.log('\nMy loans');
   check('compare counts it and does not list it', p.el('compare-body').innerHTML.includes('>1,450<'));
   p.run('renderHomeLoans()');
   check('the section appears', p.el('home-loans-section').style.display === 'block');
-  check('the section shows the other payments', p.el('home-loans-sub').textContent.includes('Other payments: $ 100'));
+  check('the section shows the other payments', p.el('home-loans-note').textContent.includes('Other payments: $ 100'));
   check('the loan card shows its payment', p.el('home-loans-list').innerHTML.includes('$ 150'));
   p.run('openSavedDetail(0,true)');
   check('a loan opened from My loans does not count itself', +p.run('results.existing') === 100);
@@ -994,7 +999,8 @@ console.log('\nMy loans');
   p.run(`applyLoadedState({plansModel:1,saved:[],form:{},myLoans:'bad'})`);
   check('a damaged section is ignored', p.run('myLoans.length') === 0);
 }
-check('the sentence explains the plans', html.includes('احفظ عروض البنوك لنفس القرض وقارن بينها. ليست قروضا حقيقية ولا تخصم من ملفك المالي'));
+check('the short line stays visible', html.includes('للمقارنة فقط، ليست قروضا حقيقية'));
+check('the open list explains the plans', html.includes('احفظ عروض البنوك لنفس القرض وقارن بينها. ولا تخصم من ملفك المالي.'));
 check('backups include My loans', /saved, myLoans, form,/.test(html));
 check('saved state includes My loans', /saved,\s*myLoans,\s*form,/.test(html));
 check('restore puts My loans back on failure', /\(\{currency,profileSaved,saved,myLoans\}=snap\)/.test(html));
@@ -1194,6 +1200,113 @@ console.log('\nPlan rows and actions');
   check('edit loads the plan', p.run('_editingLoanIdx') === 0 && p.run('form.amount') === '5000');
   check('edit keeps the real number', p.run('profile.existing') === '30');
   check('edit opens the form', p.active() === 'step3');
+}
+
+// ── Home sections open and close ───────────────────────────────────────────
+console.log('\nHome sections');
+{
+  const p = newPage();
+  const store = {};
+  p.sandbox.localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = v; } };
+  p.run(`saved=[${offer(100, 900)}];myLoans=[${offer(80, 700)}]`);
+  p.run('applyHomeOpen()');
+  check('both lists start closed', p.el('home-loans-body').hidden === true && p.el('home-plans-body').hidden === true);
+  p.run(`toggleHomeSection('loans')`);
+  check('a tap opens a list', p.el('home-loans-body').hidden === false && p.el('home-loans-toggle')['aria-expanded'] === 'true');
+  check('the other list stays closed', p.el('home-plans-body').hidden === true);
+  check('the choice is remembered', JSON.parse(store.emigo_home_open || '{}').loans === true);
+  check('it is kept apart from the user data', p.sandbox.persisted === 0);
+  check('it comes back on restart', p.run('readHomeOpen().loans') === true && p.run('readHomeOpen().plans') === false);
+  p.run(`toggleHomeSection('loans')`);
+  check('a second tap closes it', p.el('home-loans-body').hidden === true);
+  store.emigo_home_open = 'not json';
+  check('a damaged value is ignored', p.run('readHomeOpen().loans') === false);
+  p.run(`saved=[]`);
+  p.run('applyHomeOpen()');
+  check('an empty plans list stays open to explain itself', p.el('home-plans-body').hidden === false);
+  check('an empty plans list has nothing to toggle', p.el('home-plans-toggle').disabled === true);
+  p.run(`saved=[${offer(100, 900)}];_homeOpen.plans=false;applyHomeOpen()`);
+  check('the plans are closed before saving', p.el('home-plans-body').hidden === true);
+  p.run(`results={monthly:9};form.amount='4321';_lastSaveClick=0`);
+  p.run('saveScenario()');
+  check('saving shows the new plan', p.el('home-plans-body').hidden === false);
+  p.run(`_homeOpen.loans=false;takePlan(0)`);
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('taking shows the new loan', p.el('home-loans-body').hidden === false);
+}
+check('the hero says calculate', html.includes("'احسب قرضا'") && html.includes("'واحفظه كخطة لتقارن بين العروض'"));
+check('no button promises a new loan', !html.includes('+ قرض جديد') && !html.includes('hero-btn'));
+check('the guide no longer names a missing button', !html.includes('اضغط ابدأ') && !html.includes('Get Started'));
+
+// ── Bank limit against what is really left ─────────────────────────────────
+console.log('\nBank limit and what is left');
+check('thin: at the same line as the home ring', extractFunction('thinRemainder').includes('<=15'));
+{
+  // A tight budget: three real loans and one manual payment.
+  const p = newPage();
+  p.run(`currency='OMR';profile.salary='2332';profile.expenses='560';profile.variable='550';profile.existing='100';profile.bankLimit='60';
+         myLoans=[${offer(225.791, 837.95, { period: 48, rate: 4 })},${offer(139.002, 1676.14, { period: 84, rate: 4.5 })},${offer(731.576, 40462.64, { amount: 100000, period: 192, rate: 4.5 })}]`);
+  check('all real payments add up', Math.abs(p.run('realPayments()') - 1196.369) < 1e-9);
+  check('the remainder matches home', Math.abs(p.run('remainderAfter(0).remaining') - 25.631) < 1e-9);
+  check('15% of income or less is thin', p.run('thinRemainder(1200,8000)') === true && p.run('thinRemainder(1201,8000)') === false);
+  check('a deficit is thin', p.run('thinRemainder(-5,8000)') === true);
+  check('no income is not thin', p.run('thinRemainder(0,0)') === false);
+  p.run('openSavedDetail(0,true)');
+  check('a loan does not count itself', Math.abs(p.run('results.existing') - 970.578) < 1e-9);
+  check('the same remainder from inside the loan', Math.abs(p.run('results.remaining') - 25.631) < 1e-9);
+  p.run('renderBankLimitCard(results)');
+  const card = p.el('banklimit-card').innerHTML;
+  check('it warns that little is left', card.includes('Within the bank limit, but little is left'));
+  check('it shows all payments against the limit', card.includes('1,196.37') && card.includes('1,399.2'));
+  check('it shows what is left', card.includes('25.63'));
+  check('it is amber, not green', card.includes('--mod') && !card.includes('--safe') && !card.includes('✓'));
+  check('a taken loan offers no new borrowing', !card.includes('You can borrow') && !card.includes('Maximum amount'));
+  p.run('leaveSavedDetail()');
+  const row = p.run(`planRow(${offer(50, 900)},0,false)`);
+  check('a plan row warns too', row.includes('Little left') && row.includes('--mod'));
+}
+{
+  const p = newPage();
+  p.run(`profile.salary='10000';profile.expenses='500';profile.variable='0';profile.existing='0';profile.bankLimit='40';saved=[${offer(300, 900)}]`);
+  p.run('openSavedDetail(0)');
+  p.run('renderBankLimitCard(results)');
+  const card = p.el('banklimit-card').innerHTML;
+  check('plenty left stays green', card.includes('Your installment is within the limit') && card.includes('✓') && !card.includes('--mod'));
+  check('a plan still shows the borrowing room', card.includes('You can borrow up to'));
+  p.run('leaveSavedDetail()');
+  check('a plan row stays plain', p.run(`planRow(saved[0],0,false)`).includes('Within limit'));
+}
+{
+  const p = newPage();
+  p.run(`profile.salary='1000';profile.expenses='800';profile.variable='0';profile.existing='0';profile.bankLimit='50';saved=[${offer(400, 900)}]`);
+  p.run('openSavedDetail(0)');
+  p.run('renderBankLimitCard(results)');
+  const card = p.el('banklimit-card').innerHTML;
+  check('within the limit with a deficit says so', card.includes('with a monthly deficit') && card.includes('$ 200'));
+  p.run('leaveSavedDetail()');
+  p.run(`myLoans=[${offer(600, 900)}]`);
+  p.run('openSavedDetail(0,true)');
+  p.run('renderBankLimitCard(results)');
+  const over = p.el('banklimit-card').innerHTML;
+  check('a loan over the limit says all payments', over.includes('Your payments exceed the limit'));
+  check('a taken loan gets no term advice', !over.includes('extend the repayment') && !over.includes('Reduce it'));
+}
+check('a taken loan is not called new', html.includes("'قسط هذا القرض'") && html.includes("'أقساطك الأخرى'"));
+
+// ── The compare table on small phones ──────────────────────────────────────
+console.log('\nCompare width');
+{
+  const p = newPage();
+  p.run(`saved=[${offer(100, 900)},${offer(90, 1000)}];renderCompare()`);
+  const box = p.el('cmp-table');
+  box.scrollWidth = 341; box.clientWidth = 320;
+  p.run('fitCompareTable()');
+  check('a table that does not fit changes layout', box.classList.contains('stacked'));
+  box.scrollWidth = 320;
+  p.run('fitCompareTable()');
+  check('a table that fits stays a table', !box.classList.contains('stacked'));
+  check('the table knows its column count', p.el('compare-body').innerHTML.includes('--cols:2'));
 }
 
 console.log(`\nPassed: ${passed}`);
