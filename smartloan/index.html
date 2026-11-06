@@ -93,8 +93,9 @@ html.guide-tour-on .screen{animation:none!important}
 #home{flex-direction:column;overflow-y:auto}
 .home-top{position:relative;padding:calc(20px + var(--safe-top)) 20px 0;flex-shrink:0}
 .home-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.home-app-name{font-size:25px;font-weight:900;line-height:1.1;color:var(--txt)}
+.home-app-name{font-size:27px;font-weight:900;line-height:1.1;color:var(--txt)}
 .home-actions{display:flex;gap:8px;align-items:center}
+@media(max-width:359px){.home-app-name{font-size:23px}}
 @media(max-width:339px){.home-app-name{font-size:21px}.home-actions{gap:5px}.home-actions .icon-btn{padding:7px 7px}}
 #demo-banner{display:none;position:relative;flex-shrink:0;z-index:5;align-items:center;justify-content:space-between;gap:10px;padding:calc(8px + var(--safe-top)) 14px 8px;background:#f5e6b8;color:#5c4813;font-size:13px;font-weight:800;box-shadow:0 1px 0 rgba(92,72,19,.15)}
 #demo-banner button{background:#fff;color:#5c4813;border:1px solid rgba(92,72,19,.25);border-radius:10px;padding:7px 10px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
@@ -625,7 +626,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-banklimit">MAX INSTALLMENT LIMIT (BANK)</label>
-      <div class="input-wrap"><span class="input-suffix">%</span><input class="inp has-suffix" id="inp-banklimit" type="number" inputmode="numeric" min="1" max="100" placeholder="40" value="40"></div>
+      <div class="input-wrap"><span class="input-suffix">%</span><input class="inp has-suffix" id="inp-banklimit" type="text" inputmode="decimal" data-digits dir="ltr" placeholder="40" value="40"></div>
       <p style="font-size:12px;color:var(--txt3);margin-top:5px" id="lbl-banklimit-hint">أعلى نسبة من دخلك الشهري يقبلها بنكك لقسط القرض. مثال: 40% تعني ألا يتجاوز القسط 40% من دخلك.</p>
       <div style="display:flex;gap:8px;margin-top:10px" id="basis-toggle">
         <button type="button" class="basis-opt" id="basis-gross" onclick="setLimitBasis('gross')" style="flex:1;border:1.5px solid var(--brd);background:var(--bg2);color:var(--txt);border-radius:11px;padding:9px 6px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer"></button>
@@ -660,7 +661,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <input type="range" min="1" max="30" step="1" value="3" id="range-period" oninput="updatePeriodSlider(this.value)">
       <div class="range-labels"><span>1</span><span id="period-max-lbl">30</span></div>
       <div class="period-row">
-        <input class="period-num" type="number" id="form-inp-per" value="3" step="0.5" min="0.5" inputmode="numeric" oninput="updatePeriodInput(this.value)">
+        <input class="period-num" type="text" id="form-inp-per" value="3" inputmode="decimal" data-digits dir="ltr" oninput="updatePeriodInput(this.value)">
         <select class="period-unit" id="form-per-unit" onchange="updatePeriodUnit()">
           <option value="months" id="form-opt-months">Months</option>
           <option value="years" id="form-opt-years" selected>Years</option>
@@ -673,7 +674,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
       <input type="range" min="0" max="40" step="0.01" value="5" id="range-rate" oninput="updateRateSlider(this.value)">
       <div class="range-labels"><span>0%</span><span>40%</span></div>
       <div class="rate-row">
-        <input class="rate-num" type="number" id="form-inp-rate" value="5" min="0" max="40" step="0.01" inputmode="decimal" oninput="updateRateInput(this.value)">
+        <input class="rate-num" type="text" id="form-inp-rate" value="5" inputmode="decimal" data-digits dir="ltr" oninput="updateRateInput(this.value)">
         <span class="rate-pct-badge">%</span>
       </div>
     </div>
@@ -759,9 +760,9 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
   <div class="tab-content" id="tc-simulate">
     <div class="card">
       <p class="card-label" id="lbl-sim">SCENARIO SIMULATOR</p>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt"></button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simSlide('amt',this.value)"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="number" id="manual-inp-amt" step="any" inputmode="decimal" oninput="applyManual('amt')"></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simSlide('per',this.value)"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="number" id="manual-inp-per" inputmode="numeric" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" selected id="opt-years">Years</option></select></div></div></div>
-      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0" max="40" step="0.01" value="5" id="sim-range-rate" oninput="simSlide('rate',this.value)"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="number" id="manual-inp-rate" step="0.01" inputmode="decimal" oninput="applyManual('rate')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-amt">AMOUNT</span><span class="sim-val" id="sim-amt-val"></span><button class="edit-btn" onclick="toggleManual('amt')" id="edit-btn-amt"></button></div><input type="range" min="1000" max="500000" step="1000" value="50000" id="sim-range-amt" oninput="simSlide('amt',this.value)"><div class="manual-wrap" id="manual-amt" style="display:none"><input class="manual-inp" type="text" id="manual-inp-amt" inputmode="decimal" data-digits dir="ltr" oninput="applyManual('amt')"></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-per">PERIOD</span><span class="sim-val" id="sim-per-val"></span><button class="edit-btn" onclick="toggleManual('per')" id="edit-btn-per"></button></div><input type="range" min="1" max="360" step="1" value="36" id="sim-range-per" oninput="simSlide('per',this.value)"><div class="manual-wrap" id="manual-per" style="display:none"><div style="display:flex;gap:8px"><input class="manual-inp" type="text" id="manual-inp-per" inputmode="decimal" data-digits dir="ltr" oninput="applyManual('per')"><select class="manual-sel" id="per-unit" onchange="applyManual('per')"><option value="months" id="opt-months">Months</option><option value="years" selected id="opt-years">Years</option></select></div></div></div>
+      <div class="sim-field"><div class="sim-label-row"><span class="lbl" id="sim-lbl-rate">RATE</span><span class="sim-val" id="sim-rate-val"></span><button class="edit-btn" onclick="toggleManual('rate')" id="edit-btn-rate"></button></div><input type="range" min="0" max="40" step="0.01" value="5" id="sim-range-rate" oninput="simSlide('rate',this.value)"><div class="manual-wrap" id="manual-rate" style="display:none"><input class="manual-inp" type="text" id="manual-inp-rate" inputmode="decimal" data-digits dir="ltr" oninput="applyManual('rate')"></div></div>
     </div>
     <div class="kpi-grid" id="sim-kpi"></div>
   </div>
@@ -1394,7 +1395,7 @@ function renderBankCompareCard(r){
     <label for="bank-offer-inp" style="display:block;font-size:12.5px;color:var(--txt2);font-weight:700;margin:13px 0 6px">${tc.bpCmpLabel}</label>
     <div style="display:flex;align-items:center;gap:8px;background:var(--bg3);border:1.5px solid var(--brd);border-radius:13px;padding:0 13px">
       ${sym?`<span style="font-size:13px;font-weight:800;color:var(--txt3);direction:ltr;flex:none">${sym}</span>`:''}
-      <input id="bank-offer-inp" type="number" inputmode="decimal" step="0.01" min="0" value="${String(_bankOffer).replace(/[^0-9.eE+-]/g,'')}" oninput="onBankOfferInput(this.value)" style="flex:1;min-width:0;background:none;border:0;outline:0;color:var(--txt);font:inherit;font-size:16px;font-weight:800;padding:13px 0;direction:ltr;text-align:${isAr?'right':'left'}">
+      <input id="bank-offer-inp" type="text" inputmode="decimal" data-digits dir="ltr" value="${String(_bankOffer).replace(/[^0-9.eE+-]/g,'')}" oninput="onBankOfferInput(this.value)" style="flex:1;min-width:0;background:none;border:0;outline:0;color:var(--txt);font:inherit;font-size:16px;font-weight:800;padding:13px 0;direction:ltr;text-align:${isAr?'right':'left'}">
     </div>
     <p id="bank-offer-err" style="color:var(--risk);font-size:12px;font-weight:700;margin:6px 0 0;min-height:16px"></p>
     <div id="bank-offer-out" style="padding-bottom:8px"></div>
@@ -2358,6 +2359,15 @@ function cleanAmountText(v,maxDec){
   if(dot<0||maxDec===0) return whole;
   return (whole||'0')+'.'+s.slice(dot+1).replace(/\./g,'').slice(0,maxDec);
 }
+// حقول الأرقام نصية: النوع الرقمي يرفض الأرقام العربية، أو يسقط فاصلتها فتصبح ٦٫٥ رقم 65.
+// الفاصلة هنا عشرية دائما لأن هذه الحقول لا تعرض فواصل الآلاف
+function cleanDigitsField(el){
+  const clean=cleanAmountText(String(el.value).replace(/[,،]/g,'.'),6);
+  if(el.value!==clean) el.value=clean;
+}
+document.addEventListener('input',e=>{
+  if(e.target.matches&&e.target.matches('[data-digits]')) cleanDigitsField(e.target);
+},true);
 function groupAmountText(s){
   const parts=String(s).split('.');
   return parts[0].replace(/\B(?=([0-9]{3})+(?![0-9]))/g,',')+(parts.length>1?'.'+parts[1]:'');
@@ -2394,12 +2404,12 @@ function updatePeriodUnit(){
     // السلايدر من 1 إلى 30 سنة
     if(rp){rp.min='1';rp.max='30';rp.step='1';rp.value=Math.max(1,Math.round(form.period/12));}
     if(lblMax)lblMax.textContent='30';
-    inp.value=parseFloat((form.period/12).toFixed(2));inp.step='0.5';
+    inp.value=parseFloat((form.period/12).toFixed(2));
   }else{
     // السلايدر من 1 إلى 360 شهر
     if(rp){rp.min='1';rp.max='360';rp.step='1';rp.value=form.period;}
     if(lblMax)lblMax.textContent='360';
-    inp.value=form.period;inp.step='1';
+    inp.value=form.period;
   }
 }
 function updateRateSlider(v){

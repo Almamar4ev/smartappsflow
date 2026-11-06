@@ -80,7 +80,7 @@ const REAL = [
   'comparePlans', 'compareSide', 'compareVerdict',
   'leaveDetailBeforeChange', 'editViewedPlan', 'deleteViewedPlan', 'applyResultsActions', 'leaveSavedDetail',
   'readHomeOpen', 'applyHomeOpen', 'setHomeOpen', 'toggleHomeSection', 'thinRemainder', 'remainderAfter',
-  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit',
+  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit', 'cleanDigitsField',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
   'syncProfileToInputs', 'goStep', 'calculate', 'openSavedDetail', 'goHome',
@@ -1304,7 +1304,7 @@ check('no 8.5 default is left in the app', !/value="8\.5"|rate:'8\.5'|\?8\.5:|ra
 check('the form starts in years', html.includes('id="form-opt-years" selected'));
 check('the period slider starts on the years scale', html.includes('min="1" max="30" step="1" value="3" id="range-period"'));
 check('the period box starts at 3 years', html.includes('id="form-inp-per" value="3"'));
-check('the app name is larger', /\.home-app-name\{font-size:25px/.test(html));
+check('the app name is larger', /\.home-app-name\{font-size:27px/.test(html));
 {
   const p = newPage();
   p.el('form-per-unit').value = 'months';
@@ -1319,6 +1319,27 @@ check('the app name is larger', /\.home-app-name\{font-size:25px/.test(html));
   p.run(`var _s=sanitizeSaved([${offer(100, 900, { rate: 3 })},Object.assign(${offer(100, 900)},{results:{monthly:100,interest:900,total:10900,rate:0.085},form:{amount:'10000',period:'60',rate:'',loanType:'car'}})])`);
   check('an old plan keeps the rate it used', p.run('_s[1].form.rate') === '8.5');
   check('a stated rate is left alone', p.run('_s[0].form.rate') === '3');
+}
+
+// ── Arabic digits in every number field ────────────────────────────────────
+console.log('\nNumber fields');
+{
+  const p = newPage();
+  const clean = (v) => { const e = { value: v }; p.sandbox._f = e; p.run('cleanDigitsField(_f)'); return e.value; };
+  check('Arabic digits and mark', clean('٦٫٥') === '6.5');
+  check('Arabic comma as decimal', clean('٥،٥') === '5.5');
+  check('Latin comma as decimal', clean('5,5') === '5.5');
+  check('Persian digits', clean('۱۲') === '12');
+  check('Arabic thousands mark dropped', clean('١٢٬٣٤٥') === '12345');
+  check('a dot still being typed stays', clean('5.') === '5.');
+  check('a second dot is dropped', clean('1.2.3') === '1.23');
+  check('letters are dropped', clean('a5b') === '5');
+  check('plain digits untouched', clean('4.5') === '4.5');
+}
+check('number fields clean themselves on every input', /addEventListener\('input',e=>\{\s*if\(e\.target\.matches&&e\.target\.matches\('\[data-digits\]'\)\) cleanDigitsField/.test(html));
+for (const id of ['inp-banklimit', 'form-inp-per', 'form-inp-rate', 'manual-inp-amt', 'manual-inp-per', 'manual-inp-rate', 'bank-offer-inp']) {
+  const tag = html.match(new RegExp(`<input[^>]*id="${id}"[^>]*>`))[0];
+  check(`${id} is a clean text field`, tag.includes('type="text"') && tag.includes('data-digits') && tag.includes('inputmode="decimal"'));
 }
 
 // ── The compare table on small phones ──────────────────────────────────────
