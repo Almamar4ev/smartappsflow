@@ -76,6 +76,9 @@ const REAL = [
   'simUpdate', 'firstSentence', 'getStartDate',
   'confirmSheet', 'closeConfirmSheet', 'isOverlayOpen', 'handleBackButton', 'registerBackButton',
   'myLoansTotal', 'realPayments', 'takePlan', 'confirmDeleteMyLoan', 'renderHomeLoans', 'loanLastPayment',
+  'planTitle', 'planAmount', 'planLabelInput', 'setPlanLabelInput', 'planRow',
+  'comparePlans', 'compareSide', 'compareVerdict',
+  'leaveDetailBeforeChange', 'editViewedPlan', 'deleteViewedPlan', 'applyResultsActions', 'leaveSavedDetail',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
   'syncProfileToInputs', 'goStep', 'calculate', 'openSavedDetail', 'goHome',
@@ -95,8 +98,8 @@ const STATE = `
   function t(){return {saveScenario:'Save',savedScenarios:'My saved plans',months:'mo',noSaved:'none',
     monthlyInstallment:'Monthly',totalCost:'Total',totalInterest:'Interest',dtiRatio:'DTI',compareTitle:'Compare'};}
   function savedLoanDisplayName(s){return s.name||'';}
-  function escapeHtml(v){return String(v);}
   function ltIcon(){return '';}
+  function escapeHtml(v){return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function isDemoMode(){return _demo;}
   function isKnownLang(l){return !!T[l];}
   function isKnownCurrency(){return true;}
@@ -109,7 +112,10 @@ function newPage() {
   const elements = {};
   const makeClassList = () => {
     const set = new Set();
-    return { add: (c) => set.add(c), remove: (c) => set.delete(c), toggle() {}, contains: (c) => set.has(c) };
+    return {
+      add: (c) => set.add(c), remove: (c) => set.delete(c), contains: (c) => set.has(c),
+      toggle: (c, on) => { if (on) set.add(c); else set.delete(c); },
+    };
   };
   const el = (id) => (elements[id] ??= {
     id, value: '', style: {}, textContent: '', dir: '', onclick: null, clicks: 0,
@@ -479,7 +485,7 @@ const oldState = (over = '') => `({lang:'ar',currency:'OMR',profileSaved:true,
   check('badge: real payments reduce the room', p.run('planWithinBankLimit(901)') === false);
   p.run(`saved=[${plan('active', 5000)}]`);
   check('badge: other saved plans do not reduce the room', p.run('planWithinBankLimit(900)') === true);
-  check('card shows the agreed badge text', html.includes("'ضمن حد البنك'") && html.includes("يتجاوز حد البنك"));
+  check('a plan row shows the agreed short flag', html.includes("'ضمن الحد'") && html.includes("يتجاوز الحد"));
   check('the old active pill is gone', !/isAr\?'نشط'/.test(html));
 }
 {
@@ -600,7 +606,7 @@ console.log('\nCurrency decimals');
   check('IDR: under half a unit still rounds to within', p.run('planWithinBankLimit(100.6)') === true);
 }
 for (const [needle, label] of [
-  ['val:fmtPay(r.monthly)', 'report KPI'], ['<div class="saved-mini-amt">${fmtPay(s.results.monthly)}', 'plan card'],
+  ['val:fmtPay(r.monthly)', 'report KPI'], ['<span class="saved-mini-amt">${fmtPay(s.results.monthly)}', 'plan row'],
   ['fmt:v=>fmtPayNum(v)', 'compare row'], ['${fmtPay(reqPay)}', 'bank-limit sentence'],
   ['· ${fmtPay(monthly)}/', 'schedule summary'], ['val:fmtPay(c.monthly)', 'simulator KPI'],
 ]) check(`installment decimals in: ${label}`, html.includes(needle));
@@ -886,16 +892,15 @@ check('compare with a bank offer starts collapsed', html.includes(`<details clas
   const appOnly = html.slice(0, pdfStart) + html.slice(pdfEnd);
   check('no app text is under 12px', !/font-size:(?:[0-9]|1[01])(?:\.\d+)?px/.test(appOnly));
 }
-{
-  const card = extractFunction('renderHomeSaved');
-  check('plan card buttons are at least 40px', (card.match(/min-height:40px/g) || []).length === 4);
-}
+check('plan rows are easy to tap', /\.plan-row\{width:100%;min-height:60px/.test(html));
+check('plan action buttons are at least 44px', /\.plan-act\{min-height:44px/.test(html));
 
 // ── Arabic text and guide ──────────────────────────────────────────────────
 console.log('\nArabic text and guide');
 check('no Arabic diacritics in the app', !/[\u064B-\u0652\u0670]/.test(html));
 check('no Arabic diacritics in update notes', !/[\u064B-\u0652\u0670]/.test(sw));
-check('the tour teaches plans', html.includes("title:{en:'Plans, compare & Demo'") && html.includes('احفظ حتى 4 خطط في الرئيسية'));
+check('the tour teaches plans', html.includes("title:{en:'Plans, My loans & Demo'") && html.includes('احفظ حتى 4 عروض بنوك لنفس القرض'));
+check('the tour teaches My loans', html.includes('فينتقل إلى قروضي ويحسب من ملفك المالي'));
 check('the tour mentions the payments you enter', html.includes('وأقساطك الحالية وحد القسط البنكي'));
 check('what is new announces plans first', html.indexOf("id:'plans_model'") < html.indexOf("id:'demo_mode'") && html.includes("id:'plans_model'"));
 
@@ -989,12 +994,207 @@ console.log('\nMy loans');
   p.run(`applyLoadedState({plansModel:1,saved:[],form:{},myLoans:'bad'})`);
   check('a damaged section is ignored', p.run('myLoans.length') === 0);
 }
-check('the sentence explains the plans', html.includes('للمقارنة فقط: ليست قروضا حقيقية ولا تخصم من ملفك المالي'));
+check('the sentence explains the plans', html.includes('احفظ عروض البنوك لنفس القرض وقارن بينها. ليست قروضا حقيقية ولا تخصم من ملفك المالي'));
 check('backups include My loans', /saved, myLoans, form,/.test(html));
 check('saved state includes My loans', /saved,\s*myLoans,\s*form,/.test(html));
 check('restore puts My loans back on failure', /\(\{currency,profileSaved,saved,myLoans\}=snap\)/.test(html));
 check('leaving demo clears My loans first', /saved=\[\];\s*myLoans=\[\];/.test(html));
 check('a plan edit keeps what migration counted', html.includes('if(old.countedMonthly) plan.countedMonthly=old.countedMonthly;'));
+
+// ── Compare: no winner, the trade-off in the user's numbers ────────────────
+console.log('\nCompare');
+const offer = (monthly, interest, { amount = 10000, period = 60, rate = 5, label = '' } = {}) =>
+  `{loanType:'car',loanAmount:${amount},loanMonthly:${monthly},name:'Car',${label ? `label:${JSON.stringify(label)},` : ''}
+    results:{monthly:${monthly},interest:${interest},total:${amount + interest}},
+    form:{amount:'${amount}',period:'${period}',rate:'${rate}',loanType:'car'}}`;
+const greens = (body) => (body.match(/color:var\(--safe\)/g) || []).length;
+const rowOf = (body, name) => body.slice(body.indexOf(`>${name}</td>`), body.indexOf('</tr>', body.indexOf(`>${name}</td>`)));
+check('the word best is gone', !html.includes('الأفضل بأقل قسط') && !html.includes('Best by Lowest'));
+{
+  // The same loan over 9, 8 and 5 years.
+  const p = newPage();
+  p.run(`profile.salary='5000';saved=[${offer(126.6, 2153.52, { period: 96 })},${offer(188.71, 1322.74)},${offer(115.17, 2438.66, { period: 108 })}]`);
+  p.run('var _v=comparePlans(saved)');
+  check('same amount shows a trade-off', p.run('_v.kind') === 'tradeoff');
+  check('the lowest payment is the 9 years plan', p.run('_v.lowPay.results.monthly') === 115.17);
+  check('the least interest is the 5 years plan', p.run('_v.lowCost.results.monthly') === 188.71);
+  check('the monthly saving is right', Math.abs(p.run('_v.payGap') - 73.54) < 1e-9);
+  check('the extra interest is right', Math.abs(p.run('_v.costGap') - 1115.92) < 1e-9);
+  p.run('renderCompare()');
+  const body = p.el('compare-body').innerHTML;
+  check('the card states both sides', body.includes('Lowest payment') && body.includes('Least interest'));
+  check('the card gives the numbers', body.includes('$ 73.54') && body.includes('$ 1,115.92'));
+  check('the card leaves the choice to the user', body.includes('It is your call'));
+  p.run(`saved=[${offer(188.71, 1322.745)},${offer(115.17, 2438.664, { period: 108 })}]`);
+  check('the gap is the difference of the shown numbers', p.run(`fmtAmt(comparePlans(saved).costGap)`) === p.run(`fmtAmt(+numText(saved[1].results.interest,2).replace(/,/g,'')-+numText(saved[0].results.interest,2).replace(/,/g,''))`));
+  check('the table shows the term', body.includes('>8 years<') && body.includes('>5 years<'));
+  check('the table shows the amount', rowOf(body, 'Amount').includes('10,000'));
+  check('a row where all plans match has no winner', !rowOf(body, 'Amount').includes('--safe') && !rowOf(body, 'Rate').includes('--safe'));
+  check('the interest row marks the lowest', rowOf(body, 'Interest').includes('--safe'));
+}
+{
+  const p = newPage();
+  p.run(`saved=[${offer(188.71, 1322.74)},${offer(208.23, 496.22, { amount: 7000, period: 36, rate: 4.5 })}]`);
+  check('different amounts have no cheapest', p.run('comparePlans(saved).kind') === 'mixed');
+  p.run('renderCompare()');
+  const body = p.el('compare-body').innerHTML;
+  check('the notice explains why', body.includes('Different amounts') && body.includes('not which is cheaper'));
+  check('no winner on interest across amounts', !rowOf(body, 'Interest').includes('--safe'));
+  check('no winner on cost across amounts', !rowOf(body, 'Total').includes('--safe'));
+  check('the budget rows still mark the lightest', rowOf(body, 'Monthly').includes('--safe'));
+  check('no trade-off card across amounts', !body.includes('Lowest payment'));
+}
+{
+  const p = newPage();
+  p.run(`saved=[${offer(190, 1400, { rate: 5.2 })},${offer(188.71, 1322.74, { label: 'Bank B' })}]`);
+  check('lowest on both is the cheapest', p.run('comparePlans(saved).kind') === 'cheapest');
+  p.run('renderCompare()');
+  const body = p.el('compare-body').innerHTML;
+  check('it says cheapest and never best', body.includes('The cheapest') && !/\bbest\b/i.test(body));
+  check('it gives the saving', body.includes('$ 77.26'));
+  p.run(`saved=[${offer(188.71, 1322.74)},${offer(188.712, 1322.741, { label: 'Other' })}]`);
+  check('plans equal after rounding are equal', p.run('comparePlans(saved).kind') === 'equal');
+  p.run('renderCompare()');
+  check('equal plans say so', p.el('compare-body').innerHTML.includes('same payment and interest'));
+  check('a row of equal values marks no winner', !rowOf(p.el('compare-body').innerHTML, 'Monthly').includes('--safe'));
+  p.run(`saved=[${offer(120, 2400)},${offer(120, 2000, { rate: 4 })}]`);
+  check('a tie on payment goes to the least interest', p.run('comparePlans(saved).kind') === 'cheapest' && p.run('comparePlans(saved).plan.results.interest') === 2000);
+}
+{
+  const p = newPage();
+  p.run(`profile.bankLimit='10';saved=[${offer(115, 2400)},${offer(700, 1300, { label: 'Short' })}]`);
+  p.run('renderCompare()');
+  check('the card warns when the least interest is over the bank limit', p.el('compare-body').innerHTML.includes('Short: exceeds the bank limit'));
+  p.run(`profile.bankLimit='60'`);
+  p.run('renderCompare()');
+  check('no warning when it fits', !p.el('compare-body').innerHTML.includes('exceeds the bank limit'));
+}
+{
+  const p = newPage();
+  p.run(`saved=[${offer(100, 900, { label: 'Bank <b>' })},${offer(90, 1000, { label: 'Bank B' })}]`);
+  p.run('renderCompare()');
+  const body = p.el('compare-body').innerHTML;
+  check('a plan name heads its column', body.includes('Bank B'));
+  check('a plan name cannot inject markup', body.includes('Bank &lt;b&gt;') && !body.includes('Bank <b>'));
+}
+{
+  const p = newPage();
+  p.run(`var _d=buildDemoBundle({lang:'ar',currentTheme:'light'});saved=_d.saved;currency='USD'`);
+  check('demo shows offers for one loan', p.run('comparePlans(saved).kind') === 'tradeoff');
+  check('demo plans have names', p.run('saved[0].label') === 'عرض البنك أ');
+}
+
+// ── Plan names ─────────────────────────────────────────────────────────────
+console.log('\nPlan names');
+{
+  const p = newPage();
+  p.run(`results={monthly:9};form.amount='4321';_lastSaveClick=0`);
+  p.el('inp-plan-label').value = '  Bank A  ';
+  p.run('saveScenario()');
+  check('a name is saved trimmed', p.run('saved[0].label') === 'Bank A');
+  check('the field clears after saving', p.el('inp-plan-label').value === '');
+  p.el('inp-plan-label').value = 'Bank B';
+  p.run(`_lastSaveClick=0;saveScenario()`);
+  check('same numbers from another bank are allowed', p.run('saved.length') === 2);
+  p.el('inp-plan-label').value = 'Bank B';
+  p.run(`_lastSaveClick=0;saveScenario()`);
+  check('the same name and numbers are a duplicate', p.run('saved.length') === 2);
+  p.el('inp-plan-label').value = '';
+  p.run(`_lastSaveClick=0;saveScenario()`);
+  check('a plan without a name has no label', p.run('saved.length') === 3 && p.run(`'label' in saved[0]`) === false);
+  check('a name replaces the type in the title', p.run('planTitle(saved[1])') === 'Bank B');
+  check('no name falls back to the type', p.run('planTitle(saved[0])') === 'Personal');
+  p.run('editSavedLoan(1)');
+  check('editing fills in the name', p.el('inp-plan-label').value === 'Bank B');
+  p.el('inp-plan-label').value = 'Bank C';
+  p.run(`_lastSaveClick=0;saveScenario()`);
+  check('editing renames in place', p.run('saved[1].label') === 'Bank C' && p.run('saved.length') === 3);
+  p.el('inp-plan-label').value = 'left over';
+  p.run('startForm()');
+  check('a new loan starts with an empty name', p.el('inp-plan-label').value === '');
+}
+{
+  const p = newPage();
+  p.run(`var _s=sanitizeSaved([${offer(1, 1, { label: 'x'.repeat(40) })},Object.assign(${offer(2, 1)},{label:5}),Object.assign(${offer(3, 1)},{label:'   '})])`);
+  check('a long name is cut on load', p.run('_s[0].label.length') === 24);
+  check('a damaged name is dropped', p.run(`'label' in _s[1]`) === false);
+  check('a blank name is dropped', p.run(`'label' in _s[2]`) === false);
+}
+
+// ── Compact rows and the actions inside a plan ─────────────────────────────
+console.log('\nPlan rows and actions');
+{
+  const home = extractFunction('renderHomeSaved') + extractFunction('renderHomeLoans') + extractFunction('planRow');
+  check('home has no action buttons', !/takePlan|confirmDelete|editSavedLoan/.test(home));
+  const p = newPage();
+  p.run(`saved=[${offer(100, 900)},${offer(90, 1000, { label: 'Bank B' })}];myLoans=[${offer(80, 700)}]`);
+  const row = p.run('planRow(saved[1],1,false)');
+  check('a row opens its own plan', row.includes('openSavedDetail(1)'));
+  check('a row shows the payment', row.includes('$ 90'));
+  check('a long name can never hide the amount', row.includes('$ 10,000') && row.indexOf('$ 10,000') > row.indexOf('plan-row-sub'));
+  check('a row shows the bank limit', row.includes('Within limit'));
+  const loan = p.run('planRow(myLoans[0],0,true)');
+  check('a loan row opens from My loans', loan.includes('openSavedDetail(0,true)'));
+  check('a loan row shows its last payment', loan.includes('Last payment'));
+  check('a loan row has no bank limit flag', !loan.includes('limit'));
+  p.run('openSavedDetail(1)');
+  p.run('applyResultsActions()');
+  check('a plan shows its actions', p.el('plan-actions').classList.contains('on'));
+  check('a plan can be taken and edited', p.el('btn-take-plan').style.display === '' && p.el('btn-edit-plan').style.display === '');
+  check('the name field hides inside a plan', p.el('plan-label-box').style.display === 'none');
+  check('the title names the plan', p.el('res-title').textContent === 'Bank B');
+  p.run('leaveDetailBeforeChange()');
+  check('leaving clears the view', p.run('_viewingSavedLoan') === false);
+  p.run('applyResultsActions()');
+  check('a new report has no plan actions', !p.el('plan-actions').classList.contains('on'));
+  check('a new report offers the name field', p.el('plan-label-box').style.display === 'block');
+  p.run('openSavedDetail(0,true)');
+  p.run('applyResultsActions()');
+  check('a real loan cannot be taken or edited', p.el('btn-take-plan').style.display === 'none' && p.el('btn-edit-plan').style.display === 'none');
+  check('a real loan keeps delete', p.el('plan-actions').classList.contains('mine'));
+}
+{
+  // Actions run from the detail view, which holds a temporary profile.
+  const p = newPage();
+  p.run(`applyLoadedState(${oldState()})`);
+  const realForm = p.run('JSON.stringify(form)');
+  p.run('openSavedDetail(0)');
+  p.run('takePlan(_viewingSavedIdx)');
+  check('taking from a plan still asks first', p.run('saved.length') === 3 && p.run('_viewingSavedLoan') === true);
+  p.run('closeConfirmSheet(false)');
+  await settle();
+  check('cancel stays on the plan', p.run('_viewingSavedLoan') === true && p.run('saved.length') === 3);
+  p.run('takePlan(_viewingSavedIdx)');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('taking leaves the plan view', p.run('_viewingSavedLoan') === false && p.run('_savedSnap') === null);
+  check('taking moves it', p.run('myLoans.length') === 1 && p.run('saved.length') === 2);
+  check('taking lowers the real number once', p.run('profile.existing') === '50');
+  check('the real profile survives', p.run('profile.salary') === '3000' && p.run('profile.bankLimit') === '40');
+  check('the form is the real form again', p.run('JSON.stringify(form)') === realForm);
+}
+{
+  const p = newPage();
+  p.run(`saved=[${offer(100, 900)},${offer(90, 1000)}];myLoans=[${offer(80, 700)}]`);
+  p.run('openSavedDetail(1)');
+  p.run('deleteViewedPlan()');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('delete removes the viewed plan', p.run('saved.length') === 1 && p.run('saved[0].results.monthly') === 100);
+  check('delete leaves the view', p.run('_viewingSavedLoan') === false);
+  p.run('openSavedDetail(0,true)');
+  p.run('deleteViewedPlan()');
+  p.run('closeConfirmSheet(true)');
+  await settle();
+  check('delete removes the viewed loan and no plan', p.run('myLoans.length') === 0 && p.run('saved.length') === 1);
+  p.run(`saved=[${offer(100, 900, { amount: 5000, label: 'Bank A' })}];profile.existing='30'`);
+  p.run('openSavedDetail(0)');
+  p.run('editViewedPlan()');
+  check('edit leaves the view', p.run('_viewingSavedLoan') === false);
+  check('edit loads the plan', p.run('_editingLoanIdx') === 0 && p.run('form.amount') === '5000');
+  check('edit keeps the real number', p.run('profile.existing') === '30');
+  check('edit opens the form', p.active() === 'step3');
+}
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
