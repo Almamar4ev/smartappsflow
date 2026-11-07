@@ -1434,7 +1434,7 @@ function renderBankOfferResult(){
 }
 // ── بطاقة الحد الأقصى للقسط حسب بنكك ───────────────────────────────────────────
 // نفس عتبة حلقة الرئيسية. حد البنك لا يحسب المصروفات، فقد يوافق البنك ولا يبقى لك شيء
-function thinRemainder(remaining,gross){return gross>0&&(remaining/gross)*100<=15;}
+function thinRemainder(remaining,gross){return remaining<0||(gross>0&&(remaining/gross)*100<=15);}
 function remainderAfter(monthly){
   const gross=(+profile.salary||0)+(+profile.income||0);
   return {remaining:cashAfterExpenses()-monthly-realPayments(),gross};
@@ -1557,26 +1557,33 @@ function cashAfterExpenses(p){
   p=p||profile;
   return (+p.salary||0)+(+p.income||0)-(+p.expenses||0)-(+p.variable||0);
 }
+// نسبة الأقساط من دخل. بلا دخل لا توجد نسبة، فلا نصطنع واحدة بقسمة على 1 أو بقيمة 100
+function dtiPct(pay,base){return base>0?(pay/base)*100:null;}
+function fmtDti(v){
+  if(typeof v!=='number'||!isFinite(v)) return lang==='ar'?'غير متاح':lang==='es'?'No disponible':'N/A';
+  return fmtPct(v);
+}
 function myLoansTotal(){return myLoans.reduce((sum,x)=>sum+(+x.loanMonthly||0),0);}
 function realPayments(){return (+profile.existing||0)+myLoansTotal();}
 function analyse(){
   const salary=+profile.salary||0,income=+profile.income||0,expenses=+profile.expenses||0;
   const variable=+profile.variable||0,existing=realPayments();
   const amount=+form.amount||10000,period=+form.period||36;
-  const grossIncome=Math.max(salary+income,1);
+  const grossIncome=Math.max(0,salary+income);
   const netIncome=Math.max(0,grossIncome-expenses-variable);
   const ratePct=(form.rate===''||form.rate==null||isNaN(+form.rate))?DEFAULT_RATE:+form.rate;
   const rate=Math.max(0,ratePct/100);
   const{monthly,total,interest}=calcLoan(amount,rate,period);
-  const dtiGross=((monthly+existing)/grossIncome)*100;
-  const dtiNet=netIncome>0?((monthly+existing)/netIncome)*100:100;
+  const dtiGross=dtiPct(monthly+existing,grossIncome);
+  const dtiNet=dtiPct(monthly+existing,netIncome);
   let riskLevel='safe';
-  if(dtiGross>50||dtiNet>80)riskLevel='risky';
+  // بلا دخل أو بلا صافي لا توجد نسبة، والقرض خطر بالتعريف
+  if(dtiGross===null||dtiNet===null||dtiGross>50||dtiNet>80)riskLevel='risky';
   else if(dtiGross>35||dtiNet>60)riskLevel='moderate';
   const safeMax=Math.max(0,(netIncome-existing)*0.35*period/(1+rate*period/24));
   // Can be negative → a real monthly deficit. Do NOT clamp to 0 (that hid the shortfall).
   const remaining=cashAfterExpenses()-monthly-existing;
-  return{monthly,total,interest,dtiGross,dtiNet,affordability:Math.max(0,Math.min(100,100-dtiGross)),riskLevel,safeMax,grossIncome,netIncome,rate,existing,expenses,variable,remaining};
+  return{monthly,total,interest,dtiGross,dtiNet,affordability:dtiGross===null?0:Math.max(0,Math.min(100,100-dtiGross)),riskLevel,safeMax,grossIncome,netIncome,rate,existing,expenses,variable,remaining};
 }
 function amortize(amount,annualRate,months){
   const r=annualRate/12;const{monthly}=calcLoan(amount,annualRate,months);
@@ -2560,8 +2567,8 @@ function renderResults(){
     <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'معدل الفائدة السنوي':lang==='es'?'Tasa de interés anual':'Annual Interest Rate'}</span><span class="basis-val" style="color:var(--acc);font-weight:800">${safeRate(form.rate)}%</span></div>
     <div class="basis-row"><span class="basis-lbl">${CAL_ICON}${lang==='ar'?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period'}</span><span class="basis-val">${months} ${tc.months}</span></div>
     <div class="basis-row"><span class="basis-lbl">${lang==='ar'?'آخر قسط':lang==='es'?'Última cuota':'Last payment'}</span><span class="basis-val" style="color:var(--txt);font-weight:800">${endStr}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl} <span onclick="showRiskInfo()" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1.3px solid var(--txt3);color:var(--txt3);font-size:12px;font-weight:800;cursor:pointer;vertical-align:middle">${lang==='ar'?'؟':'?'}</span></span><span class="basis-hi" style="color:var(--txt)">${fmtPct(r.dtiGross)}</span></div>
-    <div class="basis-row"><span class="basis-lbl">${tc.dtiNetLbl}</span><span class="basis-hi" style="color:var(--txt)">${fmtPct(r.dtiNet)}</span></div>`;
+    <div class="basis-row"><span class="basis-lbl">${tc.dtiGrossLbl} <span onclick="showRiskInfo()" style="display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;border:1.3px solid var(--txt3);color:var(--txt3);font-size:12px;font-weight:800;cursor:pointer;vertical-align:middle">${lang==='ar'?'؟':'?'}</span></span><span class="basis-hi" style="color:var(--txt)">${fmtDti(r.dtiGross)}</span></div>
+    <div class="basis-row"><span class="basis-lbl">${tc.dtiNetLbl}</span><span class="basis-hi" style="color:var(--txt)">${fmtDti(r.dtiNet)}</span></div>`;
   try{ renderBankLimitCard(r); }catch(e){ const _b=document.getElementById('banklimit-card'); if(_b)_b.style.display='none'; }
   try{ renderBankNoteCard(r); renderBankCompareCard(r); }catch(e){
     ['bankpay-card','bankcmp-card'].forEach(id=>{const _c=document.getElementById(id); if(_c)_c.style.display='none';});
@@ -3296,7 +3303,7 @@ function renderSavedTab(){
       </div>
       <div class="saved-row"><span class="saved-lbl">${tc.monthlyInstallment}</span><span class="saved-val" style="color:var(--txt);font-size:15px">${fmtPay(s.results.monthly)}</span></div>
       <div class="saved-row"><span class="saved-lbl">${tc.totalInterest}</span><span class="saved-val" style="color:var(--risk)">${fmtAmt(s.results.interest)}</span></div>
-      <div class="saved-row"><span class="saved-lbl">${tc.dtiRatio}</span><span class="saved-val" style="color:${dtiCol}">${fmtPct(s.results.dtiGross)}</span></div>
+      <div class="saved-row"><span class="saved-lbl">${tc.dtiRatio}</span><span class="saved-val" style="color:${dtiCol}">${fmtDti(s.results.dtiGross)}</span></div>
       <div style="display:flex;gap:8px;margin-top:10px;border-top:1px solid var(--brd);padding-top:10px">
         <button onclick="openSavedDetail(${i})" style="flex:1;padding:9px;border-radius:10px;background:color-mix(in srgb,var(--acc) 12%,transparent);border:1.5px solid var(--acc);color:var(--acc);font-size:13px;font-weight:700;cursor:pointer">
           ${lang==='ar'?'عرض التفاصيل':lang==='es'?'Ver detalles':'View Details'}
@@ -3338,8 +3345,8 @@ function openSavedDetail(i,fromMyLoans=false){
   results.netIncome=curNetInc;
   results.existing=currentExisting;
   const totalDebt=results.monthly+currentExisting;
-  results.dtiGross=curGross>0?(totalDebt/curGross)*100:0;
-  results.dtiNet  =curNetInc>0?(totalDebt/curNetInc)*100:100; // نفس قاعدة analyse: لا صافي ⇒ 100%
+  results.dtiGross=dtiPct(totalDebt,curGross);
+  results.dtiNet  =dtiPct(totalDebt,curNetInc); // نفس قاعدة analyse: بلا دخل لا توجد نسبة
   results.remaining=cashAfterExpenses(prevProfile)-results.monthly-currentExisting; // قد يكون سالبا = عجز
 
   form={
@@ -3587,7 +3594,7 @@ function renderCompare(){
   const cmpExisting=realPayments();
   const cmpCash=cashAfterExpenses();
   const calcRemaining=s=>cmpCash-s.loanMonthly-cmpExisting; // قد يكون سالبا = عجز
-  const calcDti=s=>((s.loanMonthly+cmpExisting)/Math.max(cmpCurGross,1))*100;
+  const calcDti=s=>dtiPct(s.loanMonthly+cmpExisting,cmpCurGross);
 
   const plans=saved.slice(0,4);
   // تكلفة مبالغ مختلفة لا تقارن: 7,000 ستبدو دائما أرخص من 10,000
@@ -3599,7 +3606,7 @@ function renderCompare(){
     {key:'monthly',label:tc.monthlyInstallment,fmt:v=>fmtPayNum(v),best:'min'},
     {key:'interest',label:tc.totalInterest,fmt:v=>fmtNum(v),best:sameAmount?'min':null},
     {key:'total',label:tc.totalCost,fmt:v=>fmtNum(v),best:sameAmount?'min':null},
-    {key:'dtiGross',label:tc.dtiRatio,fmt:v=>fmtPct(v),best:'min'},
+    {key:'dtiGross',label:tc.dtiRatio,fmt:v=>fmtDti(v),best:'min'},
     {key:'remaining',label:remLbl,fmt:v=>v<0?`<bdi dir="ltr">${fmtNum(v)}</bdi>`:fmtNum(v),best:'max'},
   ];
 
@@ -3628,12 +3635,14 @@ function renderCompare(){
       return(v===undefined||v===null||isNaN(v))?0:v;
     });
     // صف تتساوى فيه الخطط لا فائز فيه
-    const differ=!!f.best&&new Set(vals.map(f.fmt)).size>1;
-    const bestVal=!differ?null:f.best==='min'?Math.min(...vals):Math.max(...vals);
+    // قيمة غير متاحة لا تفوز ولا تخسر
+    const nums=vals.filter(v=>typeof v==='number'&&isFinite(v));
+    const differ=!!f.best&&nums.length===vals.length&&new Set(vals.map(f.fmt)).size>1;
+    const bestVal=!differ?null:f.best==='min'?Math.min(...nums):Math.max(...nums);
     html+=`<tr>
       <td style="position:sticky;inset-inline-start:0;background:var(--bg2);color:var(--txt);padding:10px 8px;border-bottom:1px solid var(--brd);font-size:12px;font-weight:700;line-height:1.3">${f.label}</td>
       ${vals.map((v)=>{
-        const isBest=v===bestVal;
+        const isBest=bestVal!==null&&v===bestVal;
         return`<td style="text-align:center;padding:10px 5px;border-bottom:1px solid var(--brd);font-weight:${isBest?'800':'600'};color:${isBest?'var(--safe)':'var(--txt)'};font-size:13px;white-space:nowrap">${f.fmt(v)}</td>`;
       }).join('')}
     </tr>`;
@@ -3984,8 +3993,8 @@ function exportPDF(){
     [tc.existingLoans,                        fmtAmt(r.existing),            '#111'],
     [isAr?'مدة السداد':lang==='es'?'Período de pago':'Repayment Period',    months+' '+tc.months,          '#111'],
     [isAr?'آخر قسط':lang==='es'?'Última cuota':'Last payment',        endStr,                        '#f59e0b'],
-    [tc.dtiGrossLbl,                          fmtPct(r.dtiGross),     color],
-    [tc.dtiNetLbl,                            fmtPct(r.dtiNet),       color],
+    [tc.dtiGrossLbl,                          fmtDti(r.dtiGross),     color],
+    [tc.dtiNetLbl,                            fmtDti(r.dtiNet),       color],
   ].map(([l,v,c])=>`
     <tr>
       <td style="color:#374151">${l}</td>
@@ -4616,6 +4625,7 @@ function sanitizeSaved(arr){
     .map(x=>{
       if(!RISK_LEVELS.includes(x.results.riskLevel)) x.results.riskLevel='safe';
       ['monthly','total','interest','dtiGross','dtiNet','affordability','safeMax','grossIncome','netIncome','rate','existing','expenses','variable','remaining'].forEach(k=>{
+        if((k==='dtiGross'||k==='dtiNet')&&x.results[k]===null) return; // بلا دخل: النسبة غير متاحة وتبقى كذلك
         const n=Number(x.results[k]);
         x.results[k]=Number.isFinite(n)?n:0;
       });

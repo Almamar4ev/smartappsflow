@@ -80,7 +80,7 @@ const REAL = [
   'comparePlans', 'compareSide', 'compareVerdict',
   'leaveDetailBeforeChange', 'editViewedPlan', 'deleteViewedPlan', 'applyResultsActions', 'leaveSavedDetail',
   'readHomeOpen', 'applyHomeOpen', 'setHomeOpen', 'toggleHomeSection', 'thinRemainder', 'remainderAfter',
-  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit', 'cleanDigitsField', 'parsePastedNumber', 'isNumberField', 'onNumberInput', 'noteNumberEdit', 'cashAfterExpenses',
+  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit', 'cleanDigitsField', 'parsePastedNumber', 'isNumberField', 'onNumberInput', 'noteNumberEdit', 'cashAfterExpenses', 'dtiPct', 'fmtDti',
   'biometricPlugin', 'deviceAuthStatus', 'authenticateForExit', 'authErrorKind', 'isNativeApp',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
@@ -1513,7 +1513,7 @@ console.log('\nDeficit');
   check('the report shows a 600 deficit', Math.abs(r.remaining - (-500 - r.monthly)) < 1e-9 && Math.abs(r.monthly - 97.22222222222223) < 1e-6);
   p.run(`form.amount='3600'`);
   check('with a 100 payment it is exactly -600', Math.abs(p.run('analyse().remaining') + 600) < 1e-9);
-  check('debt ratios still use a net income of zero', p.run('analyse().netIncome') === 0 && p.run('analyse().dtiNet') === 100);
+  check('debt ratios use a net income of zero, with no made-up 100%', p.run('analyse().netIncome') === 0 && p.run('analyse().dtiNet') === null);
   p.run(`saved=[${offer(100, 0, { amount: 3600, period: 36, rate: 0 })},${offer(150, 0, { amount: 3600, period: 24, rate: 0 })}]`);
   check('a row warns about the deficit', p.run('remainderAfter(100).remaining') === -600);
   p.run('openSavedDetail(0)');
@@ -1544,6 +1544,56 @@ console.log('\nDeficit');
 }
 check('home uses the same source', /const rem=cashAfterExpenses\(\)-totalLoans;/.test(html));
 check('no remainder starts from a zeroed net income', !/netIncome-monthly-existing|cmpCurNet-s\.loanMonthly|curNetInc-results\.monthly/.test(html));
+
+// ── No income, no made-up ratio ────────────────────────────────────────────
+console.log('\nZero income');
+{
+  const p = newPage();
+  p.run(`profile.salary='0';profile.income='0';profile.expenses='400';profile.variable='0';profile.existing='0';form.amount='3600';form.period='36';form.rate='0'`);
+  const r = p.run('analyse()');
+  check('the real income stays zero', r.grossIncome === 0 && r.netIncome === 0);
+  check('the gross ratio is not available', r.dtiGross === null);
+  check('the net ratio is not available', r.dtiNet === null);
+  check('the loan is still risky', r.riskLevel === 'risky');
+  check('affordability is zero, not full', r.affordability === 0);
+  check('the deficit is untouched', Math.abs(r.remaining + 500) < 1e-9);
+  check('shown as not available', p.run('fmtDti(null)') === 'N/A' && p.run('fmtDti(undefined)') === 'N/A' && p.run('fmtDti(Infinity)') === 'N/A');
+  check('a real ratio still shows', p.run('fmtDti(25.5)') === '25.5%');
+  check('a zero ratio is a real ratio', p.run('fmtDti(0)') === '0%');
+  check('no income is thin when money is short', p.run('thinRemainder(-500,0)') === true);
+  p.run(`saved=[${offer(100, 0, { amount: 3600, period: 36, rate: 0 })},${offer(150, 0, { amount: 3600, period: 24, rate: 0 })}]`);
+  p.run('openSavedDetail(0)');
+  check('a plan opened keeps zero income', p.run('results.grossIncome') === 0 && p.run('results.dtiGross') === null && p.run('results.dtiNet') === null);
+  p.run('leaveSavedDetail()');
+  p.run('renderCompare()');
+  const body = p.el('compare-body').innerHTML;
+  const dti = rowOf(body, 'DTI');
+  check('compare shows the ratio as not available', (dti.match(/>N\/A</g) || []).length === 2);
+  check('a missing ratio wins nothing', !dti.includes('--safe'));
+  check('compare still shows the deficit', body.includes('>-500<') && body.includes('>-550<'));
+}
+{
+  const p = newPage();
+  p.run(`profile.salary='1000';profile.income='0';profile.expenses='1000';profile.variable='0';profile.existing='0';form.amount='3600';form.period='36';form.rate='0'`);
+  const r = p.run('analyse()');
+  check('income with no net keeps a gross ratio', Math.abs(r.dtiGross - 10) < 1e-9);
+  check('but no made-up 100% on net', r.dtiNet === null);
+}
+{
+  const p = newPage();
+  p.run(`profile.salary='3000';profile.income='0';profile.expenses='900';profile.variable='0';profile.existing='200';form.amount='3600';form.period='36';form.rate='0'`);
+  const r = p.run('analyse()');
+  check('a normal budget keeps its ratios', Math.abs(r.dtiGross - 10) < 1e-9 && Math.abs(r.dtiNet - 300 / 2100 * 100) < 1e-9);
+}
+{
+  const p = newPage();
+  p.run(`var _z=sanitizeSaved([Object.assign(${offer(100, 0)},{results:{monthly:100,interest:0,total:3600,dtiGross:null,dtiNet:null}})])`);
+  check('a saved plan with no ratio keeps it missing', p.run('_z[0].results.dtiGross') === null && p.run('_z[0].results.dtiNet') === null);
+  p.run(`_z=sanitizeSaved([Object.assign(${offer(100, 0)},{results:{monthly:100,interest:0,total:3600,dtiGross:'x'}})])`);
+  check('a damaged ratio is still cleaned', p.run('_z[0].results.dtiGross') === 0);
+}
+check('no ratio divides by a fake 1', !/Math\.max\(salary\+income,1\)|Math\.max\(cmpCurGross,1\)/.test(html));
+check('every ratio on screen goes through the safe format', !/fmtPct\((r|s\.results)\.dti/.test(html));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
