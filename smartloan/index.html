@@ -1437,8 +1437,7 @@ function renderBankOfferResult(){
 function thinRemainder(remaining,gross){return gross>0&&(remaining/gross)*100<=15;}
 function remainderAfter(monthly){
   const gross=(+profile.salary||0)+(+profile.income||0);
-  const net=Math.max(0,gross-(+profile.expenses||0)-(+profile.variable||0));
-  return {remaining:net-monthly-realPayments(),gross};
+  return {remaining:cashAfterExpenses()-monthly-realPayments(),gross};
 }
 function renderBankLimitCard(r){
   const el=document.getElementById('banklimit-card');
@@ -1552,6 +1551,12 @@ function renderBankLimitCard(r){
     <a onclick="editProfileBankLimit()" style="display:block;text-align:${isAr?'left':'right'};margin-top:13px;font-size:12px;color:var(--acc);font-weight:700;text-decoration:none;cursor:pointer">${changeLink}</a>`;
 }
 // الأقساط الحقيقية = ما يكتبه المستخدم في ملفه + أقساط قسم قروضي. الخطط لا تدخل هنا أبدا
+// ما يبقى فعلا بعد المصروفات، وقد يكون سالبا. صافي الدخل المصفر يبقى لنسب الدين وحدها،
+// لأن تصفيره قبل طرح الأقساط كان يخفي جزءا من العجز. مصدر واحد للرئيسية والتقرير والتفاصيل والمقارنة
+function cashAfterExpenses(p){
+  p=p||profile;
+  return (+p.salary||0)+(+p.income||0)-(+p.expenses||0)-(+p.variable||0);
+}
 function myLoansTotal(){return myLoans.reduce((sum,x)=>sum+(+x.loanMonthly||0),0);}
 function realPayments(){return (+profile.existing||0)+myLoansTotal();}
 function analyse(){
@@ -1570,7 +1575,7 @@ function analyse(){
   else if(dtiGross>35||dtiNet>60)riskLevel='moderate';
   const safeMax=Math.max(0,(netIncome-existing)*0.35*period/(1+rate*period/24));
   // Can be negative → a real monthly deficit. Do NOT clamp to 0 (that hid the shortfall).
-  const remaining=netIncome-monthly-existing;
+  const remaining=cashAfterExpenses()-monthly-existing;
   return{monthly,total,interest,dtiGross,dtiNet,affordability:Math.max(0,Math.min(100,100-dtiGross)),riskLevel,safeMax,grossIncome,netIncome,rate,existing,expenses,variable,remaining};
 }
 function amortize(amount,annualRate,months){
@@ -1929,7 +1934,7 @@ function renderHome(){
     const totalInc=(+profile.salary||0)+(+profile.income||0);
     const totalExp=(+profile.expenses||0)+(+profile.variable||0);
     const totalLoans=realPayments();
-    const rem=totalInc-totalExp-totalLoans; // قد يكون سالبا = عجز شهري (لا نقصه إلى صفر)
+    const rem=cashAfterExpenses()-totalLoans; // قد يكون سالبا = عجز شهري (لا نقصه إلى صفر)
     const remPct=totalInc>0?parseFloat(((rem/totalInc)*100).toFixed(2)):0;
     const remIsDeficit=rem<0;
     const remColor=remIsDeficit?'var(--risk)':remPct>30?'var(--safe)':remPct>15?'var(--mod)':'var(--risk)';
@@ -2520,7 +2525,7 @@ function renderResults(){
   // remaining: إذا محسوب مسبقا نستخدمه، وإلا نحسبه (قد يكون سالبا = عجز شهري)
   const remaining=r.remaining!==undefined
     ? r.remaining
-    : (r.netIncome-r.monthly-r.existing);
+    : (r.grossIncome-r.expenses-r.variable-r.monthly-r.existing);
   // نسبة المتبقي موحدة: remaining/grossIncome بفاصلتين
   const remainingPct=r.grossIncome>0?Math.round((remaining/r.grossIncome)*10000)/100:0;
   const isDeficit=remaining<0;
@@ -3335,7 +3340,7 @@ function openSavedDetail(i,fromMyLoans=false){
   const totalDebt=results.monthly+currentExisting;
   results.dtiGross=curGross>0?(totalDebt/curGross)*100:0;
   results.dtiNet  =curNetInc>0?(totalDebt/curNetInc)*100:100; // نفس قاعدة analyse: لا صافي ⇒ 100%
-  results.remaining=curNetInc-results.monthly-currentExisting; // قد يكون سالبا = عجز
+  results.remaining=cashAfterExpenses(prevProfile)-results.monthly-currentExisting; // قد يكون سالبا = عجز
 
   form={
     loanType:s.form.loanType||'personal',
@@ -3577,11 +3582,11 @@ function renderCompare(){
 
   // صافي الدخل الحالي من الملف المالي الحالي
   const cmpCurGross=(+profile.salary||0)+(+profile.income||0);
-  const cmpCurNet=Math.max(0,cmpCurGross-(+profile.expenses||0)-(+profile.variable||0));
 
   // كل خطة تقاس وحدها مقابل الملف الحقيقي، بدون بقية الخطط
   const cmpExisting=realPayments();
-  const calcRemaining=s=>cmpCurNet-s.loanMonthly-cmpExisting; // قد يكون سالبا = عجز
+  const cmpCash=cashAfterExpenses();
+  const calcRemaining=s=>cmpCash-s.loanMonthly-cmpExisting; // قد يكون سالبا = عجز
   const calcDti=s=>((s.loanMonthly+cmpExisting)/Math.max(cmpCurGross,1))*100;
 
   const plans=saved.slice(0,4);

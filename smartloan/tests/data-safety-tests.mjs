@@ -80,7 +80,7 @@ const REAL = [
   'comparePlans', 'compareSide', 'compareVerdict',
   'leaveDetailBeforeChange', 'editViewedPlan', 'deleteViewedPlan', 'applyResultsActions', 'leaveSavedDetail',
   'readHomeOpen', 'applyHomeOpen', 'setHomeOpen', 'toggleHomeSection', 'thinRemainder', 'remainderAfter',
-  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit', 'cleanDigitsField', 'parsePastedNumber', 'isNumberField', 'onNumberInput', 'noteNumberEdit',
+  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit', 'cleanDigitsField', 'parsePastedNumber', 'isNumberField', 'onNumberInput', 'noteNumberEdit', 'cashAfterExpenses',
   'biometricPlugin', 'deviceAuthStatus', 'authenticateForExit', 'authErrorKind', 'isNativeApp',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
@@ -1500,6 +1500,50 @@ console.log('\nBackup and take messages');
   check('four plans need no note', !p.el('compare-body').innerHTML.includes('Showing the first'));
 }
 check('the bank range is not called expected', html.includes("bpRange:'نطاق تقريبي لقسط البنك (±1%)'") && !html.includes('النطاق المتوقع لقسط البنك'));
+
+// ── A deficit is never hidden ──────────────────────────────────────────────
+console.log('\nDeficit');
+{
+  // Reviewer's case: income 1,000, expenses 1,500, a new 100 payment.
+  const p = newPage();
+  p.run(`profile.salary='1000';profile.income='0';profile.expenses='1500';profile.variable='0';profile.existing='0';
+         form.amount='3500';form.period='36';form.rate='0'`);
+  const r = p.run('analyse()');
+  check('the cash left before the loan is -500', p.run('cashAfterExpenses()') === -500);
+  check('the report shows a 600 deficit', Math.abs(r.remaining - (-500 - r.monthly)) < 1e-9 && Math.abs(r.monthly - 97.22222222222223) < 1e-6);
+  p.run(`form.amount='3600'`);
+  check('with a 100 payment it is exactly -600', Math.abs(p.run('analyse().remaining') + 600) < 1e-9);
+  check('debt ratios still use a net income of zero', p.run('analyse().netIncome') === 0 && p.run('analyse().dtiNet') === 100);
+  p.run(`saved=[${offer(100, 0, { amount: 3600, period: 36, rate: 0 })},${offer(150, 0, { amount: 3600, period: 24, rate: 0 })}]`);
+  check('a row warns about the deficit', p.run('remainderAfter(100).remaining') === -600);
+  p.run('openSavedDetail(0)');
+  check('a plan opened shows -600', p.run('results.remaining') === -600);
+  p.run('leaveSavedDetail()');
+  p.run('renderCompare()');
+  const body = p.el('compare-body').innerHTML;
+  check('compare shows -600 and -650', body.includes('>-600<') && body.includes('>-650<'));
+  check('compare keeps the minus before the number', body.includes('<bdi dir="ltr">-600</bdi>'));
+}
+{
+  const p = newPage();
+  p.run(`profile.salary='3000';profile.income='0';profile.expenses='900';profile.variable='0';profile.existing='200';form.amount='3600';form.period='36';form.rate='0'`);
+  check('a normal budget is unchanged: 1,800 left', Math.abs(p.run('analyse().remaining') - 1800) < 1e-9);
+}
+{
+  const p = newPage();
+  p.run(`profile.salary='0';profile.income='0';profile.expenses='400';profile.variable='0';profile.existing='0';form.amount='3600';form.period='36';form.rate='0'`);
+  check('no income keeps the whole deficit', Math.abs(p.run('analyse().remaining') + 500) < 1e-9);
+}
+{
+  // A real loan opened from My loans is not counted twice in a deficit.
+  const p = newPage();
+  p.run(`profile.salary='1000';profile.income='0';profile.expenses='1500';profile.variable='0';profile.existing='50';myLoans=[${offer(100, 0)},${offer(30, 0)}]`);
+  p.run('openSavedDetail(0,true)');
+  check('a loan in a deficit counts itself once', p.run('results.remaining') === -680);
+  check('and matches home', p.run('cashAfterExpenses(_savedSnap.profile)-realPayments()') === -680);
+}
+check('home uses the same source', /const rem=cashAfterExpenses\(\)-totalLoans;/.test(html));
+check('no remainder starts from a zeroed net income', !/netIncome-monthly-existing|cmpCurNet-s\.loanMonthly|curNetInc-results\.monthly/.test(html));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
