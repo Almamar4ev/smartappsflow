@@ -55,8 +55,8 @@ check('contextual tip buttons and result tip hooks exist',
   /markAllResultTipsSeen/.test(html));
 check('tour step 4 is Calculate overview (not live result tabs)',
   /id:'results'[\s\S]*?target:'calculate'/.test(html) &&
-  /بعد الضغط على «احسب» تظهر خمس صفحات|After you tap Calculate, five pages appear/.test(html) &&
-  !/لا تحتاج قرضاً محفوظاً الآن|you do not need a saved loan yet/.test(html));
+  /بعد الضغط على «احسب» تظهر أربع صفحات|After you tap Calculate, four pages appear/.test(html) &&
+  !/لا تحتاج قرضا محفوظا الآن|you do not need a saved loan yet/.test(html));
 check('tour Next keeps card and avoids smooth scroll shake',
   /Same screen: do not reset scrollTop/.test(html) &&
   /update copy in place/.test(html) &&
@@ -92,11 +92,8 @@ check('demo help card uses experimental demo title in Arabic',
   /title:'وضع العرض التجريبي'/.test(html) &&
   /ملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز/.test(html) &&
   !/على الهاتف المقفل تعود إليه/.test(html));
-check('scenario banner keeps EMI amounts neutral and loan name in title',
-  /تفعيل السيناريو يوفر/.test(html) &&
-  /يستبدل قرض \$\{repName\}/.test(html) &&
-  /color:var\(--txt\)">\$\{fmtAmt\(rep\.loanMonthly\)\}/.test(html) &&
-  /لكن إجمالي الفائدة يزيد/.test(html));
+check('guide no longer lists the hidden Refinance page',
+  !/• Refinance|• إعادة الجدولة|• Refinanciar/.test(html));
 check('report page does not show the 35% estimated-loan range card',
   !/id="lbl-rec"/.test(html) &&
   !/id="rec-range-hint"/.test(html) &&

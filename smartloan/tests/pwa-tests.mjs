@@ -79,9 +79,11 @@ assert('service worker answers GET_VERSION_INFO with VERSION_INFO',
   /const\s+VERSION\s*=/.test(sw) && /const\s+CHANGELOG\s*=/.test(sw));
 assert('Arabic update sentences stay on separate lines with their periods',
   /function updateNote\(lines\)\{ return lines\.join\('\\u2028'\); \}/.test(sw) &&
-  /الأساسية\.\\u200F/.test(sw) &&
-  /القرض\.\\u200F/.test(sw) &&
-  /الاستخدام\.\\u200F/.test(sw) &&
+  (() => {
+    const block = (sw.match(/ar: updateNote\(\[([\s\S]*?)\]\)/) || [])[1] || '';
+    const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+    return lines.length >= 2 && lines.every((l) => /\.\\u200F',?$/.test(l));
+  })() &&
   !/\\u2066/.test(sw));
 assert('update banner preserves one sentence per line',
   /updateBanner[\s\S]{0,1200}white-space:pre-line/.test(html) &&
