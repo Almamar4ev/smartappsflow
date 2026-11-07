@@ -80,7 +80,7 @@ const REAL = [
   'comparePlans', 'compareSide', 'compareVerdict',
   'leaveDetailBeforeChange', 'editViewedPlan', 'deleteViewedPlan', 'applyResultsActions', 'leaveSavedDetail',
   'readHomeOpen', 'applyHomeOpen', 'setHomeOpen', 'toggleHomeSection', 'thinRemainder', 'remainderAfter',
-  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit', 'cleanDigitsField',
+  'fitCompareTable', 'renderBankLimitCard', 'maxPrincipal', 'termForPayment', 'updatePeriodUnit', 'cleanDigitsField', 'parsePastedNumber', 'isNumberField', 'onNumberInput', 'noteNumberEdit',
   'biometricPlugin', 'deviceAuthStatus', 'authenticateForExit', 'authErrorKind', 'isNativeApp',
   'beginProfileEdit', 'endProfileEdit', 'cancelProfileEdit', 'editProfile',
   'editProfileBankLimit', 's1Back', 's2Back', 's2Next', 'saveStep2Inputs',
@@ -136,6 +136,7 @@ function newPage() {
     window: { scrollTo() {} },
     confirm: () => { throw new Error('native confirm() must not be used'); },
     calls: [],
+    toasts: [],
     setTimeout: () => 0,
     requestAnimationFrame: () => 0,
     document: {
@@ -157,7 +158,7 @@ function newPage() {
     function renderStepLabels(){}
     function renderStep3Dynamic(){renderCalls.push('step3');}
     function renderResults(){renderCalls.push('results');}
-    function maybeShowResultTip(){} function showToast(){}
+    function maybeShowResultTip(){} function showToast(m){toasts.push(m);}
     function hideGuideSheet(){calls.push('guide-sheet');} function hideBankPayInfo(){calls.push('bankpay');}
     function hideRiskInfo(){calls.push('risk');} function hidePremiumSheet(){calls.push('premium');}
     function hideExportSheet(){calls.push('export');} function skipGuideTour(){calls.push('skip-tour');}
@@ -1338,7 +1339,8 @@ console.log('\nNumber fields');
   check('letters are dropped', clean('a5b') === '5');
   check('plain digits untouched', clean('4.5') === '4.5');
 }
-check('number fields clean themselves on every input', /addEventListener\('input',e=>\{\s*if\(e\.target\.matches&&e\.target\.matches\('\[data-digits\]'\)\) cleanDigitsField/.test(html));
+check('number fields clean themselves on every input', html.includes("document.addEventListener('input',onNumberInput,true);"));
+check('the field remembers its value before each edit', html.includes("document.addEventListener('beforeinput',noteNumberEdit,true);"));
 check('a field with a suffix keeps the page direction', !/<input[^>]*has-suffix[^>]*dir="ltr"/.test(html));
 check('the hint says what to enter', html.includes('اكتب هنا فقط الأقساط غير المسجلة في قروضي'));
 check('the hint total follows the two-decimal rule', html.includes('const sum=fmtAmt(myLoansTotal());'));
@@ -1387,6 +1389,117 @@ console.log('\nCompare width');
   check('a table that fits stays a table', !box.classList.contains('stacked'));
   check('the table knows its column count', p.el('compare-body').innerHTML.includes('--cols:2'));
 }
+
+// ── Numbers pasted from anywhere ───────────────────────────────────────────
+console.log('\nPasted numbers');
+{
+  const p = newPage();
+  const read = (v, l = 'en') => { p.run(`lang='${l}'`); p.sandbox._v = v; return p.run('parsePastedNumber(_v)'); };
+  check('Spanish thousands and decimals', read('1.234,56', 'es') === '1234.56');
+  check('English thousands and decimals', read('1,234.56') === '1234.56');
+  check('the same in any app language', read('1.234,56', 'ar') === '1234.56' && read('1,234.56', 'es') === '1234.56');
+  check('a lone decimal comma', read('1234,56') === '1234.56' && read('1234,56', 'es') === '1234.56');
+  check('Arabic marks', read('١٬٢٣٤٫٥٦', 'ar') === '1234.56');
+  check('Arabic comma', read('١٢٣٤،٥', 'ar') === '1234.5');
+  check('long groups', read('1,234,567') === '1234567' && read('1.234.567', 'es') === '1234567');
+  check('three digits after a comma are thousands', read('1,234') === '1234' && read('1,234', 'ar') === '1234');
+  check('three digits after a dot are decimals', read('1.234') === '1.234' && read('1.234', 'ar') === '1.234');
+  check('Spanish reads those the other way', read('1.234', 'es') === '1234' && read('1,234', 'es') === '1.234');
+  check('a real three-decimal amount survives', read('12.345') === '12.345' && read('0,500', 'es') === '0.500');
+  check('a currency around the number', read('$ 1,234.50') === '1234.50' && read('1.234,50 €', 'es') === '1234.50' && read('ر.ع 500') === '500');
+  check('spaces and marks', read('1 234,56') === '1234.56' && read('\u200F1,234.56') === '1234.56');
+  check('a trailing separator', read('100.') === '100' && read('100,') === '100');
+  check('a leading separator', read('.5') === '0.5');
+  check('negative is refused', read('-500') === null && read('−500') === null && read('(500)') === null);
+  check('broken groups are refused', read('12,34,56') === null && read('1.2.3') === null && read('1234,567.89') === null);
+  check('text is refused', read('abc') === null && read('12a34') === null && read('') === null);
+  p.run(`lang='en'`);
+  const input = (before, after, inputType = 'insertText', digits = true) => {
+    const el = { value: after, _beforeEdit: before, matches: (q) => q.includes(digits ? 'data-digits' : 'data-money') && (digits || !q.startsWith('[data-digits]') || q.includes(',')) };
+    p.sandbox._e = { target: el, inputType };
+    p.run('onNumberInput(_e)');
+    return el.value;
+  };
+  check('paste into a rate field', input('', '5,5', 'insertFromPaste') === '5.5');
+  check('paste into the bank offer', input('', '1,234.56', 'insertFromPaste') === '1234.56');
+  check('a keyboard paste with no paste event', input('', '1.234,56') === '1234.56');
+  check('a money paste keeps its decimals', input('', '1.234,56', 'insertFromPaste', false) === '1234.56');
+  check('typing one digit is left alone', input('1,23', '1,234', 'insertText', false) === '1,234');
+  check('a typed minus is refused', input('50', '-50') === '50' && p.sandbox.toasts.length === 1);
+  {
+    const el = { value: '1,234.56', matches: () => true };
+    p.sandbox._e = { target: el, inputType: 'insertText', data: '1234,56' };
+    p.run('noteNumberEdit(_e)');
+    el.value = '1234,56';
+    p.run('onNumberInput(_e)');
+    check('a shorter paste over a selection is still a paste', el.value === '1234.56');
+    p.sandbox._e = { target: el, inputType: 'insertCompositionText', data: '123' };
+    p.run('noteNumberEdit(_e)');
+    check('composing a number is not a paste', el._bulkEdit === false);
+    p.sandbox._e = { target: el, inputType: 'insertText', data: '5' };
+    p.run('noteNumberEdit(_e)');
+    check('one typed digit is not a paste', el._bulkEdit === false);
+  }
+  check('a bad paste keeps the old value', input('700', '12,34,56', 'insertFromPaste') === '700');
+  check('and says so', p.sandbox.toasts.length === 2);
+}
+check('every money field reads pastes', (html.match(/data-money oninput="fmtAmountInput/g) || []).length === 6);
+
+// ── Other apps on this origin ──────────────────────────────────────────────
+console.log('\nShared origin');
+{
+  const removed = [];
+  const listeners = {};
+  const sandbox = {
+    self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    URL, console,
+  };
+  vm.runInNewContext(sw, sandbox);
+  let done; listeners.activate({ waitUntil: (w) => { done = w; } });
+  await done;
+  check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
+  check('the current cache stays', !removed.includes('smartloan-4.1'));
+  check('no other app loses its cache', removed.length === 2);
+}
+
+// ── Honest backup and take messages ────────────────────────────────────────
+console.log('\nBackup and take messages');
+{
+  const body = extractFunction('doExportShare');
+  check('sharing never claims a saved file', body.includes('showToast(sharedMsg)') && !/Share\.share[\s\S]{0,260}showToast\(okMsg\)/.test(body));
+  check('cancelling says nothing was saved', body.includes('فلا توجد نسخة محفوظة'));
+  check('a failed write is reported', !/catch\(err\)\{ \/\*/.test(body));
+  check('the file warns it is readable', html.includes('الملف يحتوي بياناتك المالية بنص مقروء'));
+  check('the old promise about app storage is gone', !html.includes('file already saved in app storage'));
+}
+{
+  const p = newPage();
+  p.run(`applyLoadedState(${oldState()});lang='en'`);
+  p.run('takePlan(0)');
+  check('taking a migrated loan says what it deducts', p.el('confirm-sheet-body').textContent.includes('comes off the payments'));
+  p.run('closeConfirmSheet(false)');
+  await settle();
+  p.run(`profile.existing='60'`);
+  p.run('takePlan(0)');
+  check('it never promises more than is there', p.el('confirm-sheet-body').textContent.includes('60'));
+  p.run('closeConfirmSheet(false)');
+  await settle();
+  p.run('takePlan(2)');
+  check('a plan never counted deducts nothing', !p.el('confirm-sheet-body').textContent.includes('comes off'));
+  p.run('closeConfirmSheet(false)');
+  await settle();
+}
+{
+  const p = newPage();
+  p.run(`saved=[${[1, 2, 3, 4, 5, 6].map((n) => plan('active', n * 10)).join(',')}]`);
+  p.run('renderCompare()');
+  check('more than four plans says so', p.el('compare-body').innerHTML.includes('Showing the first 4 of 6 plans'));
+  p.run(`saved=saved.slice(0,4)`);
+  p.run('renderCompare()');
+  check('four plans need no note', !p.el('compare-body').innerHTML.includes('Showing the first'));
+}
+check('the bank range is not called expected', html.includes("bpRange:'نطاق تقريبي لقسط البنك (±1%)'") && !html.includes('النطاق المتوقع لقسط البنك'));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);

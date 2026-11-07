@@ -591,11 +591,11 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <h2 class="step-title" id="s1-title">Income Details</h2>
     <div class="field-wrap" data-guide-id="salary">
       <div class="lbl-with-tip"><label class="lbl" id="lbl-salary">MONTHLY SALARY</label><button type="button" class="guide-tip-btn" onclick="openGuideTip('salary')" aria-label="Help">?</button></div>
-      <div class="input-wrap"><span class="input-prefix" id="pfx1"></span><input class="inp has-prefix" id="inp-salary" type="text" inputmode="decimal" placeholder="e.g. 5000" oninput="fmtAmountInput(this,'salary')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx1"></span><input class="inp has-prefix" id="inp-salary" type="text" inputmode="decimal" placeholder="e.g. 5000" data-money oninput="fmtAmountInput(this,'salary')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-income">ADDITIONAL INCOME</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx2"></span><input class="inp has-prefix" id="inp-income" type="text" inputmode="decimal" placeholder="0" value="0" oninput="fmtAmountInput(this,'income')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx2"></span><input class="inp has-prefix" id="inp-income" type="text" inputmode="decimal" placeholder="0" value="0" data-money oninput="fmtAmountInput(this,'income')"></div>
     </div>
   </div>
   <div class="btn-footer"><button class="primary-btn" id="s1-next" onclick="goStep(2)">Next</button></div>
@@ -613,15 +613,15 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <h2 class="step-title" id="s2-title">Monthly Expenses</h2>
     <div class="field-wrap" data-guide-id="expenses">
       <div class="lbl-with-tip"><label class="lbl" id="lbl-exp">FIXED EXPENSES</label><button type="button" class="guide-tip-btn" onclick="openGuideTip('expenses')" aria-label="Help">?</button></div>
-      <div class="input-wrap"><span class="input-prefix" id="pfx3"></span><input class="inp has-prefix" id="inp-expenses" type="text" inputmode="decimal" placeholder="e.g. 1500" oninput="fmtAmountInput(this,'expenses')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx3"></span><input class="inp has-prefix" id="inp-expenses" type="text" inputmode="decimal" placeholder="e.g. 1500" data-money oninput="fmtAmountInput(this,'expenses')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-var">VARIABLE EXPENSES</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx4"></span><input class="inp has-prefix" id="inp-variable" type="text" inputmode="decimal" placeholder="e.g. 800" oninput="fmtAmountInput(this,'variable')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx4"></span><input class="inp has-prefix" id="inp-variable" type="text" inputmode="decimal" placeholder="e.g. 800" data-money oninput="fmtAmountInput(this,'variable')"></div>
     </div>
     <div class="field-wrap">
       <label class="lbl" id="lbl-exist">EXISTING LOAN PAYMENTS</label>
-      <div class="input-wrap"><span class="input-prefix" id="pfx5"></span><input class="inp has-prefix" id="inp-existing" type="text" inputmode="decimal" placeholder="0" value="0" oninput="fmtAmountInput(this,'existing')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx5"></span><input class="inp has-prefix" id="inp-existing" type="text" inputmode="decimal" placeholder="0" value="0" data-money oninput="fmtAmountInput(this,'existing')"></div>
       <p style="font-size:12px;color:var(--txt3);margin-top:5px" id="lbl-exist-hint">أقساط قروض تدفعها حاليا فقط</p>
     </div>
     <div class="field-wrap">
@@ -653,7 +653,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
     <div class="field-wrap" data-guide-id="amount">
       <div class="lbl-with-tip"><label class="lbl" id="lbl-amount">LOAN AMOUNT</label><button type="button" class="guide-tip-btn" onclick="openGuideTip('amount')" aria-label="Help">?</button></div>
-      <div class="input-wrap"><span class="input-prefix" id="pfx6"></span><input class="inp has-prefix" id="inp-amount" type="text" inputmode="decimal" placeholder="e.g. 50,000" oninput="fmtAmountInput(this,'amount')"></div>
+      <div class="input-wrap"><span class="input-prefix" id="pfx6"></span><input class="inp has-prefix" id="inp-amount" type="text" inputmode="decimal" placeholder="e.g. 50,000" data-money oninput="fmtAmountInput(this,'amount')"></div>
     </div>
     <!-- PERIOD: compact -->
     <div class="field-wrap" data-guide-id="period">
@@ -1144,7 +1144,7 @@ const T={
     riskInfoBody:'Debt-to-Income (DTI) is the share of your monthly income that goes toward loan payments. The lower this ratio, the more breathing room you have in your budget and the easier the installment is to carry.\n\nFor the actual verdict on how much you can borrow, see the “Maximum Installment Limit (Bank)” card.',
     riskInfoClose:'Got it',
     bpChip:'Estimate',
-    bpRange:'Expected bank payment range',
+    bpRange:'Approximate bank payment (±1%)',
     bpWhy:'Why might the bank’s payment differ?',bpWhyShort:'Why?',
     bpCmpTitle:'Compare with a bank offer',
     bpCmpSub:'Have an offer or an active loan? Enter the bank payment to see the difference and its likely cause',
@@ -1219,7 +1219,7 @@ const T={
     riskInfoBody:'نسبة الدين إلى الدخل (DTI) هي نسبة دخلك الشهري التي تذهب لسداد أقساط القروض. كلما انخفضت هذه النسبة، زادت المرونة في ميزانيتك وسهل تحمل القسط.\n\nأما الحكم الفعلي على قدرتك على الاقتراض فتجده في بطاقة «الحد الأقصى للقسط حسب بنكك».',
     riskInfoClose:'حسنا',
     bpChip:'تقديري',
-    bpRange:'النطاق المتوقع لقسط البنك',
+    bpRange:'نطاق تقريبي لقسط البنك (±1%)',
     bpWhy:'لماذا قد يختلف قسط البنك؟',bpWhyShort:'لماذا؟',
     bpCmpTitle:'قارن مع عرض البنك',
     bpCmpSub:'عندك عرض أو قرض فعلي؟ أدخل قسط البنك لمعرفة الفرق وسببه المحتمل',
@@ -1283,7 +1283,7 @@ const T={
     riskInfoBody:'La relación deuda-ingreso (DTI) es la parte de tu ingreso mensual que se destina a pagos de préstamos. Cuanto menor sea esta relación, más margen tendrás en tu presupuesto y más fácil será asumir la cuota.\n\nPara el veredicto real sobre cuánto puedes pedir prestado, consulta la tarjeta «Límite máximo de cuota (banco)».',
     riskInfoClose:'Entendido',
     bpChip:'Estimado',
-    bpRange:'Rango previsto de la cuota del banco',
+    bpRange:'Cuota aproximada del banco (±1 %)',
     bpWhy:'¿Por qué puede diferir la cuota del banco?',bpWhyShort:'¿Por qué?',
     bpCmpTitle:'Compara con la oferta del banco',
     bpCmpSub:'¿Tienes una oferta o un préstamo activo? Introduce la cuota del banco para ver la diferencia y su causa probable',
@@ -1364,7 +1364,7 @@ function bpStatusBox(color,icon,title,desc){
       <div style="flex:1"><div style="font-size:14px;font-weight:800;line-height:1.35;color:${color}">${title}</div>
       <div style="font-size:12px;color:var(--txt3);margin-top:2px;font-weight:600;line-height:1.55">${desc}</div></div></div>`;
 }
-// سطر مختصر: القسط تقديري + النطاق المتوقع ±1%، والتفاصيل في نافذة «لماذا؟»
+// سطر مختصر: القسط تقديري + نطاق تقريبي ±1% للتوضيح وليس ضمانا، والتفاصيل في نافذة «لماذا؟»
 function renderBankNoteCard(r){
   const el=document.getElementById('bankpay-card');
   if(!el)return;
@@ -2099,9 +2099,11 @@ async function takePlan(i){
   const s=saved[i]; if(!s) return;
   const isAr=lang==='ar', isEs=lang==='es';
   const pay=fmtPay(s.results.monthly);
+  const cut=s.countedMonthly?Math.min(s.countedMonthly,+profile.existing||0):0;
+  const cutNote=!cut?'':'\n'+(isAr?`وسيخصم ${fmtAmt(cut)} من الأقساط التي كتبتها في ملفك المالي حتى لا يتكرر.`:isEs?`Y se restarán ${fmtAmt(cut)} de las cuotas de tu perfil para no contarlo dos veces.`:`And ${fmtAmt(cut)} comes off the payments in your profile so it is not counted twice.`);
   const ok=await confirmSheet({
     title:isAr?'هل أخذت هذا القرض فعلا؟':isEs?'¿Tomaste este préstamo de verdad?':'Did you really take this loan?',
-    body:savedLoanDisplayName(s)+'\n'+(isAr?`سينتقل إلى قروضي، ويضاف قسطه ${pay} إلى أقساطك.`:isEs?`Pasará a Mis préstamos y su cuota de ${pay} se sumará a tus cuotas.`:`It moves to My loans, and its payment of ${pay} is added to your payments.`),
+    body:savedLoanDisplayName(s)+'\n'+(isAr?`سينتقل إلى قروضي، ويضاف قسطه ${pay} إلى أقساطك.`:isEs?`Pasará a Mis préstamos y su cuota de ${pay} se sumará a tus cuotas.`:`It moves to My loans, and its payment of ${pay} is added to your payments.`)+cutNote,
     okLabel:isAr?'نعم، أخذته':isEs?'Sí, lo tomé':'Yes, I took it'
   });
   const idx=saved.indexOf(s);
@@ -2367,9 +2369,56 @@ function cleanDigitsField(el){
   const clean=cleanAmountText(String(el.value).replace(/[,،]/g,'.'),6);
   if(el.value!==clean) el.value=clean;
 }
-document.addEventListener('input',e=>{
-  if(e.target.matches&&e.target.matches('[data-digits]')) cleanDigitsField(e.target);
-},true);
+// يقرأ رقما منسوخا بأي صيغة ويعيده بنقطة عشرية، أو null إن كان سالبا أو غير مفهوم.
+// آخر فاصل بعد فاصل مختلف هو العشري. ثلاث خانات بعد فاصل واحد تتبع لغة التطبيق
+function parsePastedNumber(raw){
+  const s=normalizeDigits(raw).replace(/[٬،]/g,',').replace(/[\s\u00A0\u200E\u200F\u202F\u0027]/g,'');
+  if(/[-−–(]/.test(s)) return null;
+  const t=s.replace(/^[^0-9]*?(?=[.,]?[0-9])/,'').replace(/[^0-9]+$/,'');
+  if(!/^[0-9.,]*[0-9][0-9.,]*$/.test(t)) return null;
+  const grouped=(x,sep)=>new RegExp('^[0-9]{1,3}(\\'+sep+'[0-9]{3})+$').test(x);
+  const dot=t.lastIndexOf('.'), comma=t.lastIndexOf(',');
+  if(dot>=0&&comma>=0){
+    const dec=dot>comma?'.':',', grp=dec==='.'?',':'.';
+    const i=t.lastIndexOf(dec), whole=t.slice(0,i), frac=t.slice(i+1);
+    if(!grouped(whole,grp)) return null;
+    return whole.split(grp).join('')+(frac?'.'+frac:'');
+  }
+  const sep=dot>=0?'.':comma>=0?',':'';
+  if(!sep) return t;
+  const parts=t.split(sep);
+  if(parts.length>2) return grouped(t,sep)?parts.join(''):null;
+  const [a,b]=parts;
+  if(!b) return a;
+  if(!a) return '0.'+b;
+  if(b.length===3&&a!=='0'&&a.length<=3&&sep===(lang==='es'?'.':',')) return a+b;
+  return a+'.'+b;
+}
+function isNumberField(el){return !!(el&&el.matches&&el.matches('[data-digits],[data-money]'));}
+// الكتابة تمر حرفا حرفا. أما اللصق فيأتي دفعة واحدة، فيقرأ كاملا. وما لا يفهم لا يحول بصمت
+function onNumberInput(e){
+  const el=e.target;
+  if(!isNumberField(el)) return;
+  const before=el._beforeEdit??'';
+  const pasted=/^insertFrom/.test(e.inputType||'')||el._bulkEdit||el.value.length-before.length>=2;
+  if(pasted||/[-−–]/.test(el.value)){
+    const parsed=parsePastedNumber(el.value);
+    if(parsed===null){
+      el.value=before;
+      showToast(lang==='ar'?'تعذر قراءة الرقم. اكتب رقما موجبا بدون فواصل':lang==='es'?'No se pudo leer el número. Escribe un número positivo sin separadores':'Could not read that number. Enter a positive number without separators');
+    }else el.value=parsed;
+  }
+  if(el.matches('[data-digits]')) cleanDigitsField(el);
+}
+// بعض لوحات المفاتيح تلصق كنص عادي، وقد يكون أقصر من المحدد. الكتابة التجميعية لا تحسب لصقا
+function noteNumberEdit(e){
+  const el=e.target;
+  if(!isNumberField(el)) return;
+  el._beforeEdit=el.value;
+  el._bulkEdit=/^insert(Text|ReplacementText)$/.test(e.inputType||'')&&String(e.data||'').length>=2;
+}
+document.addEventListener('beforeinput',noteNumberEdit,true);
+document.addEventListener('input',onNumberInput,true);
 function groupAmountText(s){
   const parts=String(s).split('.');
   return parts[0].replace(/\B(?=([0-9]{3})+(?![0-9]))/g,',')+(parts.length>1?'.'+parts[1]:'');
@@ -3585,6 +3634,7 @@ function renderCompare(){
     </tr>`;
   });
   html+=`</tbody></table></div>`;
+  if(saved.length>plans.length) html+=`<p class="cmp-note" style="margin:0;text-align:center">${isAr?`تعرض المقارنة أول ${plans.length} خطط من ${saved.length}.`:isEs?`La comparación muestra los primeros ${plans.length} de ${saved.length} planes.`:`Showing the first ${plans.length} of ${saved.length} plans.`}</p>`;
   html+=compareVerdict(plans);
   document.getElementById('compare-body').innerHTML=html;
   fitCompareTable();
@@ -4113,6 +4163,7 @@ function exportBackup(){
     document.getElementById('export-file-name').textContent=filename;
     const loansLbl=isAr?(n+' '+(n===1?'خطة':'خطط')):isEs?(n+' '+(n===1?'plan':'planes')):(n+' '+(n===1?'plan':'plans'));
     document.getElementById('export-file-meta').textContent=sizeStr+' · '+loansLbl;
+    document.getElementById('export-file-note').textContent=isAr?'الملف يحتوي بياناتك المالية بنص مقروء، فاحفظه في مكان خاص.':isEs?'El archivo contiene tus datos financieros en texto legible. Guárdalo en un lugar privado.':'This file holds your financial data in readable text. Keep it somewhere private.';
     document.getElementById('export-share-btn').textContent=isAr?'مشاركة وحفظ':isEs?'Compartir y guardar':'Share & Save';
     document.getElementById('export-close-btn').textContent=isAr?'إغلاق':isEs?'Cerrar':'Close';
     hideGuideChrome();
@@ -4129,19 +4180,21 @@ async function doExportShare(){
   if(!_pendingBackup) return;
   const {json, filename, sizeStr}=_pendingBackup;
   const okMsg=(lang==='ar'?'✅ تم الحفظ':lang==='es'?'✅ Guardado':'✅ Saved')+' · '+sizeStr;
+  const sharedMsg=lang==='ar'?'تمت المشاركة. تأكد أن الملف محفوظ في مكان آمن':lang==='es'?'Compartido. Comprueba que el archivo quede en un lugar seguro':'Shared. Make sure the file is kept somewhere safe';
   hideExportSheet();
   try{
     const Cap=window.Capacitor;
     // 1) Native app → write a real file and open the native share/save sheet
     if(Cap && Cap.isNativePlatform && Cap.isNativePlatform() && Cap.Plugins && Cap.Plugins.Filesystem && Cap.Plugins.Share){
       const {Filesystem, Share}=Cap.Plugins;
+      // الملف هنا مؤقت داخل التطبيق: لا نسخة حقيقية إلا إذا اختار المستخدم وجهة تحفظه
+      await Filesystem.writeFile({path:filename, data:json, directory:'CACHE', encoding:'utf8'});
+      const {uri}=await Filesystem.getUri({path:filename, directory:'CACHE'});
       try{
-        await Filesystem.writeFile({path:filename, data:json, directory:'CACHE', encoding:'utf8'});
-        const {uri}=await Filesystem.getUri({path:filename, directory:'CACHE'});
         await Share.share({title:'emiGo backup', files:[uri],
           dialogTitle:(lang==='ar'?'احفظ أو شارك النسخة':lang==='es'?'Guardar o compartir':'Save or share your backup')});
-        showToast(okMsg);
-      }catch(err){ /* user dismissed the share sheet — file already saved in app storage */ }
+        showToast(sharedMsg);
+      }catch(err){ showToast(lang==='ar'?'لم تكتمل المشاركة، فلا توجد نسخة محفوظة':lang==='es'?'No se compartió, así que no hay copia guardada':'Not shared, so no backup was saved'); }
       return;
     }
     // 2) Web / PWA (iPhone Safari, desktop) → share file, else download
@@ -4149,6 +4202,7 @@ async function doExportShare(){
       const file=new File([json],filename,{type:'application/json'});
       if(navigator.canShare && navigator.canShare({files:[file]})){
         await navigator.share({files:[file], title:'emiGo backup'});
+        showToast(sharedMsg);
         return;
       }
     }catch(shareErr){
@@ -5436,6 +5490,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
         <div id="export-file-meta" style="font-size:12px;color:var(--txt2);margin-top:3px">— KB</div>
       </div>
     </div>
+    <p id="export-file-note" style="font-size:12px;color:var(--txt2);line-height:1.5;margin:0 0 12px"></p>
     <button onclick="doExportShare()" id="export-share-btn" style="width:100%;padding:15px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
       <span>Share &amp; Save</span>
