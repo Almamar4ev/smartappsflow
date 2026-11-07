@@ -760,7 +760,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.1'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.1a'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -1452,15 +1452,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.1'));
-  check('no other app loses its cache', removed.length === 2);
+  check('the current cache stays', !removed.includes('smartloan-4.1a') && removed.includes('smartloan-4.1'));
+  check('no other app loses its cache', removed.length === 3);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
@@ -1594,6 +1594,21 @@ console.log('\nZero income');
 }
 check('no ratio divides by a fake 1', !/Math\.max\(salary\+income,1\)|Math\.max\(cmpCurGross,1\)/.test(html));
 check('every ratio on screen goes through the safe format', !/fmtPct\((r|s\.results)\.dti/.test(html));
+
+// ── Mixed directions on one line ───────────────────────────────────────────
+console.log('\nLine direction');
+{
+  const p = newPage();
+  p.run(`currency='OMR';lang='en'`);
+  const row = p.run(`planRow(${offer(98.645, 3021.12, { amount: 10000, period: 132, rate: 5 })},0,false)`);
+  check('the amount is boxed with its currency', /<bdi dir="ltr">10,000 [^<]+<\/bdi>/.test(row));
+  check('the rate keeps its percent after it', row.includes('<bdi dir="ltr">5%</bdi>'));
+  check('the term is boxed', row.includes('<bdi>11 years</bdi>'));
+  p.run(`saved=[${offer(100, 900, { label: 'Personal' })},${offer(90, 1000)}];renderCompare()`);
+  check('compare sides box the rate', p.el('compare-body').innerHTML.includes('<bdi dir="ltr">5%</bdi> · <bdi>'));
+}
+check('names break only between words', !/overflow-wrap:anywhere/.test(html));
+check('a piece never splits across lines', html.includes('.plan-row-sub bdi,.cmp-sub bdi{white-space:nowrap}'));
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
