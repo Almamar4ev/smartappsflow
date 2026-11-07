@@ -163,6 +163,7 @@ html.guide-tour-on .screen{animation:none!important}
 .plan-row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .plan-row-name{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .plan-row-sub{font-size:12px;color:var(--txt2);line-height:1.35}
+.plan-row-sub bdi,.cmp-sub bdi{white-space:nowrap}
 .plan-row-end{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .plan-row-flag{font-size:12px;font-weight:700}
 .plan-row-chev{flex-shrink:0;color:var(--txt2)}
@@ -182,7 +183,7 @@ html.guide-tour-on .screen{animation:none!important}
 .cmp-sides{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .cmp-side{min-width:0;padding:10px;border-radius:10px;background:var(--bg3)}
 .cmp-tag{font-size:12px;font-weight:800;color:var(--safe)}
-.cmp-name{font-size:14px;font-weight:800;color:var(--txt);margin-top:4px;overflow-wrap:anywhere}
+.cmp-name{font-size:14px;font-weight:800;color:var(--txt);margin-top:4px;overflow-wrap:break-word}
 .cmp-sub{font-size:12px;color:var(--txt2);margin-top:2px}
 .cmp-val{font-size:13px;font-weight:700;color:var(--txt);margin-top:6px}
 .cmp-note{font-size:13px;line-height:1.6;color:var(--txt);margin-top:10px}
@@ -2084,7 +2085,7 @@ function renderHomeLoans(){
 // صف مختصر: التفاصيل والأزرار داخل شاشة الخطة حتى تبقى الرئيسية قصيرة
 function planRow(s,i,mine){
   const isAr=lang==='ar', isEs=lang==='es';
-  const term=`${fmtAmt(planAmount(s))} · ${safeRate(s.form?.rate)}% · ${planTermText(s.form?.period)}`;
+  const term=`<bdi dir="ltr">${fmtAmt(planAmount(s))}</bdi> · <bdi dir="ltr">${safeRate(s.form?.rate)}%</bdi> · <bdi>${planTermText(s.form?.period)}</bdi>`;
   const within=!mine&&planWithinBankLimit(s.results.monthly);
   const after=remainderAfter(s.results.monthly);
   const thin=within&&thinRemainder(after.remaining,after.gross);
@@ -3544,7 +3545,7 @@ function compareSide(s,tag){
   return`<div class="cmp-side">
     <p class="cmp-tag">${tag}</p>
     <p class="cmp-name">${escapeHtml(planTitle(s))}</p>
-    <p class="cmp-sub">${safeRate(s.form?.rate)}% · ${planTermText(s.form?.period)}</p>
+    <p class="cmp-sub"><bdi dir="ltr">${safeRate(s.form?.rate)}%</bdi> · <bdi>${planTermText(s.form?.period)}</bdi></p>
     <p class="cmp-val">${fmtPay(s.results.monthly)} ${isAr?'شهريا':isEs?'al mes':'a month'}</p>
     <p class="cmp-sub">${isAr?'الفوائد':isEs?'Intereses':'Interest'}: ${fmtAmt(s.results.interest)}</p>
   </div>`;
@@ -3610,7 +3611,7 @@ function renderCompare(){
     {key:'remaining',label:remLbl,fmt:v=>v<0?`<bdi dir="ltr">${fmtNum(v)}</bdi>`:fmtNum(v),best:'max'},
   ];
 
-  const headerCells=plans.map(s=>`<th style="text-align:center;color:var(--acc);padding:10px 5px;font-size:13px;font-weight:800;border-bottom:2px solid var(--brd);overflow-wrap:anywhere">
+  const headerCells=plans.map(s=>`<th style="text-align:center;color:var(--acc);padding:10px 5px;font-size:13px;font-weight:800;border-bottom:2px solid var(--brd);overflow-wrap:break-word">
       ${escapeHtml(planTitle(s))}
     </th>`).join('');
 
