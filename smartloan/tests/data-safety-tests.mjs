@@ -766,7 +766,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2e'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2f'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -1068,7 +1068,11 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   check('owner case: term chips for 3 and 4 years', body.includes('setCompareTerm(36)') && body.includes('setCompareTerm(48)'));
   check('owner case: the term card speaks for 36 then 12 months', body.includes('First 36 months') && body.includes('Last 12 months') && body.includes('$ 50.18 a month') && body.includes('$ 159.62 a month'));
   check('owner case: money shows two decimals', body.includes('$ 209.80') || body.includes('209.80'));
-  check('owner case: the flat-rate caveat is there', body.includes('flat rate'));
+  check('owner case: the flat note explains how flat is charged', body.includes('If the bank charges interest on the full amount for the whole term (flat), it costs more than it looks.'));
+  p.run(`lang='ar'`); p.run('renderCompare()');
+  const arFlat = p.el('compare-body').innerHTML;
+  check('Arabic flat note explains the method, not only the word ثابتة', arFlat.includes('إذا كان البنك يحسب الفائدة على المبلغ كاملا طوال المدة (Flat)، فهي أغلى مما تبدو.') && !arFlat.includes('فائدة ثابتة'));
+  p.run(`lang='en'`); p.run('renderCompare()');
   check('owner case: it is the user\'s call', body.includes('It is your call'));
   p.run('setCompareTerm(48)');
   check('a chip switches the grid to 4 years and B still saves 75.87', p.el('compare-body').innerHTML.includes('$ 75.87'));
@@ -1187,6 +1191,9 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   check('bank payment: the card says where the rate came from', body.includes('comes from the bank payment you entered'));
   check('bank payment: the table uses the bank payment', rowOf(body, 'Monthly').includes('>216.50<'));
   check('bank payment: the rate row marks it', rowOf(body, 'Rate').includes('from the bank payment'));
+  check('one plan without a bank payment: the flat note still shows', body.includes('(flat), it costs more than it looks'));
+  facts(p, A, real(p, 7000, 36, 5, 'B', 209.8)); p.run('renderCompare()');
+  check('every plan has a bank payment: the flat note is not needed', !p.el('compare-body').innerHTML.includes('(flat)'));
 }
 {
   const p = newPage();
@@ -1568,15 +1575,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'smartloan-4.2e', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'smartloan-4.2e', 'smartloan-4.2f', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.2e') && removed.includes('smartloan-4.2d'));
-  check('no other app loses its cache', removed.length === 10);
+  check('the current cache stays', !removed.includes('smartloan-4.2f') && removed.includes('smartloan-4.2e'));
+  check('no other app loses its cache', removed.length === 11);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
