@@ -25,7 +25,7 @@ const CHANGELOG = {
   ])
 };
 
-const CACHE = 'smartloan-4.2a';
+const CACHE = 'smartloan-4.2b';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 // Install: pre-cache core, then WAIT. No skipWaiting() here on purpose — the new
