@@ -760,7 +760,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.1a'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.1b'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -1452,15 +1452,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.1a') && removed.includes('smartloan-4.1'));
-  check('no other app loses its cache', removed.length === 3);
+  check('the current cache stays', !removed.includes('smartloan-4.1b') && removed.includes('smartloan-4.1a'));
+  check('no other app loses its cache', removed.length === 4);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
@@ -1609,6 +1609,79 @@ console.log('\nLine direction');
 }
 check('names break only between words', !/overflow-wrap:anywhere/.test(html));
 check('a piece never splits across lines', html.includes('.plan-row-sub bdi,.cmp-sub bdi{white-space:nowrap}'));
+
+// ── Every mix of amount, term and rate ─────────────────────────────────────
+console.log('\nCompare scenarios');
+{
+  const p = newPage();
+  p.run(`currency='USD';lang='en'`);
+  // A plan built from the app's own loan formula, as saving would build it.
+  const mk = (amount, months, rate, label) => {
+    const r = p.run(`calcLoan(${amount},${rate}/100,${months})`);
+    return { loanType: 'car', loanAmount: amount, loanMonthly: r.monthly, label, name: 'Car',
+      results: { monthly: r.monthly, interest: r.interest, total: r.total },
+      form: { amount: String(amount), period: String(months), rate: String(rate), loanType: 'car' } };
+  };
+  const verdict = (...plans) => { p.sandbox._ps = plans; return p.run('comparePlans(_ps)'); };
+  const A = mk(7000, 36, 5, 'A');
+  const cases = [
+    ['all three the same', [A, mk(7000, 36, 5, 'B')], 'equal'],
+    ['only the amount differs', [A, mk(10000, 36, 5, 'B')], 'mixed'],
+    ['only the term differs', [A, mk(7000, 48, 5, 'B')], 'tradeoff'],
+    ['only the rate differs', [A, mk(7000, 36, 4.5, 'B')], 'cheapest'],
+    ['amount and term differ', [A, mk(10000, 48, 5, 'B')], 'mixed'],
+    ['amount and rate differ', [A, mk(10000, 36, 4.5, 'B')], 'mixed'],
+    ['longer with a slightly lower rate (the screenshot)', [A, mk(7000, 48, 4.5, 'B')], 'tradeoff'],
+    ['longer with a much lower rate', [A, mk(7000, 48, 1, 'B')], 'cheapest'],
+    ['longer with a higher rate', [A, mk(7000, 48, 6, 'B')], 'tradeoff'],
+    ['shorter with a much higher rate', [A, mk(7000, 24, 20, 'B')], 'cheapest'],
+    ['all three differ', [A, mk(10000, 48, 4.5, 'B')], 'mixed'],
+    ['interest-free, same term', [mk(7000, 36, 0, 'A'), mk(7000, 36, 0, 'B')], 'equal'],
+    ['interest-free, different terms', [mk(7000, 36, 0, 'A'), mk(7000, 48, 0, 'B')], 'samecost'],
+    ['interest-free against 5%', [mk(7000, 36, 0, 'A'), A], 'cheapest'],
+  ];
+  for (const [name, plans, kind] of cases) {
+    const v = verdict(...plans);
+    check(`scenario: ${name} -> ${kind}`, v.kind === kind, v.kind);
+  }
+  check('screenshot: the lower payment is B', verdict(A, mk(7000, 48, 4.5, 'B')).lowPay.label === 'B');
+  check('screenshot: the least interest is A', verdict(A, mk(7000, 48, 4.5, 'B')).lowCost.label === 'A');
+  check('screenshot: 50.18 a month', Math.abs(verdict(A, mk(7000, 48, 4.5, 'B')).payGap - 50.18) < 1e-9);
+  check('screenshot: 109.30 more interest', Math.abs(verdict(A, mk(7000, 48, 4.5, 'B')).costGap - 109.3) < 1e-9);
+  check('the lower rate is the cheapest when nothing else differs', verdict(A, mk(7000, 36, 4.5, 'B')).plan.label === 'B');
+  check('interest-free with different terms names the lower payment', verdict(mk(7000, 36, 0, 'A'), mk(7000, 48, 0, 'B')).plan.label === 'B');
+  p.sandbox._ps = [mk(7000, 36, 0, 'A'), mk(7000, 48, 0, 'B')];
+  p.run('saved=_ps;renderCompare()');
+  const zero = p.el('compare-body').innerHTML;
+  check('equal cost is never called cheapest', !zero.includes('The cheapest') && !zero.includes('saving up to $ 0'));
+  check('equal cost says what really differs', zero.includes('Same interest') && zero.includes('$ 48.61'));
+  // Random plans: whatever the card says must be true of the numbers shown.
+  let seed = 7;
+  const rnd = (list) => { seed = (seed * 1103515245 + 12345) % 2147483648; return list[seed % list.length]; };
+  const shown = (v, d) => +(+v).toFixed(d);
+  let wrong = [];
+  for (let i = 0; i < 3000; i++) {
+    const n = 2 + (i % 3);
+    const plans = Array.from({ length: n }, (_, k) => mk(rnd([7000, 7000, 7000, 10000]), rnd([12, 36, 48, 60, 240]), rnd([0, 4.5, 5, 6.82, 12]), 'P' + k));
+    const v = verdict(...plans);
+    const pays = plans.map((x) => shown(x.results.monthly, 2)), costs = plans.map((x) => shown(x.results.interest, 2));
+    const minPay = Math.min(...pays), minCost = Math.min(...costs);
+    const sameAmount = new Set(plans.map((x) => x.loanAmount)).size === 1;
+    let ok;
+    if (!sameAmount) ok = v.kind === 'mixed';
+    else if (v.kind === 'equal') ok = new Set(pays).size === 1 && new Set(costs).size === 1;
+    else if (v.kind === 'samecost') ok = new Set(costs).size === 1 && new Set(pays).size > 1 && shown(v.plan.results.monthly, 2) === minPay;
+    else if (v.kind === 'cheapest') ok = shown(v.plan.results.monthly, 2) === minPay && shown(v.plan.results.interest, 2) === minCost && v.saves > 0;
+    else if (v.kind === 'tradeoff') ok = shown(v.lowPay.results.monthly, 2) === minPay && shown(v.lowCost.results.interest, 2) === minCost && v.payGap > 0 && v.costGap > 0 && v.lowPay !== v.lowCost;
+    else ok = false;
+    if (!ok) wrong.push(`${v.kind}: ${plans.map((x) => `${x.loanAmount}/${x.form.period}/${x.form.rate}`).join(' vs ')}`);
+  }
+  check('3,000 random comparisons all tell the truth', wrong.length === 0, wrong.slice(0, 3).join(' | '));
+  p.sandbox._ps = [mk(7000, 36, 5, 'A'), mk(7000, 120, 5, 'B'), mk(7000, 120, 5.001, 'C')];
+  p.run('saved=_ps;renderCompare()');
+  const tied = rowOf(p.el('compare-body').innerHTML, 'Monthly');
+  check('two payments shown the same are both marked', (tied.match(/--safe/g) || []).length === 2 && (tied.match(/>74\.25</g) || []).length === 2);
+}
 
 console.log(`\nPassed: ${passed}`);
 console.log(`Failed: ${failed}`);
