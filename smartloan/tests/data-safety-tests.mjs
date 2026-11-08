@@ -77,7 +77,7 @@ const REAL = [
   'confirmSheet', 'closeConfirmSheet', 'isOverlayOpen', 'handleBackButton', 'registerBackButton',
   'myLoansTotal', 'realPayments', 'takePlan', 'confirmDeleteMyLoan', 'renderHomeLoans', 'loanLastPayment',
   'planTitle', 'planAmount', 'planLabelInput', 'setPlanLabelInput', 'planRow',
-  'planRate', 'planPay', 'planInterest', 'shownPay', 'shownAmt', 'compareFacts', 'fairGrid', 'setCompareTerm', 'cmpWords', 'compareQ1', 'compareQ2', 'moneyText', 'impliedRate',
+  'planRate', 'planPay', 'planInterest', 'shownPay', 'shownAmt', 'compareFacts', 'fairGrid', 'setCompareTerm', 'cmpWords', 'compareQ1', 'compareQ2', 'moneyText', 'impliedRate', 'bankPayIssue', 'validBankPay', 'planBankPay', 'loanSheetDateChanged',
   'loanEndIndex', 'loanPastEnd', 'isLoanEnded', 'loanNeedsCheck', 'nextLoanEnding', 'lsWords', 'setLoanSheetText',
   'showLoanSheetRow', 'openLoanSheet', 'pickLoanPay', 'readLoanSheetDate', 'updateLoanSheetEnd', 'closeLoanSheet',
   'submitLoanSheet', 'loanFromSheet', 'addMyLoan', 'editMyLoan', 'confirmLoanEnded', 'onBankOfferInput',
@@ -766,7 +766,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2b'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2c'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -1567,15 +1567,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.2b') && removed.includes('smartloan-4.2a'));
-  check('no other app loses its cache', removed.length === 7);
+  check('the current cache stays', !removed.includes('smartloan-4.2c') && removed.includes('smartloan-4.2b'));
+  check('no other app loses its cache', removed.length === 8);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
@@ -1828,6 +1828,97 @@ console.log('\nMy loans 4.2');
   check('confirming the end stops it counting', p.run('myLoans[2].endConfirmed') === true && p.run('isLoanEnded(myLoans[2],_now)') === true);
 }
 {
+  // Review round 2, H1: editing a 4.1 loan must not confirm its estimated date.
+  const p = newPage();
+  const set = (id, v) => { p.el(id).value = v; };
+  const old = (extra = '') => `Object.assign(${offer(258.2, 98.4, { amount: 3000, period: 12 })},{form:{amount:'3000',period:'12',rate:'5',loanType:'car',startMonth:0,startYear:2024}}${extra})`;
+  p.run(`myLoans=[${old()}]`);
+  check('a 4.1 loan past its estimated end still counts', p.run('myLoansTotal()') === 258.2 && p.run('loanNeedsCheck(myLoans[0])') === true);
+  p.run('editMyLoan(0)');
+  check('the edit sheet says the date is an estimate', p.el('ls-date-hint').textContent.startsWith('This date is an estimate') && p.el('ls-row-dateok').style.display !== 'none');
+  set('ls-label', 'Renamed'); p.run('submitLoanSheet()'); await settle();
+  check('editing only the name keeps the date unconfirmed', p.run('myLoans[0].startConfirmed') !== true && p.run('myLoans[0].label') === 'Renamed');
+  check('and the loan still counts', p.run('myLoansTotal()') === 258.2);
+  p.run('editMyLoan(0)'); set('ls-month', '3'); p.run('loanSheetDateChanged()'); p.run('submitLoanSheet()'); await settle();
+  check('changing the month confirms the date', p.run('myLoans[0].startConfirmed') === true && p.run('myLoans[0].form.startMonth') === 3);
+  p.run(`myLoans=[${old()}]`);
+  p.run('editMyLoan(0)'); p.el('ls-date-ok').checked = true; p.run('submitLoanSheet()'); await settle();
+  check('ticking "this date is correct" confirms it', p.run('myLoans[0].startConfirmed') === true);
+  p.run(`myLoans=[${old(',{endConfirmed:true}')}]`);
+  check('a loan the user said has ended does not count', p.run('myLoansTotal()') === 0);
+  p.run('editMyLoan(0)'); set('ls-label', 'X'); p.run('submitLoanSheet()'); await settle();
+  check('editing its name keeps it ended', p.run('myLoans[0].endConfirmed') === true && p.run('myLoansTotal()') === 0);
+  p.run(`myLoans=[${old(',{startConfirmed:true}')}]`);
+  p.run('editMyLoan(0)');
+  check('a confirmed loan gets no estimate warning', p.el('ls-row-dateok').style.display === 'none' && p.el('ls-date-hint').style.display === 'none');
+  p.run('closeLoanSheet()');
+  p.run('addMyLoan()');
+  check('the add sheet has no estimate warning', p.el('ls-row-dateok').style.display === 'none');
+  p.run('closeLoanSheet()');
+  p.run(`saved=[${real(p, 7000, 48, 4.5, 'B', 100)}]`);
+  p.run('takePlan(0)');
+  check('the take sheet asks to check the date with the bank', p.el('ls-date-hint').textContent === 'Check the first payment date with your bank.' && p.el('ls-row-dateok').style.display === 'none');
+  check('the take sheet offers no bank option for a payment that does not cover the amount', !p.el('ls-pay-choice').innerHTML.includes('Bank payment'));
+  p.run('closeLoanSheet()');
+}
+{
+  const p = newPage();
+  p.run(`results={monthly:159.62};form.amount='7000';form.period='48';form.rate='4.5';_bankOffer='100';_bankOfferSig=[form.amount,form.period,form.rate,currency].join('|');_lastSaveClick=0`);
+  p.run('saveScenario()');
+  check('saving drops a bank payment that does not cover the amount', p.run('saved.length') === 1 && p.run(`'bankMonthly' in saved[0]`) === false);
+}
+{
+  // Review round 2, H2: an invalid bank payment is never used.
+  const p = newPage();
+  const f = facts(p, real(p, 7000, 36, 5, 'A'), real(p, 7000, 48, 4.5, 'B', 100));
+  check('100 x 48 below 7,000 is not a valid bank payment', p.run('bankPayIssue(7000,48,100)') === 'low');
+  check('it is ignored: B uses its own 4.5%', p.run('planRate(saved[1]).rate') === 4.5 && p.run('planRate(saved[1]).fromBank') === false && p.run('planPay(saved[1])') === p.run('saved[1].results.monthly'));
+  check('so B is the only cheapest, by its own rate', f.winners.length === 1 && f.winners[0].label === 'B' && f.minR === 4.5);
+  p.run('renderCompare()');
+  const body = p.el('compare-body').innerHTML;
+  check('the compare says the bank payment was not used', body.includes('The bank payment entered for <bdi>B</bdi> does not cover the amount or is not realistic, so it was not used.'));
+  check('and never shows 0% for it', !body.includes('>0%<'));
+  check('1,700 instead of 170 is not realistic', p.run('bankPayIssue(7000,48,1700)') === 'high');
+  check('170 still gives 7.73%', p.run('validBankPay(7000,48,170)') === true && Math.abs(p.run('impliedRate(7000,170,48)') * 100 - 7.73) < 0.005);
+  check('flat 4% (217.78 over 36) still gives 7.51%', p.run('validBankPay(7000,36,217.78)') === true && Math.abs(p.run('impliedRate(7000,217.78,36)') * 100 - 7.51) < 0.005);
+  check('an interest-free payment rounded down a cent is still accepted', p.run('validBankPay(7000,24,291.66)') === true);
+  check('40% is the ceiling, as in the add sheet', p.run(`validBankPay(7000,48,${p.run('calcLoan(7000,0.399,48).monthly')})`) === true && p.run(`validBankPay(7000,48,${p.run('calcLoan(7000,0.41,48).monthly')})`) === false);
+}
+{
+  // Review round 2, M1, L1, L2, L3: wording.
+  const p = newPage();
+  const spans = (n2) => { facts(p, real(p, 7000, 36, 5, 'A'), real(p, 7000, n2, 4.5, 'B')); p.run('renderCompare()'); return p.el('compare-body').innerHTML; };
+  const want = {
+    en: { 37: 'Last month', 38: 'Last 2 months', 39: 'Last 3 months', 48: 'Last 12 months', first: 'First 36 months' },
+    es: { 37: 'Último mes', 38: 'Últimos 2 meses', 39: 'Últimos 3 meses', 48: 'Últimos 12 meses', first: 'Primeros 36 meses' },
+    ar: { 37: 'آخر شهر', 38: 'آخر شهرين', 39: 'آخر 3 أشهر', 48: 'آخر سنة', first: 'أول 3 سنوات' },
+  };
+  let bad = [];
+  for (const lg of ['en', 'es', 'ar']) {
+    p.run(`lang='${lg}'`);
+    for (const n2 of [37, 38, 39, 48]) {
+      const b = spans(n2);
+      if (!b.includes(`<span>${want[lg][n2]}</span>`) || !b.includes(`<span>${want[lg].first}</span>`)) bad.push(lg + n2);
+    }
+  }
+  check('first and last months read correctly in all three languages', bad.length === 0, bad.join(' '));
+  p.run(`lang='ar'`);
+  check('Arabic: 11 months and 2 years read correctly', spans(47).includes('<span>آخر 11 شهرا</span>') && spans(60).includes('<span>آخر سنتين</span>'));
+  p.run(`lang='es'`);
+  let b = spans(48);
+  check('Spanish: "dura 1 año más"', b.includes('<bdi>B</bdi> dura 1 año más, así que su cuota es menor'));
+  check('Spanish: "frente al 5%"', b.includes('frente al <bdi dir="ltr">5%</bdi> de <bdi>A</bdi>.'));
+  check('Spanish: the table says Tasa', b.includes('>Tasa</td>') && !b.includes('>Interés</td>'));
+  p.run(`lang='en'`);
+  facts(p, real(p, 7000, 36, 5, 'A'), real(p, 10000, 36, 4.5, 'B')); p.run('renderCompare()');
+  check('mixed amounts: per 1,000 is about the payment and interest', p.el('compare-body').innerHTML.includes('So we compare the payment and interest per 1,000.'));
+  facts(p, real(p, 7000, 36, 5, 'A'), real(p, 10000, 36, 5, 'B')); p.run('renderCompare()');
+  b = p.el('compare-body').innerHTML;
+  check('mixed amounts, same rate: the note stops after "not the bank"', b.includes('comes from the bigger amount, not the bank.</p>') && !b.includes('per 1,000.</p>'));
+  facts(p, real(p, 7000, 36, 5, 'A', 230), real(p, 7000, 48, 5, 'B', 230)); p.run('renderCompare()');
+  check('equal payments: the shorter one has less interest', p.el('compare-body').innerHTML.includes('Same payment, and <bdi>A</bdi> has less interest because it is shorter.'));
+}
+{
   const p = newPage();
   p.run(`myLoans=[Object.assign(${offer(186.43, 0, { period: 60 })},{label:'Car',startConfirmed:true,form:{amount:'10000',period:'60',rate:'4.5',loanType:'car',startMonth:2,startYear:2022}})]`);
   const n = p.run('nextLoanEnding(new Date(2026,10,1))');
@@ -1871,6 +1962,9 @@ console.log('\nMy loans 4.2');
   check('opening the plan fills the bank box', p.run('_bankOffer') === '161');
   p.run(`onBankOfferInput('165')`);
   check('typing a new bank payment updates the plan', p.run('saved[1].bankMonthly') === 165);
+  p.run(`onBankOfferInput('100')`);
+  check('a bank payment below the amount is not stored', p.run(`'bankMonthly' in saved[1]`) === false);
+  p.run(`onBankOfferInput('165')`);
   const before = p.sandbox.persisted;
   p.run('leaveSavedDetail()');
   check('it is saved after leaving the plan view', p.sandbox.persisted > before);

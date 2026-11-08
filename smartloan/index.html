@@ -224,6 +224,10 @@ html.guide-tour-on .screen{animation:none!important}
 .ls-sel:focus{border-color:var(--acc)}
 #loan-sheet[dir="rtl"] .app-sel{background-position:left 10px center}
 .ls-hint{font-size:12px;color:var(--txt3);line-height:1.5}
+.ls-date-warn{color:var(--mod);font-weight:700;margin:2px 0 0}
+.ls-date.attn .ls-sel{border-color:var(--mod)}
+.ls-check{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--txt);cursor:pointer;min-height:40px}
+.ls-check input{width:20px;height:20px;accent-color:var(--acc);margin:0;flex:none}
 .ls-err{font-size:12.5px;font-weight:700;color:var(--risk);min-height:18px;margin:2px 0 4px}
 .ls-opt{display:flex;gap:10px;align-items:flex-start;width:100%;border:1.5px solid var(--brd);border-radius:13px;padding:10px 12px;margin-bottom:8px;background:var(--bg);color:var(--txt);font-family:inherit;text-align:start;cursor:pointer}
 .ls-opt[aria-checked="true"]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent)}
@@ -1403,6 +1407,17 @@ function impliedRate(P,M,months){
   }
   return (lo+hi)/2;
 }
+// قسط البنك يقبل فقط إذا غطى المبلغ وكانت فائدته الفعلية 40% أو أقل (سقف نافذة القرض نفسه).
+// يسمح بفرق التقريب سنتا واحدا لكل قسط، حتى يقبل قسط قرض بلا فائدة مكتوب مقربا
+function bankPayIssue(P,n,b){
+  if(!(P>0)||!(n>0)||!(b>0)) return 'none';
+  if(b*n<P-n*0.01) return 'low';
+  if(impliedRate(P,b,n)>0.40) return 'high';
+  return '';
+}
+function validBankPay(P,n,b){return bankPayIssue(P,n,b)==='';}
+// قسط البنك المحفوظ في الخطة إن كان صالحا، وإلا صفر فيرجع الحساب إلى الفائدة المكتوبة
+function planBankPay(s){const b=+s.bankMonthly;return b>0&&validBankPay(planAmount(s),+s.form?.period||0,b)?b:0;}
 // ── توضيح فرق قسط البنك ────────────────────────────────────────────────────────
 // قسط البنك المدخل للمقارنة: جلسة فقط، لا يحفظ مع القرض. يصفر عند تغير القرض.
 let _bankOffer='',_bankOfferSig='';
@@ -1461,7 +1476,7 @@ function onBankOfferInput(v){
   // في شاشة خطة محفوظة يحفظ القسط معها، والحفظ الفعلي بعد الخروج من نسخة الملف المؤقتة
   if(_viewingSavedLoan&&!_viewingMyLoan){
     const s=saved[_viewingSavedIdx];
-    if(s){const b=parseFloat(String(v||'').trim());if(b>0) s.bankMonthly=b; else delete s.bankMonthly;_planDirty=true;}
+    if(s){const b=parseFloat(String(v||'').trim());if(validBankPay(planAmount(s),+s.form?.period||0,b)) s.bankMonthly=b; else delete s.bankMonthly;_planDirty=true;}
   }
 }
 // نتيجة المقارنة — ترسم وحدها كي لا يفقد حقل الإدخال تركيزه أثناء الكتابة
@@ -1473,8 +1488,15 @@ function renderBankOfferResult(){
   if(!raw){errEl.textContent='';out.innerHTML='';return;}
   const bank=parseFloat(raw);
   if(!(bank>0)){errEl.textContent=tc.bpErr;out.innerHTML='';return;}
-  errEl.textContent='';
   const P=+form.amount||0,n=+form.period||36,m=r.monthly;
+  const issue=bankPayIssue(P,n,bank);
+  if(issue==='low'||issue==='high'){
+    errEl.textContent=issue==='low'
+      ?(lang==='ar'?'مجموع هذه الأقساط أقل من المبلغ. راجع القسط.':lang==='es'?'La suma de estas cuotas es menor que el monto. Revisa la cuota.':'These payments add up to less than the amount. Check the payment.')
+      :(lang==='ar'?'هذا القسط يعني فائدة أعلى من 40%. راجع الرقم.':lang==='es'?'Esta cuota implica una tasa mayor del 40%. Revisa la cifra.':'This payment means a rate above 40%. Check the number.');
+    out.innerHTML='';return;
+  }
+  errEl.textContent='';
   const diff=bank-m;
   const eff=impliedRate(P,bank,n)*100;
   const same=Math.abs(diff)<0.005;
@@ -2224,7 +2246,7 @@ function openLoanSheet(mode,idx){
   }
   setLoanSheetText('ls-info',info);
   document.getElementById('ls-info').style.display=info?'':'none';
-  const est=src?+src.results.monthly||0:0, bank=src&&+src.bankMonthly>0?+src.bankMonthly:0;
+  const est=src?+src.results.monthly||0:0, bank=mode==='take'&&src?planBankPay(src):0;
   const choice=document.getElementById('ls-pay-choice');
   const opt=(key,title,sub,on)=>`<button type="button" class="ls-opt" role="radio" aria-checked="${on}" onclick="pickLoanPay('${key}')"><span class="ls-radio"></span><span><b>${title}</b><small>${sub}</small></span></button>`;
   choice.innerHTML=mode!=='take'?'':bank
@@ -2263,6 +2285,16 @@ function openLoanSheet(mode,idx){
   setLoanSheetText('ls-ok',take?W('نعم، أخذته','Sí, lo tomé','Yes, I took it'):mode==='edit'?W('حفظ','Guardar','Save'):W('إضافة إلى قروضي','Añadir a Mis préstamos','Add to My loans'));
   setLoanSheetText('ls-cancel',W('إلغاء','Cancelar','Cancel'));
   setLoanSheetText('ls-err','');
+  // تاريخ قرض من 4.1 تقدير وقت الحساب: ننبه عليه، ولا نعتبره مؤكدا إلا إذا غيره المستخدم أو أكده
+  const guessed=mode==='edit'&&src.startConfirmed!==true;
+  setLoanSheetText('ls-date-hint',guessed
+    ?W('هذا التاريخ تقدير من وقت الحساب. اختر تاريخ أول قسط الفعلي.','Esta fecha es una estimación del cálculo. Elige la fecha real de la primera cuota.','This date is an estimate from when you calculated. Choose the real first payment date.')
+    :take?W('تأكد من تاريخ أول قسط عند البنك.','Confirma con el banco la fecha de la primera cuota.','Check the first payment date with your bank.'):'');
+  showLoanSheetRow('ls-date-hint',guessed||take);
+  showLoanSheetRow('ls-row-dateok',guessed);
+  document.getElementById('ls-date').classList.toggle('attn',guessed);
+  const dateOk=document.getElementById('ls-date-ok'); if(dateOk) dateOk.checked=false;
+  setLoanSheetText('ls-l-dateok',W('التاريخ صحيح','La fecha es correcta','This date is correct'));
   ov.style.display='flex';
   return new Promise(resolve=>{_loanSheet={mode,idx,src,pay:bank?'bank':'app',resolve};updateLoanSheetEnd();});
 }
@@ -2270,6 +2302,10 @@ function pickLoanPay(key){
   if(!_loanSheet) return;
   _loanSheet.pay=key;
   document.querySelectorAll('#ls-pay-choice .ls-opt').forEach((b,i)=>b.setAttribute('aria-checked',String((i===0)===(key==='bank'))));
+}
+function loanSheetDateChanged(){
+  if(_loanSheet) _loanSheet.dateTouched=true;
+  updateLoanSheetEnd();
 }
 function readLoanSheetDate(){
   return {startMonth:+document.getElementById('ls-month').value||0,startYear:+document.getElementById('ls-year').value||new Date().getFullYear()};
@@ -2295,7 +2331,7 @@ function submitLoanSheet(){
   let v;
   if(st.mode==='take'){
     const s=st.src;
-    v={...d,pay:st.pay==='bank'&&+s.bankMonthly>0?+s.bankMonthly:+s.results.monthly};
+    v={...d,pay:st.pay==='bank'&&planBankPay(s)>0?planBankPay(s):+s.results.monthly};
   }else{
     const num=id=>{const x=String(document.getElementById(id).value||'').trim();return x===''?null:+x;};
     const pay=num('ls-pay'), n=parseInt(document.getElementById('ls-term').value,10);
@@ -2308,7 +2344,8 @@ function submitLoanSheet(){
     if(amount!==null&&pay*n<amount-0.005) return err(W('مجموع الأقساط أقل من المبلغ. راجع القسط أو المدة.','La suma de las cuotas es menor que el monto. Revisa la cuota o el plazo.','The payments add up to less than the amount. Check the payment or term.'));
     if(amount===null){const r=rate/1200;amount=r?pay*(1-Math.pow(1+r,-n))/r:pay*n;}
     if(rate===null) rate=impliedRate(amount,pay,n)*100;
-    v={...d,pay,n,rate,amount,label:String(document.getElementById('ls-label').value||'').trim().slice(0,24),type:LOAN_TYPES.includes(document.getElementById('ls-type').value)?document.getElementById('ls-type').value:'personal'};
+    const fresh=!!st.dateTouched||!!document.getElementById('ls-date-ok')?.checked;
+    v={...d,pay,n,rate,amount,mode:st.mode,dateFresh:fresh,dateConfirmed:st.mode==='add'||st.src?.startConfirmed===true||fresh,label:String(document.getElementById('ls-label').value||'').trim().slice(0,24),type:LOAN_TYPES.includes(document.getElementById('ls-type').value)?document.getElementById('ls-type').value:'personal'};
   }
   const ov=document.getElementById('loan-sheet');
   if(ov) ov.style.display='none';
@@ -2324,8 +2361,10 @@ function loanFromSheet(v,base){
   s.results={...(s.results||{}),monthly:v.pay,total:v.pay*v.n,interest:Math.max(0,v.pay*v.n-v.amount),rate:v.rate/100};
   if(!s.results.riskLevel) s.results.riskLevel='safe';
   s.form={...(s.form||{}),loanType:v.type,amount:String(+v.amount.toFixed(2)),period:String(v.n),rate:String(+v.rate.toFixed(4)),startMonth:v.startMonth,startYear:v.startYear};
-  s.startConfirmed=true;
-  delete s.endConfirmed;
+  // التاريخ مؤكد عند الإضافة، أو إذا كان مؤكدا من قبل، أو غيره المستخدم أو أكده الآن.
+  // وجواب «نعم، انتهى» السابق يبقى إلا إذا أكد المستخدم التاريخ في هذا التعديل
+  if(v.dateConfirmed!==false) s.startConfirmed=true;
+  if(v.dateConfirmed!==false&&(v.mode!=='edit'||v.dateFresh)) delete s.endConfirmed;
   return s;
 }
 async function addMyLoan(){
@@ -3501,7 +3540,7 @@ function saveScenario(){
   const label=planLabelInput();
   if(label) plan.label=label;
   const bankPay=parseFloat(String(_bankOffer||'').trim());
-  if(bankPay>0&&_bankOfferSig===[form.amount,form.period,form.rate,currency].join('|')) plan.bankMonthly=bankPay;
+  if(validBankPay(+form.amount||0,+form.period||0,bankPay)&&_bankOfferSig===[form.amount,form.period,form.rate,currency].join('|')) plan.bankMonthly=bankPay;
   if(editing){
     const old=saved[_editingLoanIdx];
     if(old.countedMonthly) plan.countedMonthly=old.countedMonthly;
@@ -3794,12 +3833,12 @@ window.addEventListener('resize',fitCompareTable);
 // سعر العرض هو فائدته. والمبلغ والمدة اختيار المقترض، فالمقارنة العادلة تثبتهما وتقارن الفائدة.
 // وإن كتب المستخدم قسط البنك لخطة نحسب فائدتها الفعلية منه، لأن البنك قد يعطي فائدة ثابتة (Flat)
 function planRate(s){
-  const bm=+s.bankMonthly, n=+s.form?.period||0;
+  const bm=planBankPay(s), n=+s.form?.period||0;
   if(bm>0&&n>0) return {rate:+(impliedRate(planAmount(s),bm,n)*100).toFixed(2),fromBank:true};
   return {rate:+safeRate(s.form?.rate),fromBank:false};
 }
-function planPay(s){return +s.bankMonthly>0?+s.bankMonthly:+s.results.monthly||0;}
-function planInterest(s){return +s.bankMonthly>0?Math.max(0,(+s.bankMonthly)*(+s.form?.period||0)-planAmount(s)):(+s.results.interest||0);}
+function planPay(s){const b=planBankPay(s);return b>0?b:+s.results.monthly||0;}
+function planInterest(s){const b=planBankPay(s);return b>0?Math.max(0,b*(+s.form?.period||0)-planAmount(s)):(+s.results.interest||0);}
 // الأرقام كما تظهر، حتى يطابق كل فرق ما يحسبه المستخدم بيده
 function shownPay(v){return +fmtPayNum(v).replace(/,/g,'');}
 function shownAmt(v){return +fmtNum(v).replace(/,/g,'');}
@@ -3845,7 +3884,8 @@ function cmpWords(){
 function compareQ1(f){
   const {L,names,pct}=cmpWords(), tc=t();
   const flat=`<p class="cmp-hint">${L(`إذا أعطاك البنك فائدة ثابتة (Flat)، اكتب قسطه في «${tc.bpCmpTitle}» داخل الخطة، فيحسب التطبيق فائدته الفعلية.`,`Si el banco te da una tasa fija (flat), escribe su cuota en «${tc.bpCmpTitle}» dentro del plan y la app calculará su tasa real.`,`If the bank gives a flat rate, enter its payment in “${tc.bpCmpTitle}” inside the plan, and the app works out its real rate.`)}</p>`;
-  const bankNotes=f.plans.filter((s,i)=>f.rates[i].fromBank).map(s=>`<p class="cmp-hint">${L(`<bdi>${escapeHtml(planTitle(s))}</bdi>: فائدته الفعلية ${pct(planRate(s).rate)} محسوبة من قسط البنك الذي كتبته.`,`<bdi>${escapeHtml(planTitle(s))}</bdi>: su tasa real ${pct(planRate(s).rate)} sale de la cuota del banco que escribiste.`,`<bdi>${escapeHtml(planTitle(s))}</bdi>: its real rate ${pct(planRate(s).rate)} comes from the bank payment you entered.`)}</p>`).join('');
+  const badBank=f.plans.filter(s=>+s.bankMonthly>0&&!planBankPay(s)).map(s=>`<p class="cmp-warn" style="margin:6px 0 0">${L(`قسط البنك المكتوب في <bdi>${escapeHtml(planTitle(s))}</bdi> لا يغطي المبلغ أو غير منطقي، فلم يستخدم.`,`La cuota del banco de <bdi>${escapeHtml(planTitle(s))}</bdi> no cubre el monto o no es realista, así que no se usó.`,`The bank payment entered for <bdi>${escapeHtml(planTitle(s))}</bdi> does not cover the amount or is not realistic, so it was not used.`)}</p>`).join('');
+  const bankNotes=badBank+f.plans.filter((s,i)=>f.rates[i].fromBank).map(s=>`<p class="cmp-hint">${L(`<bdi>${escapeHtml(planTitle(s))}</bdi>: فائدته الفعلية ${pct(planRate(s).rate)} محسوبة من قسط البنك الذي كتبته.`,`<bdi>${escapeHtml(planTitle(s))}</bdi>: su tasa real ${pct(planRate(s).rate)} sale de la cuota del banco que escribiste.`,`<bdi>${escapeHtml(planTitle(s))}</bdi>: its real rate ${pct(planRate(s).rate)} comes from the bank payment you entered.`)}</p>`).join('');
   const head=`<p class="card-label">${L('أي عرض أرخص؟','¿Qué oferta es más barata?','Which offer is cheaper?')}</p>`;
   if(f.sameR){
     const text=f.sameP&&f.sameN
@@ -3863,7 +3903,7 @@ function compareQ1(f){
   const restR=f.plans.map((s,i)=>f.rates[i].rate).filter((r,i)=>!f.winners.includes(f.plans[i]));
   const restLo=Math.min(...restR), restOne=restLo===f.maxR;
   const vs=restOne
-    ?L(`، مقابل ${pct(f.maxR)} عند ${names(rest)}.`,`, frente a ${pct(f.maxR)} de ${names(rest)}.`,`, vs ${pct(f.maxR)} for ${names(rest)}.`)
+    ?L(`، مقابل ${pct(f.maxR)} عند ${names(rest)}.`,`, frente al ${pct(f.maxR)} de ${names(rest)}.`,`, vs ${pct(f.maxR)} for ${names(rest)}.`)
     :L(`. والبقية بين ${pct(restLo)} و${pct(f.maxR)}.`,`. Las demás, entre ${pct(restLo)} y ${pct(f.maxR)}.`,`. The others range from ${pct(restLo)} to ${pct(f.maxR)}.`);
   const intro=L(`أقل فائدة عند ${winner}: ${pct(f.minR)}${vs} وبنفس المبلغ والمدة، الفائدة الأقل تعني دائما قسطا أقل وفوائد أقل.`,
     `La tasa más baja es de ${winner}: ${pct(f.minR)}${vs} Con el mismo monto y plazo, una tasa más baja siempre da menor cuota y menos intereses.`,
@@ -3900,13 +3940,23 @@ function compareQ2(f){
   const k=planTermText(T2.k);
   const byK=lang!=='ar'?k:T2.k===12?'بسنة':T2.k===24?'بسنتين':T2.k===1?'بشهر':T2.k===2?'بشهرين':'بـ '+k;
   let text;
-  if(T2.payDiff>0&&T2.intDiff>0) text=L(`خطتك ${lN} مدتها أطول ${byK}، لذلك قسطها أقل وفوائدها أكثر.`,`${lN} es más largo por ${k}, así que su cuota es menor y sus intereses mayores.`,`${lN} is longer by ${k}, so its payment is lower and its interest is higher.`);
-  else if(T2.payDiff>0&&T2.intDiff===0) text=L(`${lN} قسطها أقل والفوائد نفسها، لأن مدتها أطول ${byK}.`,`${lN} tiene una cuota menor y los mismos intereses, porque es más largo por ${k}.`,`${lN} has a lower payment and the same interest, because it is longer by ${k}.`);
+  if(T2.payDiff>0&&T2.intDiff>0) text=L(`خطتك ${lN} مدتها أطول ${byK}، لذلك قسطها أقل وفوائدها أكثر.`,`${lN} dura ${k} más, así que su cuota es menor y sus intereses mayores.`,`${lN} is longer by ${k}, so its payment is lower and its interest is higher.`);
+  else if(T2.payDiff>0&&T2.intDiff===0) text=L(`${lN} قسطها أقل والفوائد نفسها، لأن مدتها أطول ${byK}.`,`${lN} tiene una cuota menor y los mismos intereses, porque dura ${k} más.`,`${lN} has a lower payment and the same interest, because it is longer by ${k}.`);
+  else if(T2.payDiff===0&&T2.intDiff>0) text=L(`القسط نفسه، و${sN} فوائدها أقل لأن مدتها أقصر.`,`La misma cuota, y ${sN} tiene menos intereses porque dura menos.`,`Same payment, and ${sN} has less interest because it is shorter.`);
   else if(T2.payDiff>0) text=L(`${lN} مدتها أطول، وأقل في القسط والفوائد.`,`${lN} es más largo y menor en cuota e intereses.`,`${lN} is longer and lower in both payment and interest.`);
   else text=L(`${sN} مدتها أقصر، وأقل في القسط والفوائد.`,`${sN} es más corto y menor en cuota e intereses.`,`${sN} is shorter and lower in both payment and interest.`);
   const pS=planPay(S), pL=planPay(Lp);
   const w1=Math.round(nS/nL*100);
-  const months=x=>L(`${x} شهرا`,`${x} meses`,`${x} months`);
+  // «أول/آخر» مع العدد بصيغة صحيحة في كل لغة
+  const span=(x,first)=>{
+    if(lang==='ar'){
+      const w=first?'أول':'آخر';
+      if(x%12===0){const c=x/12;return `${w} ${c===1?'سنة':c===2?'سنتين':c<=10?c+' سنوات':c+' سنة'}`;}
+      return `${w} ${x===1?'شهر':x===2?'شهرين':x<=10?x+' أشهر':x+' شهرا'}`;
+    }
+    if(lang==='es') return x===1?(first?'Primer mes':'Último mes'):`${first?'Primeros':'Últimos'} ${x} meses`;
+    return x===1?(first?'First month':'Last month'):`${first?'First':'Last'} ${x} months`;
+  };
   const first=T2.payDiff>0?L(`${lN} أقل بـ ${fmtPay(T2.payDiff)} شهريا`,`${lN} menor en ${fmtPay(T2.payDiff)} al mes`,`${lN} lower by ${fmtPay(T2.payDiff)} a month`)
     :T2.payDiff<0?L(`${lN} أعلى بـ ${fmtPay(-T2.payDiff)} شهريا`,`${lN} mayor en ${fmtPay(-T2.payDiff)} al mes`,`${lN} higher by ${fmtPay(-T2.payDiff)} a month`)
     :L('القسط نفسه','La misma cuota','The same payment');
@@ -3922,8 +3972,8 @@ function compareQ2(f){
       <div class="cmp-tl-row"><span>${lN}</span><div class="cmp-bar"><span class="b" style="width:${w1}%" dir="ltr">${fmtPayNum(pL)} × ${nS}</span><span class="x" style="width:${100-w1}%" dir="ltr">+ ${nL-nS}</span></div></div>
     </div>
     <div style="margin-top:6px">
-      <div class="cmp-kv"><span>${L(`أول ${months(nS)}`,`Primeros ${months(nS)}`,`First ${months(nS)}`)}</span><b>${first}</b></div>
-      <div class="cmp-kv"><span>${L(`آخر ${months(nL-nS)}`,`Últimos ${months(nL-nS)}`,`Last ${months(nL-nS)}`)}</span><b>${last}</b></div>
+      <div class="cmp-kv"><span>${span(nS,true)}</span><b>${first}</b></div>
+      <div class="cmp-kv"><span>${span(nL-nS,false)}</span><b>${last}</b></div>
       <div class="cmp-kv"><span>${L('فرق الفوائد','Diferencia de intereses','Interest difference')}</span><b>${intr}</b></div>
     </div>
     <p class="cmp-hint">${L('القرار لك.','Tú decides.','It is your call.')}</p>
@@ -3947,7 +3997,7 @@ function renderCompare(){
   const fields=[
     {label:isAr?'المبلغ':isEs?'Monto':'Amount',cell:s=>fmtNum(planAmount(s))},
     {label:isAr?'المدة':isEs?'Plazo':'Term',cell:s=>planTermText(s.form?.period)},
-    {label:isAr?'الفائدة':isEs?'Interés':'Rate',cell:s=>{const r=planRate(s);return `<bdi dir="ltr">${fmtPct(r.rate)}</bdi>`+(r.fromBank?sub(isAr?'من قسط البنك':isEs?'de la cuota del banco':'from the bank payment'):'');}},
+    {label:isAr?'الفائدة':isEs?'Tasa':'Rate',cell:s=>{const r=planRate(s);return `<bdi dir="ltr">${fmtPct(r.rate)}</bdi>`+(r.fromBank?sub(isAr?'من قسط البنك':isEs?'de la cuota del banco':'from the bank payment'):'');}},
     {label:tc.monthlyInstallment,cell:s=>fmtPayNum(planPay(s))},
     ...(sameAmount?[
       {label:tc.totalInterest,cell:s=>fmtNum(planInterest(s))},
@@ -3966,7 +4016,9 @@ function renderCompare(){
   let mixed='';
   if(!sameAmount) mixed=`<div class="card" style="border-inline-start:4px solid var(--mod)">
     <p class="card-label" style="color:var(--mod)">${isAr?'المبالغ مختلفة':isEs?'Montos diferentes':'Different amounts'}</p>
-    <p class="cmp-note" style="margin-top:0">${isAr?'القسط الأكبر سببه المبلغ الأكبر، وليس البنك. لذلك قارنا الفائدة لكل 1,000.':isEs?'Una cuota mayor viene del monto mayor, no del banco. Por eso comparamos la tasa por cada 1,000.':'A bigger payment comes from the bigger amount, not the bank. That is why the rate is compared per 1,000.'}</p>
+    <p class="cmp-note" style="margin-top:0">${facts.sameR
+      ?(isAr?'القسط الأكبر سببه المبلغ الأكبر، وليس البنك.':isEs?'Una cuota mayor viene del monto mayor, no del banco.':'A bigger payment comes from the bigger amount, not the bank.')
+      :(isAr?'القسط الأكبر سببه المبلغ الأكبر، وليس البنك. لذلك قارنا القسط والفوائد لكل 1,000.':isEs?'Una cuota mayor viene del monto mayor, no del banco. Por eso comparamos la cuota y los intereses por cada 1,000.':'A bigger payment comes from the bigger amount, not the bank. So we compare the payment and interest per 1,000.')}</p>
   </div>`;
   let html=`<div class="card" id="cmp-table" style="overflow-x:auto;padding:0">
     <div style="padding:14px 14px 10px;border-bottom:1px solid var(--brd)">
@@ -5912,7 +5964,7 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
     <div class="ls-f" id="ls-row-type"><label for="ls-type" id="ls-l-type"></label><select class="app-sel ls-sel" id="ls-type"></select></div>
     <div class="ls-f" id="ls-row-pay"><label for="ls-pay" id="ls-l-pay"></label><input class="inp" id="ls-pay" type="text" inputmode="decimal" data-digits dir="ltr" autocomplete="off"><span class="ls-hint" id="ls-h-pay"></span></div>
     <div>
-      <div class="ls-f"><span class="ls-lbl" id="ls-l-start"></span><div class="ls-date"><select class="app-sel ls-sel" id="ls-month" onchange="updateLoanSheetEnd()"></select><select class="app-sel ls-sel" id="ls-year" onchange="updateLoanSheetEnd()"></select></div></div>
+      <div class="ls-f"><span class="ls-lbl" id="ls-l-start"></span><div class="ls-date" id="ls-date"><select class="app-sel ls-sel" id="ls-month" onchange="loanSheetDateChanged()"></select><select class="app-sel ls-sel" id="ls-year" onchange="loanSheetDateChanged()"></select></div><p class="ls-hint ls-date-warn" id="ls-date-hint"></p><label class="ls-check" id="ls-row-dateok"><input type="checkbox" id="ls-date-ok"><span id="ls-l-dateok"></span></label></div>
       <div class="ls-f" id="ls-row-term"><label for="ls-term" id="ls-l-term"></label><input class="inp" id="ls-term" type="text" inputmode="numeric" data-digits dir="ltr" autocomplete="off" oninput="updateLoanSheetEnd()"></div>
     </div>
     <p class="ls-hint" id="ls-end" style="margin:-4px 0 10px"></p>
