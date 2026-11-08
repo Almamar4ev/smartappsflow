@@ -766,7 +766,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2d'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2e'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -918,6 +918,7 @@ check('the tour teaches plans', html.includes("title:{en:'Plans, My loans & Demo
 check('the home add button has its own style, not the old full-width one', html.includes('class="home-add-loan-btn" id="home-add-loan"') && !html.includes('.add-loan-btn{'));
 check('the loan sheet arrow moves left in Arabic, away from the text', html.includes('#loan-sheet[dir="rtl"] .app-sel{background-position:left 10px center}'));
 check('sheet text isolates the plan name from its amount, even as plain text', html.includes("return '\\u2068'+planTitle(s)+'\\u2069'+(amt?' — '+fmtAmt(amt):'');"));
+check('the "date is correct" row is a 44px touch target', html.includes('cursor:pointer;min-height:44px}'));
 check('the web app bars are a light neutral, not purple', /"theme_color": "#f1f5f9"/.test(readFileSync(join(here, '..', 'manifest.json'), 'utf8')));
 check('the tour teaches My loans', html.includes('فينتقل إلى قروضي ويحسب من ملفك المالي'));
 check('the tour mentions the payments you enter', html.includes('وأقساطك الحالية وحد القسط البنكي'));
@@ -1567,15 +1568,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'smartloan-4.2e', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.2d') && removed.includes('smartloan-4.2c'));
-  check('no other app loses its cache', removed.length === 9);
+  check('the current cache stays', !removed.includes('smartloan-4.2e') && removed.includes('smartloan-4.2d'));
+  check('no other app loses its cache', removed.length === 10);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
