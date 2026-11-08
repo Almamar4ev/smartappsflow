@@ -766,7 +766,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2a'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2b'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -917,6 +917,7 @@ check('no Arabic diacritics in update notes', !/[\u064B-\u0652\u0670]/.test(sw))
 check('the tour teaches plans', html.includes("title:{en:'Plans, My loans & Demo'") && html.includes('احفظ حتى 4 عروض بنوك لنفس القرض') && html.includes('أي عرض أرخص وأي مدة تناسبك'));
 check('the home add button has its own style, not the old full-width one', html.includes('class="home-add-loan-btn" id="home-add-loan"') && !html.includes('.add-loan-btn{'));
 check('the loan sheet arrow moves left in Arabic, away from the text', html.includes('#loan-sheet[dir="rtl"] .app-sel{background-position:left 10px center}'));
+check('sheet text isolates the plan name from its amount, even as plain text', html.includes("return '\\u2068'+planTitle(s)+'\\u2069'+(amt?' — '+fmtAmt(amt):'');"));
 check('the web app bars are a light neutral, not purple', /"theme_color": "#f1f5f9"/.test(readFileSync(join(here, '..', 'manifest.json'), 'utf8')));
 check('the tour teaches My loans', html.includes('فينتقل إلى قروضي ويحسب من ملفك المالي'));
 check('the tour mentions the payments you enter', html.includes('وأقساطك الحالية وحد القسط البنكي'));
@@ -1050,7 +1051,17 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   check('owner case: B more interest by 109.30', Math.abs(f.term.intDiff - 109.3) < 1e-9);
   p.run('renderCompare()');
   const body = p.el('compare-body').innerHTML;
-  check('owner case: the bank answer names B', body.includes('<b>B</b> has the lowest rate'));
+  check('owner case: the bank answer names B', body.includes('<b><bdi>B</bdi></b> has the lowest rate'));
+  check('owner case: two plans say who has the other rate, without "up to"', body.includes('vs <bdi dir="ltr">5%</bdi> for <bdi>A</bdi>.') && !body.includes('vs up to'));
+  check('owner case: the second sentence says what a lower rate means', body.includes('a lower rate always means a lower payment and less interest'));
+  check('owner case: every name in a sentence is isolated from the numbers', !/[^>]B [0-9$]/.test(body) && body.includes('saves <bdi dir') === false);
+  check('the term card says longer by 1 year in plain words', body.includes('<bdi>B</bdi> is longer by 1 year'));
+  p.run(`lang='ar'`); p.run('renderCompare()');
+  const ar = p.el('compare-body').innerHTML;
+  check('Arabic: longer by a year reads بسنة', ar.includes('مدتها أطول بسنة،'));
+  check('Arabic: the cheaper sentence names both plans and rates', ar.includes('أقل فائدة عند <b><bdi>B</bdi></b>: <bdi dir="ltr">4.5%</bdi>، مقابل <bdi dir="ltr">5%</bdi> عند <bdi>A</bdi>.'));
+  check('Arabic: the saving line keeps the name apart from the amount', ar.includes('يوفر <b><bdi>B</bdi></b> '));
+  p.run(`lang='en'`);
   check('owner case: same-term saving 56.45', body.includes('$ 56.45'));
   check('owner case: the same-term grid is hypothetical', body.includes('If you took the offers over the same term'));
   check('owner case: term chips for 3 and 4 years', body.includes('setCompareTerm(36)') && body.includes('setCompareTerm(48)'));
@@ -1113,7 +1124,14 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   const f = facts(p, real(p, 7000, 36, 4.5, 'A'), real(p, 7000, 36, 4.5, 'B'), real(p, 7000, 36, 5, 'C'));
   check('tie: both 4.5% plans are winners', f.winners.length === 2);
   p.run('renderCompare()');
-  check('tie: both named, saving says up to', p.el('compare-body').innerHTML.includes('<b>A and B</b>') && p.el('compare-body').innerHTML.includes('up to'));
+  check('tie: both named, saving says up to', p.el('compare-body').innerHTML.includes('<b><bdi>A</bdi> and <bdi>B</bdi></b>') && p.el('compare-body').innerHTML.includes('saves up to'));
+  check('tie: the rest share one rate, so it is named, not "up to"', p.el('compare-body').innerHTML.includes('vs <bdi dir="ltr">5%</bdi> for <bdi>C</bdi>.'));
+}
+{
+  const p = newPage();
+  facts(p, real(p, 7000, 36, 4, 'A'), real(p, 7000, 36, 5, 'B'), real(p, 7000, 36, 6, 'C'));
+  p.run('renderCompare()');
+  check('different other rates are given as a range', p.el('compare-body').innerHTML.includes('The others range from <bdi dir="ltr">5%</bdi> to <bdi dir="ltr">6%</bdi>.'));
 }
 {
   // 8. Zero rate.
@@ -1174,7 +1192,7 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   p.run(`profile.bankLimit='10'`);
   facts(p, real(p, 7000, 36, 5, 'A'), real(p, 7000, 12, 5, 'Short'));
   p.run('renderCompare()');
-  check('a plan over the bank limit is still flagged', p.el('compare-body').innerHTML.includes('Short: exceeds the bank limit'));
+  check('a plan over the bank limit is still flagged', p.el('compare-body').innerHTML.includes('<bdi>Short</bdi>: exceeds the bank limit'));
 }
 {
   const p = newPage();
@@ -1549,15 +1567,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.2a') && removed.includes('smartloan-4.2'));
-  check('no other app loses its cache', removed.length === 6);
+  check('the current cache stays', !removed.includes('smartloan-4.2b') && removed.includes('smartloan-4.2a'));
+  check('no other app loses its cache', removed.length === 7);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────

@@ -2079,7 +2079,8 @@ function planTitle(s){return s.label||T[lang]?.['lt_'+(s.loanType||s.form?.loanT
 function planAmount(s){return +s.loanAmount||+s.form?.amount||0;}
 function savedLoanDisplayName(s){
   const amt=planAmount(s);
-  return planTitle(s)+(amt?' — '+fmtAmt(amt):'');
+  // \u2068…\u2069 يعزل الاسم في النص العادي أيضا، فلا يلتصق اسم لاتيني بالرقم في العربية
+  return '\u2068'+planTitle(s)+'\u2069'+(amt?' — '+fmtAmt(amt):'');
 }
 function planLabelInput(){
   const el=document.getElementById('inp-plan-label');
@@ -3838,13 +3839,13 @@ function setCompareTerm(n){_cmpTerm=n;renderCompare();}
 function cmpWords(){
   const isAr=lang==='ar', isEs=lang==='es';
   return {isAr,isEs,L:(ar,es,en)=>isAr?ar:isEs?es:en,
-    names:list=>list.map(s=>escapeHtml(planTitle(s))).join(isAr?' و':isEs?' y ':' and '),
+    names:list=>list.map(s=>`<bdi>${escapeHtml(planTitle(s))}</bdi>`).join(isAr?' و':isEs?' y ':' and '),
     pct:v=>`<bdi dir="ltr">${fmtPct(v)}</bdi>`};
 }
 function compareQ1(f){
   const {L,names,pct}=cmpWords(), tc=t();
   const flat=`<p class="cmp-hint">${L(`إذا أعطاك البنك فائدة ثابتة (Flat)، اكتب قسطه في «${tc.bpCmpTitle}» داخل الخطة، فيحسب التطبيق فائدته الفعلية.`,`Si el banco te da una tasa fija (flat), escribe su cuota en «${tc.bpCmpTitle}» dentro del plan y la app calculará su tasa real.`,`If the bank gives a flat rate, enter its payment in “${tc.bpCmpTitle}” inside the plan, and the app works out its real rate.`)}</p>`;
-  const bankNotes=f.plans.filter((s,i)=>f.rates[i].fromBank).map(s=>`<p class="cmp-hint">${L(`${escapeHtml(planTitle(s))}: فائدته الفعلية ${pct(planRate(s).rate)} محسوبة من قسط البنك الذي كتبته.`,`${escapeHtml(planTitle(s))}: su tasa real ${pct(planRate(s).rate)} sale de la cuota del banco que escribiste.`,`${escapeHtml(planTitle(s))}: its real rate ${pct(planRate(s).rate)} comes from the bank payment you entered.`)}</p>`).join('');
+  const bankNotes=f.plans.filter((s,i)=>f.rates[i].fromBank).map(s=>`<p class="cmp-hint">${L(`<bdi>${escapeHtml(planTitle(s))}</bdi>: فائدته الفعلية ${pct(planRate(s).rate)} محسوبة من قسط البنك الذي كتبته.`,`<bdi>${escapeHtml(planTitle(s))}</bdi>: su tasa real ${pct(planRate(s).rate)} sale de la cuota del banco que escribiste.`,`<bdi>${escapeHtml(planTitle(s))}</bdi>: its real rate ${pct(planRate(s).rate)} comes from the bank payment you entered.`)}</p>`).join('');
   const head=`<p class="card-label">${L('أي عرض أرخص؟','¿Qué oferta es más barata?','Which offer is cheaper?')}</p>`;
   if(f.sameR){
     const text=f.sameP&&f.sameN
@@ -3858,9 +3859,15 @@ function compareQ1(f){
   const saves=+(grid[grid.length-1].interest-grid[0].interest).toFixed(Math.min(2,curDec()));
   const per=f.sameP?'':L(' لكل 1,000',' por cada 1,000',' per 1,000');
   const winner=`<b>${names(f.winners)}</b>`;
-  const intro=L(`الفائدة الأقل عند ${winner}: ${pct(f.minR)} مقابل ${many?'حتى ':''}${pct(f.maxR)}. بنفس المبلغ ونفس المدة يكون الأرخص دائما.`,
-    `La tasa más baja es de ${winner}: ${pct(f.minR)} frente a ${many?'hasta ':''}${pct(f.maxR)}. Con el mismo monto y plazo siempre es más barato.`,
-    `${winner} has the lowest rate: ${pct(f.minR)} vs ${many?'up to ':''}${pct(f.maxR)}. At the same amount and term it is always cheaper.`);
+  const rest=f.plans.filter(s=>!f.winners.includes(s));
+  const restR=f.plans.map((s,i)=>f.rates[i].rate).filter((r,i)=>!f.winners.includes(f.plans[i]));
+  const restLo=Math.min(...restR), restOne=restLo===f.maxR;
+  const vs=restOne
+    ?L(`، مقابل ${pct(f.maxR)} عند ${names(rest)}.`,`, frente a ${pct(f.maxR)} de ${names(rest)}.`,`, vs ${pct(f.maxR)} for ${names(rest)}.`)
+    :L(`. والبقية بين ${pct(restLo)} و${pct(f.maxR)}.`,`. Las demás, entre ${pct(restLo)} y ${pct(f.maxR)}.`,`. The others range from ${pct(restLo)} to ${pct(f.maxR)}.`);
+  const intro=L(`أقل فائدة عند ${winner}: ${pct(f.minR)}${vs} وبنفس المبلغ والمدة، الفائدة الأقل تعني دائما قسطا أقل وفوائد أقل.`,
+    `La tasa más baja es de ${winner}: ${pct(f.minR)}${vs} Con el mismo monto y plazo, una tasa más baja siempre da menor cuota y menos intereses.`,
+    `${winner} has the lowest rate: ${pct(f.minR)}${vs} At the same amount and term, a lower rate always means a lower payment and less interest.`);
   const chips=f.termChoices.length>1?`<div class="cmp-chips" role="group">${f.termChoices.map(x=>`<button type="button" class="cmp-chip" aria-pressed="${x===n}" onclick="setCompareTerm(${x})">${planTermText(x)}</button>`).join('')}</div>`:'';
   const month=L('شهريا','al mes','a month'), interestW=L('الفوائد','Intereses','Interest');
   const sides=grid.map(g=>{
@@ -3889,11 +3896,12 @@ function compareQ2(f){
   if(!f.term) return '';
   const {L}=cmpWords(), T2=f.term, S=T2.S, Lp=T2.L;
   const nS=+S.form?.period||0, nL=+Lp.form?.period||0;
-  const sN=escapeHtml(planTitle(S)), lN=escapeHtml(planTitle(Lp));
+  const sN=`<bdi>${escapeHtml(planTitle(S))}</bdi>`, lN=`<bdi>${escapeHtml(planTitle(Lp))}</bdi>`;
   const k=planTermText(T2.k);
+  const byK=lang!=='ar'?k:T2.k===12?'بسنة':T2.k===24?'بسنتين':T2.k===1?'بشهر':T2.k===2?'بشهرين':'بـ '+k;
   let text;
-  if(T2.payDiff>0&&T2.intDiff>0) text=L(`خطتك ${lN} مدتها أطول بـ ${k}، لذلك قسطها أقل وفوائدها أكثر.`,`${lN} es más largo por ${k}, así que su cuota es menor y sus intereses mayores.`,`${lN} is longer by ${k}, so its payment is lower and its interest is higher.`);
-  else if(T2.payDiff>0&&T2.intDiff===0) text=L(`${lN} قسطها أقل والفوائد نفسها، لأن مدتها أطول بـ ${k}.`,`${lN} tiene una cuota menor y los mismos intereses, porque es más largo por ${k}.`,`${lN} has a lower payment and the same interest, because it is longer by ${k}.`);
+  if(T2.payDiff>0&&T2.intDiff>0) text=L(`خطتك ${lN} مدتها أطول ${byK}، لذلك قسطها أقل وفوائدها أكثر.`,`${lN} es más largo por ${k}, así que su cuota es menor y sus intereses mayores.`,`${lN} is longer by ${k}, so its payment is lower and its interest is higher.`);
+  else if(T2.payDiff>0&&T2.intDiff===0) text=L(`${lN} قسطها أقل والفوائد نفسها، لأن مدتها أطول ${byK}.`,`${lN} tiene una cuota menor y los mismos intereses, porque es más largo por ${k}.`,`${lN} has a lower payment and the same interest, because it is longer by ${k}.`);
   else if(T2.payDiff>0) text=L(`${lN} مدتها أطول، وأقل في القسط والفوائد.`,`${lN} es más largo y menor en cuota e intereses.`,`${lN} is longer and lower in both payment and interest.`);
   else text=L(`${sN} مدتها أقصر، وأقل في القسط والفوائد.`,`${sN} es más corto y menor en cuota e intereses.`,`${sN} is shorter and lower in both payment and interest.`);
   const pS=planPay(S), pL=planPay(Lp);
@@ -3981,7 +3989,7 @@ function renderCompare(){
   });
   html+=`</tbody></table></div>`;
   if(saved.length>plans.length) html+=`<p class="cmp-note" style="margin:0;text-align:center">${isAr?`تعرض المقارنة أول ${plans.length} خطط من ${saved.length}.`:isEs?`La comparación muestra los primeros ${plans.length} de ${saved.length} planes.`:`Showing the first ${plans.length} of ${saved.length} plans.`}</p>`;
-  html+=plans.filter(s=>!planWithinBankLimit(planPay(s))).map(s=>`<p class="cmp-warn" style="margin:0">⚠ ${escapeHtml(planTitle(s))}: ${isAr?'يتجاوز حد البنك':isEs?'supera el límite del banco':'exceeds the bank limit'}</p>`).join('');
+  html+=plans.filter(s=>!planWithinBankLimit(planPay(s))).map(s=>`<p class="cmp-warn" style="margin:0">⚠ <bdi>${escapeHtml(planTitle(s))}</bdi>: ${isAr?'يتجاوز حد البنك':isEs?'supera el límite del banco':'exceeds the bank limit'}</p>`).join('');
   html+=mixed+compareQ1(facts)+compareQ2(facts);
   document.getElementById('compare-body').innerHTML=html;
   fitCompareTable();
