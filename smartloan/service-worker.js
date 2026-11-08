@@ -2,30 +2,30 @@
    On a real release: set VERSION to the app version (4.1, 4.2…) and rewrite CHANGELOG.
    VERSION is shown to users, so it is a product release, not a running fix counter.
    Quiet polish can keep VERSION and bump CACHE only so PWA clients refresh. */
-const VERSION = '4.1';
+const VERSION = '4.2';
 
 // Each sentence is its own line. U+2028 breaks the line even in the current
 // banner, and the RTL mark keeps every Arabic period with its sentence.
 function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
   ar: updateNote([
-    'قسم جديد لقروضك الحقيقية.\u200F',
-    'مقارنة أوضح بين عروض البنوك.\u200F',
-    'شاشة رئيسية أبسط وإصلاحات عامة.\u200F'
+    'مقارنة عادلة: أي عرض أرخص، وأي مدة تناسبك.\u200F',
+    'أضف قروضك الحالية وعدلها، ويتوقف حسابها عند انتهائها.\u200F',
+    'أرقام أوضح وإصلاحات عامة.\u200F'
   ]),
   en: updateNote([
-    'A new section for your real loans.',
-    'Clearer comparison of bank offers.',
-    'A simpler home screen and general fixes.'
+    'A fair comparison: which offer is cheaper, and which term suits you.',
+    'Add and edit the loans you already pay; they stop counting when they end.',
+    'Clearer numbers and general fixes.'
   ]),
   es: updateNote([
-    'Nueva sección para tus préstamos reales.',
-    'Comparación más clara de ofertas bancarias.',
-    'Inicio más simple y mejoras generales.'
+    'Una comparación justa: qué oferta es más barata y qué plazo te conviene.',
+    'Añade y edita los préstamos que ya pagas; dejan de contar al terminar.',
+    'Números más claros y mejoras generales.'
   ])
 };
 
-const CACHE = 'smartloan-4.1b';
+const CACHE = 'smartloan-4.2';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 // Install: pre-cache core, then WAIT. No skipWaiting() here on purpose — the new
