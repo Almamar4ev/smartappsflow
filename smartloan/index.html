@@ -7,7 +7,7 @@
 
 <!-- PWA / Add to Home Screen (web + iPhone) -->
 <link rel="manifest" href="manifest.json"/>
-<meta name="theme-color" content="#3A2A8C"/>
+<meta name="theme-color" content="#f1f5f9"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
@@ -188,6 +188,49 @@ html.guide-tour-on .screen{animation:none!important}
 .cmp-val{font-size:13px;font-weight:700;color:var(--txt);margin-top:6px}
 .cmp-note{font-size:13px;line-height:1.6;color:var(--txt);margin-top:10px}
 .cmp-warn{font-size:12px;font-weight:700;color:var(--risk);margin-top:6px}
+.cmp-side.win{border:1.5px solid color-mix(in srgb,var(--safe) 55%,transparent);background:color-mix(in srgb,var(--safe) 9%,var(--bg2))}
+.cmp-side .cmp-tag.ghost{visibility:hidden}
+.cmp-q{font-size:14px;line-height:1.6;color:var(--txt);margin:0}
+.cmp-q b{color:var(--safe)}
+.cmp-hint{font-size:12px;line-height:1.55;color:var(--txt3);margin:8px 0 0}
+.cmp-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.cmp-chip{min-height:36px;padding:0 13px;border-radius:999px;border:1.5px solid var(--brd);background:var(--bg);color:var(--txt2);font-family:inherit;font-size:13px;font-weight:800;cursor:pointer}
+.cmp-chip[aria-pressed="true"]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent);color:var(--acc)}
+.cmp-tl{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.cmp-tl-row{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:center;font-size:12px;font-weight:800;color:var(--txt)}
+.cmp-bar{display:flex;height:22px;border-radius:7px;overflow:hidden;background:var(--bg3)}
+.cmp-bar span{display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden}
+.cmp-bar .a{background:var(--acc)}
+.cmp-bar .b{background:var(--acc2)}
+.cmp-bar .x{background:color-mix(in srgb,var(--acc2) 55%,var(--bg3))}
+.cmp-kv{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--brd);font-size:13px;color:var(--txt2)}
+.cmp-kv:last-child{border-bottom:0}
+.cmp-kv b{color:var(--txt);font-weight:800;text-align:end}
+.cmp-cell-sub{display:block;font-size:12px;color:var(--txt3);font-weight:600}
+.add-loan-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:calc(100% - 24px);min-height:46px;margin:0 12px 10px;border-radius:13px;border:1.5px dashed color-mix(in srgb,var(--safe) 60%,var(--brd));background:color-mix(in srgb,var(--safe) 6%,transparent);color:var(--safe);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.plan-row.ended{background:var(--bg3)}
+.plan-row.ended .plan-row-name,.plan-row.ended .saved-mini-amt{color:var(--txt3)}
+.plan-row.ended .saved-mini-amt{text-decoration:line-through}
+.loan-pill{display:inline-block;align-self:flex-start;font-size:12px;font-weight:800;border-radius:999px;padding:1px 9px;margin-top:3px;background:var(--bg3);color:var(--txt2)}
+.loan-pill.warn{background:color-mix(in srgb,var(--mod) 14%,transparent);color:var(--mod)}
+.home-gain{font-size:12px;font-weight:800;color:var(--safe);margin-top:4px}
+.ls-title{font-size:19px;font-weight:900;color:var(--txt);margin:0 0 6px}
+.ls-info{font-size:14px;color:var(--txt2);line-height:1.6;white-space:pre-line;margin:0 0 10px}
+.ls-f{display:flex;flex-direction:column;gap:5px;margin-bottom:11px;min-width:0}
+.ls-f label,.ls-lbl{font-size:12.5px;font-weight:800;color:var(--lbl)}
+.ls-two{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.ls-date{display:grid;grid-template-columns:1.4fr 1fr;gap:6px}
+.ls-sel{width:100%;min-height:46px;background-color:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding-block:11px;padding-inline:12px 30px;color:var(--txt);font-size:15px;font-weight:600;outline:none}
+.ls-sel:focus{border-color:var(--acc)}
+.ls-hint{font-size:12px;color:var(--txt3);line-height:1.5}
+.ls-err{font-size:12.5px;font-weight:700;color:var(--risk);min-height:18px;margin:2px 0 4px}
+.ls-opt{display:flex;gap:10px;align-items:flex-start;width:100%;border:1.5px solid var(--brd);border-radius:13px;padding:10px 12px;margin-bottom:8px;background:var(--bg);color:var(--txt);font-family:inherit;text-align:start;cursor:pointer}
+.ls-opt[aria-checked="true"]{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent)}
+.ls-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--brd);flex:none;margin-top:2px;display:flex;align-items:center;justify-content:center}
+.ls-opt[aria-checked="true"] .ls-radio{border-color:var(--acc)}
+.ls-opt[aria-checked="true"] .ls-radio::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--acc)}
+.ls-opt b{display:block;font-size:14px}
+.ls-opt small{font-size:12px;color:var(--txt3)}
 .no-saved-home{margin:0 20px 20px;background:var(--bg2);border:1px dashed var(--brd);border-radius:14px;padding:20px;text-align:center;color:var(--txt2);font-size:14px;line-height:1.6}
 
 /* ── LIGHT THEME fix — full consistency ── */
@@ -541,7 +584,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
   </div>
   <!-- Real loans the user took -->
-  <div class="home-sec mine" id="home-loans-section" style="display:none">
+  <div class="home-sec mine" id="home-loans-section">
     <div class="sec-head">
       <button type="button" class="sec-toggle" id="home-loans-toggle" onclick="toggleHomeSection('loans')" aria-expanded="false" aria-controls="home-loans-body">
         <span class="sec-text"><span class="sec-title" id="home-loans-title"></span><span class="sec-sub" id="home-loans-sub"></span></span>
@@ -550,6 +593,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
     <div class="sec-body" id="home-loans-body" hidden>
       <p class="sec-note" id="home-loans-note"></p>
+      <button type="button" class="add-loan-btn" id="home-add-loan" onclick="addMyLoan()"></button>
       <div id="home-loans-list"></div>
     </div>
   </div>
@@ -726,6 +770,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     <div class="plan-actions" id="plan-actions">
       <button class="plan-act take" id="btn-take-plan" onclick="takePlan(_viewingSavedIdx)"></button>
       <button class="plan-act edit" id="btn-edit-plan" onclick="editViewedPlan()"></button>
+      <button class="plan-act take" id="btn-end-loan" onclick="confirmLoanEnded(_viewingSavedIdx)"></button>
       <button class="plan-act del" id="btn-delete-plan" onclick="deleteViewedPlan()"></button>
     </div>
     <div class="action-row" data-guide-id="save">
@@ -1001,8 +1046,16 @@ function getCurrencyName(c){
 // قاعدة الأرقام: القسط الشهري بخانات العملة، وكل مبلغ آخر بخانتين كحد أقصى،
 // ولا تكتب أصفار زائدة (100 لا 100.00)
 function numText(n,maxDec){return Number(n).toLocaleString('en-US',{maximumFractionDigits:maxDec});}
-function fmtNum(n){return numText(n,Math.min(2,curDec()));}
-function fmtPayNum(n){return numText(n,curDec());}
+// المال: الرقم الصحيح بلا خانات (100)، والكسر بخاناته كاملة (209.80 لا 209.8)
+function moneyText(n,dec){
+  // التقريب نفسه الذي يعرضه المتصفح، لا toFixed الذي يخطئ في 1.2345
+  const r=+Number(+n||0).toLocaleString('en-US',{maximumFractionDigits:dec,useGrouping:false});
+  if(r===0) return '0';
+  if(Number.isInteger(r)) return numText(r,0);
+  return r.toLocaleString('en-US',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+}
+function fmtNum(n){return moneyText(n,Math.min(2,curDec()));}
+function fmtPayNum(n){return moneyText(n,curDec());}
 function fmtPct(n){return numText(n,2)+'%';}
 function fmtAmt(n){return withCurrency(fmtNum(n));}
 function fmtPay(n){return withCurrency(fmtPayNum(n));}
@@ -1403,7 +1456,14 @@ function renderBankCompareCard(r){
   </details>`;
   renderBankOfferResult();
 }
-function onBankOfferInput(v){_bankOffer=v;renderBankOfferResult();}
+function onBankOfferInput(v){
+  _bankOffer=v;renderBankOfferResult();
+  // في شاشة خطة محفوظة يحفظ القسط معها، والحفظ الفعلي بعد الخروج من نسخة الملف المؤقتة
+  if(_viewingSavedLoan&&!_viewingMyLoan){
+    const s=saved[_viewingSavedIdx];
+    if(s){const b=parseFloat(String(v||'').trim());if(b>0) s.bankMonthly=b; else delete s.bankMonthly;_planDirty=true;}
+  }
+}
 // نتيجة المقارنة — ترسم وحدها كي لا يفقد حقل الإدخال تركيزه أثناء الكتابة
 function renderBankOfferResult(){
   const out=document.getElementById('bank-offer-out'),errEl=document.getElementById('bank-offer-err');
@@ -1564,7 +1624,27 @@ function fmtDti(v){
   if(typeof v!=='number'||!isFinite(v)) return lang==='ar'?'غير متاح':lang==='es'?'No disponible':'N/A';
   return fmtPct(v);
 }
-function myLoansTotal(){return myLoans.reduce((sum,x)=>sum+(+x.loanMonthly||0),0);}
+// شهر آخر قسط كرقم واحد (سنة×12+شهر). شهر آخر قسط ما زال يحسب
+function loanEndIndex(s){const f=s.form||{};return (+f.startYear)*12+(+f.startMonth||0)+(+f.period||1)-1;}
+function loanPastEnd(s,now){
+  const f=s.form||{};
+  if(!f.startYear) return false;
+  now=now||new Date();
+  return loanEndIndex(s)<now.getFullYear()*12+now.getMonth();
+}
+// القروض المأخوذة في 4.1 تاريخها تقدير وقت الحساب، فلا تنتهي حتى يؤكد المستخدم. والشك يبقيها محسوبة
+function isLoanEnded(s,now){return loanPastEnd(s,now)&&(s.startConfirmed===true||s.endConfirmed===true);}
+function loanNeedsCheck(s,now){return loanPastEnd(s,now)&&!isLoanEnded(s,now);}
+function myLoansTotal(now){return myLoans.filter(x=>!isLoanEnded(x,now)).reduce((sum,x)=>sum+(+x.loanMonthly||0),0);}
+// أقرب قرض مؤكد التاريخ ينتهي خلال 12 شهرا
+function nextLoanEnding(now){
+  now=now||new Date();
+  const nowIdx=now.getFullYear()*12+now.getMonth();
+  const soon=myLoans.filter(x=>x.startConfirmed===true&&!isLoanEnded(x,now))
+    .map(x=>({s:x,left:loanEndIndex(x)-nowIdx})).filter(x=>x.left>=0&&x.left<12)
+    .sort((a,b)=>a.left-b.left);
+  return soon[0]||null;
+}
 function realPayments(){return (+profile.existing||0)+myLoansTotal();}
 function analyse(){
   const salary=+profile.salary||0,income=+profile.income||0,expenses=+profile.expenses||0;
@@ -1963,6 +2043,7 @@ function renderHome(){
           <div style="font-size:12px;font-weight:700;color:var(--lbl);margin-bottom:2px">${remLabel}</div>
           <div style="font-size:24px;font-weight:900;line-height:1.2;color:${remIsDeficit?'var(--risk)':'var(--txt)'}">${fmtAmt(Math.abs(rem))}</div>
           <div style="font-size:12px;color:var(--txt3);margin-top:3px">${remDesc}</div>
+          ${(()=>{const n=nextLoanEnding();if(!n) return '';const nm=escapeHtml(planTitle(n.s)),when=loanLastPayment(n.s),amt=fmtAmt(+n.s.loanMonthly||0);return `<div class="home-gain">${lang==='ar'?`+${amt} بعد انتهاء قرض ${nm} في ${when}`:lang==='es'?`+${amt} cuando termine tu préstamo ${nm} en ${when}`:`+${amt} after your ${nm} loan ends in ${when}`}</div>`;})()}
         </div>
         <div style="width:52px;height:52px;border-radius:50%;border:3px solid color-mix(in srgb,${remColor} 25%,transparent);display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,${remColor} 15%,transparent);flex-shrink:0">
           <span style="font-size:${String(Math.round(remPct)).length>3?13:16}px;font-weight:900;color:var(--txt)">${Math.round(remPct)}%</span>
@@ -2052,7 +2133,7 @@ function readHomeOpen(){
 }
 // قائمة الخطط الفارغة تبقى مفتوحة لأنها تشرح ما يجب فعله
 function applyHomeOpen(){
-  [['loans',_homeOpen.loans],['plans',_homeOpen.plans||!saved.length]].forEach(([key,on])=>{
+  [['loans',_homeOpen.loans||!myLoans.length],['plans',_homeOpen.plans||!saved.length]].forEach(([key,on])=>{
     const body=document.getElementById(`home-${key}-body`);
     const toggle=document.getElementById(`home-${key}-toggle`);
     if(!body||!toggle) return;
@@ -2061,6 +2142,8 @@ function applyHomeOpen(){
   });
   const plansToggle=document.getElementById('home-plans-toggle');
   if(plansToggle) plansToggle.disabled=!saved.length;
+  const loansToggle=document.getElementById('home-loans-toggle');
+  if(loansToggle) loansToggle.disabled=!myLoans.length;
 }
 function setHomeOpen(key,on){
   _homeOpen[key]=on;
@@ -2071,15 +2154,18 @@ function toggleHomeSection(key){setHomeOpen(key,!_homeOpen[key]);}
 function renderHomeLoans(){
   const section=document.getElementById('home-loans-section');
   if(!section) return;
-  section.style.display=myLoans.length?'block':'none';
-  if(!myLoans.length) return;
   const isAr=lang==='ar', isEs=lang==='es';
-  document.getElementById('home-loans-title').textContent=`${isAr?'قروضي':isEs?'MIS PRÉSTAMOS':'MY LOANS'} (${myLoans.length})`;
+  const active=myLoans.filter(x=>!isLoanEnded(x));
+  document.getElementById('home-loans-title').textContent=`${isAr?'قروضي':isEs?'MIS PRÉSTAMOS':'MY LOANS'}${myLoans.length?` (${myLoans.length})`:''}`;
   const other=+profile.existing||0;
-  document.getElementById('home-loans-sub').textContent=`${fmtAmt(myLoansTotal())} ${isAr?'شهريا':isEs?'al mes':'a month'}`;
+  document.getElementById('home-loans-sub').textContent=!myLoans.length
+    ?(isAr?'لا توجد قروض بعد':isEs?'Aún no hay préstamos':'No loans yet')
+    :`${fmtAmt(myLoansTotal())} ${isAr?'شهريا':isEs?'al mes':'a month'}`+(active.length<myLoans.length?` · ${myLoans.length-active.length} ${isAr?'انتهى':isEs?'terminados':'ended'}`:'');
   document.getElementById('home-loans-note').textContent=
     (isAr?'قروض حقيقية تدفعها، وأقساطها تحسب من ملفك المالي':isEs?'Préstamos reales que pagas; sus cuotas cuentan en tu perfil':'Real loans you pay; their payments count in your profile')
     +(other>0?` · ${isAr?'أقساط أخرى':isEs?'Otras cuotas':'Other payments'}: ${fmtAmt(other)}`:'');
+  const add=document.getElementById('home-add-loan');
+  if(add) add.innerHTML=`<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>${isAr?'أضف قرضا تدفعه حاليا':isEs?'Añade un préstamo que ya pagas':'Add a loan you already pay'}`;
   document.getElementById('home-loans-list').innerHTML=myLoans.map((s,i)=>planRow(s,i,true)).join('');
 }
 // صف مختصر: التفاصيل والأزرار داخل شاشة الخطة حتى تبقى الرئيسية قصيرة
@@ -2093,8 +2179,12 @@ function planRow(s,i,mine){
     ?(isAr?'⚠ يتجاوز الحد':isEs?'⚠ Supera el límite':'⚠ Over limit')
     :thin?(isAr?'⚠ المتبقي قليل':isEs?'⚠ Te queda poco':'⚠ Little left')
     :(isAr?'ضمن الحد':isEs?'Dentro del límite':'Within limit')}</span>`;
-  const last=mine?`<span class="plan-row-sub">${isAr?'آخر قسط':isEs?'Última cuota':'Last payment'}: ${loanLastPayment(s)}</span>`:'';
-  return`<button type="button" class="plan-row" onclick="openSavedDetail(${i}${mine?',true':''})">
+  const ended=mine&&isLoanEnded(s), check=mine&&loanNeedsCheck(s);
+  const last=!mine?'':ended
+    ?`<span class="loan-pill">${isAr?`انتهى في ${loanLastPayment(s)} · لا يحسب`:isEs?`Terminó en ${loanLastPayment(s)} · no cuenta`:`Ended ${loanLastPayment(s)} · not counted`}</span>`
+    :check?`<span class="loan-pill warn">${isAr?'مضى آخر قسط. هل انتهى؟':isEs?'Pasó la última cuota. ¿Terminó?':'Last payment has passed. Has it ended?'}</span>`
+    :`<span class="plan-row-sub">${isAr?'آخر قسط':isEs?'Última cuota':'Last payment'}: ${loanLastPayment(s)}</span>`;
+  return`<button type="button" class="plan-row${ended?' ended':''}" onclick="openSavedDetail(${i}${mine?',true':''})">
       <span class="plan-row-icon">${ltIcon(s.loanType||s.form?.loanType,18)}</span>
       <span class="plan-row-main">
         <span class="plan-row-name">${escapeHtml(planTitle(s))}</span>
@@ -2107,24 +2197,184 @@ function planRow(s,i,mine){
       <svg class="plan-row-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
     </button>`;
 }
-// الخطة تصبح قرضا حقيقيا بقرار صريح فقط. ما كان محسوبا في الرقم اليدوي بعد الترحيل يخصم منه كي لا يتكرر
-async function takePlan(i){
-  const s=saved[i]; if(!s) return;
+// قسط البنك هو ما يحسب في الملف المالي. والفائدة والمبلغ للرصيد المتبقي فقط، لأن قسط البنك قد يشمل التأمين
+const LOAN_TYPES=['personal','car','home','business','education','other'];
+let _loanSheet=null;
+function lsWords(){
   const isAr=lang==='ar', isEs=lang==='es';
-  const pay=fmtPay(s.results.monthly);
-  const cut=s.countedMonthly?Math.min(s.countedMonthly,+profile.existing||0):0;
-  const cutNote=!cut?'':'\n'+(isAr?`وسيخصم ${fmtAmt(cut)} من الأقساط التي كتبتها في ملفك المالي حتى لا يتكرر.`:isEs?`Y se restarán ${fmtAmt(cut)} de las cuotas de tu perfil para no contarlo dos veces.`:`And ${fmtAmt(cut)} comes off the payments in your profile so it is not counted twice.`);
+  return (ar,es,en)=>isAr?ar:isEs?es:en;
+}
+function setLoanSheetText(id,v){const el=document.getElementById(id);if(el) el.textContent=v;}
+function showLoanSheetRow(id,on){const el=document.getElementById(id);if(el) el.style.display=on?'':'none';}
+function openLoanSheet(mode,idx){
+  closeLoanSheet();
+  const W=lsWords(), now=new Date();
+  const src=mode==='edit'?myLoans[idx]:mode==='take'?saved[idx]:null;
+  const f=(src&&src.form)||{};
+  const ov=document.getElementById('loan-sheet');
+  ov.dir=lang==='ar'?'rtl':'ltr';
+  setLoanSheetText('ls-title',mode==='take'?W('هل أخذت هذا القرض فعلا؟','¿Tomaste este préstamo de verdad?','Did you really take this loan?')
+    :mode==='edit'?W('تعديل القرض','Editar préstamo','Edit loan'):W('أضف قرضا تدفعه حاليا','Añade un préstamo que ya pagas','Add a loan you already pay'));
+  let info='';
+  if(mode==='take'){
+    const cut=src.countedMonthly?Math.min(src.countedMonthly,+profile.existing||0):0;
+    info=savedLoanDisplayName(src)+'\n'+W('سينتقل إلى قروضي، ويضاف قسطه إلى أقساطك.','Pasará a Mis préstamos y su cuota se sumará a tus cuotas.','It moves to My loans, and its payment is added to your payments.')
+      +(cut?'\n'+W(`وسيخصم ${fmtAmt(cut)} من الأقساط التي كتبتها في ملفك المالي حتى لا يتكرر.`,`Y se restarán ${fmtAmt(cut)} de las cuotas de tu perfil para no contarlo dos veces.`,`And ${fmtAmt(cut)} comes off the payments in your profile so it is not counted twice.`):'');
+  }
+  setLoanSheetText('ls-info',info);
+  document.getElementById('ls-info').style.display=info?'':'none';
+  const est=src?+src.results.monthly||0:0, bank=src&&+src.bankMonthly>0?+src.bankMonthly:0;
+  const choice=document.getElementById('ls-pay-choice');
+  const opt=(key,title,sub,on)=>`<button type="button" class="ls-opt" role="radio" aria-checked="${on}" onclick="pickLoanPay('${key}')"><span class="ls-radio"></span><span><b>${title}</b><small>${sub}</small></span></button>`;
+  choice.innerHTML=mode!=='take'?'':bank
+    ?`<p class="ls-lbl" style="margin:0 0 6px">${W('أي قسط نحسب؟','¿Qué cuota contamos?','Which payment do we count?')}</p>`
+      +opt('bank',W(`قسط البنك: ${fmtPay(bank)}`,`Cuota del banco: ${fmtPay(bank)}`,`Bank payment: ${fmtPay(bank)}`),W(`من خانة «${t().bpCmpTitle}»`,`De «${t().bpCmpTitle}»`,`From “${t().bpCmpTitle}”`),true)
+      +opt('app',W(`تقدير التطبيق: ${fmtPay(est)}`,`Estimación de la app: ${fmtPay(est)}`,`App estimate: ${fmtPay(est)}`),W('قد يختلف قليلا عن البنك','Puede variar un poco respecto al banco','May differ a little from the bank'),false)
+    :`<p class="ls-info" style="margin:0 0 10px">${W(`القسط: ${fmtPay(est)} (تقدير التطبيق)`,`Cuota: ${fmtPay(est)} (estimación de la app)`,`Payment: ${fmtPay(est)} (app estimate)`)}</p>`;
+  const take=mode==='take';
+  ['ls-row-label','ls-row-type','ls-row-pay','ls-row-term','ls-row-rate'].forEach(id=>showLoanSheetRow(id,!take));
+  setLoanSheetText('ls-l-label',W('اسم القرض (اختياري)','Nombre del préstamo (opcional)','Loan name (optional)'));
+  setLoanSheetText('ls-l-type',W('نوع القرض','Tipo de préstamo','Loan type'));
+  setLoanSheetText('ls-l-pay',W('القسط الشهري الفعلي من البنك','Cuota mensual real del banco','Actual monthly payment from the bank'));
+  setLoanSheetText('ls-h-pay',W('من كشف الحساب أو تطبيق البنك. هذا الرقم هو الذي يحسب في ملفك.','Del extracto o de la app del banco. Esta cifra es la que cuenta en tu perfil.','From your statement or bank app. This is the number counted in your profile.'));
+  setLoanSheetText('ls-l-start',take?W('أول قسط فعلي','Primera cuota real','First actual payment'):W('أول قسط','Primera cuota','First payment'));
+  setLoanSheetText('ls-l-term',W('المدة بالأشهر','Plazo en meses','Term in months'));
+  setLoanSheetText('ls-l-rate',W('الفائدة أو المبلغ الأصلي (أحدهما)','Tasa o monto original (uno de los dos)','Rate or original amount (either one)'));
+  setLoanSheetText('ls-h-rate',W('لحساب الرصيد المتبقي وجدول السداد.','Sirve para tu saldo pendiente y el calendario.','Used for your remaining balance and schedule.'));
+  const typeSel=document.getElementById('ls-type');
+  typeSel.innerHTML=LOAN_TYPES.map(x=>`<option value="${x}">${escapeHtml(T[lang]?.['lt_'+x]||x)}</option>`).join('');
+  const loc=lang==='ar'?'ar-u-ca-gregory':lang==='es'?'es-ES':'en-US';
+  document.getElementById('ls-month').innerHTML=Array.from({length:12},(_,m)=>`<option value="${m}">${new Date(2000,m,1).toLocaleDateString(loc,{month:'long'})}</option>`).join('');
+  const y0=now.getFullYear();
+  document.getElementById('ls-year').innerHTML=Array.from({length:38},(_,k)=>y0+2-k).map(y=>`<option value="${y}">${y}</option>`).join('');
+  const val=(id,v)=>{const el=document.getElementById(id);if(el) el.value=v;};
+  val('ls-label',src&&mode==='edit'?(src.label||''):'');
+  val('ls-type',(src&&(src.loanType||f.loanType))||'personal');
+  val('ls-pay',mode==='edit'?String(+(+src.loanMonthly).toFixed(curDec())):'');
+  val('ls-month',String(f.startMonth??now.getMonth()));
+  val('ls-year',String(f.startYear??y0));
+  val('ls-term',src?String(+f.period||''):'');
+  val('ls-rate',mode==='edit'&&f.rate!==undefined&&f.rate!==''?String(+f.rate):'');
+  val('ls-amount',mode==='edit'&&planAmount(src)?String(+planAmount(src).toFixed(2)):'');
+  const rate=document.getElementById('ls-rate'), amount=document.getElementById('ls-amount');
+  if(rate) rate.placeholder=W('الفائدة %','Tasa %','Rate %');
+  if(amount) amount.placeholder=W('المبلغ','Monto','Amount');
+  setLoanSheetText('ls-ok',take?W('نعم، أخذته','Sí, lo tomé','Yes, I took it'):mode==='edit'?W('حفظ','Guardar','Save'):W('إضافة إلى قروضي','Añadir a Mis préstamos','Add to My loans'));
+  setLoanSheetText('ls-cancel',W('إلغاء','Cancelar','Cancel'));
+  setLoanSheetText('ls-err','');
+  ov.style.display='flex';
+  return new Promise(resolve=>{_loanSheet={mode,idx,src,pay:bank?'bank':'app',resolve};updateLoanSheetEnd();});
+}
+function pickLoanPay(key){
+  if(!_loanSheet) return;
+  _loanSheet.pay=key;
+  document.querySelectorAll('#ls-pay-choice .ls-opt').forEach((b,i)=>b.setAttribute('aria-checked',String((i===0)===(key==='bank'))));
+}
+function readLoanSheetDate(){
+  return {startMonth:+document.getElementById('ls-month').value||0,startYear:+document.getElementById('ls-year').value||new Date().getFullYear()};
+}
+function updateLoanSheetEnd(){
+  if(!_loanSheet) return;
+  const W=lsWords(), d=readLoanSheetDate();
+  const n=_loanSheet.mode==='take'?+_loanSheet.src.form.period||0:parseInt(document.getElementById('ls-term').value,10)||0;
+  setLoanSheetText('ls-end',n>0&&n<=360?W(`آخر قسط: ${loanLastPayment({form:{...d,period:n}})}`,`Última cuota: ${loanLastPayment({form:{...d,period:n}})}`,`Last payment: ${loanLastPayment({form:{...d,period:n}})}`):'');
+}
+function closeLoanSheet(){
+  const ov=document.getElementById('loan-sheet');
+  if(ov) ov.style.display='none';
+  const st=_loanSheet;
+  _loanSheet=null;
+  if(st) st.resolve(null);
+}
+function submitLoanSheet(){
+  const st=_loanSheet;
+  if(!st) return;
+  const W=lsWords(), d=readLoanSheetDate();
+  const err=m=>{setLoanSheetText('ls-err',m);};
+  let v;
+  if(st.mode==='take'){
+    const s=st.src;
+    v={...d,pay:st.pay==='bank'&&+s.bankMonthly>0?+s.bankMonthly:+s.results.monthly};
+  }else{
+    const num=id=>{const x=String(document.getElementById(id).value||'').trim();return x===''?null:+x;};
+    const pay=num('ls-pay'), n=parseInt(document.getElementById('ls-term').value,10);
+    let rate=num('ls-rate'), amount=num('ls-amount');
+    if(!(pay>0)) return err(W('اكتب القسط الشهري.','Escribe la cuota mensual.','Enter the monthly payment.'));
+    if(!(n>=1&&n<=360)) return err(W('اكتب المدة من 1 إلى 360 شهرا.','Escribe un plazo de 1 a 360 meses.','Enter a term from 1 to 360 months.'));
+    if(rate===null&&amount===null) return err(W('اكتب الفائدة أو المبلغ الأصلي.','Escribe la tasa o el monto original.','Enter the rate or the original amount.'));
+    if(rate!==null&&!(rate>=0&&rate<=40)) return err(W('الفائدة من 0 إلى 40%.','La tasa va de 0 a 40%.','The rate must be 0 to 40%.'));
+    if(amount!==null&&!(amount>0)) return err(W('المبلغ يجب أن يكون أكبر من صفر.','El monto debe ser mayor que cero.','The amount must be above zero.'));
+    if(amount!==null&&pay*n<amount-0.005) return err(W('مجموع الأقساط أقل من المبلغ. راجع القسط أو المدة.','La suma de las cuotas es menor que el monto. Revisa la cuota o el plazo.','The payments add up to less than the amount. Check the payment or term.'));
+    if(amount===null){const r=rate/1200;amount=r?pay*(1-Math.pow(1+r,-n))/r:pay*n;}
+    if(rate===null) rate=impliedRate(amount,pay,n)*100;
+    v={...d,pay,n,rate,amount,label:String(document.getElementById('ls-label').value||'').trim().slice(0,24),type:LOAN_TYPES.includes(document.getElementById('ls-type').value)?document.getElementById('ls-type').value:'personal'};
+  }
+  const ov=document.getElementById('loan-sheet');
+  if(ov) ov.style.display='none';
+  _loanSheet=null;
+  st.resolve(v);
+}
+// يكتب بيانات النافذة في قرض من قروضي، جديد أو موجود، دون أن يغير مكانه
+function loanFromSheet(v,base){
+  const s=base||{lang,time:new Date().toLocaleTimeString()};
+  s.loanType=v.type; s.name=T[lang]?.['lt_'+v.type]||v.type;
+  if(v.label) s.label=v.label; else delete s.label;
+  s.loanAmount=+v.amount.toFixed(2); s.loanMonthly=v.pay;
+  s.results={...(s.results||{}),monthly:v.pay,total:v.pay*v.n,interest:Math.max(0,v.pay*v.n-v.amount),rate:v.rate/100};
+  if(!s.results.riskLevel) s.results.riskLevel='safe';
+  s.form={...(s.form||{}),loanType:v.type,amount:String(+v.amount.toFixed(2)),period:String(v.n),rate:String(+v.rate.toFixed(4)),startMonth:v.startMonth,startYear:v.startYear};
+  s.startConfirmed=true;
+  delete s.endConfirmed;
+  return s;
+}
+async function addMyLoan(){
+  const v=await openLoanSheet('add');
+  if(!v) return;
+  myLoans.unshift(loanFromSheet(v,{manual:true,lang,time:new Date().toLocaleTimeString()}));
+  setHomeOpen('loans',true);
+  persistState();
+  renderHome();renderHomeSaved();
+}
+async function editMyLoan(i){
+  const s=myLoans[i]; if(!s) return;
+  const v=await openLoanSheet('edit',i);
+  const idx=myLoans.indexOf(s);
+  if(!v||idx<0) return;
+  leaveDetailBeforeChange();
+  loanFromSheet(v,s);
+  persistState();
+  renderHome();renderHomeSaved();
+}
+async function confirmLoanEnded(i){
+  const s=myLoans[i]; if(!s) return;
+  const isAr=lang==='ar', isEs=lang==='es';
   const ok=await confirmSheet({
-    title:isAr?'هل أخذت هذا القرض فعلا؟':isEs?'¿Tomaste este préstamo de verdad?':'Did you really take this loan?',
-    body:savedLoanDisplayName(s)+'\n'+(isAr?`سينتقل إلى قروضي، ويضاف قسطه ${pay} إلى أقساطك.`:isEs?`Pasará a Mis préstamos y su cuota de ${pay} se sumará a tus cuotas.`:`It moves to My loans, and its payment of ${pay} is added to your payments.`)+cutNote,
-    okLabel:isAr?'نعم، أخذته':isEs?'Sí, lo tomé':'Yes, I took it'
+    title:isAr?'هل انتهى هذا القرض؟':isEs?'¿Terminó este préstamo?':'Has this loan ended?',
+    body:savedLoanDisplayName(s)+'\n'+(isAr?'سيتوقف حسابه في أقساطك، ويبقى في قروضي حتى تحذفه.':isEs?'Dejará de contar en tus cuotas y seguirá en Mis préstamos hasta que lo elimines.':'It stops counting in your payments, and stays in My loans until you delete it.'),
+    okLabel:isAr?'نعم، انتهى':isEs?'Sí, terminó':'Yes, it ended'
   });
-  const idx=saved.indexOf(s);
+  const idx=myLoans.indexOf(s);
   if(!ok||idx<0) return;
   leaveDetailBeforeChange();
+  s.endConfirmed=true;
+  persistState();
+  renderHome();renderHomeSaved();
+}
+// الخطة تصبح قرضا حقيقيا بقرار صريح فقط، مع قسطه الفعلي وتاريخ أول قسط. ما كان محسوبا في الرقم اليدوي بعد الترحيل يخصم منه كي لا يتكرر
+async function takePlan(i){
+  const s=saved[i]; if(!s) return;
+  const v=await openLoanSheet('take',i);
+  const idx=saved.indexOf(s);
+  if(!v||idx<0) return;
+  leaveDetailBeforeChange();
   saved.splice(idx,1);
-  if(s.countedMonthly) profile.existing=String(+Math.max(0,(+profile.existing||0)-s.countedMonthly).toFixed(3));
+  if(s.countedMonthly) profile.existing=String(+Math.max(0,(+profile.existing||0)-s.countedMonthly).toFixed(curDec()));
   delete s.countedMonthly;
+  const n=+s.form.period||0, P=planAmount(s);
+  s.loanMonthly=v.pay;
+  s.results={...s.results,monthly:v.pay,total:v.pay*n,interest:Math.max(0,v.pay*n-P)};
+  s.form={...s.form,startMonth:v.startMonth,startYear:v.startYear};
+  s.startConfirmed=true;
   myLoans.unshift(s);
   setHomeOpen('loans',true);
   persistState();
@@ -3249,6 +3499,8 @@ function saveScenario(){
   };
   const label=planLabelInput();
   if(label) plan.label=label;
+  const bankPay=parseFloat(String(_bankOffer||'').trim());
+  if(bankPay>0&&_bankOfferSig===[form.amount,form.period,form.rate,currency].join('|')) plan.bankMonthly=bankPay;
   if(editing){
     const old=saved[_editingLoanIdx];
     if(old.countedMonthly) plan.countedMonthly=old.countedMonthly;
@@ -3370,6 +3622,9 @@ function openSavedDetail(i,fromMyLoans=false){
     limitBasis:prevProfile.limitBasis||'gross'
   };
 
+  // قسط البنك المحفوظ مع الخطة يظهر في خانته
+  _bankOfferSig=[form.amount,form.period,form.rate,currency].join('|');
+  _bankOffer=!fromMyLoans&&+s.bankMonthly>0?String(s.bankMonthly):'';
   _savedSnap={results:prevResults,form:prevForm,profile:prevProfile};
   _viewingSavedLoan=true;
   _viewingSavedIdx=i;
@@ -3384,6 +3639,7 @@ function leaveDetailBeforeChange(){
 }
 function editViewedPlan(){
   const i=_viewingSavedIdx;
+  if(_viewingMyLoan){editMyLoan(i);return;}
   leaveDetailBeforeChange();
   editSavedLoan(i);
 }
@@ -3399,6 +3655,7 @@ function leaveSavedDetail(){
     _savedSnap=null;
   }
   _viewingSavedLoan=false;
+  if(_planDirty){_planDirty=false;persistState();}
   goHome();
 }
 function applyResultsActions(){
@@ -3420,7 +3677,14 @@ function applyResultsActions(){
     const take=document.getElementById('btn-take-plan');
     const edit=document.getElementById('btn-edit-plan');
     const del=document.getElementById('btn-delete-plan');
-    take.style.display=edit.style.display=_viewingMyLoan?'none':'';
+    take.style.display=_viewingMyLoan?'none':'';
+    edit.style.display='';
+    const end=document.getElementById('btn-end-loan');
+    const viewedLoan=_viewingSavedLoan&&_viewingMyLoan?myLoans[_viewingSavedIdx]:null;
+    if(end){
+      end.style.display=viewedLoan&&loanNeedsCheck(viewedLoan)?'':'none';
+      end.textContent=isAr?'انتهى هذا القرض':isEs?'Este préstamo terminó':'This loan has ended';
+    }
     take.textContent=isAr?'أخذت هذا القرض':isEs?'Tomé este préstamo':'I took this loan';
     edit.textContent=isAr?'تعديل':isEs?'Editar':'Edit';
     del.textContent=isAr?'حذف':isEs?'Eliminar':'Delete';
@@ -3512,6 +3776,7 @@ function renderSettings(){
 // ── COMPARE ───────────────────────────────────────────────────────────────────
 function openCompare(){
   const tc=t();
+  _cmpTerm=0;
   document.getElementById('compare-title').textContent=tc.compareTitle;
   renderCompare();
   showScreen('compare-screen');
@@ -3525,71 +3790,135 @@ function fitCompareTable(){
   if(box.scrollWidth>box.clientWidth+1) box.classList.add('stacked');
 }
 window.addEventListener('resize',fitCompareTable);
-// لا نعلن خطة «أفضل»: أقل قسط يعني غالبا فوائد أكثر، والقرار للمستخدم
-function comparePlans(plans){
-  if(new Set(plans.map(planAmount)).size>1) return {kind:'mixed'};
-  // الفروق تحسب من الأرقام كما تظهر، حتى يطابق الناتج ما يحسبه المستخدم بيده
-  const shown=(v,dec)=>+numText(+v||0,dec).replace(/,/g,'');
-  const pay=s=>shown(s.results.monthly,curDec()), cost=s=>shown(s.results.interest,Math.min(2,curDec()));
-  const byPay=[...plans].sort((a,b)=>pay(a)-pay(b)||cost(a)-cost(b));
-  const byCost=[...plans].sort((a,b)=>cost(a)-cost(b)||pay(a)-pay(b));
-  const lowPay=byPay[0], lowCost=byCost[0], worst=byCost[byCost.length-1];
-  if(pay(lowPay)===pay(lowCost)&&cost(lowPay)===cost(lowCost)){
-    const highPay=byPay[byPay.length-1];
-    if(cost(worst)===cost(lowCost)&&pay(highPay)===pay(lowCost)) return {kind:'equal'};
-    // الفوائد واحدة في كل الخطط، كقروض بلا فائدة بمدد مختلفة: لا توجد خطة أرخص، الفرق في القسط فقط
-    if(cost(worst)===cost(lowCost)) return {kind:'samecost',plan:lowPay,payGap:pay(highPay)-pay(lowPay)};
-    return {kind:'cheapest',plan:lowCost,saves:cost(worst)-cost(lowCost)};
+// سعر العرض هو فائدته. والمبلغ والمدة اختيار المقترض، فالمقارنة العادلة تثبتهما وتقارن الفائدة.
+// وإن كتب المستخدم قسط البنك لخطة نحسب فائدتها الفعلية منه، لأن البنك قد يعطي فائدة ثابتة (Flat)
+function planRate(s){
+  const bm=+s.bankMonthly, n=+s.form?.period||0;
+  if(bm>0&&n>0) return {rate:+(impliedRate(planAmount(s),bm,n)*100).toFixed(2),fromBank:true};
+  return {rate:+safeRate(s.form?.rate),fromBank:false};
+}
+function planPay(s){return +s.bankMonthly>0?+s.bankMonthly:+s.results.monthly||0;}
+function planInterest(s){return +s.bankMonthly>0?Math.max(0,(+s.bankMonthly)*(+s.form?.period||0)-planAmount(s)):(+s.results.interest||0);}
+// الأرقام كما تظهر، حتى يطابق كل فرق ما يحسبه المستخدم بيده
+function shownPay(v){return +fmtPayNum(v).replace(/,/g,'');}
+function shownAmt(v){return +fmtNum(v).replace(/,/g,'');}
+function compareFacts(plans){
+  const amounts=plans.map(planAmount), terms=plans.map(s=>+s.form?.period||0), rates=plans.map(planRate);
+  const rv=rates.map(r=>r.rate);
+  const f={plans,amounts,terms,rates,sameP:new Set(amounts).size===1,sameN:new Set(terms).size===1,sameR:new Set(rv).size===1};
+  if(!f.sameR){
+    f.minR=Math.min(...rv); f.maxR=Math.max(...rv);
+    f.winners=plans.filter((s,i)=>rv[i]===f.minR);
+    f.pref=f.sameP?amounts[0]:1000;
+    f.termChoices=[...new Set(terms)].sort((a,b)=>a-b);
   }
-  return {kind:'tradeoff',lowPay,lowCost,payGap:pay(lowCost)-pay(lowPay),costGap:cost(lowPay)-cost(lowCost)};
+  if(f.sameP&&!f.sameN){
+    const pay=s=>shownPay(planPay(s)), cost=s=>shownAmt(planInterest(s)), n=s=>+s.form?.period||0;
+    const lowPay=[...plans].sort((a,b)=>pay(a)-pay(b)||cost(a)-cost(b))[0];
+    const lowCost=[...plans].sort((a,b)=>cost(a)-cost(b)||pay(a)-pay(b))[0];
+    let pair=[lowPay,lowCost];
+    if(lowPay===lowCost||n(lowPay)===n(lowCost)){
+      const byN=[...plans].sort((a,b)=>n(a)-n(b));
+      pair=[byN[0],byN[byN.length-1]];
+    }
+    const [S,L]=n(pair[0])<=n(pair[1])?pair:[pair[1],pair[0]];
+    f.term={S,L,k:n(L)-n(S),payDiff:+(pay(S)-pay(L)).toFixed(curDec()),intDiff:+(cost(L)-cost(S)).toFixed(Math.min(2,curDec()))};
+  }
+  return f;
 }
-function compareSide(s,tag){
+// كل العروض بالمبلغ نفسه والمدة نفسها، فلا يبقى فرق إلا الفائدة
+function fairGrid(f,n){
+  return f.plans.map((s,i)=>{
+    const x=calcLoan(f.pref,f.rates[i].rate/100,n);
+    return {s,rate:f.rates[i].rate,fromBank:f.rates[i].fromBank,pay:shownPay(x.monthly),interest:shownAmt(x.interest)};
+  }).sort((a,b)=>a.rate-b.rate);
+}
+let _cmpTerm=0,_planDirty=false;
+function setCompareTerm(n){_cmpTerm=n;renderCompare();}
+function cmpWords(){
   const isAr=lang==='ar', isEs=lang==='es';
-  return`<div class="cmp-side">
-    <p class="cmp-tag">${tag}</p>
-    <p class="cmp-name">${escapeHtml(planTitle(s))}</p>
-    <p class="cmp-sub"><bdi dir="ltr">${safeRate(s.form?.rate)}%</bdi> · <bdi>${planTermText(s.form?.period)}</bdi></p>
-    <p class="cmp-val">${fmtPay(s.results.monthly)} ${isAr?'شهريا':isEs?'al mes':'a month'}</p>
-    <p class="cmp-sub">${isAr?'الفوائد':isEs?'Intereses':'Interest'}: ${fmtAmt(s.results.interest)}</p>
+  return {isAr,isEs,L:(ar,es,en)=>isAr?ar:isEs?es:en,
+    names:list=>list.map(s=>escapeHtml(planTitle(s))).join(isAr?' و':isEs?' y ':' and '),
+    pct:v=>`<bdi dir="ltr">${fmtPct(v)}</bdi>`};
+}
+function compareQ1(f){
+  const {L,names,pct}=cmpWords(), tc=t();
+  const flat=`<p class="cmp-hint">${L(`إذا أعطاك البنك فائدة ثابتة (Flat)، اكتب قسطه في «${tc.bpCmpTitle}» داخل الخطة، فيحسب التطبيق فائدته الفعلية.`,`Si el banco te da una tasa fija (flat), escribe su cuota en «${tc.bpCmpTitle}» dentro del plan y la app calculará su tasa real.`,`If the bank gives a flat rate, enter its payment in “${tc.bpCmpTitle}” inside the plan, and the app works out its real rate.`)}</p>`;
+  const bankNotes=f.plans.filter((s,i)=>f.rates[i].fromBank).map(s=>`<p class="cmp-hint">${L(`${escapeHtml(planTitle(s))}: فائدته الفعلية ${pct(planRate(s).rate)} محسوبة من قسط البنك الذي كتبته.`,`${escapeHtml(planTitle(s))}: su tasa real ${pct(planRate(s).rate)} sale de la cuota del banco que escribiste.`,`${escapeHtml(planTitle(s))}: its real rate ${pct(planRate(s).rate)} comes from the bank payment you entered.`)}</p>`).join('');
+  const head=`<p class="card-label">${L('أي عرض أرخص؟','¿Qué oferta es más barata?','Which offer is cheaper?')}</p>`;
+  if(f.sameR){
+    const text=f.sameP&&f.sameN
+      ?L('نفس المبلغ والفائدة والمدة. أي فرق عند البنك يأتي من الرسوم أو التأمين، وهذه لا يحسبها التطبيق.','Mismo monto, tasa y plazo. Cualquier diferencia en el banco viene de comisiones o seguros, que emiGo no incluye.','Same amount, rate and term. Any difference at the bank comes from fees or insurance, which emiGo does not include.')
+      :L(`كل الخطط بنفس الفائدة (${pct(f.rates[0].rate)})، فالسعر واحد. الفرق في المدة أو المبلغ فقط.`,`Todos los planes tienen la misma tasa (${pct(f.rates[0].rate)}), así que el precio es igual. Solo cambia el plazo o el monto.`,`All plans have the same rate (${pct(f.rates[0].rate)}), so the price is the same. Only the term or amount differs.`);
+    return`<div class="card">${head}<p class="cmp-q">${text}</p>${bankNotes}${flat}</div>`;
+  }
+  const many=f.plans.length>2;
+  const n=f.termChoices.includes(_cmpTerm)?_cmpTerm:f.termChoices[0];
+  const grid=fairGrid(f,n);
+  const saves=+(grid[grid.length-1].interest-grid[0].interest).toFixed(Math.min(2,curDec()));
+  const per=f.sameP?'':L(' لكل 1,000',' por cada 1,000',' per 1,000');
+  const winner=`<b>${names(f.winners)}</b>`;
+  const intro=L(`الفائدة الأقل عند ${winner}: ${pct(f.minR)} مقابل ${many?'حتى ':''}${pct(f.maxR)}. بنفس المبلغ ونفس المدة يكون الأرخص دائما.`,
+    `La tasa más baja es de ${winner}: ${pct(f.minR)} frente a ${many?'hasta ':''}${pct(f.maxR)}. Con el mismo monto y plazo siempre es más barato.`,
+    `${winner} has the lowest rate: ${pct(f.minR)} vs ${many?'up to ':''}${pct(f.maxR)}. At the same amount and term it is always cheaper.`);
+  const chips=f.termChoices.length>1?`<div class="cmp-chips" role="group">${f.termChoices.map(x=>`<button type="button" class="cmp-chip" aria-pressed="${x===n}" onclick="setCompareTerm(${x})">${planTermText(x)}</button>`).join('')}</div>`:'';
+  const month=L('شهريا','al mes','a month'), interestW=L('الفوائد','Intereses','Interest');
+  const sides=grid.map(g=>{
+    const win=f.winners.includes(g.s);
+    return`<div class="cmp-side${win?' win':''}">
+      <p class="cmp-tag${win?'':' ghost'}">${L('الأرخص','Más barato','Cheapest')}</p>
+      <p class="cmp-name">${escapeHtml(planTitle(g.s))}</p>
+      <p class="cmp-sub">${pct(g.rate)} · <bdi>${planTermText(n)}</bdi></p>
+      <p class="cmp-val">${fmtPay(g.pay)} ${month}</p>
+      <p class="cmp-sub">${interestW}: ${fmtAmt(g.interest)}</p>
+    </div>`;
+  }).join('');
+  const savesLine=L(`بالمدة نفسها يوفر ${winner} ${many?'حتى ':''}${fmtAmt(saves)} من الفوائد${per}.`,
+    `Con el mismo plazo, ${winner} ahorra ${many?'hasta ':''}${fmtAmt(saves)} en intereses${per}.`,
+    `At the same term, ${winner} saves ${many?'up to ':''}${fmtAmt(saves)} in interest${per}.`);
+  return`<div class="card">${head}
+    <p class="cmp-q">${intro}</p>
+    <p class="cmp-hint">${L(`لو أخذت العروض بالمدة نفسها${per}:`,`Si tomaras las ofertas con el mismo plazo${per}:`,`If you took the offers over the same term${per}:`)}</p>
+    ${chips}
+    <div class="cmp-sides">${sides}</div>
+    <p class="cmp-note">${savesLine}</p>
+    ${bankNotes}${flat}
   </div>`;
 }
-function compareVerdict(plans){
-  const isAr=lang==='ar', isEs=lang==='es';
-  const v=comparePlans(plans);
-  const overLimit=s=>planWithinBankLimit(s.results.monthly)?''
-    :`<p class="cmp-warn">⚠ ${escapeHtml(planTitle(s))}: ${isAr?'يتجاوز حد البنك':isEs?'supera el límite del banco':'exceeds the bank limit'}</p>`;
-  if(v.kind==='mixed') return`<div class="card" style="border-inline-start:4px solid var(--mod)">
-    <p class="card-label" style="color:var(--mod)">${isAr?'المبالغ مختلفة':isEs?'Montos diferentes':'Different amounts'}</p>
-    <p class="cmp-note" style="margin-top:0">${isAr?'لذلك تعرض المقارنة أثر كل خطة على ميزانيتك ولا تحدد الأرخص. لمقارنة عروض البنوك احفظ نفس المبلغ بعروض مختلفة.'
-      :isEs?'Por eso la comparación muestra el efecto de cada plan en tu presupuesto y no indica cuál es más barato. Para comparar bancos, guarda el mismo monto con ofertas distintas.'
-      :'So this shows how each plan affects your budget, not which is cheaper. To compare banks, save the same amount with different offers.'}</p>
-  </div>`;
-  if(v.kind==='equal') return`<div class="card"><p class="cmp-note" style="margin-top:0">${isAr?'هذه الخطط متطابقة في القسط والفوائد.':isEs?'Estos planes tienen la misma cuota e intereses.':'These plans have the same payment and interest.'}</p></div>`;
-  if(v.kind==='samecost') return`<div class="card">
-    <p class="card-label">${isAr?'الفوائد نفسها':isEs?'Mismos intereses':'Same interest'}</p>
-    <p class="cmp-note" style="margin-top:0">${isAr?`لا فرق في الفوائد بين خططك، والفرق في القسط فقط: ${escapeHtml(planTitle(v.plan))} قسطه أقل بـ ${fmtPay(v.payGap)} شهريا.`
-      :isEs?`No hay diferencia de intereses entre tus planes; solo cambia la cuota: ${escapeHtml(planTitle(v.plan))} paga ${fmtPay(v.payGap)} menos al mes.`
-      :`No difference in interest between your plans; only the payment differs: ${escapeHtml(planTitle(v.plan))} is ${fmtPay(v.payGap)} less a month.`}</p>
-    ${overLimit(v.plan)}
-  </div>`;
-  if(v.kind==='cheapest') return`<div class="card" style="border-inline-start:4px solid var(--safe)">
-    <p class="card-label" style="color:var(--safe)">${isAr?'الأرخص':isEs?'El más barato':'The cheapest'}</p>
-    <p style="font-size:19px;font-weight:800;color:var(--txt)">${escapeHtml(savedLoanDisplayName(v.plan))}</p>
-    <p class="cmp-note">${isAr?`أقل قسط وأقل فوائد بين خططك، ويوفر حتى ${fmtAmt(v.saves)} من الفوائد.`
-      :isEs?`La cuota y los intereses más bajos de tus planes, con un ahorro de hasta ${fmtAmt(v.saves)} en intereses.`
-      :`The lowest payment and interest of your plans, saving up to ${fmtAmt(v.saves)} in interest.`}</p>
-    ${overLimit(v.plan)}
-  </div>`;
+function compareQ2(f){
+  if(!f.term) return '';
+  const {L}=cmpWords(), T2=f.term, S=T2.S, Lp=T2.L;
+  const nS=+S.form?.period||0, nL=+Lp.form?.period||0;
+  const sN=escapeHtml(planTitle(S)), lN=escapeHtml(planTitle(Lp));
+  const k=planTermText(T2.k);
+  let text;
+  if(T2.payDiff>0&&T2.intDiff>0) text=L(`خطتك ${lN} مدتها أطول بـ ${k}، لذلك قسطها أقل وفوائدها أكثر.`,`${lN} es más largo por ${k}, así que su cuota es menor y sus intereses mayores.`,`${lN} is longer by ${k}, so its payment is lower and its interest is higher.`);
+  else if(T2.payDiff>0&&T2.intDiff===0) text=L(`${lN} قسطها أقل والفوائد نفسها، لأن مدتها أطول بـ ${k}.`,`${lN} tiene una cuota menor y los mismos intereses, porque es más largo por ${k}.`,`${lN} has a lower payment and the same interest, because it is longer by ${k}.`);
+  else if(T2.payDiff>0) text=L(`${lN} مدتها أطول، وأقل في القسط والفوائد.`,`${lN} es más largo y menor en cuota e intereses.`,`${lN} is longer and lower in both payment and interest.`);
+  else text=L(`${sN} مدتها أقصر، وأقل في القسط والفوائد.`,`${sN} es más corto y menor en cuota e intereses.`,`${sN} is shorter and lower in both payment and interest.`);
+  const pS=planPay(S), pL=planPay(Lp);
+  const w1=Math.round(nS/nL*100);
+  const months=x=>L(`${x} شهرا`,`${x} meses`,`${x} months`);
+  const first=T2.payDiff>0?L(`${lN} أقل بـ ${fmtPay(T2.payDiff)} شهريا`,`${lN} menor en ${fmtPay(T2.payDiff)} al mes`,`${lN} lower by ${fmtPay(T2.payDiff)} a month`)
+    :T2.payDiff<0?L(`${lN} أعلى بـ ${fmtPay(-T2.payDiff)} شهريا`,`${lN} mayor en ${fmtPay(-T2.payDiff)} al mes`,`${lN} higher by ${fmtPay(-T2.payDiff)} a month`)
+    :L('القسط نفسه','La misma cuota','The same payment');
+  const last=L(`${lN} فقط: ${fmtPay(pL)} شهريا`,`Solo ${lN}: ${fmtPay(pL)} al mes`,`${lN} only: ${fmtPay(pL)} a month`);
+  const intr=T2.intDiff>0?L(`${lN} أكثر بـ ${fmtAmt(T2.intDiff)}`,`${lN} más por ${fmtAmt(T2.intDiff)}`,`${lN} more by ${fmtAmt(T2.intDiff)}`)
+    :T2.intDiff<0?L(`${lN} أقل بـ ${fmtAmt(-T2.intDiff)}`,`${lN} menos por ${fmtAmt(-T2.intDiff)}`,`${lN} less by ${fmtAmt(-T2.intDiff)}`)
+    :L('لا فرق','Sin diferencia','No difference');
   return`<div class="card">
-    <p class="card-label">${isAr?'قسط أقل أم فوائد أقل؟':isEs?'¿Cuota menor o menos intereses?':'Lower payment or less interest?'}</p>
-    <div class="cmp-sides">
-      ${compareSide(v.lowPay,isAr?'أقل قسط شهري':isEs?'Cuota más baja':'Lowest payment')}
-      ${compareSide(v.lowCost,isAr?'أقل فوائد':isEs?'Menos intereses':'Least interest')}
+    <p class="card-label">${L('أي مدة تناسبك؟','¿Qué plazo te conviene?','Which term suits you?')}</p>
+    <p class="cmp-q">${text}</p>
+    <div class="cmp-tl" aria-hidden="true">
+      <div class="cmp-tl-row"><span>${sN}</span><div class="cmp-bar"><span class="a" style="width:${w1}%" dir="ltr">${fmtPayNum(pS)} × ${nS}</span></div></div>
+      <div class="cmp-tl-row"><span>${lN}</span><div class="cmp-bar"><span class="b" style="width:${w1}%" dir="ltr">${fmtPayNum(pL)} × ${nS}</span><span class="x" style="width:${100-w1}%" dir="ltr">+ ${nL-nS}</span></div></div>
     </div>
-    <p class="cmp-note">${isAr?`القسط الأقل يوفر لك ${fmtPay(v.payGap)} شهريا، لكنه يكلفك ${fmtAmt(v.costGap)} زيادة في الفوائد. القرار لك.`
-      :isEs?`La cuota menor te ahorra ${fmtPay(v.payGap)} al mes, pero te cuesta ${fmtAmt(v.costGap)} más en intereses. Tú decides.`
-      :`The lower payment saves you ${fmtPay(v.payGap)} a month, but costs ${fmtAmt(v.costGap)} more in interest. It is your call.`}</p>
-    ${overLimit(v.lowCost)}
+    <div style="margin-top:6px">
+      <div class="cmp-kv"><span>${L(`أول ${months(nS)}`,`Primeros ${months(nS)}`,`First ${months(nS)}`)}</span><b>${first}</b></div>
+      <div class="cmp-kv"><span>${L(`آخر ${months(nL-nS)}`,`Últimos ${months(nL-nS)}`,`Last ${months(nL-nS)}`)}</span><b>${last}</b></div>
+      <div class="cmp-kv"><span>${L('فرق الفوائد','Diferencia de intereses','Interest difference')}</span><b>${intr}</b></div>
+    </div>
+    <p class="cmp-hint">${L('القرار لك.','Tú decides.','It is your call.')}</p>
   </div>`;
 }
 function renderCompare(){
@@ -3597,71 +3926,62 @@ function renderCompare(){
   const tc=t();
   if(saved.length<2){document.getElementById('compare-body').innerHTML=`<p class="empty-state">${tc.noSaved}</p>`;return;}
   const remLbl=isAr?'يتبقى شهريا':isEs?'Resto mensual':'Monthly Remainder';
-
-  // صافي الدخل الحالي من الملف المالي الحالي
   const cmpCurGross=(+profile.salary||0)+(+profile.income||0);
-
   // كل خطة تقاس وحدها مقابل الملف الحقيقي، بدون بقية الخطط
   const cmpExisting=realPayments();
   const cmpCash=cashAfterExpenses();
-  const calcRemaining=s=>cmpCash-s.loanMonthly-cmpExisting; // قد يكون سالبا = عجز
-  const calcDti=s=>dtiPct(s.loanMonthly+cmpExisting,cmpCurGross);
-
   const plans=saved.slice(0,4);
-  // تكلفة مبالغ مختلفة لا تقارن: 7,000 ستبدو دائما أرخص من 10,000
-  const sameAmount=new Set(plans.map(planAmount)).size===1;
+  const facts=compareFacts(plans);
+  const sameAmount=facts.sameP;
+  const term=s=>+s.form?.period||0;
+  const sub=v=>`<span class="cmp-cell-sub">${v}</span>`;
+  // لا لون فائز في الجدول: الأخضر كان يميز المدة الأطول أو المبلغ الأصغر دائما
   const fields=[
-    {key:'amount',label:isAr?'المبلغ':isEs?'Monto':'Amount',get:planAmount,fmt:v=>fmtNum(v)},
-    {key:'term',label:isAr?'المدة':isEs?'Plazo':'Term',get:s=>planTermText(s.form?.period),fmt:v=>v},
-    {key:'rate',label:isAr?'الفائدة':isEs?'Interés':'Rate',get:s=>safeRate(s.form?.rate),fmt:v=>v+'%'},
-    {key:'monthly',label:tc.monthlyInstallment,fmt:v=>fmtPayNum(v),best:'min'},
-    {key:'interest',label:tc.totalInterest,fmt:v=>fmtNum(v),best:sameAmount?'min':null},
-    {key:'total',label:tc.totalCost,fmt:v=>fmtNum(v),best:sameAmount?'min':null},
-    {key:'dtiGross',label:tc.dtiRatio,fmt:v=>fmtDti(v),best:'min'},
-    {key:'remaining',label:remLbl,fmt:v=>v<0?`<bdi dir="ltr">${fmtNum(v)}</bdi>`:fmtNum(v),best:'max'},
+    {label:isAr?'المبلغ':isEs?'Monto':'Amount',cell:s=>fmtNum(planAmount(s))},
+    {label:isAr?'المدة':isEs?'Plazo':'Term',cell:s=>planTermText(s.form?.period)},
+    {label:isAr?'الفائدة':isEs?'Interés':'Rate',cell:s=>{const r=planRate(s);return `<bdi dir="ltr">${fmtPct(r.rate)}</bdi>`+(r.fromBank?sub(isAr?'من قسط البنك':isEs?'de la cuota del banco':'from the bank payment'):'');}},
+    {label:tc.monthlyInstallment,cell:s=>fmtPayNum(planPay(s))},
+    ...(sameAmount?[
+      {label:tc.totalInterest,cell:s=>fmtNum(planInterest(s))},
+      {label:tc.totalCost,cell:s=>fmtNum(planAmount(s)+planInterest(s))},
+    ]:[
+      {label:isAr?'القسط لكل 1,000':isEs?'Cuota por cada 1,000':'Monthly per 1,000',cell:s=>fmtPayNum(calcLoan(1000,planRate(s).rate/100,term(s)).monthly)},
+    ]),
+    {label:tc.dtiRatio,cell:s=>fmtDti(dtiPct(planPay(s)+cmpExisting,cmpCurGross))},
+    {label:remLbl,cell:s=>{const v=cmpCash-planPay(s)-cmpExisting;return(v<0?`<bdi dir="ltr">${fmtNum(v)}</bdi>`:fmtNum(v))+sub(planTermText(s.form?.period));}},
   ];
 
   const headerCells=plans.map(s=>`<th style="text-align:center;color:var(--acc);padding:10px 5px;font-size:13px;font-weight:800;border-bottom:2px solid var(--brd);overflow-wrap:break-word">
       ${escapeHtml(planTitle(s))}
     </th>`).join('');
 
-  let html=`<div class="card" id="cmp-table" style="overflow-x:auto;padding:0">
+  let html=compareQ1(facts)+compareQ2(facts);
+  if(!sameAmount) html+=`<div class="card" style="border-inline-start:4px solid var(--mod)">
+    <p class="card-label" style="color:var(--mod)">${isAr?'المبالغ مختلفة':isEs?'Montos diferentes':'Different amounts'}</p>
+    <p class="cmp-note" style="margin-top:0">${isAr?'القسط الأكبر سببه المبلغ الأكبر، وليس البنك. لذلك قارنا الفائدة لكل 1,000.':isEs?'Una cuota mayor viene del monto mayor, no del banco. Por eso comparamos la tasa por cada 1,000.':'A bigger payment comes from the bigger amount, not the bank. That is why the rate is compared per 1,000.'}</p>
+  </div>`;
+  html+=`<div class="card" id="cmp-table" style="overflow-x:auto;padding:0">
     <div style="padding:14px 14px 10px;border-bottom:1px solid var(--brd)">
-      <p class="card-label" style="margin:0">${tc.compareTitle}${getCurrencySymbol()?' · '+getCurrencySymbol():''}</p>
+      <p class="card-label" style="margin:0">${isAr?'خططك كما حفظتها':isEs?'Tus planes guardados':'Your plans as saved'}${getCurrencySymbol()?' · '+getCurrencySymbol():''}</p>
+      <p class="cmp-hint" style="margin-top:2px">${isAr?'أثر كل خطة على ميزانيتك. لا يوجد فائز هنا.':isEs?'Cómo afecta cada plan a tu presupuesto. Aquí no hay ganador.':'How each plan affects your budget. There is no winner here.'}</p>
     </div>
     <table style="width:100%;border-collapse:collapse;--cols:${plans.length}">
       <thead>
         <tr style="background:var(--bg3)">
-          <th style="position:sticky;inset-inline-start:0;background:var(--bg3);text-align:start;color:var(--lbl);padding:10px;font-size:13px;font-weight:800;border-bottom:2px solid var(--brd)">${isAr?'البند':lang==='es'?'Campo':'Field'}</th>
+          <th style="position:sticky;inset-inline-start:0;background:var(--bg3);text-align:start;color:var(--lbl);padding:10px;font-size:13px;font-weight:800;border-bottom:2px solid var(--brd)">${isAr?'البند':isEs?'Campo':'Field'}</th>
           ${headerCells}
         </tr>
       </thead>
       <tbody>`;
   fields.forEach(f=>{
-    const vals=plans.map(s=>{
-      if(f.get) return f.get(s);
-      if(f.key==='remaining') return calcRemaining(s);
-      if(f.key==='dtiGross') return calcDti(s);
-      const v=s.results[f.key];
-      return(v===undefined||v===null||isNaN(v))?0:v;
-    });
-    // صف تتساوى فيه الخطط لا فائز فيه
-    // قيمة غير متاحة لا تفوز ولا تخسر
-    const nums=vals.filter(v=>typeof v==='number'&&isFinite(v));
-    const differ=!!f.best&&nums.length===vals.length&&new Set(vals.map(f.fmt)).size>1;
-    const bestVal=!differ?null:f.best==='min'?Math.min(...nums):Math.max(...nums);
     html+=`<tr>
       <td style="position:sticky;inset-inline-start:0;background:var(--bg2);color:var(--txt);padding:10px 8px;border-bottom:1px solid var(--brd);font-size:12px;font-weight:700;line-height:1.3">${f.label}</td>
-      ${vals.map((v)=>{
-        // رقمان يظهران متساويين يلونان معا، فالفرق في خانات لا يراها المستخدم ليس فوزا
-        const isBest=bestVal!==null&&f.fmt(v)===f.fmt(bestVal);
-        return`<td style="text-align:center;padding:10px 5px;border-bottom:1px solid var(--brd);font-weight:${isBest?'800':'600'};color:${isBest?'var(--safe)':'var(--txt)'};font-size:13px;white-space:nowrap">${f.fmt(v)}</td>`;
-      }).join('')}
+      ${plans.map(s=>`<td style="text-align:center;padding:10px 5px;border-bottom:1px solid var(--brd);font-weight:600;color:var(--txt);font-size:13px;white-space:nowrap">${f.cell(s)}</td>`).join('')}
     </tr>`;
   });
   html+=`</tbody></table></div>`;
   if(saved.length>plans.length) html+=`<p class="cmp-note" style="margin:0;text-align:center">${isAr?`تعرض المقارنة أول ${plans.length} خطط من ${saved.length}.`:isEs?`La comparación muestra los primeros ${plans.length} de ${saved.length} planes.`:`Showing the first ${plans.length} of ${saved.length} plans.`}</p>`;
-  html+=compareVerdict(plans);
+  html+=plans.filter(s=>!planWithinBankLimit(planPay(s))).map(s=>`<p class="cmp-warn" style="margin:0">⚠ ${escapeHtml(planTitle(s))}: ${isAr?'يتجاوز حد البنك':isEs?'supera el límite del banco':'exceeds the bank limit'}</p>`).join('');
   document.getElementById('compare-body').innerHTML=html;
   fitCompareTable();
 }
@@ -4650,6 +4970,8 @@ function sanitizeSaved(arr){
       else delete x.label;
       x.time=typeof x.time==='string'?x.time.slice(0,80):'';
       x.loanMonthly=x.results.monthly;
+      if(+x.bankMonthly>0&&isFinite(+x.bankMonthly)) x.bankMonthly=+x.bankMonthly; else delete x.bankMonthly;
+      ['manual','startConfirmed','endConfirmed'].forEach(k=>{if(x[k]!==true) delete x[k];});
       return x;
     });
 }
@@ -4776,7 +5098,7 @@ const GUIDE_HELP={
   profile:{en:{title:'Financial profile',body:'Your financial file holds the numbers emiGo reuses for every loan:\n\n• Monthly salary and extra income\n• Fixed and variable expenses\n• Existing loan payments you are paying now (you enter them)\n• Bank installment limit percentage and whether it is on gross or net income\n\nSave this file once so each new loan uses realistic limits.'},ar:{title:'الملف المالي',body:'ملفك المالي يجمع الأرقام التي يعيد تطبيق emiGo استخدامها مع كل قرض:\n\n• الراتب الشهري والدخل الإضافي\n• المصروفات الثابتة والمتغيرة\n• أقساط القروض التي تدفعها حاليا وتكتبها بنفسك\n• حد القسط البنكي كنسبة مئوية وعلى أساس الدخل الإجمالي أو الصافي\n\nاحفظ الملف مرة واحدة ليحسب كل قرض جديد بحدود واقعية.'},es:{title:'Perfil financiero',body:'Tu archivo financiero guarda los números que emiGo reutiliza en cada préstamo:\n\n• Salario mensual e ingresos extra\n• Gastos fijos y variables\n• Cuotas de préstamos que pagas ahora (las escribes tú)\n• Límite bancario de cuota en porcentaje y si aplica sobre ingreso bruto o neto\n\nGuárdalo una vez para que cada préstamo nuevo use límites realistas.'}},
   loan:{en:{title:'Calculate a loan',body:'From Home tap Calculate a loan, then enter:\n\n• Loan type\n• Loan amount\n• Repayment period\n• Annual interest rate\n• Optional start date\n\nTap Calculate to open the four result pages.'},ar:{title:'حساب قرض',body:'من الرئيسية اضغط احسب قرضا ثم أدخل:\n\n• نوع القرض\n• مبلغ القرض\n• مدة السداد\n• معدل الفائدة السنوي\n• تاريخ البداية إن احتجت\n\nثم اضغط احسب قرضي لفتح صفحات النتائج الأربع.'},es:{title:'Calcular un préstamo',body:'En Inicio toca Calcula un préstamo e ingresa:\n\n• Tipo de préstamo\n• Monto\n• Plazo\n• Tasa anual\n• Fecha de inicio opcional\n\nToca Calcular para abrir las cuatro páginas de resultados.'}},
   results:{en:{title:'Understand results',body:'After Calculate you get four pages:\n\n• Report — installment, cost, interest, affordability\n• Charts — principal vs interest visually\n• Schedule — month-by-month table\n• Simulate — what-if changes instantly\n\nThe intro tour gives a short overview; open this Help topic anytime for the full list.'},ar:{title:'فهم النتائج',body:'بعد الحساب تظهر أربع صفحات:\n\n• التقرير — القسط والتكلفة والفائدة والقدرة على السداد\n• الرسوم — توزيع الأصل والفائدة بصريا\n• الجدول — أقساط شهرية ورصيد متبق\n• المحاكاة — ماذا لو تغير المبلغ أو الفائدة أو المدة\n\nالجولة التعريفية تعطي نظرة عامة قصيرة؛ افتح هذا الموضوع من الدليل في أي وقت للقائمة كاملة.'},es:{title:'Entender resultados',body:'Tras Calcular tienes cuatro páginas:\n\n• Informe — cuota, costo, interés y asequibilidad\n• Gráficos — capital frente a interés\n• Tabla — mes a mes\n• Simular — cambios al instante\n\nEl tour da un resumen breve; abre este tema de la guía cuando quieras la lista completa.'}},
-  save:{en:{title:'Save & compare',body:'On the Report page you can name the plan, for example with the bank name, then tap Save as plan to keep it on Home. You can keep up to 4 plans. Use them for the same loan with different bank offers, then tap Compare to see the lowest payment, the least interest and the difference between them. The choice is yours.\n\nA saved plan is not a debt: it never changes your payments. When you really take a loan, open the plan and tap I took this loan: it moves to My loans with all its details, and its payment counts in your profile.'},ar:{title:'الحفظ والمقارنة',body:'من صفحة التقرير يمكنك تسمية الخطة، مثل اسم البنك، ثم اضغط حفظ كخطة لتظهر في الرئيسية. يمكنك الاحتفاظ بـ 4 خطط. استخدمها لنفس القرض بعروض بنوك مختلفة، ثم اضغط مقارنة لترى أقل قسط وأقل فوائد والفرق بينهما، والقرار لك.\n\nالخطة المحفوظة ليست دينا: لا تغير أقساطك. وعندما تأخذ قرضا فعلا افتح الخطة واضغط أخذت هذا القرض، فينتقل إلى قروضي بكل تفاصيله ويحسب قسطه من ملفك المالي.'},es:{title:'Guardar y comparar',body:'En Informe puedes poner nombre al plan, por ejemplo el del banco, y tocar Guardar como plan para dejarlo en Inicio. Puedes tener hasta 4 planes. Úsalos para el mismo préstamo con ofertas de distintos bancos y toca Comparar para ver la cuota más baja, los menores intereses y la diferencia. Tú decides.\n\nUn plan guardado no es una deuda: no cambia tus cuotas. Cuando tomes un préstamo de verdad abre el plan y pulsa Tomé este préstamo: pasa a Mis préstamos con sus detalles y su cuota cuenta en tu perfil.'}},
+  save:{en:{title:'Save & compare',body:'On the Report page you can name the plan, for example with the bank name, then tap Save as plan to keep it on Home. You can keep up to 4 plans. Use them for the same loan with different bank offers, then tap Compare to see which offer is cheaper and which term suits you. The choice is yours.\n\nA saved plan is not a debt: it never changes your payments. When you really take a loan, open the plan and tap I took this loan: it moves to My loans with all its details, and its payment counts in your profile.'},ar:{title:'الحفظ والمقارنة',body:'من صفحة التقرير يمكنك تسمية الخطة، مثل اسم البنك، ثم اضغط حفظ كخطة لتظهر في الرئيسية. يمكنك الاحتفاظ بـ 4 خطط. استخدمها لنفس القرض بعروض بنوك مختلفة، ثم اضغط مقارنة لترى أي عرض أرخص وأي مدة تناسبك، والقرار لك.\n\nالخطة المحفوظة ليست دينا: لا تغير أقساطك. وعندما تأخذ قرضا فعلا افتح الخطة واضغط أخذت هذا القرض، فينتقل إلى قروضي بكل تفاصيله ويحسب قسطه من ملفك المالي.'},es:{title:'Guardar y comparar',body:'En Informe puedes poner nombre al plan, por ejemplo el del banco, y tocar Guardar como plan para dejarlo en Inicio. Puedes tener hasta 4 planes. Úsalos para el mismo préstamo con ofertas de distintos bancos y toca Comparar para ver qué oferta es más barata y qué plazo te conviene. Tú decides.\n\nUn plan guardado no es una deuda: no cambia tus cuotas. Cuando tomes un préstamo de verdad abre el plan y pulsa Tomé este préstamo: pasa a Mis préstamos con sus detalles y su cuota cuenta en tu perfil.'}},
   demo:{en:{title:'Demo mode',body:'Demo mode protects your privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. You return to it after biometrics or device PIN. Find Demo on Home (eye icon) or in Settings.'},ar:{title:'وضع العرض التجريبي',body:'هدف وضع العرض التجريبي حماية خصوصيتك وخصوصية ملفك المالي. يفتح أرقاما تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك الحقيقي.\n\nملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بأيقونة العين أو من الإعدادات.'},es:{title:'Modo demo',body:'El modo demo protege tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. Vuelves a él con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'}}
 };
 
@@ -4795,7 +5117,7 @@ const GUIDE_TOUR_STEPS=[
     body:{en:'After you tap Calculate, four pages appear: Report, Charts, Schedule, and Simulate. Each answers a different question. Details stay in Help when you need them.',ar:'بعد الضغط على «احسب» تظهر أربع صفحات: التقرير والرسوم والجدول والمحاكاة. كل صفحة تجيب سؤالا مختلفا. التفاصيل تبقى في دليل الاستخدام عند الحاجة.',es:'Tras Calcular aparecen cuatro páginas: Informe, Gráficos, Tabla y Simular. Cada una responde algo distinto. Los detalles quedan en la guía cuando los necesites.'}},
   {id:'extras',target:'saved-list',fallback:'demo',
     title:{en:'Plans, My loans & Demo',ar:'الخطط وقروضي ووضع العرض',es:'Planes, Mis préstamos y Demo'},
-    body:{en:'Save up to 4 bank offers for the same loan and compare them to see the lowest payment and the least interest. Plans are for comparing only. When you really take a loan, open the plan and tap I took this loan: it moves to My loans and counts in your profile. Demo mode protects your real file while showing the app.',ar:'احفظ حتى 4 عروض بنوك لنفس القرض وقارن بينها لترى أقل قسط وأقل فوائد. الخطط للمقارنة فقط. وعندما تأخذ قرضا فعلا افتح الخطة واضغط أخذت هذا القرض، فينتقل إلى قروضي ويحسب من ملفك المالي. ووضع العرض يحمي ملفك الحقيقي أثناء عرض التطبيق.',es:'Guarda hasta 4 ofertas de bancos para el mismo préstamo y compáralas para ver la cuota más baja y los menores intereses. Los planes son solo para comparar. Cuando tomes un préstamo de verdad abre el plan y pulsa Tomé este préstamo: pasa a Mis préstamos y cuenta en tu perfil. El modo demo protege tu archivo real al mostrar la app.'}},
+    body:{en:'Save up to 4 bank offers for the same loan and compare them to see which offer is cheaper and which term suits you. In My loans, add a loan you already pay. Plans are for comparing only. When you really take a loan, open the plan and tap I took this loan: it moves to My loans and counts in your profile. Demo mode protects your real file while showing the app.',ar:'احفظ حتى 4 عروض بنوك لنفس القرض وقارن بينها لترى أي عرض أرخص وأي مدة تناسبك. ومن قروضي أضف قرضا تدفعه حاليا. الخطط للمقارنة فقط. وعندما تأخذ قرضا فعلا افتح الخطة واضغط أخذت هذا القرض، فينتقل إلى قروضي ويحسب من ملفك المالي. ووضع العرض يحمي ملفك الحقيقي أثناء عرض التطبيق.',es:'Guarda hasta 4 ofertas de bancos para el mismo préstamo y compáralas para ver qué oferta es más barata y qué plazo te conviene. En Mis préstamos, añade un préstamo que ya pagas. Los planes son solo para comparar. Cuando tomes un préstamo de verdad abre el plan y pulsa Tomé este préstamo: pasa a Mis préstamos y cuenta en tu perfil. El modo demo protege tu archivo real al mostrar la app.'}},
 ];
 
 const GUIDE_FEATURES=[
@@ -4853,7 +5175,7 @@ function isOverlayOpen(id){
 function isGuideBlocked(){
   if(_guideBlocked) return true;
   try{
-    return ['export-sheet','premium-overlay','risk-info-overlay','bankpay-overlay','limit-overlay','existing-notice-overlay','confirm-sheet','guide-sheet'].some(isOverlayOpen);
+    return ['export-sheet','premium-overlay','risk-info-overlay','bankpay-overlay','limit-overlay','existing-notice-overlay','confirm-sheet','loan-sheet','guide-sheet'].some(isOverlayOpen);
   }catch(e){}
   return false;
 }
@@ -5235,6 +5557,7 @@ function runGuideHelpAction(action){
 // زر الرجوع في أندرويد: يغلق النافذة المفتوحة أولا، ثم يتصرف مثل سهم الرجوع الظاهر في الشاشة
 const BACK_LAYERS=[
   ['confirm-sheet',()=>closeConfirmSheet(false)],
+  ['loan-sheet',()=>closeLoanSheet()],
   ['guide-sheet',()=>hideGuideSheet()],
   ['existing-notice-overlay',()=>{}], // تحتاج قرارا من المستخدم
   ['limit-overlay',()=>hideSavedLimitSheet()],
@@ -5570,6 +5893,26 @@ if ('serviceWorker' in navigator && !window.Capacitor && location.protocol.start
   </div>
 </div>
 <!-- نافذة توضيح فرق قسط البنك -->
+<div id="loan-sheet" onclick="if(event.target===this)closeLoanSheet()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:10004;align-items:flex-end">
+  <div style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + var(--safe-bottom));border-top:1px solid var(--brd);max-height:92vh;max-height:92dvh;overflow-y:auto">
+    <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 16px"></div>
+    <p id="ls-title" class="ls-title"></p>
+    <p id="ls-info" class="ls-info"></p>
+    <div id="ls-pay-choice"></div>
+    <div class="ls-f" id="ls-row-label"><label for="ls-label" id="ls-l-label"></label><input class="inp" id="ls-label" type="text" maxlength="24" autocomplete="off"></div>
+    <div class="ls-f" id="ls-row-type"><label for="ls-type" id="ls-l-type"></label><select class="app-sel ls-sel" id="ls-type"></select></div>
+    <div class="ls-f" id="ls-row-pay"><label for="ls-pay" id="ls-l-pay"></label><input class="inp" id="ls-pay" type="text" inputmode="decimal" data-digits dir="ltr" autocomplete="off"><span class="ls-hint" id="ls-h-pay"></span></div>
+    <div>
+      <div class="ls-f"><span class="ls-lbl" id="ls-l-start"></span><div class="ls-date"><select class="app-sel ls-sel" id="ls-month" onchange="updateLoanSheetEnd()"></select><select class="app-sel ls-sel" id="ls-year" onchange="updateLoanSheetEnd()"></select></div></div>
+      <div class="ls-f" id="ls-row-term"><label for="ls-term" id="ls-l-term"></label><input class="inp" id="ls-term" type="text" inputmode="numeric" data-digits dir="ltr" autocomplete="off" oninput="updateLoanSheetEnd()"></div>
+    </div>
+    <p class="ls-hint" id="ls-end" style="margin:-4px 0 10px"></p>
+    <div class="ls-f" id="ls-row-rate"><span class="ls-lbl" id="ls-l-rate"></span><div class="ls-two"><input class="inp" id="ls-rate" type="text" inputmode="decimal" data-digits dir="ltr" autocomplete="off"><input class="inp" id="ls-amount" type="text" inputmode="decimal" data-digits dir="ltr" autocomplete="off"></div><span class="ls-hint" id="ls-h-rate"></span></div>
+    <p class="ls-err" id="ls-err"></p>
+    <button onclick="submitLoanSheet()" id="ls-ok" style="width:100%;padding:15px;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;background:linear-gradient(135deg,var(--acc),var(--acc2))"></button>
+    <button onclick="closeLoanSheet()" id="ls-cancel" style="width:100%;margin-top:10px;padding:14px;background:var(--bg3);color:var(--txt2);border:1px solid var(--brd);border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit"></button>
+  </div>
+</div>
 <div id="confirm-sheet" onclick="if(event.target===this)closeConfirmSheet(false)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:10005;align-items:flex-end">
   <div style="width:100%;max-width:480px;margin:0 auto;background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));border-top:1px solid var(--brd)">
     <div style="width:40px;height:4px;background:var(--brd);border-radius:4px;margin:0 auto 20px"></div>
