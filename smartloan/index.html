@@ -207,7 +207,7 @@ html.guide-tour-on .screen{animation:none!important}
 .cmp-kv:last-child{border-bottom:0}
 .cmp-kv b{color:var(--txt);font-weight:800;text-align:end}
 .cmp-cell-sub{display:block;font-size:12px;color:var(--txt3);font-weight:600}
-.add-loan-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:calc(100% - 24px);min-height:46px;margin:0 12px 10px;border-radius:13px;border:1.5px dashed color-mix(in srgb,var(--safe) 60%,var(--brd));background:color-mix(in srgb,var(--safe) 6%,transparent);color:var(--safe);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.home-add-loan-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:calc(100% - 24px);min-height:46px;margin:0 12px 10px;border-radius:13px;border:1.5px dashed color-mix(in srgb,var(--safe) 60%,var(--brd));background:color-mix(in srgb,var(--safe) 6%,transparent);color:var(--safe);font-family:inherit;font-size:14px;font-weight:800;cursor:pointer}
 .plan-row.ended{background:var(--bg3)}
 .plan-row.ended .plan-row-name,.plan-row.ended .saved-mini-amt{color:var(--txt3)}
 .plan-row.ended .saved-mini-amt{text-decoration:line-through}
@@ -222,6 +222,7 @@ html.guide-tour-on .screen{animation:none!important}
 .ls-date{display:grid;grid-template-columns:1.4fr 1fr;gap:6px}
 .ls-sel{width:100%;min-height:46px;background-color:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding-block:11px;padding-inline:12px 30px;color:var(--txt);font-size:15px;font-weight:600;outline:none}
 .ls-sel:focus{border-color:var(--acc)}
+#loan-sheet[dir="rtl"] .app-sel{background-position:left 10px center}
 .ls-hint{font-size:12px;color:var(--txt3);line-height:1.5}
 .ls-err{font-size:12.5px;font-weight:700;color:var(--risk);min-height:18px;margin:2px 0 4px}
 .ls-opt{display:flex;gap:10px;align-items:flex-start;width:100%;border:1.5px solid var(--brd);border-radius:13px;padding:10px 12px;margin-bottom:8px;background:var(--bg);color:var(--txt);font-family:inherit;text-align:start;cursor:pointer}
@@ -394,7 +395,6 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
 .loan-card{background:var(--bg2);border-radius:13px;padding:14px 15px;border:1px solid var(--brd);margin-bottom:10px;position:relative}
 .loan-card-title{font-weight:700;font-size:15px;color:var(--txt);margin-bottom:10px}
 .remove-btn{position:absolute;top:12px;inset-inline-end:12px;background:none;border:none;color:var(--txt3);font-size:18px;cursor:pointer}
-.add-loan-btn{width:100%;padding:14px;border-radius:13px;background:color-mix(in srgb,var(--acc) 8%,transparent);border:1.5px dashed var(--acc);color:var(--acc);font-size:15px;font-weight:700;cursor:pointer}
 .total-block{background:var(--bg3);border-radius:12px;padding:14px 16px}
 .total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .total-lbl{font-size:14px;color:var(--txt2);font-weight:600}
@@ -593,7 +593,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
     </div>
     <div class="sec-body" id="home-loans-body" hidden>
       <p class="sec-note" id="home-loans-note"></p>
-      <button type="button" class="add-loan-btn" id="home-add-loan" onclick="addMyLoan()"></button>
+      <button type="button" class="home-add-loan-btn" id="home-add-loan" onclick="addMyLoan()"></button>
       <div id="home-loans-list"></div>
     </div>
   </div>
@@ -3955,12 +3955,12 @@ function renderCompare(){
       ${escapeHtml(planTitle(s))}
     </th>`).join('');
 
-  let html=compareQ1(facts)+compareQ2(facts);
-  if(!sameAmount) html+=`<div class="card" style="border-inline-start:4px solid var(--mod)">
+  let mixed='';
+  if(!sameAmount) mixed=`<div class="card" style="border-inline-start:4px solid var(--mod)">
     <p class="card-label" style="color:var(--mod)">${isAr?'المبالغ مختلفة':isEs?'Montos diferentes':'Different amounts'}</p>
     <p class="cmp-note" style="margin-top:0">${isAr?'القسط الأكبر سببه المبلغ الأكبر، وليس البنك. لذلك قارنا الفائدة لكل 1,000.':isEs?'Una cuota mayor viene del monto mayor, no del banco. Por eso comparamos la tasa por cada 1,000.':'A bigger payment comes from the bigger amount, not the bank. That is why the rate is compared per 1,000.'}</p>
   </div>`;
-  html+=`<div class="card" id="cmp-table" style="overflow-x:auto;padding:0">
+  let html=`<div class="card" id="cmp-table" style="overflow-x:auto;padding:0">
     <div style="padding:14px 14px 10px;border-bottom:1px solid var(--brd)">
       <p class="card-label" style="margin:0">${isAr?'خططك كما حفظتها':isEs?'Tus planes guardados':'Your plans as saved'}${getCurrencySymbol()?' · '+getCurrencySymbol():''}</p>
       <p class="cmp-hint" style="margin-top:2px">${isAr?'أثر كل خطة على ميزانيتك. لا يوجد فائز هنا.':isEs?'Cómo afecta cada plan a tu presupuesto. Aquí no hay ganador.':'How each plan affects your budget. There is no winner here.'}</p>
@@ -3982,6 +3982,7 @@ function renderCompare(){
   html+=`</tbody></table></div>`;
   if(saved.length>plans.length) html+=`<p class="cmp-note" style="margin:0;text-align:center">${isAr?`تعرض المقارنة أول ${plans.length} خطط من ${saved.length}.`:isEs?`La comparación muestra los primeros ${plans.length} de ${saved.length} planes.`:`Showing the first ${plans.length} of ${saved.length} plans.`}</p>`;
   html+=plans.filter(s=>!planWithinBankLimit(planPay(s))).map(s=>`<p class="cmp-warn" style="margin:0">⚠ ${escapeHtml(planTitle(s))}: ${isAr?'يتجاوز حد البنك':isEs?'supera el límite del banco':'exceeds the bank limit'}</p>`).join('');
+  html+=mixed+compareQ1(facts)+compareQ2(facts);
   document.getElementById('compare-body').innerHTML=html;
   fitCompareTable();
 }
