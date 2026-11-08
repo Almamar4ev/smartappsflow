@@ -3535,7 +3535,10 @@ function comparePlans(plans){
   const byCost=[...plans].sort((a,b)=>cost(a)-cost(b)||pay(a)-pay(b));
   const lowPay=byPay[0], lowCost=byCost[0], worst=byCost[byCost.length-1];
   if(pay(lowPay)===pay(lowCost)&&cost(lowPay)===cost(lowCost)){
-    if(cost(worst)===cost(lowCost)&&pay(byPay[byPay.length-1])===pay(lowCost)) return {kind:'equal'};
+    const highPay=byPay[byPay.length-1];
+    if(cost(worst)===cost(lowCost)&&pay(highPay)===pay(lowCost)) return {kind:'equal'};
+    // الفوائد واحدة في كل الخطط، كقروض بلا فائدة بمدد مختلفة: لا توجد خطة أرخص، الفرق في القسط فقط
+    if(cost(worst)===cost(lowCost)) return {kind:'samecost',plan:lowPay,payGap:pay(highPay)-pay(lowPay)};
     return {kind:'cheapest',plan:lowCost,saves:cost(worst)-cost(lowCost)};
   }
   return {kind:'tradeoff',lowPay,lowCost,payGap:pay(lowCost)-pay(lowPay),costGap:cost(lowPay)-cost(lowCost)};
@@ -3562,6 +3565,13 @@ function compareVerdict(plans){
       :'So this shows how each plan affects your budget, not which is cheaper. To compare banks, save the same amount with different offers.'}</p>
   </div>`;
   if(v.kind==='equal') return`<div class="card"><p class="cmp-note" style="margin-top:0">${isAr?'هذه الخطط متطابقة في القسط والفوائد.':isEs?'Estos planes tienen la misma cuota e intereses.':'These plans have the same payment and interest.'}</p></div>`;
+  if(v.kind==='samecost') return`<div class="card">
+    <p class="card-label">${isAr?'الفوائد نفسها':isEs?'Mismos intereses':'Same interest'}</p>
+    <p class="cmp-note" style="margin-top:0">${isAr?`لا فرق في الفوائد بين خططك، والفرق في القسط فقط: ${escapeHtml(planTitle(v.plan))} قسطه أقل بـ ${fmtPay(v.payGap)} شهريا.`
+      :isEs?`No hay diferencia de intereses entre tus planes; solo cambia la cuota: ${escapeHtml(planTitle(v.plan))} paga ${fmtPay(v.payGap)} menos al mes.`
+      :`No difference in interest between your plans; only the payment differs: ${escapeHtml(planTitle(v.plan))} is ${fmtPay(v.payGap)} less a month.`}</p>
+    ${overLimit(v.plan)}
+  </div>`;
   if(v.kind==='cheapest') return`<div class="card" style="border-inline-start:4px solid var(--safe)">
     <p class="card-label" style="color:var(--safe)">${isAr?'الأرخص':isEs?'El más barato':'The cheapest'}</p>
     <p style="font-size:19px;font-weight:800;color:var(--txt)">${escapeHtml(savedLoanDisplayName(v.plan))}</p>
@@ -3643,7 +3653,8 @@ function renderCompare(){
     html+=`<tr>
       <td style="position:sticky;inset-inline-start:0;background:var(--bg2);color:var(--txt);padding:10px 8px;border-bottom:1px solid var(--brd);font-size:12px;font-weight:700;line-height:1.3">${f.label}</td>
       ${vals.map((v)=>{
-        const isBest=bestVal!==null&&v===bestVal;
+        // رقمان يظهران متساويين يلونان معا، فالفرق في خانات لا يراها المستخدم ليس فوزا
+        const isBest=bestVal!==null&&f.fmt(v)===f.fmt(bestVal);
         return`<td style="text-align:center;padding:10px 5px;border-bottom:1px solid var(--brd);font-weight:${isBest?'800':'600'};color:${isBest?'var(--safe)':'var(--txt)'};font-size:13px;white-space:nowrap">${f.fmt(v)}</td>`;
       }).join('')}
     </tr>`;
