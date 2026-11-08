@@ -766,7 +766,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2a'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -915,6 +915,8 @@ console.log('\nArabic text and guide');
 check('no Arabic diacritics in the app', !/[\u064B-\u0652\u0670]/.test(html));
 check('no Arabic diacritics in update notes', !/[\u064B-\u0652\u0670]/.test(sw));
 check('the tour teaches plans', html.includes("title:{en:'Plans, My loans & Demo'") && html.includes('احفظ حتى 4 عروض بنوك لنفس القرض') && html.includes('أي عرض أرخص وأي مدة تناسبك'));
+check('the home add button has its own style, not the old full-width one', html.includes('class="home-add-loan-btn" id="home-add-loan"') && !html.includes('.add-loan-btn{'));
+check('the loan sheet arrow moves left in Arabic, away from the text', html.includes('#loan-sheet[dir="rtl"] .app-sel{background-position:left 10px center}'));
 check('the web app bars are a light neutral, not purple', /"theme_color": "#f1f5f9"/.test(readFileSync(join(here, '..', 'manifest.json'), 'utf8')));
 check('the tour teaches My loans', html.includes('فينتقل إلى قروضي ويحسب من ملفك المالي'));
 check('the tour mentions the payments you enter', html.includes('وأقساطك الحالية وحد القسط البنكي'));
@@ -1130,8 +1132,10 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   facts(p, real(p, 7000, 36, 5, 'A'), real(p, 7000, 48, 4.5, 'B'), real(p, 5000, 72, 5, 'C'));
   p.run('renderCompare()');
   const body = p.el('compare-body').innerHTML;
-  const table = body.slice(body.indexOf('id="cmp-table"'));
+  const table = body.slice(body.indexOf('id="cmp-table"'), body.indexOf('</table>'));
   check('the table has no winner colour', !/color:var\(--safe\)/.test(table));
+  check('the table comes first and the answers after it, as in 4.1',
+    body.indexOf('id="cmp-table"') < body.indexOf('cmp-q') && body.indexOf('</table>') < body.indexOf('Different amounts'));
   check('the remainder states its term', /<span class="cmp-cell-sub">3 years<\/span>/.test(rowOf(body, 'Monthly Remainder')));
 }
 {
@@ -1545,15 +1549,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.2') && removed.includes('smartloan-4.1b'));
-  check('no other app loses its cache', removed.length === 5);
+  check('the current cache stays', !removed.includes('smartloan-4.2a') && removed.includes('smartloan-4.2'));
+  check('no other app loses its cache', removed.length === 6);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
@@ -1737,7 +1741,7 @@ console.log('\nCompare scenarios');
     if (!f.sameP && f.term) ok = false;
     p.run('renderCompare()');
     const body = p.el('compare-body').innerHTML;
-    if (/color:var\(--safe\)/.test(body.slice(body.indexOf('id="cmp-table"')))) ok = false;
+    if (/color:var\(--safe\)/.test(body.slice(body.indexOf('id="cmp-table"'), body.indexOf('</table>')))) ok = false;
     if (!ok) wrong.push(plans.length + ' plans');
   }
   check('3,000 random comparisons all tell the truth', wrong.length === 0, wrong.slice(0, 3).join(' | '));
