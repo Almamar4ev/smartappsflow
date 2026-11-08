@@ -766,7 +766,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2c'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2d'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -1567,15 +1567,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.2c') && removed.includes('smartloan-4.2b'));
-  check('no other app loses its cache', removed.length === 8);
+  check('the current cache stays', !removed.includes('smartloan-4.2d') && removed.includes('smartloan-4.2c'));
+  check('no other app loses its cache', removed.length === 9);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
@@ -1909,6 +1909,7 @@ console.log('\nMy loans 4.2');
   check('Spanish: "dura 1 año más"', b.includes('<bdi>B</bdi> dura 1 año más, así que su cuota es menor'));
   check('Spanish: "frente al 5%"', b.includes('frente al <bdi dir="ltr">5%</bdi> de <bdi>A</bdi>.'));
   check('Spanish: the table says Tasa', b.includes('>Tasa</td>') && !b.includes('>Interés</td>'));
+  check('Spanish: no literal "es más largo/corto" is left', !p.run('compareQ2.toString()').includes('es más largo') && !p.run('compareQ2.toString()').includes('es más corto'));
   p.run(`lang='en'`);
   facts(p, real(p, 7000, 36, 5, 'A'), real(p, 10000, 36, 4.5, 'B')); p.run('renderCompare()');
   check('mixed amounts: per 1,000 is about the payment and interest', p.el('compare-body').innerHTML.includes('So we compare the payment and interest per 1,000.'));

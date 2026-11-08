@@ -3943,8 +3943,8 @@ function compareQ2(f){
   if(T2.payDiff>0&&T2.intDiff>0) text=L(`خطتك ${lN} مدتها أطول ${byK}، لذلك قسطها أقل وفوائدها أكثر.`,`${lN} dura ${k} más, así que su cuota es menor y sus intereses mayores.`,`${lN} is longer by ${k}, so its payment is lower and its interest is higher.`);
   else if(T2.payDiff>0&&T2.intDiff===0) text=L(`${lN} قسطها أقل والفوائد نفسها، لأن مدتها أطول ${byK}.`,`${lN} tiene una cuota menor y los mismos intereses, porque dura ${k} más.`,`${lN} has a lower payment and the same interest, because it is longer by ${k}.`);
   else if(T2.payDiff===0&&T2.intDiff>0) text=L(`القسط نفسه، و${sN} فوائدها أقل لأن مدتها أقصر.`,`La misma cuota, y ${sN} tiene menos intereses porque dura menos.`,`Same payment, and ${sN} has less interest because it is shorter.`);
-  else if(T2.payDiff>0) text=L(`${lN} مدتها أطول، وأقل في القسط والفوائد.`,`${lN} es más largo y menor en cuota e intereses.`,`${lN} is longer and lower in both payment and interest.`);
-  else text=L(`${sN} مدتها أقصر، وأقل في القسط والفوائد.`,`${sN} es más corto y menor en cuota e intereses.`,`${sN} is shorter and lower in both payment and interest.`);
+  else if(T2.payDiff>0) text=L(`${lN} مدتها أطول، وأقل في القسط والفوائد.`,`${lN} dura más y tiene menor cuota e intereses.`,`${lN} is longer and lower in both payment and interest.`);
+  else text=L(`${sN} مدتها أقصر، وأقل في القسط والفوائد.`,`${sN} dura menos y tiene menor cuota e intereses.`,`${sN} is shorter and lower in both payment and interest.`);
   const pS=planPay(S), pL=planPay(Lp);
   const w1=Math.round(nS/nL*100);
   // «أول/آخر» مع العدد بصيغة صحيحة في كل لغة
