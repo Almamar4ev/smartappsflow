@@ -6,10 +6,21 @@
   <base href="/compoundcalc-preview/">
 
   <meta charset="UTF-8">
+  <!--
+    Only this site's own files may run or load. Inline scripts are not
+    allowed (they live in js/); 'wasm-unsafe-eval' is what the rendering
+    engine (CanvasKit, bundled locally) needs; Cloudflare Web Analytics is
+    the one outside script. Styles stay inline-able because the engine
+    writes its own <style> tags.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://static.cloudflareinsights.com; connect-src 'self' https://cloudflareinsights.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <!-- Zoom stays allowed: the app runs inside #app-host, so the engine does
+       not replace this tag with one that disables pinch-zoom. -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="description" content="حاسبة الفائدة المركبة — أداة تقديرية لتخطيط الاستثمار طويل الأجل.">
-  <meta name="theme-color" content="#0B5ED7">
+  <!-- The engine updates the tag with this id instead of adding a second one. -->
+  <meta id="flutterweb-theme" name="theme-color" content="#0B5ED7">
 
   <!-- iOS / Safari PWA -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -25,6 +36,8 @@
        page is never a blank white screen while the app downloads. -->
   <style>
     html, body { margin: 0; height: 100%; background: #E3EFFF; }
+    /* The app draws here, filling the window. */
+    #app-host { position: fixed; inset: 0; }
     #app-splash {
       position: fixed; inset: 0; z-index: 9999;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
@@ -48,282 +61,22 @@
       #app-splash .spin { animation-duration: 2.4s; }
     }
   </style>
-  <script>
-    (function () {
-      var code = String(navigator.language || 'en').toLowerCase().split('-')[0];
-      var pages = {
-        ar: {
-          title: 'حاسبة الفائدة المركبة',
-          shortTitle: 'حاسبة الاستثمار',
-          description: 'حاسبة الفائدة المركبة — أداة تقديرية لتخطيط الاستثمار طويل الأجل.',
-          htmlLang: 'ar',
-          dir: 'rtl',
-          manifest: 'manifest.json'
-        },
-        es: {
-          title: 'Calculadora de interés compuesto',
-          shortTitle: 'Interés compuesto',
-          description: 'Calculadora de interés compuesto para planificar inversiones a largo plazo.',
-          htmlLang: 'es',
-          dir: 'ltr',
-          manifest: 'manifest-es.json'
-        },
-        pt: {
-          title: 'Calculadora de juros compostos',
-          shortTitle: 'Juros compostos',
-          description: 'Calculadora de juros compostos para planejar investimentos de longo prazo.',
-          htmlLang: 'pt',
-          dir: 'ltr',
-          manifest: 'manifest-pt.json'
-        }
-      };
-      var page = pages[code] || {
-        title: 'Compound Interest Calculator',
-        shortTitle: 'Compound Calc',
-        description: 'Compound interest calculator for long-term investment planning.',
-        htmlLang: 'en',
-        dir: 'ltr',
-        manifest: 'manifest-en.json'
-      };
-      document.documentElement.lang = page.htmlLang;
-      document.documentElement.dir = page.dir;
-      document.title = page.title;
-      var desc = document.querySelector('meta[name="description"]');
-      if (desc) desc.setAttribute('content', page.description);
-      var apple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-      if (apple) apple.setAttribute('content', page.shortTitle);
-      var link = document.createElement('link');
-      link.rel = 'manifest';
-      link.href = page.manifest;
-      document.head.appendChild(link);
-    })();
-  </script>
+  <script src="js/page-setup.js"></script>
 
   <!--
     Cloudflare Web Analytics — live site only. Counts page visits, not
     typed numbers, and not Play Store app users.
   -->
-  <script>
-    (function () {
-      function shouldTrackWebUsage() {
-        var params = new URLSearchParams(window.location.search);
-        if (params.get('source') === 'play') return false;
-        if (document.referrer && document.referrer.indexOf('play.google.com') !== -1) {
-          return false;
-        }
-        var protocol = String(window.location.protocol || '').toLowerCase();
-        var hostname = String(window.location.hostname || '').toLowerCase();
-        if (protocol !== 'https:') return false;
-        return hostname === 'smartappsflow.net' ||
-          hostname.slice(-18) === '.smartappsflow.net';
-      }
-
-      window.initWebAnalytics = function () {
-        if (!shouldTrackWebUsage()) return;
-        // Cloudflare Web Analytics — same token as smartappsflow.net / smartloan
-        var s = document.createElement('script');
-        s.defer = true;
-        s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
-        s.setAttribute('data-cf-beacon', '{"token": "215281d4f5024ae0bec2a82dea63a851"}');
-        document.body.appendChild(s);
-      };
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', window.initWebAnalytics);
-      } else {
-        window.initWebAnalytics();
-      }
-    })();
-  </script>
+  <script src="js/analytics.js"></script>
 </head>
 <body>
+  <div id="app-host"></div>
   <div id="app-splash" role="progressbar" aria-busy="true">
     <img src="icons/app-icon-192.png" alt="" width="96" height="96">
     <div class="spin"></div>
   </div>
-  <script>
-    (function () {
-      var splash = document.getElementById('app-splash');
-      var label = { ar: 'جارٍ التحميل', es: 'Cargando', pt: 'Carregando' };
-      splash.setAttribute('aria-label', label[document.documentElement.lang] || 'Loading');
-      function hideSplash() {
-        if (!splash) return;
-        var el = splash;
-        splash = null;
-        el.classList.add('hide');
-        setTimeout(function () { el.remove(); }, 300);
-      }
-      // Flutter fires this once the first frame is on screen.
-      window.addEventListener('flutter-first-frame', hideSplash, { once: true });
-    })();
-  </script>
-  <script>
-    (function () {
-      if (document.getElementById('flutter-bootstrap')) return;
-      var script = document.createElement('script');
-      script.id = 'flutter-bootstrap';
-      script.async = true;
-      script.src = 'flutter_bootstrap.js?v=20261109211240';
-      document.body.appendChild(script);
-    })();
-  </script>
-  <script>
-    (function () {
-      if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
-
-      var pendingWorker = null;
-      var pendingInfo = null;
-      var bannerDismissed = false;
-      var lang = (document.documentElement.lang || 'en').toLowerCase();
-
-      function t(key) {
-        var S = {
-          ar: { avail: 'يتوفّر تحديث جديد', now: 'تحديث الآن', later: 'لاحقاً', generic: 'تحسينات وإصلاحات جديدة.', ready: 'نسخة جديدة جاهزة' },
-          en: { avail: 'A new update is available', now: 'Update now', later: 'Later', generic: 'New improvements and fixes.', ready: 'A new version is ready' },
-          es: { avail: 'Hay una actualización disponible', now: 'Actualizar ahora', later: 'Después', generic: 'Nuevas mejoras y correcciones.', ready: 'Una nueva versión está lista' },
-          pt: { avail: 'Há uma atualização disponível', now: 'Atualizar agora', later: 'Depois', generic: 'Novas melhorias e correções.', ready: 'Uma nova versão está pronta' }
-        };
-        return (S[lang] || S.en)[key];
-      }
-
-      function versionLabel(v) {
-        if (!v) return '';
-        if (lang === 'ar') return ' · الإصدار ' + v;
-        if (lang === 'es') return ' · versión ' + v;
-        if (lang === 'pt') return ' · versão ' + v;
-        return ' · version ' + v;
-      }
-
-      function changelogText(cl) {
-        if (!cl) return t('generic');
-        return cl[lang] || cl.en || cl.ar || t('generic');
-      }
-
-      function applyUpdate() {
-        if (pendingWorker) pendingWorker.postMessage('SKIP_WAITING');
-        else window.location.reload();
-      }
-
-      function showChip() {
-        if (document.getElementById('updateChip')) return;
-        var chip = document.createElement('button');
-        chip.id = 'updateChip';
-        chip.type = 'button';
-        chip.textContent = t('ready');
-        chip.style.cssText = [
-          'position:fixed', 'left:12px', 'right:12px', 'margin:0 auto',
-          'bottom:calc(16px + env(safe-area-inset-bottom))',
-          'max-width:280px', 'z-index:4000',
-          'background:#0B5ED7', 'color:#fff', 'border:none',
-          'border-radius:999px', 'padding:11px 18px',
-          'font:800 13px/1.3 inherit', 'cursor:pointer',
-          'box-shadow:0 10px 28px rgba(11,94,215,.35)'
-        ].join(';');
-        chip.onclick = applyUpdate;
-        document.body.appendChild(chip);
-      }
-
-      function showBanner(newWorker) {
-        pendingWorker = newWorker || null;
-        if (bannerDismissed) {
-          showChip();
-          return;
-        }
-        if (document.getElementById('updateBanner')) return;
-
-        var bar = document.createElement('div');
-        bar.id = 'updateBanner';
-        bar.style.cssText = [
-          'position:fixed', 'left:12px', 'right:12px',
-          'bottom:calc(16px + env(safe-area-inset-bottom))',
-          'max-width:460px', 'margin:0 auto', 'z-index:4000',
-          'background:#fff', 'color:#0f172a',
-          'border:1.5px solid #0B5ED7', 'border-inline-start:4px solid #0B5ED7',
-          'border-radius:14px', 'padding:14px 16px',
-          'box-shadow:0 12px 34px rgba(15,23,42,.18)',
-          'display:flex', 'flex-direction:column', 'gap:8px',
-          'font-family:inherit'
-        ].join(';');
-
-        var head = document.createElement('div');
-        head.style.cssText = 'font-size:14px;font-weight:800;line-height:1.3;color:#0B5ED7';
-        head.textContent = t('avail');
-
-        var desc = document.createElement('div');
-        desc.style.cssText = 'font-size:12.5px;font-weight:500;line-height:1.7;color:#475569;white-space:pre-line;text-align:start';
-        desc.textContent = changelogText(pendingInfo && pendingInfo.changelog);
-
-        var row = document.createElement('div');
-        row.style.cssText = 'display:flex;gap:8px;align-items:center;justify-content:flex-end';
-
-        var later = document.createElement('button');
-        later.type = 'button';
-        later.textContent = t('later');
-        later.style.cssText = 'background:none;border:none;color:#64748b;font-weight:700;font-size:12.5px;font-family:inherit;cursor:pointer;padding:8px 12px';
-        later.onclick = function () {
-          bannerDismissed = true;
-          bar.remove();
-          showChip();
-        };
-
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = t('now');
-        btn.style.cssText = 'background:#0B5ED7;color:#fff;border:none;border-radius:9px;padding:9px 20px;font-weight:800;font-size:13px;font-family:inherit;cursor:pointer;white-space:nowrap';
-        btn.onclick = function () {
-          btn.disabled = true;
-          btn.textContent = '…';
-          applyUpdate();
-        };
-
-        row.appendChild(later);
-        row.appendChild(btn);
-        bar.appendChild(head);
-        bar.appendChild(desc);
-        bar.appendChild(row);
-        document.body.appendChild(bar);
-
-        if (newWorker) {
-          navigator.serviceWorker.addEventListener('message', function onMsg(e) {
-            if (e.data && e.data.type === 'VERSION_INFO') {
-              pendingInfo = { version: e.data.version, changelog: e.data.changelog };
-              desc.textContent = changelogText(e.data.changelog);
-              head.textContent = t('avail') + versionLabel(e.data.version);
-              navigator.serviceWorker.removeEventListener('message', onMsg);
-            }
-          });
-          try { newWorker.postMessage('GET_VERSION_INFO'); } catch (_) {}
-        }
-      }
-
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' }).then(function (reg) {
-          var checkWaiting = function () {
-            if (reg.waiting && navigator.serviceWorker.controller) showBanner(reg.waiting);
-          };
-          checkWaiting();
-          reg.addEventListener('updatefound', function () {
-            var nw = reg.installing;
-            if (!nw) return;
-            nw.addEventListener('statechange', function () {
-              if (nw.state === 'installed' && navigator.serviceWorker.controller) showBanner(nw);
-            });
-          });
-          reg.update().then(checkWaiting).catch(function () {});
-          document.addEventListener('visibilitychange', function () {
-            if (document.visibilityState === 'visible') reg.update().then(checkWaiting).catch(function () {});
-          });
-          setInterval(function () { reg.update().then(checkWaiting).catch(function () {}); }, 60000);
-        }).catch(function () {});
-
-        var refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', function () {
-          if (refreshing) return;
-          refreshing = true;
-          window.location.reload();
-        });
-      });
-    })();
-  </script>
+  <script src="js/splash.js"></script>
+  <script id="flutter-bootstrap" src="flutter_bootstrap.js?v=20261109220949" async></script>
+  <script src="js/updates.js"></script>
 </body>
 </html>

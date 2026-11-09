@@ -1,25 +1,27 @@
 /* Compound Interest Calculator — service worker
-   On a real release: bump VERSION and rewrite CHANGELOG.
-   Quiet republish can keep VERSION and let the build stamp change CACHE. */
-const VERSION = '1.1';
+   VERSION is stamped from pubspec.yaml by scripts/patch_web_update.py, so
+   it always equals Settings → Version. On a real release: raise the
+   version in pubspec.yaml and rewrite CHANGELOG. A quiet republish keeps
+   the version and lets the build stamp change CACHE. */
+const VERSION = '1.0.0';
 
 function updateNote(lines){ return lines.join('\u2028'); }
 const CHANGELOG = {
   ar: updateNote([
-    'إضافة الإسبانية والبرتغالية داخل التطبيق.\u200F',
-    'اللغة تتبع لغة الهاتف أو المتصفح.\u200F'
+    'تصميم جديد: نتيجة أوضح، ونطاق متوقع للرصيد، وجدول سنوي.\u200F',
+    'التطبيق يتذكر اللغة والسمة والعملة.\u200F'
   ]),
   en: updateNote([
-    'Adds Spanish and Portuguese in the app.',
-    'The language follows the phone or browser.'
+    'New design: a clearer result, an expected balance range and a yearly table.',
+    'The app remembers your language, theme and currency.'
   ]),
   es: updateNote([
-    'Se añaden español y portugués en la app.',
-    'El idioma sigue el del teléfono o el navegador.'
+    'Nuevo diseño: un resultado más claro, un rango esperado del saldo y una tabla anual.',
+    'La app recuerda tu idioma, tema y moneda.'
   ]),
   pt: updateNote([
-    'Adiciona espanhol e português no app.',
-    'O idioma segue o do telefone ou do navegador.'
+    'Novo design: um resultado mais claro, uma faixa esperada do saldo e uma tabela anual.',
+    'O app lembra seu idioma, tema e moeda.'
   ])
 };
 
@@ -27,7 +29,7 @@ const CHANGELOG = {
 // only ever deletes its own old caches (CACHE_PREFIX), never another app's.
 // patch_web_update.py stamps both lines; a preview build gets its own prefix.
 const CACHE_PREFIX = 'compoundcalc-preview-';
-const CACHE = 'compoundcalc-preview-20261109211240';
+const CACHE = 'compoundcalc-preview-20261109220949';
 const CORE = [
   './',
   './index.html',
@@ -37,6 +39,10 @@ const CORE = [
   './manifest-pt.json',
   './flutter_bootstrap.js',
   './main.dart.js',
+  './js/page-setup.js',
+  './js/analytics.js',
+  './js/splash.js',
+  './js/updates.js',
   './favicon.png',
   './icons/app-icon-192.png',
   './icons/app-icon-512.png'
