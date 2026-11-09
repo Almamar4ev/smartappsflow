@@ -491,3 +491,4 @@ Smart App Guide + متجر 4.0 — 20 أكتوبر 2026
 - بعد موافقة المراجع: جملتان إسبانيتان أوضح في بطاقة المدة (dura más / dura menos). الكاش smartloan-4.2d.
 - فحص الهاتف: 40 فحصا ناجحا. صف «التاريخ صحيح» صار 44px. الكاش smartloan-4.2e. التفاصيل في PROJECT_LOG_AR.md §2-هه.
 - تنبيه Flat يشرح طريقة الحساب بدل كلمة «ثابتة»، ويختفي إذا كتب قسط البنك لكل الخطط. الكاش smartloan-4.2f. التفاصيل في PROJECT_LOG_AR.md §2-وو.
+- مراجعة الترجمة الإنجليزية والإسبانية في كل التطبيق: «If every offer had the same term» و«The choice is yours» و«I took out this loan» و«Monthly Payment» وصياغات أوضح. العربية لم تتغير. الكاش smartloan-4.2g. التفاصيل في PROJECT_LOG_AR.md §2-زز.

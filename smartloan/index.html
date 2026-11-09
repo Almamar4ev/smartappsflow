@@ -738,7 +738,7 @@ input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer;margin:6px 0
           style="background-color:var(--bg3);border:1.5px solid var(--brd);border-radius:12px;padding-block:12px;padding-inline:14px 30px;color:var(--txt);font-size:15px;font-weight:600;outline:none;font-family:inherit">
         </select>
       </div>
-      <p style="font-size:12px;color:var(--txt3);margin-top:6px" id="lbl-start-hint">Default is current month — change if loan already started or will start later</p>
+      <p style="font-size:12px;color:var(--txt3);margin-top:6px" id="lbl-start-hint">Defaults to this month. Change it if the loan already started or starts later.</p>
     </div>
   </div>
   <div class="btn-footer"><button class="primary-btn" id="s3-next" data-guide-id="calculate" onclick="calculate()">Calculate My Loan</button></div>
@@ -1167,9 +1167,9 @@ const T={
     q_amount:'LOAN AMOUNT',q_period:'REPAYMENT PERIOD',q_employment:'EMPLOYMENT STATUS',q_risk:'RISK TOLERANCE',
     lt_car:'Car',lt_home:'Home',lt_personal:'Personal',lt_business:'Business',lt_education:'Education',lt_other:'Other',
     emp_full:'Full-time Employed',emp_part:'Part-time Employed',emp_self:'Self-Employed',emp_retired:'Retired',emp_none:'Unemployed',
-    risk_low:'Low — I prefer safety',risk_medium:'Medium — Balanced',risk_high:'High — Maximise opportunity',
+    risk_low:'Low — I prefer safety',risk_medium:'Medium — Balanced',risk_high:'High — Maximize opportunity',
     results:'Your Loan Summary',recommended:'ESTIMATED LOAN',suggestedRange:'Calculated Range',
-    monthlyInstallment:'Monthly Install.',dtiRatio:'Payments / gross income',netDti:'DTI Net',riskLevel:'Risk Level',
+    monthlyInstallment:'Monthly Payment',dtiRatio:'Payments / gross income',netDti:'DTI Net',riskLevel:'Risk Level',
     affordabilityScore:'Affordability',totalCost:'Total Cost',totalInterest:'Total Interest',
     recommendation:'CALCULATION SUMMARY',advice:'THINGS TO CONSIDER',breakdown:'REPAYMENT BREAKDOWN',
     amortization:'PAYOFF JOURNEY',loanTypes:'LOAN TYPE SUITABILITY',scenarioSim:'SCENARIO SIMULATOR',balance:'REMAINING BALANCE',
@@ -1210,7 +1210,7 @@ const T={
     bpAppPay:'App payment',
     bpDiffM:'Monthly difference',
     bpDiffT:'Full-term difference',
-    bpImplied:'Effective rate of bank payment',
+    bpImplied:'Effective rate of the bank payment',
     bpErr:'Enter a number above zero',
     bpOkT:'Small, normal difference',
     bpOkD:'Usually from rounding or the day-count method',
@@ -1324,7 +1324,7 @@ const T={
     recommendation:'RESUMEN DEL CÁLCULO',advice:'ASPECTOS A CONSIDERAR',breakdown:'DESGLOSE DE PAGOS',
     amortization:'RUTA DE PAGO',loanTypes:'IDONEIDAD DEL PRÉSTAMO',scenarioSim:'SIMULADOR',balance:'SALDO PENDIENTE',
     risk_safe:'Seguro',risk_moderate:'Moderado',risk_risky:'Arriesgado',
-    adv_reduce:'Considera reducir el monto un 15–20%',adv_down:'Aumenta el enganche para reducir las cuotas',adv_extend:'Amplía el plazo para aligerar la carga mensual',
+    adv_reduce:'Considera reducir el monto un 15–20%',adv_down:'Aumenta el pago inicial para reducir las cuotas',adv_extend:'Amplía el plazo para aligerar la carga mensual',
     adv_avoid:'Evita este préstamo — el riesgo financiero es muy alto',adv_great:'Este préstamo se adapta perfectamente a tu perfil',adv_moderate:'Es viable, pero controla tu presupuesto de cerca',
     rec_safe:'Este préstamo es adecuado para tus ingresos',rec_mod:'Viable con una gestión cuidadosa',rec_moderate:'Viable con una gestión cuidadosa',rec_risky:'Este préstamo puede presionar tu economía',
     saveScenario:'Guardar como plan',goHome:'Inicio',restart:'Nuevo cálculo',
@@ -2065,7 +2065,7 @@ function renderHome(){
           <div style="font-size:12px;font-weight:700;color:var(--lbl);margin-bottom:2px">${remLabel}</div>
           <div style="font-size:24px;font-weight:900;line-height:1.2;color:${remIsDeficit?'var(--risk)':'var(--txt)'}">${fmtAmt(Math.abs(rem))}</div>
           <div style="font-size:12px;color:var(--txt3);margin-top:3px">${remDesc}</div>
-          ${(()=>{const n=nextLoanEnding();if(!n) return '';const nm=escapeHtml(planTitle(n.s)),when=loanLastPayment(n.s),amt=fmtAmt(+n.s.loanMonthly||0);return `<div class="home-gain">${lang==='ar'?`+${amt} بعد انتهاء قرض ${nm} في ${when}`:lang==='es'?`+${amt} cuando termine tu préstamo ${nm} en ${when}`:`+${amt} after your ${nm} loan ends in ${when}`}</div>`;})()}
+          ${(()=>{const n=nextLoanEnding();if(!n) return '';const nm=escapeHtml(planTitle(n.s)),when=loanLastPayment(n.s),amt=fmtAmt(+n.s.loanMonthly||0);return `<div class="home-gain">${lang==='ar'?`+${amt} بعد انتهاء قرض ${nm} في ${when}`:lang==='es'?`+${amt} cuando termine tu préstamo ${nm} en ${when}`:`+${amt} after your ${nm}${/\bloan$/i.test(nm)?'':' loan'} ends in ${when}`}</div>`;})()}
         </div>
         <div style="width:52px;height:52px;border-radius:50%;border:3px solid color-mix(in srgb,${remColor} 25%,transparent);display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,${remColor} 15%,transparent);flex-shrink:0">
           <span style="font-size:${String(Math.round(remPct)).length>3?13:16}px;font-weight:900;color:var(--txt)">${Math.round(remPct)}%</span>
@@ -2236,7 +2236,7 @@ function openLoanSheet(mode,idx){
   const f=(src&&src.form)||{};
   const ov=document.getElementById('loan-sheet');
   ov.dir=lang==='ar'?'rtl':'ltr';
-  setLoanSheetText('ls-title',mode==='take'?W('هل أخذت هذا القرض فعلا؟','¿Tomaste este préstamo de verdad?','Did you really take this loan?')
+  setLoanSheetText('ls-title',mode==='take'?W('هل أخذت هذا القرض فعلا؟','¿Tomaste este préstamo de verdad?','Did you take out this loan?')
     :mode==='edit'?W('تعديل القرض','Editar préstamo','Edit loan'):W('أضف قرضا تدفعه حاليا','Añade un préstamo que ya pagas','Add a loan you already pay'));
   let info='';
   if(mode==='take'){
@@ -2282,13 +2282,13 @@ function openLoanSheet(mode,idx){
   const rate=document.getElementById('ls-rate'), amount=document.getElementById('ls-amount');
   if(rate) rate.placeholder=W('الفائدة %','Tasa %','Rate %');
   if(amount) amount.placeholder=W('المبلغ','Monto','Amount');
-  setLoanSheetText('ls-ok',take?W('نعم، أخذته','Sí, lo tomé','Yes, I took it'):mode==='edit'?W('حفظ','Guardar','Save'):W('إضافة إلى قروضي','Añadir a Mis préstamos','Add to My loans'));
+  setLoanSheetText('ls-ok',take?W('نعم، أخذته','Sí, lo tomé','Yes, I took it out'):mode==='edit'?W('حفظ','Guardar','Save'):W('إضافة إلى قروضي','Añadir a Mis préstamos','Add to My loans'));
   setLoanSheetText('ls-cancel',W('إلغاء','Cancelar','Cancel'));
   setLoanSheetText('ls-err','');
   // تاريخ قرض من 4.1 تقدير وقت الحساب: ننبه عليه، ولا نعتبره مؤكدا إلا إذا غيره المستخدم أو أكده
   const guessed=mode==='edit'&&src.startConfirmed!==true;
   setLoanSheetText('ls-date-hint',guessed
-    ?W('هذا التاريخ تقدير من وقت الحساب. اختر تاريخ أول قسط الفعلي.','Esta fecha es una estimación del cálculo. Elige la fecha real de la primera cuota.','This date is an estimate from when you calculated. Choose the real first payment date.')
+    ?W('هذا التاريخ تقدير من وقت الحساب. اختر تاريخ أول قسط الفعلي.','Esta fecha es una estimación del cálculo. Elige la fecha real de la primera cuota.','This date was estimated when you calculated the loan. Choose the real first payment date.')
     :take?W('تأكد من تاريخ أول قسط عند البنك.','Confirma con el banco la fecha de la primera cuota.','Check the first payment date with your bank.'):'');
   showLoanSheetRow('ls-date-hint',guessed||take);
   showLoanSheetRow('ls-row-dateok',guessed);
@@ -2534,7 +2534,7 @@ function renderStepLabels(){
     ?'أعلى نسبة من دخلك الشهري يقبلها بنكك لقسط القرض. مثال: 40% تعني ألا يتجاوز القسط 40% من دخلك.'
     :lang==='es'
     ?'El porcentaje máximo de tu ingreso mensual que tu banco acepta destinar a la cuota. Ej.: 40% significa que la cuota no debe superar el 40% de tu ingreso.'
-    :'The highest share of your monthly income your bank accepts going to the loan installment. E.g. 40% means the installment must not exceed 40% of your income.';
+    :'The largest share of your monthly income your bank allows for loan installments. E.g. 40% means the installment must not exceed 40% of your income.';
   renderBasisToggle();
   document.getElementById('lbl-ltype').textContent=tc.q_loanType;
   document.getElementById('lbl-amount').textContent=tc.q_amount;
@@ -2579,7 +2579,7 @@ function renderStep3Dynamic(){
   const hint=document.getElementById('lbl-start-hint');
   if(hint) hint.textContent=isAr?'الافتراضي هو الشهر الحالي — غيره إذا بدأ القرض مسبقا أو سيبدأ لاحقا':
     isEs?'Por defecto es el mes actual — cambia si el préstamo ya empezó o empezará después':
-    'Default is current month — change if loan already started or will start later';
+    'Defaults to this month. Change it if the loan already started or starts later.';
 
   // تعبئة حقل المبلغ بالقيمة المنسقة بالفاصلة الألفية (مهم عند التعديل أو العودة)
   const amtEl=document.getElementById('inp-amount');
@@ -3014,7 +3014,7 @@ function drawCharts(){
           <span style="position:relative;z-index:1">${remPct>5?remPct+'%':''}</span>
         </div>`}
       </div>
-      ${idIsDeficit?`<div style="margin-bottom:14px;padding:7px 11px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid color-mix(in srgb,var(--risk) 35%,transparent);border-radius:9px;font-size:12px;font-weight:700;color:var(--risk);text-align:center">${isAr?'التزاماتك تتجاوز دخلك بـ':isEs?'Tus obligaciones superan tu ingreso en':'Your commitments exceed income by'} <bdi dir="ltr">${Math.round(spendPctExact-100)}%</bdi></div>`:''}
+      ${idIsDeficit?`<div style="margin-bottom:14px;padding:7px 11px;background:color-mix(in srgb,var(--risk) 12%,transparent);border:1px solid color-mix(in srgb,var(--risk) 35%,transparent);border-radius:9px;font-size:12px;font-weight:700;color:var(--risk);text-align:center">${isAr?'التزاماتك تتجاوز دخلك بـ':isEs?'Tus obligaciones superan tu ingreso en':'Your commitments exceed your income by'} <bdi dir="ltr">${Math.round(spendPctExact-100)}%</bdi></div>`:''}
       <!-- البطاقات -->
       <div style="display:grid;grid-template-columns:${hasOther?'1fr 1fr':'1fr 1fr'};gap:9px">
         ${miniCard('#f59e0b',
@@ -3129,19 +3129,19 @@ function calcRestructure(){
 
   // Labels
   document.getElementById('lbl-rst-details').textContent=isAr?'تفاصيل إعادة الجدولة':isEs?'Detalles':'Restructuring Details';
-  document.getElementById('lbl-rst-after').textContent=isAr?'بعد القسط رقم':isEs?'Despues de la cuota N':'After payment number';
+  document.getElementById('lbl-rst-after').textContent=isAr?'بعد القسط رقم':isEs?'Después de la cuota N':'After payment number';
   document.getElementById('lbl-rst-balance').textContent=isAr?'الرصيد المتبقي':isEs?'Saldo restante':'Remaining balance';
-  document.getElementById('lbl-rst-what').textContent=isAr?'ماذا تريد تعديله؟':isEs?'Que deseas cambiar?':'What do you want to change?';
+  document.getElementById('lbl-rst-what').textContent=isAr?'ماذا تريد تعديله؟':isEs?'¿Qué deseas cambiar?':'What do you want to change?';
   document.getElementById('rst-tab-rate-lbl').textContent=isAr?'تغيير الفائدة':isEs?'Cambiar tasa':'Change Rate';
   document.getElementById('rst-tab-pay-lbl').textContent=isAr?'تغيير القسط':isEs?'Cambiar cuota':'Change Payment';
   document.getElementById('lbl-rst-result').textContent=isAr?'نتيجة إعادة الجدولة':isEs?'Resultado':'Restructuring Result';
   document.getElementById('rst-warning').textContent=isAr?
     'الرصيد يحسب بعد دفع القسط المحدد — إعادة الجدولة تبدأ من الشهر التالي.':
-    isEs?'El saldo se calcula despues del pago — la reestructuracion comienza el mes siguiente.':
+    isEs?'El saldo se calcula después del pago — la reestructuración comienza el mes siguiente.':
     'Balance is calculated after the specified payment — restructuring starts the following month.';
   document.getElementById('rst-info-text').innerHTML=isAr?
     'البنك لا يبدأ من الصفر — يحسب <strong style="color:#38bdf8">الرصيد المتبقي بعد آخر قسط دفعته</strong> ويعيد جدولته كقرض جديد.':
-    isEs?'El banco calcula el <strong style="color:#38bdf8">saldo pendiente tras el ultimo pago</strong> y lo refinancia como prestamo nuevo.':
+    isEs?'El banco calcula el <strong style="color:#38bdf8">saldo pendiente tras el último pago</strong> y lo refinancia como préstamo nuevo.':
     'The bank calculates the <strong style="color:#38bdf8">remaining balance after your last payment</strong> and refinances it as a new loan.';
 
   const oldRemInterest=Math.max(0,origPmt*remN-balance);
@@ -3172,14 +3172,14 @@ function calcRestructure(){
 
   let rows='';
   rows+=rstRow(isAr?'القسط قبل':isEs?'Cuota antes':'Payment before', fmtV(origPmt)+' '+moBefore, '#f59e0b');
-  rows+=rstRow(isAr?'القسط بعد':isEs?'Cuota despues':'Payment after', newMonths<9999?fmtV(newPmt)+' '+moBefore:'—', 'var(--safe)');
+  rows+=rstRow(isAr?'القسط بعد':isEs?'Cuota después':'Payment after', newMonths<9999?fmtV(newPmt)+' '+moBefore:'—', 'var(--safe)');
   rows+=rstRow(isAr?'المدة المتبقية قبل':isEs?'Plazo antes':'Months left before', remN+' '+moLbl, '#60a5fa');
-  rows+=rstRow(isAr?'المدة المتبقية بعد':isEs?'Plazo despues':'Months left after',
+  rows+=rstRow(isAr?'المدة المتبقية بعد':isEs?'Plazo después':'Months left after',
     newMonths<9999?(newMonths+' '+moLbl+(monthsSaved>0?' — '+(isAr?'أبكر بـ ':isEs?'antes ':'sooner by ')+monthsSaved+' '+moLbl:monthsSaved<0?' — '+(isAr?'أطول بـ ':isEs?'mas ':'longer by ')+(-monthsSaved)+' '+moLbl:'')):
     (isAr?'القسط لا يكفي':isEs?'Cuota insuficiente':'Payment too low'),
     monthsSaved>0?'var(--safe)':monthsSaved<0?'var(--risk)':'var(--txt)');
   rows+=rstRow(isAr?'فوائد متبقية قبل':isEs?'Intereses antes':'Remaining interest before', fmtV(oldRemInterest), 'var(--risk)');
-  rows+=rstRow(isAr?'فوائد متبقية بعد':isEs?'Intereses despues':'Remaining interest after', newMonths<9999?fmtV(newRemInterest):'—', 'var(--safe)');
+  rows+=rstRow(isAr?'فوائد متبقية بعد':isEs?'Intereses después':'Remaining interest after', newMonths<9999?fmtV(newRemInterest):'—', 'var(--safe)');
   document.getElementById('rst-rows').innerHTML=rows;
 
   const savingBox=document.getElementById('rst-saving-box');
@@ -3193,7 +3193,7 @@ function calcRestructure(){
   savDesc.textContent=newMonths>=9999?
     (isAr?'القسط لا يغطي الفائدة — زد المبلغ':isEs?'La cuota no cubre los intereses':'Payment does not cover interest — increase amount'):
     isGood?(isAr?'توفير في إجمالي الفائدة المتبقية':isEs?'de ahorro en intereses':'saved in remaining interest'):
-    (isAr?'زيادة في الفائدة المتبقية':isEs?'mas en intereses':'more in remaining interest');
+    (isAr?'زيادة في الفائدة المتبقية':isEs?'más en intereses':'more in remaining interest');
 
   document.getElementById('rst-result-card').style.display='block';
 
@@ -3725,7 +3725,7 @@ function applyResultsActions(){
       end.style.display=viewedLoan&&loanNeedsCheck(viewedLoan)?'':'none';
       end.textContent=isAr?'انتهى هذا القرض':isEs?'Este préstamo terminó':'This loan has ended';
     }
-    take.textContent=isAr?'أخذت هذا القرض':isEs?'Tomé este préstamo':'I took this loan';
+    take.textContent=isAr?'أخذت هذا القرض':isEs?'Tomé este préstamo':'I took out this loan';
     edit.textContent=isAr?'تعديل':isEs?'Editar':'Edit';
     del.textContent=isAr?'حذف':isEs?'Eliminar':'Delete';
   }
@@ -3908,7 +3908,7 @@ function compareQ1(f){
     :L(`. والبقية بين ${pct(restLo)} و${pct(f.maxR)}.`,`. Las demás, entre ${pct(restLo)} y ${pct(f.maxR)}.`,`. The others range from ${pct(restLo)} to ${pct(f.maxR)}.`);
   const intro=L(`أقل فائدة عند ${winner}: ${pct(f.minR)}${vs} وبنفس المبلغ والمدة، الفائدة الأقل تعني دائما قسطا أقل وفوائد أقل.`,
     `La tasa más baja es de ${winner}: ${pct(f.minR)}${vs} Con el mismo monto y plazo, una tasa más baja siempre da menor cuota y menos intereses.`,
-    `${winner} has the lowest rate: ${pct(f.minR)}${vs} At the same amount and term, a lower rate always means a lower payment and less interest.`);
+    `${winner} has the lowest rate: ${pct(f.minR)}${vs} For the same amount and term, a lower rate always means a lower payment and less interest.`);
   const chips=f.termChoices.length>1?`<div class="cmp-chips" role="group">${f.termChoices.map(x=>`<button type="button" class="cmp-chip" aria-pressed="${x===n}" onclick="setCompareTerm(${x})">${planTermText(x)}</button>`).join('')}</div>`:'';
   const month=L('شهريا','al mes','a month'), interestW=L('الفوائد','Intereses','Interest');
   const sides=grid.map(g=>{
@@ -3923,10 +3923,10 @@ function compareQ1(f){
   }).join('');
   const savesLine=L(`بالمدة نفسها يوفر ${winner} ${many?'حتى ':''}${fmtAmt(saves)} من الفوائد${per}.`,
     `Con el mismo plazo, ${winner} ahorra ${many?'hasta ':''}${fmtAmt(saves)} en intereses${per}.`,
-    `At the same term, ${winner} saves ${many?'up to ':''}${fmtAmt(saves)} in interest${per}.`);
+    `Over the same term, ${winner} saves ${many?'up to ':''}${fmtAmt(saves)} in interest${per}.`);
   return`<div class="card">${head}
     <p class="cmp-q">${intro}</p>
-    <p class="cmp-hint">${L(`لو أخذت العروض بالمدة نفسها${per}:`,`Si tomaras las ofertas con el mismo plazo${per}:`,`If you took the offers over the same term${per}:`)}</p>
+    <p class="cmp-hint">${L(`لو أخذت العروض بالمدة نفسها${per}:`,`Si todas las ofertas tuvieran el mismo plazo${f.sameP?'':' (por cada 1,000)'}:`,`If every offer had the same term${f.sameP?'':' (per 1,000)'}:`)}</p>
     ${chips}
     <div class="cmp-sides">${sides}</div>
     <p class="cmp-note">${savesLine}</p>
@@ -3977,14 +3977,14 @@ function compareQ2(f){
       <div class="cmp-kv"><span>${span(nL-nS,false)}</span><b>${last}</b></div>
       <div class="cmp-kv"><span>${L('فرق الفوائد','Diferencia de intereses','Interest difference')}</span><b>${intr}</b></div>
     </div>
-    <p class="cmp-hint">${L('القرار لك.','Tú decides.','It is your call.')}</p>
+    <p class="cmp-hint">${L('القرار لك.','Tú decides.','The choice is yours.')}</p>
   </div>`;
 }
 function renderCompare(){
   const isAr=lang==='ar', isEs=lang==='es';
   const tc=t();
   if(saved.length<2){document.getElementById('compare-body').innerHTML=`<p class="empty-state">${tc.noSaved}</p>`;return;}
-  const remLbl=isAr?'يتبقى شهريا':isEs?'Resto mensual':'Monthly Remainder';
+  const remLbl=isAr?'يتبقى شهريا':isEs?'Te queda al mes':'Monthly Remainder';
   const cmpCurGross=(+profile.salary||0)+(+profile.income||0);
   // كل خطة تقاس وحدها مقابل الملف الحقيقي، بدون بقية الخطط
   const cmpExisting=realPayments();
@@ -4004,7 +4004,7 @@ function renderCompare(){
       {label:tc.totalInterest,cell:s=>fmtNum(planInterest(s))},
       {label:tc.totalCost,cell:s=>fmtNum(planAmount(s)+planInterest(s))},
     ]:[
-      {label:isAr?'القسط لكل 1,000':isEs?'Cuota por cada 1,000':'Monthly per 1,000',cell:s=>fmtPayNum(calcLoan(1000,planRate(s).rate/100,term(s)).monthly)},
+      {label:isAr?'القسط لكل 1,000':isEs?'Cuota por cada 1,000':'Payment per 1,000',cell:s=>fmtPayNum(calcLoan(1000,planRate(s).rate/100,term(s)).monthly)},
     ]),
     {label:tc.dtiRatio,cell:s=>fmtDti(dtiPct(planPay(s)+cmpExisting,cmpCurGross))},
     {label:remLbl,cell:s=>{const v=cmpCash-planPay(s)-cmpExisting;return(v<0?`<bdi dir="ltr">${fmtNum(v)}</bdi>`:fmtNum(v))+sub(planTermText(s.form?.period));}},
@@ -4283,7 +4283,7 @@ function showExistingNotice(){
   document.getElementById('existing-notice-body').textContent=isAr
     ?'إذا كانت قروضك المحفوظة عروضا فقط اجعل الرقم صفرا. وإذا كان بينها قرض تدفعه فعلا فافتحه واضغط «أخذت هذا القرض».'
     :isEs?'Si tus préstamos guardados eran solo ofertas, pon el número en cero. Si alguno es un préstamo que ya pagas, ábrelo y pulsa «Tomé este préstamo».'
-    :'If your saved loans were only offers, set the number to zero. If one of them is a loan you actually pay, open it and tap «I took this loan».';
+    :'If your saved loans were only offers, set the number to zero. If one of them is a loan you actually pay, open it and tap “I took out this loan”.';
   document.getElementById('existing-notice-review').textContent=isAr?'راجع ملفي':isEs?'Revisar mi perfil':'Review my profile';
   document.getElementById('existing-notice-ok').textContent=isAr?'تمام':isEs?'Entendido':'OK';
   ov.style.display='flex';
@@ -4893,7 +4893,7 @@ async function enterDemoMode(){
       title:isAr?'هذا الهاتف بلا قفل شاشة':isEs?'Este teléfono no tiene bloqueo de pantalla':'This phone has no screen lock',
       body:isAr?'لذلك يمكن الخروج من وضع العرض بدون بصمة. لا تسلم هاتفك لغيرك إن كنت لا تريد أن يرى ملفك.'
         :isEs?'Así que se puede salir del modo demo sin biometría. No entregues el teléfono si no quieres que vean tu archivo.'
-        :'So Demo Mode can be left without biometrics. Do not hand over your phone if you do not want someone to see your file.',
+        :'This means Demo Mode can be left without biometrics. Do not hand your phone to anyone you do not want to see your file.',
       okLabel:isAr?'متابعة':isEs?'Continuar':'Continue'
     });
     if(!ok) return;
@@ -5157,10 +5157,10 @@ const GUIDE_TIPS={
 };
 
 const GUIDE_HELP={
-  profile:{en:{title:'Financial profile',body:'Your financial file holds the numbers emiGo reuses for every loan:\n\n• Monthly salary and extra income\n• Fixed and variable expenses\n• Existing loan payments you are paying now (you enter them)\n• Bank installment limit percentage and whether it is on gross or net income\n\nSave this file once so each new loan uses realistic limits.'},ar:{title:'الملف المالي',body:'ملفك المالي يجمع الأرقام التي يعيد تطبيق emiGo استخدامها مع كل قرض:\n\n• الراتب الشهري والدخل الإضافي\n• المصروفات الثابتة والمتغيرة\n• أقساط القروض التي تدفعها حاليا وتكتبها بنفسك\n• حد القسط البنكي كنسبة مئوية وعلى أساس الدخل الإجمالي أو الصافي\n\nاحفظ الملف مرة واحدة ليحسب كل قرض جديد بحدود واقعية.'},es:{title:'Perfil financiero',body:'Tu archivo financiero guarda los números que emiGo reutiliza en cada préstamo:\n\n• Salario mensual e ingresos extra\n• Gastos fijos y variables\n• Cuotas de préstamos que pagas ahora (las escribes tú)\n• Límite bancario de cuota en porcentaje y si aplica sobre ingreso bruto o neto\n\nGuárdalo una vez para que cada préstamo nuevo use límites realistas.'}},
+  profile:{en:{title:'Financial profile',body:'Your financial file holds the numbers emiGo reuses for every loan:\n\n• Monthly salary and extra income\n• Fixed and variable expenses\n• Loan payments you make now (you enter them)\n• Bank installment limit percentage and whether it is on gross or net income\n\nSave this file once so each new loan uses realistic limits.'},ar:{title:'الملف المالي',body:'ملفك المالي يجمع الأرقام التي يعيد تطبيق emiGo استخدامها مع كل قرض:\n\n• الراتب الشهري والدخل الإضافي\n• المصروفات الثابتة والمتغيرة\n• أقساط القروض التي تدفعها حاليا وتكتبها بنفسك\n• حد القسط البنكي كنسبة مئوية وعلى أساس الدخل الإجمالي أو الصافي\n\nاحفظ الملف مرة واحدة ليحسب كل قرض جديد بحدود واقعية.'},es:{title:'Perfil financiero',body:'Tu archivo financiero guarda los números que emiGo reutiliza en cada préstamo:\n\n• Salario mensual e ingresos extra\n• Gastos fijos y variables\n• Cuotas de préstamos que pagas ahora (las escribes tú)\n• Límite bancario de cuota en porcentaje y si aplica sobre ingreso bruto o neto\n\nGuárdalo una vez para que cada préstamo nuevo use límites realistas.'}},
   loan:{en:{title:'Calculate a loan',body:'From Home tap Calculate a loan, then enter:\n\n• Loan type\n• Loan amount\n• Repayment period\n• Annual interest rate\n• Optional start date\n\nTap Calculate to open the four result pages.'},ar:{title:'حساب قرض',body:'من الرئيسية اضغط احسب قرضا ثم أدخل:\n\n• نوع القرض\n• مبلغ القرض\n• مدة السداد\n• معدل الفائدة السنوي\n• تاريخ البداية إن احتجت\n\nثم اضغط احسب قرضي لفتح صفحات النتائج الأربع.'},es:{title:'Calcular un préstamo',body:'En Inicio toca Calcula un préstamo e ingresa:\n\n• Tipo de préstamo\n• Monto\n• Plazo\n• Tasa anual\n• Fecha de inicio opcional\n\nToca Calcular para abrir las cuatro páginas de resultados.'}},
-  results:{en:{title:'Understand results',body:'After Calculate you get four pages:\n\n• Report — installment, cost, interest, affordability\n• Charts — principal vs interest visually\n• Schedule — month-by-month table\n• Simulate — what-if changes instantly\n\nThe intro tour gives a short overview; open this Help topic anytime for the full list.'},ar:{title:'فهم النتائج',body:'بعد الحساب تظهر أربع صفحات:\n\n• التقرير — القسط والتكلفة والفائدة والقدرة على السداد\n• الرسوم — توزيع الأصل والفائدة بصريا\n• الجدول — أقساط شهرية ورصيد متبق\n• المحاكاة — ماذا لو تغير المبلغ أو الفائدة أو المدة\n\nالجولة التعريفية تعطي نظرة عامة قصيرة؛ افتح هذا الموضوع من الدليل في أي وقت للقائمة كاملة.'},es:{title:'Entender resultados',body:'Tras Calcular tienes cuatro páginas:\n\n• Informe — cuota, costo, interés y asequibilidad\n• Gráficos — capital frente a interés\n• Tabla — mes a mes\n• Simular — cambios al instante\n\nEl tour da un resumen breve; abre este tema de la guía cuando quieras la lista completa.'}},
-  save:{en:{title:'Save & compare',body:'On the Report page you can name the plan, for example with the bank name, then tap Save as plan to keep it on Home. You can keep up to 4 plans. Use them for the same loan with different bank offers, then tap Compare to see which offer is cheaper and which term suits you. The choice is yours.\n\nA saved plan is not a debt: it never changes your payments. When you really take a loan, open the plan and tap I took this loan: it moves to My loans with all its details, and its payment counts in your profile.'},ar:{title:'الحفظ والمقارنة',body:'من صفحة التقرير يمكنك تسمية الخطة، مثل اسم البنك، ثم اضغط حفظ كخطة لتظهر في الرئيسية. يمكنك الاحتفاظ بـ 4 خطط. استخدمها لنفس القرض بعروض بنوك مختلفة، ثم اضغط مقارنة لترى أي عرض أرخص وأي مدة تناسبك، والقرار لك.\n\nالخطة المحفوظة ليست دينا: لا تغير أقساطك. وعندما تأخذ قرضا فعلا افتح الخطة واضغط أخذت هذا القرض، فينتقل إلى قروضي بكل تفاصيله ويحسب قسطه من ملفك المالي.'},es:{title:'Guardar y comparar',body:'En Informe puedes poner nombre al plan, por ejemplo el del banco, y tocar Guardar como plan para dejarlo en Inicio. Puedes tener hasta 4 planes. Úsalos para el mismo préstamo con ofertas de distintos bancos y toca Comparar para ver qué oferta es más barata y qué plazo te conviene. Tú decides.\n\nUn plan guardado no es una deuda: no cambia tus cuotas. Cuando tomes un préstamo de verdad abre el plan y pulsa Tomé este préstamo: pasa a Mis préstamos con sus detalles y su cuota cuenta en tu perfil.'}},
+  results:{en:{title:'Understand results',body:'After you tap Calculate, you get four pages:\n\n• Report — installment, cost, interest, affordability\n• Charts — principal vs interest visually\n• Schedule — month-by-month table\n• Simulate — what-if changes instantly\n\nThe intro tour gives a short overview; open this Help topic anytime for the full list.'},ar:{title:'فهم النتائج',body:'بعد الحساب تظهر أربع صفحات:\n\n• التقرير — القسط والتكلفة والفائدة والقدرة على السداد\n• الرسوم — توزيع الأصل والفائدة بصريا\n• الجدول — أقساط شهرية ورصيد متبق\n• المحاكاة — ماذا لو تغير المبلغ أو الفائدة أو المدة\n\nالجولة التعريفية تعطي نظرة عامة قصيرة؛ افتح هذا الموضوع من الدليل في أي وقت للقائمة كاملة.'},es:{title:'Entender resultados',body:'Tras Calcular tienes cuatro páginas:\n\n• Informe — cuota, costo, interés y asequibilidad\n• Gráficos — capital frente a interés\n• Tabla — mes a mes\n• Simular — cambios al instante\n\nEl tour da un resumen breve; abre este tema de la guía cuando quieras la lista completa.'}},
+  save:{en:{title:'Save & compare',body:'On the Report page you can name the plan, for example with the bank name, then tap Save as plan to keep it on Home. You can keep up to 4 plans. Use them for the same loan with different bank offers, then tap Compare to see which offer is cheaper and which term suits you. The choice is yours.\n\nA saved plan is not a debt: it never changes your payments. When you actually take out a loan, open the plan and tap I took out this loan: it moves to My loans with all its details, and its payment counts in your profile.'},ar:{title:'الحفظ والمقارنة',body:'من صفحة التقرير يمكنك تسمية الخطة، مثل اسم البنك، ثم اضغط حفظ كخطة لتظهر في الرئيسية. يمكنك الاحتفاظ بـ 4 خطط. استخدمها لنفس القرض بعروض بنوك مختلفة، ثم اضغط مقارنة لترى أي عرض أرخص وأي مدة تناسبك، والقرار لك.\n\nالخطة المحفوظة ليست دينا: لا تغير أقساطك. وعندما تأخذ قرضا فعلا افتح الخطة واضغط أخذت هذا القرض، فينتقل إلى قروضي بكل تفاصيله ويحسب قسطه من ملفك المالي.'},es:{title:'Guardar y comparar',body:'En Informe puedes poner nombre al plan, por ejemplo el del banco, y tocar Guardar como plan para dejarlo en Inicio. Puedes tener hasta 4 planes. Úsalos para el mismo préstamo con ofertas de distintos bancos y toca Comparar para ver qué oferta es más barata y qué plazo te conviene. Tú decides.\n\nUn plan guardado no es una deuda: no cambia tus cuotas. Cuando tomes un préstamo de verdad abre el plan y pulsa Tomé este préstamo: pasa a Mis préstamos con sus detalles y su cuota cuenta en tu perfil.'}},
   demo:{en:{title:'Demo mode',body:'Demo mode protects your privacy. It opens fixed sample numbers in US dollars so you can show the app without revealing your real financial file.\n\nYour real file stays closed. You return to it after biometrics or device PIN. Find Demo on Home (eye icon) or in Settings.'},ar:{title:'وضع العرض التجريبي',body:'هدف وضع العرض التجريبي حماية خصوصيتك وخصوصية ملفك المالي. يفتح أرقاما تجريبية ثابتة بالدولار لتعرض التطبيق دون كشف ملفك الحقيقي.\n\nملفك الحقيقي يبقى مغلقا، تعود إليه بعد البصمة ورمز الجهاز. تجده من الرئيسية بأيقونة العين أو من الإعدادات.'},es:{title:'Modo demo',body:'El modo demo protege tu privacidad. Abre números de muestra fijos en dólares para mostrar la app sin revelar tu archivo financiero real.\n\nTu archivo real permanece cerrado. Vuelves a él con biometría o PIN. Está en Inicio (ojo) o en Ajustes.'}}
 };
 
@@ -5179,7 +5179,7 @@ const GUIDE_TOUR_STEPS=[
     body:{en:'After you tap Calculate, four pages appear: Report, Charts, Schedule, and Simulate. Each answers a different question. Details stay in Help when you need them.',ar:'بعد الضغط على «احسب» تظهر أربع صفحات: التقرير والرسوم والجدول والمحاكاة. كل صفحة تجيب سؤالا مختلفا. التفاصيل تبقى في دليل الاستخدام عند الحاجة.',es:'Tras Calcular aparecen cuatro páginas: Informe, Gráficos, Tabla y Simular. Cada una responde algo distinto. Los detalles quedan en la guía cuando los necesites.'}},
   {id:'extras',target:'saved-list',fallback:'demo',
     title:{en:'Plans, My loans & Demo',ar:'الخطط وقروضي ووضع العرض',es:'Planes, Mis préstamos y Demo'},
-    body:{en:'Save up to 4 bank offers for the same loan and compare them to see which offer is cheaper and which term suits you. In My loans, add a loan you already pay. Plans are for comparing only. When you really take a loan, open the plan and tap I took this loan: it moves to My loans and counts in your profile. Demo mode protects your real file while showing the app.',ar:'احفظ حتى 4 عروض بنوك لنفس القرض وقارن بينها لترى أي عرض أرخص وأي مدة تناسبك. ومن قروضي أضف قرضا تدفعه حاليا. الخطط للمقارنة فقط. وعندما تأخذ قرضا فعلا افتح الخطة واضغط أخذت هذا القرض، فينتقل إلى قروضي ويحسب من ملفك المالي. ووضع العرض يحمي ملفك الحقيقي أثناء عرض التطبيق.',es:'Guarda hasta 4 ofertas de bancos para el mismo préstamo y compáralas para ver qué oferta es más barata y qué plazo te conviene. En Mis préstamos, añade un préstamo que ya pagas. Los planes son solo para comparar. Cuando tomes un préstamo de verdad abre el plan y pulsa Tomé este préstamo: pasa a Mis préstamos y cuenta en tu perfil. El modo demo protege tu archivo real al mostrar la app.'}},
+    body:{en:'Save up to 4 bank offers for the same loan and compare them to see which offer is cheaper and which term suits you. In My loans, add a loan you already pay. Plans are for comparing only. When you actually take out a loan, open the plan and tap I took out this loan: it moves to My loans and counts in your profile. Demo mode protects your real file while showing the app.',ar:'احفظ حتى 4 عروض بنوك لنفس القرض وقارن بينها لترى أي عرض أرخص وأي مدة تناسبك. ومن قروضي أضف قرضا تدفعه حاليا. الخطط للمقارنة فقط. وعندما تأخذ قرضا فعلا افتح الخطة واضغط أخذت هذا القرض، فينتقل إلى قروضي ويحسب من ملفك المالي. ووضع العرض يحمي ملفك الحقيقي أثناء عرض التطبيق.',es:'Guarda hasta 4 ofertas de bancos para el mismo préstamo y compáralas para ver qué oferta es más barata y qué plazo te conviene. En Mis préstamos, añade un préstamo que ya pagas. Los planes son solo para comparar. Cuando tomes un préstamo de verdad abre el plan y pulsa Tomé este préstamo: pasa a Mis préstamos y cuenta en tu perfil. El modo demo protege tu archivo real al mostrar la app.'}},
 ];
 
 const GUIDE_FEATURES=[
@@ -5187,7 +5187,7 @@ const GUIDE_FEATURES=[
     teaser:{en:'New in emiGo: Saved plans',ar:'جديد في \u2068emiGo\u2069: الخطط المحفوظة',es:'Nuevo en emiGo: Planes guardados'},
     title:{en:'Saved plans',ar:'الخطط المحفوظة',es:'Planes guardados'},
     body:{
-      en:'Every loan you save is now a plan to compare before you go to the bank, not a debt.\n\nYou enter the payments you make today in your profile, and they never change when you save or delete a plan. Keep up to 4 plans, and each one shows if it fits your bank limit. When you really take one, it moves to My loans with all its details.',
+      en:'Every loan you save is now a plan to compare before you go to the bank, not a debt.\n\nYou enter the payments you make today in your profile, and they never change when you save or delete a plan. Keep up to 4 plans, and each one shows if it fits your bank limit. When you actually take one out, it moves to My loans with all its details.',
       ar:'كل قرض تحفظه أصبح خطة تقارنها قبل الذهاب إلى البنك، وليس دينا عليك.\n\nأقساطك الحالية تكتبها بنفسك في ملفك المالي، ولا تتغير عند حفظ خطة أو حذفها. يمكنك الاحتفاظ بـ 4 خطط، وكل خطة توضح هل هي ضمن حد البنك. وعندما تأخذ قرضا فعلا ينتقل إلى قسم قروضي بكل تفاصيله.',
       es:'Cada préstamo que guardas ahora es un plan para comparar antes de ir al banco, no una deuda.\n\nEscribes tus cuotas actuales en tu perfil y no cambian al guardar o eliminar un plan. Guarda hasta 4 planes y cada uno muestra si cabe en el límite del banco. Cuando tomes uno de verdad, pasa a Mis préstamos con sus detalles.'
     }},
