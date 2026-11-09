@@ -573,6 +573,31 @@ smartloan/
 
 `CACHE` صار `smartloan-4.2f`.
 
+### زز) مراجعة الترجمة الإنجليزية والإسبانية (9 نوفمبر 2026)
+
+**طلب المالك:** جملة «لو أخذت العروض بالمدة نفسها» بالإنجليزية غير طبيعية، ومراجعة الترجمة في كل التطبيق. روجعت كل نصوص الواجهة (852 نصا).
+
+- **المقارنة:**
+  - «If every offer had the same term:» بدل «If you took the offers over the same term:».
+  - «Over the same term» و«For the same amount and term» بدل «At…».
+  - «The choice is yours.» بدل «It is your call.».
+  - «Payment per 1,000» بدل «Monthly per 1,000».
+  - الإسبانية: «Si todas las ofertas tuvieran el mismo plazo:»، و«Te queda al mes» بدل «Resto mensual».
+- **أخذ القرض:** الإنجليزية تقول «take out a loan»:
+  - «I took out this loan» و«Did you take out this loan?» و«Yes, I took it out».
+  - تحدّث الدليل والجولة ورسالة الترحيل لتطابق اسم الزر.
+- **صياغات أوضح:**
+  - «Monthly Payment» بدل «Monthly Install.».
+  - تلميح حد البنك، وتلميح تاريخ البداية، وتاريخ القرض التقديري.
+  - «exceed your income»، و«Maximize»، و«Effective rate of the bank payment».
+  - تحذير وضع العرض بلا قفل شاشة، والدليل.
+- **سطر الانتهاء في الرئيسية:** لا تتكرر كلمة loan إذا كان اسم القرض ينتهي بها.
+- **الإسبانية:** أضيفت الحركات في نصوص إعادة الجدولة المخفية، و«pago inicial» بدل «enganche».
+- **العربية:** لم تتغير.
+- **الإصدار:** الرقم الظاهر بقي 4.2، و`CACHE` صار `smartloan-4.2g`.
+
+**التحقق:** 811 اختبارا ناجحة. وصفحتا التقرير والمقارنة بعرض 320 بالإنجليزية و360 بالإسبانية بلا تمدد للصفحة.
+
 ## 3) مشكلة المحاذاة (safe-area) — التاريخ الكامل والحل النهائي
 
 **العَرَض:** في نسخة المتجر (APK) المحتوى يتداخل مع شريط الحالة أعلى وأزرار التنقّل أسفل.

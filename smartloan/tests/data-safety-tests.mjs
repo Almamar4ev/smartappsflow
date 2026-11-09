@@ -766,7 +766,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2f'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2g'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -932,7 +932,7 @@ console.log('\nMy loans');
   check('a saved plan is not a real payment', p.run('realPayments()') === 100);
   p.run('takePlan(0)');
   check('taking asks first', p.el('loan-sheet').style.display === 'flex' && p.run('myLoans.length') === 0);
-  check('the question is explicit', p.el('ls-title').textContent === 'Did you really take this loan?');
+  check('the question is explicit', p.el('ls-title').textContent === 'Did you take out this loan?');
   p.run('closeLoanSheet()');
   await settle();
   check('cancel changes nothing', p.run('saved.length') === 2 && p.run('myLoans.length') === 0);
@@ -1064,7 +1064,7 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   check('Arabic: the saving line keeps the name apart from the amount', ar.includes('يوفر <b><bdi>B</bdi></b> '));
   p.run(`lang='en'`);
   check('owner case: same-term saving 56.45', body.includes('$ 56.45'));
-  check('owner case: the same-term grid is hypothetical', body.includes('If you took the offers over the same term'));
+  check('owner case: the same-term grid is hypothetical', body.includes('If every offer had the same term'));
   check('owner case: term chips for 3 and 4 years', body.includes('setCompareTerm(36)') && body.includes('setCompareTerm(48)'));
   check('owner case: the term card speaks for 36 then 12 months', body.includes('First 36 months') && body.includes('Last 12 months') && body.includes('$ 50.18 a month') && body.includes('$ 159.62 a month'));
   check('owner case: money shows two decimals', body.includes('$ 209.80') || body.includes('209.80'));
@@ -1073,7 +1073,7 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   const arFlat = p.el('compare-body').innerHTML;
   check('Arabic flat note explains the method, not only the word ثابتة', arFlat.includes('إذا كان البنك يحسب الفائدة على المبلغ كاملا طوال المدة (Flat)، فهي أغلى مما تبدو.') && !arFlat.includes('فائدة ثابتة'));
   p.run(`lang='en'`); p.run('renderCompare()');
-  check('owner case: it is the user\'s call', body.includes('It is your call'));
+  check('owner case: it is the user\'s call', body.includes('The choice is yours'));
   p.run('setCompareTerm(48)');
   check('a chip switches the grid to 4 years and B still saves 75.87', p.el('compare-body').innerHTML.includes('$ 75.87'));
 }
@@ -1102,7 +1102,7 @@ check('the word best is gone', !html.includes('الأفضل بأقل قسط') &&
   check('amount only: same rate and term', f.sameR && f.sameN && !f.sameP && !f.term);
   p.run('renderCompare()');
   const body = p.el('compare-body').innerHTML;
-  check('amount only: per 1,000 shows 29.97 twice', (rowOf(body, 'Monthly per 1,000').match(/>29\.97</g) || []).length === 2);
+  check('amount only: per 1,000 shows 29.97 twice', (rowOf(body, 'Payment per 1,000').match(/>29\.97</g) || []).length === 2);
   check('amount only: the warning blames the amount, not the bank', body.includes('A bigger payment comes from the bigger amount'));
   check('amount only: interest and cost rows hidden', !body.includes('>Interest</td>') && !body.includes('>Total</td>'));
 }
@@ -1575,15 +1575,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'smartloan-4.2e', 'smartloan-4.2f', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'smartloan-4.2e', 'smartloan-4.2f', 'smartloan-4.2g', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.2f') && removed.includes('smartloan-4.2e'));
-  check('no other app loses its cache', removed.length === 11);
+  check('the current cache stays', !removed.includes('smartloan-4.2g') && removed.includes('smartloan-4.2f'));
+  check('no other app loses its cache', removed.length === 12);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
@@ -1843,7 +1843,7 @@ console.log('\nMy loans 4.2');
   p.run(`myLoans=[${old()}]`);
   check('a 4.1 loan past its estimated end still counts', p.run('myLoansTotal()') === 258.2 && p.run('loanNeedsCheck(myLoans[0])') === true);
   p.run('editMyLoan(0)');
-  check('the edit sheet says the date is an estimate', p.el('ls-date-hint').textContent.startsWith('This date is an estimate') && p.el('ls-row-dateok').style.display !== 'none');
+  check('the edit sheet says the date is an estimate', p.el('ls-date-hint').textContent.startsWith('This date was estimated') && p.el('ls-row-dateok').style.display !== 'none');
   set('ls-label', 'Renamed'); p.run('submitLoanSheet()'); await settle();
   check('editing only the name keeps the date unconfirmed', p.run('myLoans[0].startConfirmed') !== true && p.run('myLoans[0].label') === 'Renamed');
   check('and the loan still counts', p.run('myLoansTotal()') === 258.2);
