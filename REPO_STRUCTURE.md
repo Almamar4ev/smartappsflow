@@ -9,6 +9,8 @@ established build/deploy pipeline.
 
 **Last archive update:** 8 August 2026.
 
+> **Start every session with [`CLAUDE.md`](CLAUDE.md)** (repo root, Arabic): the real repo path, the app index, the working rules, the tools that work, and past mistakes. The current emiGo status is in [`smartloan/CLAUDE.md`](smartloan/CLAUDE.md). The Smart Loan status in §0b and §5 below is from August 2026 and is kept as history.
+
 ---
 
 ## 0. Start here (onboarding for a new developer or AI agent)
