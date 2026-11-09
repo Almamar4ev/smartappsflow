@@ -1,7 +1,21 @@
 <!DOCTYPE html>
+<!--
+  emiGo: EMI & Loan
+  Copyright (c) 2026 Smart Apps Flow (smartappsflow.net). All rights reserved.
+
+  This code, its design, texts and graphics belong to Smart Apps Flow. They are
+  published only to run the official emiGo app and website. "emiGo" and its logo
+  are trademarks of Smart Apps Flow.
+
+  Copying, modifying, republishing, selling, or releasing an app or website built
+  on this code or any part of it is not allowed without written permission.
+  See LICENSE.txt. Contact: smartappsflow@gmail.com
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<meta name="author" content="Smart Apps Flow"/>
+<meta name="copyright" content="© 2026 Smart Apps Flow. emiGo is a trademark of Smart Apps Flow. All rights reserved."/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"/>
 <title>emiGo: EMI &amp; Loan | حاسبة القروض الذكية</title>
 
@@ -4196,15 +4210,14 @@ function hideBankPayInfo(e){
 // ── إرسال ملاحظة: يفتح بريد المستخدم برسالة جاهزة ─────────────────────────────
 const FEEDBACK_EMAIL='smartappsflow@gmail.com';
 const PLAY_URL='https://play.google.com/store/apps/details?id=com.smartapps.smartloanadvisor';
-const WEB_URL='https://smartappsflow.net/smartloan/';
 async function shareApp(){
   const isAr=lang==='ar', isEs=lang==='es';
   const title='emiGo: EMI & Loan';
   const text=isAr
-    ?'جرب emiGo لحساب الأقساط والقروض.\n\nأندرويد — Google Play:\n'+PLAY_URL+'\n\nآيفون والمتصفح:\n'+WEB_URL
+    ?'جرب emiGo لحساب الأقساط والقروض.\n\nأندرويد — Google Play:\n'+PLAY_URL
     :isEs
-    ?'Prueba emiGo para calcular cuotas y préstamos.\n\nAndroid — Google Play:\n'+PLAY_URL+'\n\niPhone y navegador:\n'+WEB_URL
-    :'Try emiGo for EMI, loan and mortgage estimates.\n\nAndroid — Google Play:\n'+PLAY_URL+'\n\niPhone & browser:\n'+WEB_URL;
+    ?'Prueba emiGo para calcular cuotas y préstamos.\n\nAndroid — Google Play:\n'+PLAY_URL
+    :'Try emiGo for EMI, loan and mortgage estimates.\n\nAndroid — Google Play:\n'+PLAY_URL;
   try{
     const Cap=window.Capacitor;
     if(Cap&&Cap.isNativePlatform&&Cap.isNativePlatform()&&Cap.Plugins&&Cap.Plugins.Share){

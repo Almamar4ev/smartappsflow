@@ -766,7 +766,7 @@ const response = (ok, type) => ({ ok, type, clone() { return this; } });
   check('an offline image does not get the app as its content',
     (await w.request('https://emigo.test/a.png', 'no-cors')).isNetworkError === true);
 }
-check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2h'"));
+check('the cache name changed so clients refresh', sw.includes("const CACHE = 'smartloan-4.2i'"));
 check('the first visit does not reload the page', /var hadController = !!navigator\.serviceWorker\.controller/.test(html)
   && /if \(!hadController\) \{ hadController = true; return; \}/.test(html));
 
@@ -1575,15 +1575,15 @@ console.log('\nShared origin');
   const listeners = {};
   const sandbox = {
     self: { addEventListener: (n, f) => { listeners[n] = f; }, clients: { claim: async () => {} }, location: { origin: 'https://emigo.test' } },
-    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'smartloan-4.2e', 'smartloan-4.2f', 'smartloan-4.2g', 'smartloan-4.2h', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
+    caches: { keys: async () => ['smartloan-1.3e', 'smartloan-v40', 'smartloan-4.1', 'smartloan-4.1a', 'smartloan-4.1b', 'smartloan-4.2', 'smartloan-4.2a', 'smartloan-4.2b', 'smartloan-4.2c', 'smartloan-4.2d', 'smartloan-4.2e', 'smartloan-4.2f', 'smartloan-4.2g', 'smartloan-4.2h', 'smartloan-4.2i', 'compoundcalc-1', 'edgeory-v43', 'basis-2', 'car-maint-3'], delete: async (k) => { removed.push(k); return true; } },
     URL, console,
   };
   vm.runInNewContext(sw, sandbox);
   let done; listeners.activate({ waitUntil: (w) => { done = w; } });
   await done;
   check('old emiGo caches are cleared', removed.includes('smartloan-1.3e') && removed.includes('smartloan-v40'));
-  check('the current cache stays', !removed.includes('smartloan-4.2h') && removed.includes('smartloan-4.2g'));
-  check('no other app loses its cache', removed.length === 13);
+  check('the current cache stays', !removed.includes('smartloan-4.2i') && removed.includes('smartloan-4.2h'));
+  check('no other app loses its cache', removed.length === 14);
 }
 
 // ── Honest backup and take messages ────────────────────────────────────────
@@ -2004,6 +2004,8 @@ check('the loan sheet answers the back button', html.includes("['loan-sheet',()=
 // ── Profile rows keep each number on its label line ─────────────────────────
 check('a profile row never wraps the number below its label', /\.prof-stat\{[^}]*flex-wrap:nowrap/.test(html) && /\.prof-stat b\{[^}]*white-space:nowrap/.test(html));
 check('a long label can wrap instead of the number', /\.prof-stat span\{min-width:0\}/.test(html));
+check('the share message has only the Google Play link', !html.includes('WEB_URL') && !html.includes('iPhone & browser') && !html.includes('آيفون والمتصفح') && !html.includes('iPhone y navegador') && html.includes("Google Play:\\n'+PLAY_URL;"));
+check('the page starts in standards mode with the ownership notice after it', html.startsWith('<!DOCTYPE html>') && html.includes('Copyright (c) 2026 Smart Apps Flow') && html.includes('<meta name="copyright"'));
 check('English uses the shorter Loan Payments label', html.includes("lang==='es'?'Cuotas actuales':'Loan Payments'") && !html.includes("'Existing Payments'"));
 
 console.log(`\nPassed: ${passed}`);

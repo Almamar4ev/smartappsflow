@@ -1,0 +1,17 @@
+emiGo: EMI & Loan
+Copyright (c) 2026 Smart Apps Flow (smartappsflow.net). All rights reserved.
+
+This folder holds the source code of emiGo. The code, its design, texts,
+icons and graphics belong to Smart Apps Flow. They are published only to run
+the official emiGo app and website. "emiGo" and the emiGo logo are trademarks
+of Smart Apps Flow.
+
+No license is granted. Without written permission from Smart Apps Flow you may
+not copy, modify, republish, redistribute or sell this code or any part of it,
+and you may not release an app or website built on it or using the emiGo name
+or logo.
+
+Official app:
+https://play.google.com/store/apps/details?id=com.smartapps.smartloanadvisor
+
+Contact for permission: smartappsflow@gmail.com

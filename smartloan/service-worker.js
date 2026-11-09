@@ -1,4 +1,8 @@
 /* emiGo: EMI & Loan — service worker
+   Copyright (c) 2026 Smart Apps Flow. All rights reserved. "emiGo" is a trademark
+   of Smart Apps Flow. Copying or reuse is not allowed without written permission.
+   See LICENSE.txt.
+
    On a real release: set VERSION to the app version (4.1, 4.2…) and rewrite CHANGELOG.
    VERSION is shown to users, so it is a product release, not a running fix counter.
    Quiet polish can keep VERSION and bump CACHE only so PWA clients refresh. */
@@ -25,7 +29,7 @@ const CHANGELOG = {
   ])
 };
 
-const CACHE = 'smartloan-4.2h';
+const CACHE = 'smartloan-4.2i';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-maskable-512.png'];
 
 // Install: pre-cache core, then WAIT. No skipWaiting() here on purpose — the new
