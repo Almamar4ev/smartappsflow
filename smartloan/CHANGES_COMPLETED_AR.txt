@@ -492,3 +492,4 @@ Smart App Guide + متجر 4.0 — 20 أكتوبر 2026
 - فحص الهاتف: 40 فحصا ناجحا. صف «التاريخ صحيح» صار 44px. الكاش smartloan-4.2e. التفاصيل في PROJECT_LOG_AR.md §2-هه.
 - تنبيه Flat يشرح طريقة الحساب بدل كلمة «ثابتة»، ويختفي إذا كتب قسط البنك لكل الخطط. الكاش smartloan-4.2f. التفاصيل في PROJECT_LOG_AR.md §2-وو.
 - مراجعة الترجمة الإنجليزية والإسبانية في كل التطبيق: «If every offer had the same term» و«The choice is yours» و«I took out this loan» و«Monthly Payment» وصياغات أوضح. العربية لم تتغير. الكاش smartloan-4.2g. التفاصيل في PROJECT_LOG_AR.md §2-زز.
+- صف الأقساط في الملف المالي: الرقم لا ينزل تحت عنوانه في أي لغة، والعنوان الإنجليزي «Loan Payments». الكاش smartloan-4.2h. التفاصيل في PROJECT_LOG_AR.md §2-حح.
