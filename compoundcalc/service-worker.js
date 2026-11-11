@@ -1,29 +1,36 @@
 /* Compound Interest Calculator — service worker
-   On a real release: bump VERSION and rewrite CHANGELOG.
-   Quiet republish can keep VERSION and let the build stamp change CACHE. */
-const VERSION = '1.1';
+   VERSION is stamped from pubspec.yaml by scripts/patch_web_update.py, so
+   it always equals Settings → Version. On a real release: raise the
+   version in pubspec.yaml and rewrite CHANGELOG. A quiet republish keeps
+   the version and lets the build stamp change CACHE. */
+const VERSION = '1.1.0';
 
-function updateNote(lines){ return lines.join('\u2028'); }
+// One line per change; the update card shows them with white-space: pre-line.
+function updateNote(lines){ return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'إضافة الإسبانية والبرتغالية داخل التطبيق.\u200F',
-    'اللغة تتبع لغة الهاتف أو المتصفح.\u200F'
+    'تصميم جديد: نتيجة أوضح، ونطاق متوقع للرصيد، وجدول سنوي.\u200F',
+    'التطبيق يتذكر اللغة والسمة والعملة.\u200F'
   ]),
   en: updateNote([
-    'Adds Spanish and Portuguese in the app.',
-    'The language follows the phone or browser.'
+    'New design: a clearer result, an expected balance range and a yearly table.',
+    'The app remembers your language, theme and currency.'
   ]),
   es: updateNote([
-    'Se añaden español y portugués en la app.',
-    'El idioma sigue el del teléfono o el navegador.'
+    'Nuevo diseño: un resultado más claro, un rango esperado del saldo y una tabla anual.',
+    'La app recuerda tu idioma, tema y moneda.'
   ]),
   pt: updateNote([
-    'Adiciona espanhol e português no app.',
-    'O idioma segue o do telefone ou do navegador.'
+    'Novo design: um resultado mais claro, uma faixa esperada do saldo e uma tabela anual.',
+    'O app lembra seu idioma, tema e moeda.'
   ])
 };
 
-const CACHE = 'compoundcalc-20261023074355';
+// Every app on smartappsflow.net shares one cache store, so this worker
+// only ever deletes its own old caches (CACHE_PREFIX), never another app's.
+// patch_web_update.py stamps both lines; a preview build gets its own prefix.
+const CACHE_PREFIX = 'compoundcalc-';
+const CACHE = 'compoundcalc-20261111192537';
 const CORE = [
   './',
   './index.html',
@@ -33,19 +40,34 @@ const CORE = [
   './manifest-pt.json',
   './flutter_bootstrap.js',
   './main.dart.js',
+  './js/page-setup.js',
+  './js/analytics.js',
+  './js/splash.js',
+  './js/updates.js',
   './favicon.png',
   './icons/app-icon-192.png',
   './icons/app-icon-512.png'
 ];
 
+// A new version must cache the new files, not copies the browser still
+// holds from before (GitHub Pages lets it keep them 10 minutes): 'reload'
+// skips the HTTP cache, 'no-cache' asks the server whether a copy changed.
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).catch(() => {}));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(CORE.map((u) => new Request(u, { cache: 'reload' }))))
+      .catch(() => {})
+  );
 });
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(
+        keys
+          .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE)
+          .map((k) => caches.delete(k))
+      ))
       .then(() => self.clients.claim())
   );
 });
@@ -67,14 +89,17 @@ self.addEventListener('fetch', (e) => {
   if (url.pathname.endsWith('app_build.txt')) return;
 
   e.respondWith(
-    caches.match(req).then((hit) => {
+    // Look only in this app's cache, not in other apps' on the same site.
+    caches.open(CACHE).then((c) => c.match(req)).then((hit) => {
       if (hit) return hit;
-      return fetch(req).then((res) => {
+      // A page navigation cannot take options; everything else revalidates.
+      const fresh = req.mode === 'navigate' ? req : new Request(req, { cache: 'no-cache' });
+      return fetch(fresh).then((res) => {
         if (!res || !res.ok) return res;
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         return res;
-      }).catch(() => caches.match('./index.html'));
+      }).catch(() => caches.open(CACHE).then((c) => c.match('./index.html')));
     })
   );
 });

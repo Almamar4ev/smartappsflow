@@ -33,12 +33,24 @@ addEventListener("message", eventListener);
 if (!window._flutter) {
   window._flutter = {};
 }
-_flutter.buildConfig = {"engineRevision":"a10d8ac38de835021c8d2f920dbf50a920ccc030","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}]};
+_flutter.buildConfig = {"engineRevision":"a10d8ac38de835021c8d2f920dbf50a920ccc030","builds":[{"compileTarget":"dart2js","renderer":"canvaskit","mainJsPath":"main.dart.js"},{}],"useLocalCanvasKit":true};
 
 
+// Everything comes from this site: the rendering engine (CanvasKit) is
+// bundled with --no-web-resources-cdn, and fallback fonts would also be
+// looked for here, never on fonts.gstatic.com (the app bundles all the
+// fonts it needs, so none should be requested).
+//
+// The app runs inside #app-host instead of taking over the whole page, so
+// the engine leaves the page's viewport tag alone and pinch-zoom works.
 _flutter.loader.load({
-  config: {
-    // Load CanvasKit from Google CDN — no need to upload the heavy canvaskit/ folder.
-    canvasKitBaseUrl: "https://www.gstatic.com/flutter-canvaskit/a10d8ac38de835021c8d2f920dbf50a920ccc030/",
+  onEntrypointLoaded: async function (engineInitializer) {
+    // Engine settings go here (not in load's config) when the page starts
+    // the engine itself.
+    const appRunner = await engineInitializer.initializeEngine({
+      hostElement: document.getElementById('app-host'),
+      fontFallbackBaseUrl: 'assets/fallback-fonts/',
+    });
+    await appRunner.runApp();
   },
 });
