@@ -30,7 +30,7 @@ const CHANGELOG = {
 // only ever deletes its own old caches (CACHE_PREFIX), never another app's.
 // patch_web_update.py stamps both lines; a preview build gets its own prefix.
 const CACHE_PREFIX = 'compoundcalc-preview-';
-const CACHE = 'compoundcalc-preview-20261111041616';
+const CACHE = 'compoundcalc-preview-20261111043102';
 const CORE = [
   './',
   './index.html',
