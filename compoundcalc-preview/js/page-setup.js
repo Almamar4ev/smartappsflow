@@ -2,6 +2,16 @@
    Content-Security-Policy (no inline scripts). */
 (function () {
       var code = String(navigator.language || 'en').toLowerCase().split('-')[0];
+      // The language chosen in the app wins over the device's, so the page
+      // title and the update card match the app. Same keys the app writes
+      // (lib/services/app_storage.dart); the review copy has its own.
+      try {
+        var prefix = location.pathname.indexOf('/compoundcalc-preview/') !== -1
+          ? 'compoundcalc_preview.' : 'compoundcalc.';
+        var saved = JSON.parse(localStorage.getItem(prefix + 'language') || 'null');
+        var fromApp = { arabic: 'ar', english: 'en', spanish: 'es', portuguese: 'pt' }[saved];
+        if (fromApp) code = fromApp;
+      } catch (_) {}
       var pages = {
         ar: {
           title: 'حاسبة الفائدة المركبة',
