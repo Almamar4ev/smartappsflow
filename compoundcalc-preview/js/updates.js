@@ -7,6 +7,21 @@
       var pendingInfo = null;
       var bannerDismissed = false;
       var lang = (document.documentElement.lang || 'en').toLowerCase();
+      // The card is plain HTML outside the Flutter app: give it the system UI
+      // font, not the browser default (Times).
+      var FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+      // Version of the worker running now; the card names the new version
+      // only when it differs (a quiet republish keeps the same number).
+      var currentVersion = null;
+      function askVersion(worker, done) {
+        if (!worker) return;
+        navigator.serviceWorker.addEventListener('message', function onMsg(e) {
+          if (e.source !== worker || !e.data || e.data.type !== 'VERSION_INFO') return;
+          navigator.serviceWorker.removeEventListener('message', onMsg);
+          done(e.data);
+        });
+        try { worker.postMessage('GET_VERSION_INFO'); } catch (_) {}
+      }
 
       function t(key) {
         var S = {
@@ -19,7 +34,7 @@
       }
 
       function versionLabel(v) {
-        if (!v) return '';
+        if (!v || v === currentVersion) return '';
         if (lang === 'ar') return ' · الإصدار ' + v;
         if (lang === 'es') return ' · versión ' + v;
         if (lang === 'pt') return ' · versão ' + v;
@@ -48,7 +63,8 @@
           'max-width:280px', 'z-index:4000',
           'background:#0B5ED7', 'color:#fff', 'border:none',
           'border-radius:999px', 'padding:11px 18px',
-          'font:800 13px/1.3 inherit', 'cursor:pointer',
+          'font-weight:800', 'font-size:13px', 'line-height:1.3',
+          'font-family:' + FONT, 'cursor:pointer',
           'box-shadow:0 10px 28px rgba(11,94,215,.35)'
         ].join(';');
         chip.onclick = applyUpdate;
@@ -74,8 +90,9 @@
           'border-radius:14px', 'padding:14px 16px',
           'box-shadow:0 12px 34px rgba(15,23,42,.18)',
           'display:flex', 'flex-direction:column', 'gap:8px',
-          'font-family:inherit'
+          'font-family:' + FONT
         ].join(';');
+        bar.dir = lang === 'ar' ? 'rtl' : 'ltr';
 
         var head = document.createElement('div');
         head.style.cssText = 'font-size:14px;font-weight:800;line-height:1.3;color:#0B5ED7';
@@ -116,15 +133,28 @@
         document.body.appendChild(bar);
 
         if (newWorker) {
-          navigator.serviceWorker.addEventListener('message', function onMsg(e) {
-            if (e.data && e.data.type === 'VERSION_INFO') {
-              pendingInfo = { version: e.data.version, changelog: e.data.changelog };
-              desc.textContent = changelogText(e.data.changelog);
-              head.textContent = t('avail') + versionLabel(e.data.version);
-              navigator.serviceWorker.removeEventListener('message', onMsg);
-            }
-          });
-          try { newWorker.postMessage('GET_VERSION_INFO'); } catch (_) {}
+          var showInfo = function (info) {
+            pendingInfo = { version: info.version, changelog: info.changelog };
+            desc.textContent = changelogText(info.changelog);
+            head.textContent = t('avail') + versionLabel(info.version);
+          };
+          var controller = navigator.serviceWorker.controller;
+          if (controller && currentVersion === null) {
+            // Older workers do not answer; then the new number is shown.
+            var asked = false;
+            var askNew = function () {
+              if (asked) return;
+              asked = true;
+              askVersion(newWorker, showInfo);
+            };
+            askVersion(controller, function (info) {
+              currentVersion = info.version || null;
+              askNew();
+            });
+            setTimeout(askNew, 800);
+          } else {
+            askVersion(newWorker, showInfo);
+          }
         }
       }
 

@@ -5,7 +5,8 @@
    the version and lets the build stamp change CACHE. */
 const VERSION = '1.0.0';
 
-function updateNote(lines){ return lines.join('\u2028'); }
+// One line per change; the update card shows them with white-space: pre-line.
+function updateNote(lines){ return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
     'تصميم جديد: نتيجة أوضح، ونطاق متوقع للرصيد، وجدول سنوي.\u200F',
@@ -29,7 +30,7 @@ const CHANGELOG = {
 // only ever deletes its own old caches (CACHE_PREFIX), never another app's.
 // patch_web_update.py stamps both lines; a preview build gets its own prefix.
 const CACHE_PREFIX = 'compoundcalc-preview-';
-const CACHE = 'compoundcalc-preview-20261109220949';
+const CACHE = 'compoundcalc-preview-20261111035638';
 const CORE = [
   './',
   './index.html',
