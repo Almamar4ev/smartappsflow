@@ -30,7 +30,7 @@ const CHANGELOG = {
 // only ever deletes its own old caches (CACHE_PREFIX), never another app's.
 // patch_web_update.py stamps both lines; a preview build gets its own prefix.
 const CACHE_PREFIX = 'compoundcalc-preview-';
-const CACHE = 'compoundcalc-preview-20261111040203';
+const CACHE = 'compoundcalc-preview-20261111040654';
 const CORE = [
   './',
   './index.html',
@@ -49,8 +49,15 @@ const CORE = [
   './icons/app-icon-512.png'
 ];
 
+// A new version must cache the new files, not copies the browser still
+// holds from before (GitHub Pages lets it keep them 10 minutes): 'reload'
+// skips the HTTP cache, 'no-cache' asks the server whether a copy changed.
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).catch(() => {}));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(CORE.map((u) => new Request(u, { cache: 'reload' }))))
+      .catch(() => {})
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -85,7 +92,9 @@ self.addEventListener('fetch', (e) => {
     // Look only in this app's cache, not in other apps' on the same site.
     caches.open(CACHE).then((c) => c.match(req)).then((hit) => {
       if (hit) return hit;
-      return fetch(req).then((res) => {
+      // A page navigation cannot take options; everything else revalidates.
+      const fresh = req.mode === 'navigate' ? req : new Request(req, { cache: 'no-cache' });
+      return fetch(fresh).then((res) => {
         if (!res || !res.ok) return res;
         const copy = res.clone();
         caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
