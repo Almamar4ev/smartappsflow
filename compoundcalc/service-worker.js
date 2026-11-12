@@ -12,25 +12,25 @@ const CHANGELOG = {
     'تصميم جديد: نتيجة أوضح، ونطاق متوقع للرصيد، وجدول سنوي.\u200F',
     'تمرير أسرع وأنعم.\u200F',
     'المشاركة فيها رابط المتجر ورابط الويب.\u200F',
-    'التطبيق يتذكر اللغة والسمة والعملة.\u200F'
+    'التطبيق يتذكر أرقامك واللغة والسمة والعملة.\u200F'
   ]),
   en: updateNote([
     'New design: a clearer result, an expected balance range and a yearly table.',
     'Faster, smoother scrolling.',
     'Shared results include the Google Play and the web link.',
-    'The app remembers your language, theme and currency.'
+    'The app remembers your numbers, language, theme and currency.'
   ]),
   es: updateNote([
     'Nuevo diseño: un resultado más claro, un rango esperado del saldo y una tabla anual.',
     'Desplazamiento más rápido y fluido.',
     'Al compartir se incluyen el enlace de Google Play y el de la web.',
-    'La app recuerda tu idioma, tema y moneda.'
+    'La app recuerda tus números, idioma, tema y moneda.'
   ]),
   pt: updateNote([
     'Novo design: um resultado mais claro, uma faixa esperada do saldo e uma tabela anual.',
     'Rolagem mais rápida e suave.',
     'Ao compartilhar, vão o link do Google Play e o da web.',
-    'O app lembra seu idioma, tema e moeda.'
+    'O app lembra seus números, idioma, tema e moeda.'
   ])
 };
 
@@ -38,7 +38,7 @@ const CHANGELOG = {
 // only ever deletes its own old caches (CACHE_PREFIX), never another app's.
 // patch_web_update.py stamps both lines; a preview build gets its own prefix.
 const CACHE_PREFIX = 'compoundcalc-';
-const CACHE = 'compoundcalc-20261112060637';
+const CACHE = 'compoundcalc-20261112093220';
 const CORE = [
   './',
   './index.html',
