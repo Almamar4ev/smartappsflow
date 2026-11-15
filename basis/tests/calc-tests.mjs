@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stockAverage, averageSell, profitLoss, positionByPercent, positionByPrice, compoundGrowth, positionMark, whatIfBuy, targetAverage, whatIfSell } from '../js/calc.js';
+import { stockAverage, averageSell, profitLoss, positionByPercent, positionByPrice, compoundGrowth, positionMark, whatIfBuy, targetAverage, whatIfSell, sellCompare, parseNumber, liveFormat } from '../js/calc.js';
 import { STR } from '../js/i18n.js';
 
 function close(actual, expected, eps = 0.01) {
@@ -138,6 +138,67 @@ test('what-if mark, buy, sell, and target match the sheet cases', () => {
 
   assert.equal(targetAverage({ ...position, target: '30' }).reason, 'impossible');
   assert.equal(targetAverage({ ...position, target: '60' }).reason, 'already');
+});
+
+test('number parsing follows locale separators and eastern digits', () => {
+  assert.equal(parseNumber('1,5', 'es'), 1.5);
+  assert.equal(parseNumber('1.500,50', 'es'), 1500.5);
+  assert.equal(parseNumber('1,500', 'en'), 1500);
+  assert.equal(parseNumber('1,500.50', 'en'), 1500.5);
+  assert.equal(parseNumber('١٠٠', 'ar'), 100);
+  assert.equal(parseNumber('۱٬۲۵۰٫۵', 'ar'), 1250.5);
+  assert.equal(liveFormat('1250.5', 'en').display, '1,250.5');
+  assert.equal(liveFormat('1250,5', 'es').display, '1.250,5');
+});
+
+test('compound years keep half years as months', () => {
+  const result = compoundGrowth({
+    capital: '1000', rate: '0', ratePeriod: 'annual', duration: '1.5', durationUnit: 'years', deposit: '0', frequency: '12',
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.months.length, 18);
+});
+
+test('compound growth allows zero capital with a deposit', () => {
+  const result = compoundGrowth({
+    capital: '0', rate: '12', ratePeriod: 'annual', duration: '2', durationUnit: 'months', deposit: '100', frequency: '12',
+  });
+  assert.equal(result.ok, true);
+  assert.ok(result.finalBalance > 200);
+});
+
+test('price position floors to whole shares unless fractional is on', () => {
+  const whole = positionByPrice({
+    balance: '10000', riskMode: 'percent', riskValue: '1', entry: '33', stop: '30', target: '', fractional: false,
+  });
+  assert.equal(whole.quantity, 33);
+  const part = positionByPrice({
+    balance: '10000', riskMode: 'percent', riskValue: '1', entry: '33', stop: '30', target: '', fractional: true,
+  });
+  assert.ok(Math.abs(part.quantity - 100 / 3) < 1e-9);
+});
+
+test('target average ceils to whole shares and reports the new average', () => {
+  const hit = targetAverage({
+    qty: '50', avg: '79.6', price: '105', buyPrice: '50', target: '70', whole: true,
+  });
+  assert.equal(hit.ok, true);
+  assert.equal(hit.needed, 24);
+  close(hit.newAvg, 70);
+  close(hit.neededCost, 1200);
+});
+
+test('sell compare uses whole shares and includes 75 percent', () => {
+  const rows = sellCompare({
+    qty: '50', avg: '79.6', price: '105', sellPrice: '110', whole: true,
+  });
+  assert.equal(rows.length, 4);
+  assert.equal(rows[0].pct, 25);
+  assert.equal(rows[0].sold, 12);
+  assert.equal(rows[2].pct, 75);
+  assert.equal(rows[2].sold, 37);
+  assert.equal(rows[3].sold, 50);
+  close(rows[0].received, 1320);
 });
 
 test('compound growth rejects a span longer than 50 years', () => {

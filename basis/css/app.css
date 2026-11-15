@@ -291,6 +291,12 @@ select::-ms-expand { display: none; }
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: border-color .6s, box-shadow .6s;
+}
+/* Brief mark on a buy added from "Lower my average". */
+.buy.just-added {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .buy-head {
   display: flex;
@@ -531,8 +537,8 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
 .compare { overflow: hidden; }
 .compare .row {
   display: grid;
-  grid-template-columns: 0.7fr 0.7fr 1.1fr 1.1fr;
-  gap: 6px;
+  grid-template-columns: 0.7fr 0.6fr 1.2fr 1.2fr;
+  gap: 10px;
   padding: 10px 12px;
   align-items: baseline;
   width: 100%;
@@ -552,7 +558,10 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
   font-weight: 700;
   cursor: default;
 }
-.compare .row b, .compare .sub { text-align: end; }
+.compare .row:not(.head) { font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+/* justify-self follows the grid's direction (RTL-safe); text-align would follow each LTR number instead. */
+.compare .row > :first-child { justify-self: start; }
+.compare .row > :not(:first-child) { justify-self: end; }
 .compare .sub { color: var(--muted); font-size: 0.75rem; }
 .compare .row.active { background: var(--accent-soft); }
 .compare .row:not(.head):hover { background: var(--surface-2); }
@@ -632,7 +641,7 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
   gap: 10px;
 }
 .keep-card .name { font-weight: 700; font-size: 0.95rem; }
-.keep-card .date { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
+.keep-card .date { color: var(--muted); font-size: 0.78rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .keep-card .figure {
   display: block;
   color: var(--accent-ink);

@@ -8,24 +8,24 @@ const CACHE = `basis-${VERSION}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'خطط خطوتك التالية: خفض المتوسط أو بيع جزء، مع نتيجة قبل وبعد.\u200F',
-    'مشاركة أوضح: معلومة واحدة في كل سطر، وتأكيد الحذف داخل البطاقة.\u200F',
-    'جدول المقارنة داخل أداة البيع فقط.\u200F',
+    'جدول المقارنة أوضح: كل رقم تحت عنوانه.\u200F',
+    'الحسابات المحفوظة: التاريخ والملخص يظهران بالترتيب الصحيح، وتبويب الفائدة المركبة يعمل.\u200F',
+    'خفض المتوسط: سعر الشراء يظهر بشكل صحيح، والشراء المضاف يتميز في القائمة.\u200F',
   ]),
   en: updateNote([
-    'Plan your next move: lower the average or sell part, with before and after.',
-    'Clearer sharing: one fact per line, and delete confirmation on the card.',
-    'The comparison table lives only inside Sell part.',
+    'Clearer comparison table: every number sits under its heading.',
+    'Saved calculations: dates and summaries read correctly, and the Compound tab works.',
+    'Lower the average: the buy price reads correctly, and the added buy is marked in the list.',
   ]),
   es: updateNote([
-    'Planifica el siguiente paso: baja el promedio o vende parte, con antes y después.',
-    'Compartir más claro: un dato por línea, y confirmar el borrado en la tarjeta.',
-    'La tabla de comparación está solo en Vender parte.',
+    'Tabla de comparación más clara: cada número bajo su título.',
+    'Cálculos guardados: fechas y resúmenes se leen bien, y la pestaña de interés compuesto funciona.',
+    'Bajar el promedio: el precio de compra se ve bien, y la compra añadida se marca en la lista.',
   ]),
   pt: updateNote([
-    'Planeje o próximo passo: reduza o médio ou venda parte, com antes e depois.',
-    'Compartilhar mais claro: um fato por linha, e confirmar a exclusão no cartão.',
-    'A tabela de comparação fica só em Vender parte.',
+    'Tabela de comparação mais clara: cada número sob o seu título.',
+    'Cálculos salvos: datas e resumos aparecem corretamente, e a aba de juros compostos funciona.',
+    'Reduzir o médio: o preço de compra aparece corretamente, e a compra adicionada fica marcada na lista.',
   ]),
 };
 

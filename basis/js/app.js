@@ -595,7 +595,7 @@ function paintLower(summary) {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       <span class="to num">${esc(moneyPrice(target.newAvg))}</span>
     </div>
-    <p>${fill('buySharesAt', { q: qty(target.needed), price: moneyPrice(Number(buyPrice)) })}</p>
+    <p>${fill('buySharesAt', { q: `<strong class="num">${qty(target.needed)}</strong>`, price: `<span class="num">${moneyPrice(Number(buyPrice))}</span>` })}</p>
     <div class="facts num">
       <div><span>${t('neededCost')}</span><b>${esc(money(target.neededCost))}</b></div>
       <div><span>${t('sharesAfter')}</span><b>${esc(qty(target.newQty))}</b></div>
@@ -643,7 +643,10 @@ function paintCompare(position) {
     host.innerHTML = '';
     return;
   }
-  const currentPct = Math.round(Number(state.avg.sellPct));
+  // Highlight only when the row truly matches the current input: % in percent mode, share count in qty mode.
+  const byQty = state.avg.sellMode === 'qty';
+  const currentPct = byQty ? NaN : Math.round(Number(state.avg.sellPct));
+  const currentQty = byQty ? Math.floor(Number(state.avg.sellQty)) : NaN;
   host.innerHTML = `<div class="compare">
     <div class="row head">
       <span>${t('comparePercent')}</span>
@@ -652,7 +655,7 @@ function paintCompare(position) {
       <span class="sub">${t('realizedProfit')}</span>
     </div>
     ${rows.map((row) => `
-      <button type="button" class="row${currentPct === row.pct ? ' active' : ''}" data-act="pick-compare" data-pct="${row.pct}">
+      <button type="button" class="row${currentPct === row.pct || currentQty === row.sold ? ' active' : ''}" data-act="pick-compare" data-pct="${row.pct}">
         <span class="num">${row.pct}%</span>
         <span class="num">${qty(row.sold)}</span>
         <span class="num">${money(row.received)}</span>
@@ -993,7 +996,7 @@ function onClick(event) {
   }
   if (act.dataset.act === 'confirm-delete') deleteNamed(act.dataset.id);
   if (act.dataset.act === 'lib-tab') {
-    state.saveTab = act.dataset.tab === 'growth' ? 'growth' : 'avg';
+    state.saveTab = act.dataset.lib === 'growth' ? 'growth' : 'avg';
     pendingDeleteId = null;
     paintLibrary();
   }
@@ -1035,10 +1038,15 @@ function onClick(event) {
     state.avg.rows.push({ price: act.dataset.price || '', qty: act.dataset.qty || '' });
     save();
     appendBuyRow();
-    const input = document.getElementById(`price-${state.avg.rows.length - 1}`);
-    input?.focus({ preventScroll: true });
-    input?.closest('.buy')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    // The row is already filled, so no focus (no keyboard) and no toast that would cover it:
+    // scroll to the new row and mark it briefly instead.
+    const row = document.getElementById(`price-${state.avg.rows.length - 1}`)?.closest('.buy');
     paint();
+    if (row) {
+      row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      row.classList.add('just-added');
+      setTimeout(() => row.classList.remove('just-added'), 1800);
+    }
   }
   if (act.dataset.act === 'apply-update') applyPendingUpdate();
 }
@@ -1149,23 +1157,34 @@ function savedWhen(ts) {
   }
 }
 
+// Isolate one number inside running text so RTL lines keep it intact.
+function numSpan(value) {
+  return `<span class="num">${esc(value)}</span>`;
+}
+
 function libraryBits(tab, item) {
   if (tab === 'avg') {
     const summary = stockAverage(item.data?.rows || []);
     if (!summary.ok) return { value: '—', sum: '' };
     return {
       value: moneyPrice(summary.average),
-      sum: `${summary.buys} ${t('buys')} · ${qty(summary.totalShares)} ${t('shares')} · ${t('shareCostLabel')} ${money(summary.totalCost)}`,
+      sum: fill('libAvgSum', {
+        buys: numSpan(String(summary.buys)),
+        shares: numSpan(qty(summary.totalShares)),
+        cost: numSpan(money(summary.totalCost)),
+      }),
     };
   }
   const result = compoundGrowth(item.data || {});
   if (!result.ok) return { value: '—', sum: '' };
   const data = item.data || {};
-  const unit = data.durationUnit === 'months' ? t('months') : t('years');
-  const deposit = Number(data.deposit) > 0 ? ` · ${signedMoney(Number(data.deposit))}` : '';
+  const unit = data.durationUnit === 'months' ? t('monthUnit') : t('yearUnit');
+  const deposit = Number(data.deposit) > 0
+    ? ` · ${fill('libDepositSum', { amount: numSpan(money(Number(data.deposit))) })}`
+    : '';
   return {
     value: money(result.finalBalance),
-    sum: `${esc(shown(data.duration))} ${unit} · ${esc(shown(data.rate))}%${deposit}`,
+    sum: fill('libGrowthSum', { duration: numSpan(shown(data.duration)), unit, rate: numSpan(annualRateOf(data)) }) + deposit,
   };
 }
 
@@ -1174,8 +1193,8 @@ function paintLibrary() {
   const list = libraryFor(tab);
   const host = $('#library-list');
   const tabs = `<div class="lib-tabs" role="group">
-    <button type="button" class="chip" data-act="lib-tab" data-tab="avg" aria-pressed="${tab === 'avg' ? 'true' : 'false'}">${t('libAvg')}</button>
-    <button type="button" class="chip" data-act="lib-tab" data-tab="growth" aria-pressed="${tab === 'growth' ? 'true' : 'false'}">${t('libGrowth')}</button>
+    <button type="button" class="chip" data-act="lib-tab" data-lib="avg" aria-pressed="${tab === 'avg' ? 'true' : 'false'}">${t('libAvg')}</button>
+    <button type="button" class="chip" data-act="lib-tab" data-lib="growth" aria-pressed="${tab === 'growth' ? 'true' : 'false'}">${t('libGrowth')}</button>
   </div>`;
   if (!list.length) {
     host.innerHTML = `${tabs}<p class="empty">${t('savedEmpty')}</p>`;
@@ -1185,9 +1204,9 @@ function paintLibrary() {
     const pending = pendingDeleteId === item.id;
     const bits = libraryBits(tab, item);
     return `<article class="keep-card${pending ? ' pending' : ''}">
-      <div class="r1"><span class="name">${esc(item.name)}</span><span class="date num">${esc(savedWhen(item.savedAt))}</span></div>
+      <div class="r1"><span class="name">${esc(item.name)}</span><span class="date">${esc(savedWhen(item.savedAt))}</span></div>
       <div class="figure num">${esc(bits.value)}</div>
-      <div class="sum num">${bits.sum}</div>
+      <div class="sum">${bits.sum}</div>
       ${pending
         ? `<div class="confirm" role="alertdialog" aria-label="${esc(t('deleteSave'))}">
             <span>${esc(fill('deleteNamed', { name: item.name }))}</span>
