@@ -1461,6 +1461,8 @@ function shortVersion(version) {
 function versionLabel(fullVersion) {
   if (!fullVersion) return '';
   const version = shortVersion(fullVersion);
+  // A patch update keeps the visible number, so "update · version 1.3" on 1.3 would only confuse.
+  if (version === shortVersion(APP_VERSION)) return '';
   if (state.lang === 'ar') return ` · الإصدار ${version}`;
   if (state.lang === 'es') return ` · versión ${version}`;
   if (state.lang === 'pt') return ` · versão ${version}`;

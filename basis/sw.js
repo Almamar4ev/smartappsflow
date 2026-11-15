@@ -10,22 +10,22 @@ const CHANGELOG = {
   ar: updateNote([
     'الأرقام الصحيحة تظهر بدون كسور، مثل 70 بدل 70.00.\u200F',
     'الأرقام التي فيها كسر تبقى بخانتين، مثل 79.60.\u200F',
-    'الأسعار الصغيرة والكميات الصغيرة تحتفظ بدقتها.\u200F',
+    'التحديثات صارت تُحمَّل كاملة فور الضغط على تحديث.\u200F',
   ]),
   en: updateNote([
     'Whole numbers show without decimals, like 70 instead of 70.00.',
     'Numbers with a fraction keep two decimals, like 79.60.',
-    'Small prices and small quantities keep their precision.',
+    'Updates now load in full as soon as you tap Update.',
   ]),
   es: updateNote([
     'Los números enteros se muestran sin decimales, como 70 en lugar de 70,00.',
     'Los números con fracción mantienen dos decimales, como 79,60.',
-    'Los precios y cantidades pequeños mantienen su precisión.',
+    'Las actualizaciones ahora se cargan completas al tocar Actualizar.',
   ]),
   pt: updateNote([
     'Números inteiros aparecem sem casas decimais, como 70 em vez de 70,00.',
     'Números com fração mantêm duas casas, como 79,60.',
-    'Preços e quantidades pequenos mantêm a precisão.',
+    'As atualizações agora carregam por completo ao tocar em Atualizar.',
   ]),
 };
 
@@ -49,7 +49,9 @@ const CORE = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE)));
+  // cache: 'reload' skips the browser HTTP cache (GitHub Pages sends max-age=600); without it a new
+  // version could be packed with the previous version's files and the update would not show.
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(CORE.map((url) => new Request(url, { cache: 'reload' })))));
 });
 
 self.addEventListener('activate', (event) => {
