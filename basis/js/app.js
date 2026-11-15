@@ -154,16 +154,19 @@ function signedMoney(value) {
   return `${sign}${moneyCore(formatNumber(Math.abs(value), { min: 2, max: 2 }))}`;
 }
 
+// Prices: 2 decimals from 1 upward ($29.95); up to 4 below 1, where they matter ($0.4523).
+// Display only: every calculation keeps full precision.
 function price(value) {
-  return formatNumber(value, { min: 2, max: 4 });
+  return formatNumber(value, { min: 2, max: Math.abs(Number(value)) >= 1 ? 2 : 4 });
 }
 
 function moneyPrice(value) {
   return moneyCore(price(value));
 }
 
+// Quantities: whole numbers bare (50), fractions up to 4 decimals (12.5); below 1 up to 8 (0.00125 BTC).
 function qty(value) {
-  return formatNumber(value, { min: 0, max: 4 });
+  return formatNumber(value, { min: 0, max: Math.abs(Number(value)) >= 1 ? 4 : 8 });
 }
 
 function pct(value) {

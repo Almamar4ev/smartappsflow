@@ -8,24 +8,24 @@ const CACHE = `basis-${VERSION}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'جدول المقارنة أوضح: كل رقم تحت عنوانه.\u200F',
-    'الحسابات المحفوظة: التاريخ والملخص يظهران بالترتيب الصحيح، وتبويب الفائدة المركبة يعمل.\u200F',
-    'خفض المتوسط: سعر الشراء يظهر بشكل صحيح، والشراء المضاف يتميز في القائمة.\u200F',
+    'الأسعار والمتوسط بخانتين عشريتين، مثل 29.95.\u200F',
+    'الأسعار والكميات الأقل من 1 تحتفظ بدقتها، مثل 0.4523 و0.00125.\u200F',
+    'الحسابات نفسها لم تتغير، والتقريب في العرض فقط.\u200F',
   ]),
   en: updateNote([
-    'Clearer comparison table: every number sits under its heading.',
-    'Saved calculations: dates and summaries read correctly, and the Compound tab works.',
-    'Lower the average: the buy price reads correctly, and the added buy is marked in the list.',
+    'Prices and the average show two decimals, like 29.95.',
+    'Prices and quantities below 1 keep their precision, like 0.4523 and 0.00125.',
+    'The math is unchanged: rounding is for display only.',
   ]),
   es: updateNote([
-    'Tabla de comparación más clara: cada número bajo su título.',
-    'Cálculos guardados: fechas y resúmenes se leen bien, y la pestaña de interés compuesto funciona.',
-    'Bajar el promedio: el precio de compra se ve bien, y la compra añadida se marca en la lista.',
+    'Los precios y el promedio muestran dos decimales, como 29,95.',
+    'Los precios y cantidades por debajo de 1 mantienen su precisión, como 0,4523 y 0,00125.',
+    'Los cálculos no cambian: el redondeo es solo visual.',
   ]),
   pt: updateNote([
-    'Tabela de comparação mais clara: cada número sob o seu título.',
-    'Cálculos salvos: datas e resumos aparecem corretamente, e a aba de juros compostos funciona.',
-    'Reduzir o médio: o preço de compra aparece corretamente, e a compra adicionada fica marcada na lista.',
+    'Preços e o médio mostram duas casas decimais, como 29,95.',
+    'Preços e quantidades abaixo de 1 mantêm a precisão, como 0,4523 e 0,00125.',
+    'As contas não mudam: o arredondamento é só na exibição.',
   ]),
 };
 
