@@ -8,24 +8,24 @@ const CACHE = `basis-${VERSION}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'الأسعار والمتوسط بخانتين عشريتين، مثل 29.95.\u200F',
-    'الأسعار والكميات الأقل من 1 تحتفظ بدقتها، مثل 0.4523 و0.00125.\u200F',
-    'الحسابات نفسها لم تتغير، والتقريب في العرض فقط.\u200F',
+    'الأرقام الصحيحة تظهر بدون كسور، مثل 70 بدل 70.00.\u200F',
+    'الأرقام التي فيها كسر تبقى بخانتين، مثل 79.60.\u200F',
+    'الأسعار الصغيرة والكميات الصغيرة تحتفظ بدقتها.\u200F',
   ]),
   en: updateNote([
-    'Prices and the average show two decimals, like 29.95.',
-    'Prices and quantities below 1 keep their precision, like 0.4523 and 0.00125.',
-    'The math is unchanged: rounding is for display only.',
+    'Whole numbers show without decimals, like 70 instead of 70.00.',
+    'Numbers with a fraction keep two decimals, like 79.60.',
+    'Small prices and small quantities keep their precision.',
   ]),
   es: updateNote([
-    'Los precios y el promedio muestran dos decimales, como 29,95.',
-    'Los precios y cantidades por debajo de 1 mantienen su precisión, como 0,4523 y 0,00125.',
-    'Los cálculos no cambian: el redondeo es solo visual.',
+    'Los números enteros se muestran sin decimales, como 70 en lugar de 70,00.',
+    'Los números con fracción mantienen dos decimales, como 79,60.',
+    'Los precios y cantidades pequeños mantienen su precisión.',
   ]),
   pt: updateNote([
-    'Preços e o médio mostram duas casas decimais, como 29,95.',
-    'Preços e quantidades abaixo de 1 mantêm a precisão, como 0,4523 e 0,00125.',
-    'As contas não mudam: o arredondamento é só na exibição.',
+    'Números inteiros aparecem sem casas decimais, como 70 em vez de 70,00.',
+    'Números com fração mantêm duas casas, como 79,60.',
+    'Preços e quantidades pequenos mantêm a precisão.',
   ]),
 };
 

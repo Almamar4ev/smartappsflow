@@ -144,20 +144,27 @@ function moneyCore(body) {
   return currency.after ? `${body} ${currency.symbol}` : `${currency.symbol}${body}`;
 }
 
+// Whole at the shown precision → no decimals ($77, +50%); otherwise at least 2 ($364.80, never $364.8).
+function fractionDigits(value, max) {
+  const scale = 10 ** max;
+  const whole = Number.isInteger(Math.round(Math.abs(Number(value)) * scale) / scale);
+  return whole ? { min: 0, max: 0 } : { min: 2, max };
+}
+
 function money(value) {
   const negative = value < 0;
-  return `${negative ? '−' : ''}${moneyCore(formatNumber(Math.abs(value), { min: 2, max: 2 }))}`;
+  return `${negative ? '−' : ''}${moneyCore(formatNumber(Math.abs(value), fractionDigits(value, 2)))}`;
 }
 
 function signedMoney(value) {
   const sign = value > 0 ? '+' : value < 0 ? '−' : '';
-  return `${sign}${moneyCore(formatNumber(Math.abs(value), { min: 2, max: 2 }))}`;
+  return `${sign}${moneyCore(formatNumber(Math.abs(value), fractionDigits(value, 2)))}`;
 }
 
 // Prices: 2 decimals from 1 upward ($29.95); up to 4 below 1, where they matter ($0.4523).
-// Display only: every calculation keeps full precision.
+// Whole prices drop the decimals ($70). Display only: every calculation keeps full precision.
 function price(value) {
-  return formatNumber(value, { min: 2, max: Math.abs(Number(value)) >= 1 ? 2 : 4 });
+  return formatNumber(value, fractionDigits(value, Math.abs(Number(value)) >= 1 ? 2 : 4));
 }
 
 function moneyPrice(value) {
@@ -171,11 +178,11 @@ function qty(value) {
 
 function pct(value) {
   const sign = value > 0 ? '+' : value < 0 ? '−' : '';
-  return `${sign}${formatNumber(Math.abs(value), { min: 2, max: 2 })}%`;
+  return `${sign}${formatNumber(Math.abs(value), fractionDigits(value, 2))}%`;
 }
 
 function plainPct(value) {
-  return `${formatNumber(value, { min: 2, max: 2 })}%`;
+  return `${formatNumber(value, fractionDigits(value, 2))}%`;
 }
 
 function themeColor() {
@@ -218,7 +225,7 @@ function applyChrome() {
   $('#lang').value = state.lang;
   $('#currency').value = state.currency;
   const version = $('#version-label');
-  if (version) version.textContent = fill('versionName', { v: APP_VERSION });
+  if (version) version.textContent = fill('versionName', { v: shortVersion(APP_VERSION) });
   syncThemeButtons();
   renderNav();
   paintUpdateUI();
@@ -721,7 +728,7 @@ function paintPosition(answerHost, detail) {
   const blocks = [];
   if (result.riskPct > 10) blocks.push(`<p class="note warn">${t('highRisk')}</p>`);
   if (result.capped) blocks.push(`<p class="note warn">${fill('capped', { risk: money(result.actualRisk), asked: money(result.requestedRisk) })}</p>`);
-  if (result.needsLeverage) blocks.push(`<p class="note info">${fill('marginNote', { lev: `${formatNumber(result.leverage, { min: 2, max: 2 })}x` })}</p>`);
+  if (result.needsLeverage) blocks.push(`<p class="note info">${fill('marginNote', { lev: `${formatNumber(result.leverage, fractionDigits(result.leverage, 2))}x` })}</p>`);
   const primary = shareMode
     ? [
       { label: t('positionValue'), value: money(result.position) },
@@ -734,7 +741,7 @@ function paintPosition(answerHost, detail) {
       { label: t('pctOfBalance'), value: plainPct(result.pctOfBalance) },
       { label: t('totalRisk'), value: money(result.actualRisk), tone: 'loss' },
     ];
-  if (result.margin) primary.push({ label: t('leverage'), value: `${formatNumber(result.leverage, { min: 2, max: 2 })}x` });
+  if (result.margin) primary.push({ label: t('leverage'), value: `${formatNumber(result.leverage, fractionDigits(result.leverage, 2))}x` });
   blocks.push(stats(primary));
   if (shareMode) {
     blocks.push(`<p class="note">${fill('stopNote', { money: `<span class="num">${money(result.riskPerShare)}</span>`, pct: `<span class="num">${plainPct(result.stopPct)}</span>` })}</p>`);
@@ -743,7 +750,7 @@ function paintPosition(answerHost, detail) {
     blocks.push(stats([
       ...(shareMode ? [{ label: t('targetGap'), value: money(result.rewardPerShare) }] : []),
       { label: t('totalReward'), value: money(result.reward), tone: 'gain' },
-      { label: t('riskReward'), value: `1 : ${formatNumber(result.rr, { min: 2, max: 2 })}` },
+      { label: t('riskReward'), value: `1 : ${formatNumber(result.rr, fractionDigits(result.rr, 2))}` },
     ]));
     const win = result.balance + result.reward;
     const lose = result.balance - result.actualRisk;
@@ -1446,8 +1453,14 @@ function changelogText(cl) {
   return cl[state.lang] || cl.en || cl.ar || t('updateGeneric');
 }
 
-function versionLabel(version) {
-  if (!version) return '';
+// Users see major.minor only (1.3.3 → 1.3); the full number stays internal so the SW still updates.
+function shortVersion(version) {
+  return String(version || '').split('.').slice(0, 2).join('.');
+}
+
+function versionLabel(fullVersion) {
+  if (!fullVersion) return '';
+  const version = shortVersion(fullVersion);
   if (state.lang === 'ar') return ` · الإصدار ${version}`;
   if (state.lang === 'es') return ` · versión ${version}`;
   if (state.lang === 'pt') return ` · versão ${version}`;
