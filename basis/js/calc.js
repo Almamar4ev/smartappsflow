@@ -55,18 +55,29 @@ export function liveFormat(display, lang = 'en') {
   text = text.replaceAll('٬', '').replaceAll(group, '');
   text = text.replaceAll('٫', decimal);
   const pieces = text.split(decimal);
-  // Leading zeros go ("00012" → "12"), but one zero stays so "0." and "0," still type naturally.
-  const intRaw = (pieces[0] || '').replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  // Leading zeros stay while typing (deleting the 6 of "6,019" must leave "019", ready for a new
+  // first digit) but are not grouped, so "00012" never reads "00,012". tidyNumber() drops them on blur.
+  const intRaw = (pieces[0] || '').replace(/\D/g, '');
   const typedDecimal = pieces.length > 1;
   const frac = typedDecimal ? pieces.slice(1).join('').replace(/\D/g, '') : '';
   if (!intRaw && !typedDecimal && !neg) return { canonical: '', display: '' };
-  const grouped = intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, group);
+  const zeros = intRaw.length > 1 ? intRaw.match(/^0*(?=\d)/)[0] : '';
+  const body = intRaw.slice(zeros.length);
+  const grouped = zeros + body.replace(/\B(?=(\d{3})+(?!\d))/g, group);
   let shown = (neg ? '-' : '') + grouped;
   if (typedDecimal) shown += decimal + frac;
   let canonical = (neg ? '-' : '') + (intRaw || (typedDecimal ? '0' : ''));
   if (typedDecimal) canonical += `.${frac}`;
   if (canonical === '-' || canonical === '-0') canonical = neg && !intRaw && !typedDecimal ? '-' : canonical;
   return { canonical, display: shown };
+}
+
+// Canonical number without leading zeros ("00012" → "12", "007.5" → "7.5", "0.5" stays). Used on blur.
+export function tidyNumber(canonical) {
+  const text = String(canonical ?? '');
+  const neg = text.startsWith('-');
+  const body = (neg ? text.slice(1) : text).replace(/^0+(?=\d)/, '');
+  return (neg ? '-' : '') + body;
 }
 
 export function formatInputValue(canonical, lang = 'en') {

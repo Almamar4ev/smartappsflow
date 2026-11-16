@@ -3,29 +3,33 @@
    VERSION comes from js/version.js so the app footer and cache stay in sync. */
 importScripts('./js/version.js');
 const VERSION = self.BASIS_VERSION;
-const CACHE = `basis-${VERSION}`;
+const CACHE = `basis-${VERSION}-b${self.BASIS_BUILD || 0}`;
 
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'تأكيد الحذف أوضح: زر الإلغاء في مكان أيقونة الحذف.\u200F',
-    'الأرقام الصحيحة بدون كسور، مثل 77 بدل 77.00.\u200F',
-    'صيغ الجمع والتواريخ وأسماء الحاسبات موحدة في كل مكان.\u200F',
+    'الكتابة في الحقول أدق: المؤشر يبقى في مكانه عند الحذف والكتابة.\u200F',
+    'زر المشاركة يفتح قائمة المشاركة في الجوال.\u200F',
+    'حجم الصفقة: بطاقة الربح مقابل بطاقة الخسارة.\u200F',
+    'الفائدة المركبة: المس الرسم لترى الرصيد والنمو في أي سنة.\u200F',
   ]),
   en: updateNote([
-    'Safer delete: Cancel now sits where the trash icon was.',
-    'Whole numbers show without decimals, like 77 instead of 77.00.',
-    'Plurals, dates and calculator names are the same everywhere.',
+    'Smoother typing: the cursor stays in place when you delete and type.',
+    'Share opens your phone\'s share menu.',
+    'Trade size: the profit card now faces the loss card.',
+    'Compound growth: touch the chart to see the balance and growth for any year.',
   ]),
   es: updateNote([
-    'Borrado más seguro: Cancelar queda donde estaba la papelera.',
-    'Los números enteros se muestran sin decimales, como 77 en lugar de 77,00.',
-    'Plurales, fechas y nombres de las calculadoras son iguales en todas partes.',
+    'Escritura más fluida: el cursor se queda en su sitio al borrar y escribir.',
+    'Compartir abre el menú de compartir del teléfono.',
+    'Tamaño de la operación: la tarjeta de ganancia queda frente a la de pérdida.',
+    'Interés compuesto: toca el gráfico para ver el saldo y el crecimiento de cualquier año.',
   ]),
   pt: updateNote([
-    'Exclusão mais segura: Cancelar fica onde estava a lixeira.',
-    'Números inteiros aparecem sem casas decimais, como 77 em vez de 77,00.',
-    'Plurais, datas e nomes das calculadoras são iguais em todo lugar.',
+    'Digitação mais suave: o cursor fica no lugar ao apagar e digitar.',
+    'Compartilhar abre o menu de compartilhamento do celular.',
+    'Tamanho da operação: o cartão de lucro fica de frente para o de perda.',
+    'Juros compostos: toque no gráfico para ver o saldo e o crescimento de qualquer ano.',
   ]),
 };
 

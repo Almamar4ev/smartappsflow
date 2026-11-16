@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { stockAverage, averageSell, profitLoss, positionByPercent, positionByPrice, compoundGrowth, positionMark, whatIfBuy, targetAverage, whatIfSell, sellCompare, parseNumber, liveFormat } from '../js/calc.js';
+import { stockAverage, averageSell, profitLoss, positionByPercent, positionByPrice, compoundGrowth, positionMark, whatIfBuy, targetAverage, whatIfSell, sellCompare, parseNumber, liveFormat, tidyNumber } from '../js/calc.js';
 import { STR } from '../js/i18n.js';
 
 function close(actual, expected, eps = 0.01) {
@@ -209,12 +209,17 @@ test('compound growth rejects a span longer than 50 years', () => {
   assert.equal(result.reason, 'range');
 });
 
-test('typing strips leading zeros but keeps a single zero before the decimal', () => {
-  assert.equal(liveFormat('00012', 'en').display, '12');
-  assert.equal(liveFormat('00012', 'en').canonical, '12');
+test('leading zeros stay ungrouped while typing and go away on blur', () => {
+  // Deleting the 6 of "6,019" leaves "019" so the next digit lands in the same place (7 → 7,019).
+  assert.equal(liveFormat('019', 'en').display, '019');
+  assert.equal(liveFormat('7019', 'en').display, '7,019');
+  assert.equal(liveFormat('00012', 'en').display, '00012');
   assert.equal(liveFormat('0.', 'en').display, '0.');
   assert.equal(liveFormat('0,', 'es').display, '0,');
-  assert.equal(liveFormat('0', 'en').display, '0');
+  assert.equal(tidyNumber('00012'), '12');
+  assert.equal(tidyNumber('007.5'), '7.5');
+  assert.equal(tidyNumber('0.5'), '0.5');
+  assert.equal(tidyNumber('0'), '0');
 });
 
 test('selling more shares than owned sells all of them and flags it', () => {

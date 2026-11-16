@@ -1,4 +1,4 @@
-import { stockAverage, profitLoss, positionByPercent, positionByPrice, compoundGrowth, positionMark, targetAverage, whatIfSell, sellCompare, liveFormat, formatInputValue } from './calc.js';
+import { stockAverage, profitLoss, positionByPercent, positionByPrice, compoundGrowth, positionMark, targetAverage, whatIfSell, sellCompare, liveFormat, formatInputValue, tidyNumber, separators } from './calc.js';
 import { translate } from './i18n.js';
 
 const CURRENCIES = {
@@ -297,7 +297,7 @@ function field(id, label, bind, unit, value, placeholder = '0.00') {
   return `<div class="field">
     <label for="${id}">${label}</label>
     <div class="control">
-      <input id="${id}" data-bind="${bind}" data-numeric="1" type="text" inputmode="decimal" autocomplete="off" placeholder="${esc(placeholder)}" value="${esc(shown(value))}">
+      <input id="${id}" data-bind="${bind}" data-numeric="1" type="text" inputmode="decimal" autocomplete="off" placeholder="${esc(placeholder)}" value="${esc(shown(value))}" data-shown="${esc(shown(value))}">
       ${unit ? `<span class="unit" data-unit="${unit}"></span>` : ''}
     </div>
   </div>`;
@@ -781,28 +781,27 @@ function paintPosition(answerHost, detail) {
   if (result.riskPct > 10) blocks.push(`<p class="note warn">${t('highRisk')}</p>`);
   if (result.capped) blocks.push(`<p class="note warn">${fill('capped', { risk: money(result.actualRisk), asked: money(result.requestedRisk) })}</p>`);
   if (result.needsLeverage) blocks.push(`<p class="note info">${fill('marginNote', { lev: `${formatNumber(result.leverage, cents(result.leverage))}x` })}</p>`);
-  const primary = shareMode
-    ? [
-      { label: t('positionValue'), value: money(result.position) },
-      { label: t('pctOfBalance'), value: plainPct(result.pctOfBalance) },
-      { label: t('stopGap'), value: money(result.riskPerShare) },
-      { label: t('totalRisk'), value: money(result.actualRisk), tone: 'loss' },
-    ]
-    : [
-      { label: t('positionValue'), value: money(result.position) },
-      { label: t('pctOfBalance'), value: plainPct(result.pctOfBalance) },
-      { label: t('totalRisk'), value: money(result.actualRisk), tone: 'loss' },
-    ];
+  // With a target, gains face losses in the second grid (reward | risk, target gap | stop gap) and
+  // R:R moves up next to leverage; without a target the risk cards stay in the first grid.
+  const hasTarget = result.rr != null;
+  const stopGap = { label: t('stopGap'), value: money(result.riskPerShare) };
+  const risk = { label: t('totalRisk'), value: money(result.actualRisk), tone: 'loss' };
+  const primary = [
+    { label: t('positionValue'), value: money(result.position) },
+    { label: t('pctOfBalance'), value: plainPct(result.pctOfBalance) },
+  ];
+  if (hasTarget) primary.push({ label: t('riskReward'), value: `1 : ${formatNumber(result.rr, cents(result.rr))}` });
+  else primary.push(...(shareMode ? [stopGap, risk] : [risk]));
   if (result.margin) primary.push({ label: t('leverage'), value: `${formatNumber(result.leverage, cents(result.leverage))}x` });
   blocks.push(stats(primary));
   if (shareMode) {
     blocks.push(`<p class="note">${fill('stopNote', { money: `<span class="num">${money(result.riskPerShare)}</span>`, pct: `<span class="num">${plainPct(result.stopPct)}</span>` })}</p>`);
   }
-  if (result.rr != null) {
+  if (hasTarget) {
     blocks.push(stats([
-      ...(shareMode ? [{ label: t('targetGap'), value: money(result.rewardPerShare) }] : []),
+      ...(shareMode ? [{ label: t('targetGap'), value: money(result.rewardPerShare) }, stopGap] : []),
       { label: t('totalReward'), value: money(result.reward), tone: 'gain' },
-      { label: t('riskReward'), value: `1 : ${formatNumber(result.rr, cents(result.rr))}` },
+      risk,
     ]));
     const win = result.balance + result.reward;
     const lose = result.balance - result.actualRisk;
@@ -838,6 +837,9 @@ function scheduleRows(months) {
   return rows;
 }
 
+// Points the touch cursor can snap to (set by growthChart, read by the chart pointer handlers).
+let chartModel = null;
+
 function growthChart(capital, months) {
   const values = [capital, ...months.map((row) => row.balance)];
   const min = Math.min(...values);
@@ -851,13 +853,118 @@ function growthChart(capital, months) {
     const y = pad + (1 - (value - min) / span) * (h - pad * 2);
     return [x, y];
   });
+  // Snap targets: every year (and the last month) from 2 years up, otherwise every month.
+  const byYear = months.length >= 24;
+  const deposit = months[0]?.deposit || 0;
+  const snaps = [];
+  for (let i = 0; i < values.length; i += 1) {
+    if (byYear && i % 12 !== 0 && i !== values.length - 1) continue;
+    const invested = capital + deposit * i;
+    let label = t('chartStart');
+    if (i > 0) label = byYear && i % 12 === 0 ? fill('yearN', { n: i / 12 }) : fill('monthN', { n: i });
+    snaps.push({ x: coords[i][0] / w, y: coords[i][1] / h, label, balance: values[i], invested, growth: values[i] - invested });
+  }
+  chartModel = { snaps };
+  chartIndex = -1;
   const line = coords.map(([x, y], index) => `${index ? 'L' : 'M'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
   const area = `${line} L${coords.at(-1)[0].toFixed(1)},${h - pad} L${coords[0][0].toFixed(1)},${h - pad} Z`;
-  return `<svg class="chart" viewBox="0 0 ${w} ${h}" role="img" aria-label="${t('chartTitle')}">
-    <path class="area" d="${area}"></path>
-    <path class="line" d="${line}"></path>
-  </svg>
-  <div class="chart-scale"><span class="num">${growthMoney(capital)}</span><span class="num">${growthMoney(values.at(-1))}</span></div>`;
+  return `<div class="chart-wrap" tabindex="0" dir="ltr" aria-label="${esc(t('chartHint'))}">
+    <div class="chart-band" dir="${state.lang === 'ar' ? 'rtl' : 'ltr'}">
+      <p class="chart-hint">${t('chartHint')}</p>
+      <div class="chart-tip" hidden>
+        <span class="tip-label"></span>
+        <b class="tip-balance num"></b>
+        <span class="tip-row"><span class="tip-key"></span> <span class="tip-growth num"></span></span>
+        <span class="tip-row"><span class="tip-key"></span> <span class="tip-invested num"></span></span>
+      </div>
+    </div>
+    <svg class="chart" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="${t('chartTitle')}">
+      <path class="area" d="${area}"></path>
+      <path class="line" d="${line}"></path>
+    </svg>
+    <i class="chart-cursor" hidden></i>
+    <i class="chart-dot" hidden></i>
+  </div>
+  <div class="chart-scale" dir="ltr"><span class="num">${growthMoney(capital)}</span><span class="num">${growthMoney(values.at(-1))}</span></div>`;
+}
+
+// Touch / mouse / keyboard cursor on the growth chart. One rAF per frame, no re-render:
+// it only moves three absolutely positioned elements and swaps text.
+let chartFrame = 0;
+let chartIndex = -1;
+
+function showChartPoint(wrap, index) {
+  const snaps = chartModel?.snaps;
+  if (!snaps?.length) return;
+  const i = Math.max(0, Math.min(snaps.length - 1, index));
+  chartIndex = i;
+  const p = snaps[i];
+  const svg = wrap.querySelector('.chart');
+  const width = svg.clientWidth;
+  const height = svg.clientHeight;
+  // SVG elements have no offsetTop; measure the plot against the wrapper instead.
+  const top = svg.getBoundingClientRect().top - wrap.getBoundingClientRect().top;
+  const x = p.x * width;
+  const cursor = wrap.querySelector('.chart-cursor');
+  const dot = wrap.querySelector('.chart-dot');
+  const tip = wrap.querySelector('.chart-tip');
+  cursor.hidden = false;
+  dot.hidden = false;
+  tip.hidden = false;
+  wrap.querySelector('.chart-hint').hidden = true;
+  cursor.style.transform = `translate(${x}px, ${top}px)`;
+  cursor.style.height = `${height}px`;
+  dot.style.transform = `translate(${x}px, ${top + p.y * height}px)`;
+  tip.querySelector('.tip-label').textContent = p.label;
+  tip.querySelector('.tip-balance').textContent = growthMoney(p.balance);
+  const keys = tip.querySelectorAll('.tip-key');
+  keys[0].textContent = t('chartGrowth');
+  keys[1].textContent = t('chartInvested');
+  tip.querySelector('.tip-growth').textContent = signedGrowthMoney(p.growth);
+  tip.querySelector('.tip-invested').textContent = growthMoney(p.invested);
+  // The readout follows the finger inside the band above the plot, clamped to the card.
+  const tipWidth = tip.offsetWidth;
+  const left = Math.max(0, Math.min(width - tipWidth, x - tipWidth / 2));
+  tip.style.transform = `translateX(${left}px)`;
+}
+
+function chartIndexAt(wrap, clientX) {
+  const snaps = chartModel?.snaps;
+  if (!snaps?.length) return -1;
+  const rect = wrap.getBoundingClientRect();
+  const fraction = (clientX - rect.left) / rect.width;
+  let best = 0;
+  for (let i = 1; i < snaps.length; i += 1) {
+    if (Math.abs(snaps[i].x - fraction) < Math.abs(snaps[best].x - fraction)) best = i;
+  }
+  return best;
+}
+
+function onChartPointer(event) {
+  const wrap = event.target.closest?.('.chart-wrap');
+  if (!wrap) return;
+  if (event.type === 'pointerdown') {
+    try { wrap.setPointerCapture(event.pointerId); } catch {}
+  } else if (event.type === 'pointermove' && event.pointerType !== 'mouse' && !wrap.hasPointerCapture?.(event.pointerId)) {
+    return;
+  }
+  const clientX = event.clientX;
+  cancelAnimationFrame(chartFrame);
+  chartFrame = requestAnimationFrame(() => {
+    const index = chartIndexAt(wrap, clientX);
+    if (index >= 0 && index !== chartIndex) showChartPoint(wrap, index);
+    else if (index >= 0 && wrap.querySelector('.chart-tip').hidden) showChartPoint(wrap, index);
+  });
+}
+
+function onChartKey(event) {
+  const wrap = event.target.closest?.('.chart-wrap');
+  if (!wrap || !chartModel) return;
+  const last = chartModel.snaps.length - 1;
+  const moves = { ArrowRight: chartIndex + 1, ArrowLeft: chartIndex - 1, Home: 0, End: last };
+  if (!(event.key in moves)) return;
+  event.preventDefault();
+  showChartPoint(wrap, chartIndex < 0 && event.key.startsWith('Arrow') ? last : moves[event.key]);
 }
 
 function compositionDonut(result) {
@@ -936,11 +1043,16 @@ function readBind(bind, value) {
   state[parts[0]][parts[1]] = value;
 }
 
+// Caret mapping while a number is reformatted: only characters that survive formatting count —
+// digits, the decimal mark of the current language and a minus sign. Thousands separators come and go
+// (6,000 → 600), so counting them moved the caret one place off.
+function keeps(ch) {
+  return /[\d٠-٩۰-۹٫-]/.test(ch) || ch === separators(state.lang).decimal;
+}
+
 function significantCount(text, end) {
   let count = 0;
-  for (let i = 0; i < end && i < text.length; i += 1) {
-    if (/\d|[.,٫]/.test(text[i])) count += 1;
-  }
+  for (let i = 0; i < end && i < text.length; i += 1) if (keeps(text[i])) count += 1;
   return count;
 }
 
@@ -948,7 +1060,7 @@ function caretFromCount(text, count) {
   if (count <= 0) return 0;
   let seen = 0;
   for (let i = 0; i < text.length; i += 1) {
-    if (/\d|[.,٫]/.test(text[i])) {
+    if (keeps(text[i])) {
       seen += 1;
       if (seen >= count) return i + 1;
     }
@@ -956,21 +1068,45 @@ function caretFromCount(text, count) {
   return text.length;
 }
 
+function keptOnly(text) {
+  return [...String(text)].filter(keeps).join('');
+}
+
 function onField(event) {
   const el = event.target;
   if (!el.dataset || !el.dataset.bind) return;
   if (el.dataset.numeric && event.type === 'input') {
-    const start = el.selectionStart ?? el.value.length;
-    const marked = significantCount(el.value, start);
-    const next = liveFormat(el.value, state.lang);
-    readBind(el.dataset.bind, next.canonical);
-    if (el.value !== next.display) {
-      el.value = next.display;
-      const pos = caretFromCount(next.display, marked);
-      try { el.setSelectionRange(pos, pos); } catch (err) {}
+    let raw = el.value;
+    let start = el.selectionStart ?? raw.length;
+    // Backspace/Delete that only removed a thousands separator would be undone by reformatting;
+    // remove the digit next to it instead, like a normal text field.
+    const prev = el.dataset.shown ?? raw;
+    if (raw.length < prev.length && keptOnly(raw) === keptOnly(prev)) {
+      if (event.inputType === 'deleteContentBackward') {
+        let i = start - 1;
+        while (i >= 0 && !keeps(raw[i])) i -= 1;
+        if (i >= 0) { raw = raw.slice(0, i) + raw.slice(i + 1); start = i; }
+      } else if (event.inputType === 'deleteContentForward') {
+        let i = start;
+        while (i < raw.length && !keeps(raw[i])) i += 1;
+        if (i < raw.length) raw = raw.slice(0, i) + raw.slice(i + 1);
+      }
     }
-  } else if (!el.dataset.numeric || event.type === 'change') {
-    readBind(el.dataset.bind, el.dataset.numeric ? liveFormat(el.value, state.lang).canonical : el.value);
+    const marked = significantCount(raw, start);
+    const next = liveFormat(raw, state.lang);
+    readBind(el.dataset.bind, next.canonical);
+    if (el.value !== next.display) el.value = next.display;
+    const pos = caretFromCount(next.display, marked);
+    try { el.setSelectionRange(pos, pos); } catch (err) {}
+    el.dataset.shown = next.display;
+  } else if (el.dataset.numeric && event.type === 'change') {
+    // Leaving the field: drop leading zeros ("00012" → "12").
+    const canonical = tidyNumber(liveFormat(el.value, state.lang).canonical);
+    readBind(el.dataset.bind, canonical);
+    el.value = formatInputValue(canonical, state.lang);
+    el.dataset.shown = el.value;
+  } else if (!el.dataset.numeric) {
+    readBind(el.dataset.bind, el.value);
   } else {
     return;
   }
@@ -1094,7 +1230,7 @@ function onClick(event) {
       button.setAttribute('aria-pressed', String(button.dataset.value === 'pct'));
     });
     const input = $('#sell-pct');
-    if (input) input.value = shown(state.avg.sellPct);
+    if (input) { input.value = shown(state.avg.sellPct); input.dataset.shown = input.value; }
     paint();
   }
   if (act.dataset.act === 'add-as-buy') {
@@ -1342,6 +1478,11 @@ function platformLabel() {
   }
 }
 
+function systemShowsCopied() {
+  const match = /Android (\d+)/.exec(navigator.userAgent || '');
+  return Boolean(match && Number(match[1]) >= 13);
+}
+
 async function sharePlain(text, copiedKey = 'shareCopied') {
   const title = t('appName');
   try {
@@ -1359,7 +1500,8 @@ async function sharePlain(text, copiedKey = 'shareCopied') {
   }
   try {
     await navigator.clipboard.writeText(text);
-    toast(t(copiedKey));
+    // Android 13+ shows its own "Copied" bubble; a second toast would sit under it.
+    if (!systemShowsCopied()) toast(t(copiedKey));
   } catch {
     toast(text);
   }
@@ -1473,6 +1615,9 @@ function boot() {
   renderMain();
   if (state.tab === 'avg') paintRows();
   $('#app').addEventListener('input', onField);
+  $('#app').addEventListener('pointerdown', onChartPointer);
+  $('#app').addEventListener('pointermove', onChartPointer, { passive: true });
+  $('#app').addEventListener('keydown', onChartKey);
   $('#app').addEventListener('change', onField);
   $('#app').addEventListener('click', onClick);
   $('#settings-open').addEventListener('click', () => {
