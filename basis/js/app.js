@@ -18,11 +18,13 @@ const LIBRARY_CAP = 30;
 const FEEDBACK_EMAIL = 'smartappsflow@gmail.com';
 const WEB_URL = 'https://smartappsflow.net/basis/';
 const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.smartapps.basis';
-const APP_VERSION = (typeof self !== 'undefined' && self.BASIS_VERSION) ? self.BASIS_VERSION : '1.3';
+const APP_VERSION = (typeof self !== 'undefined' && self.BASIS_VERSION) ? self.BASIS_VERSION : '1.0';
 const LTR = '\u2066';
 const PDF = '\u2069';
 let toastTimer = 0;
 let pendingDeleteId = null;
+let pendingDeleteAt = 0;
+let saveSuggestion = '';
 let pendingWorker = null;
 let pendingInfo = null;
 let bannerDismissed = false;
@@ -144,27 +146,70 @@ function moneyCore(body) {
   return currency.after ? `${body} ${currency.symbol}` : `${currency.symbol}${body}`;
 }
 
-// Whole at the shown precision → no decimals ($77, +50%); otherwise at least 2 ($364.80, never $364.8).
-function fractionDigits(value, max) {
-  const scale = 10 ** max;
-  const whole = Number.isInteger(Math.round(Math.abs(Number(value)) * scale) / scale);
-  return whole ? { min: 0, max: 0 } : { min: 2, max };
+// Display rules (owner's decision, 1.0). Every calculation keeps full precision.
+//   money / prices >= 1 / averages / percents : whole → no decimals ($77, +50%); otherwise 2 ($79.60, +38.19%)
+//   prices below 1                            : 4 significant digits ($0.4523, $0.00001234), at least 2 decimals
+//   quantities                                : bare when whole, precise when fractional (qty)
+//   Compound calculator                       : whole money everywhere (growthMoney) — long-range estimates
+const TWO = { min: 2, max: 2 };
+
+// Whole once rounded to cents → no decimals; otherwise exactly 2 ($364.80, never $364.8).
+function cents(value) {
+  return Number.isInteger(Math.round(Math.abs(Number(value)) * 100) / 100) ? { min: 0, max: 0 } : TWO;
 }
 
 function money(value) {
   const negative = value < 0;
-  return `${negative ? '−' : ''}${moneyCore(formatNumber(Math.abs(value), fractionDigits(value, 2)))}`;
+  return `${negative ? '−' : ''}${moneyCore(formatNumber(Math.abs(value), cents(value)))}`;
 }
 
 function signedMoney(value) {
   const sign = value > 0 ? '+' : value < 0 ? '−' : '';
-  return `${sign}${moneyCore(formatNumber(Math.abs(value), fractionDigits(value, 2)))}`;
+  return `${sign}${moneyCore(formatNumber(Math.abs(value), cents(value)))}`;
 }
 
-// Prices: 2 decimals from 1 upward ($29.95); up to 4 below 1, where they matter ($0.4523).
-// Whole prices drop the decimals ($70). Display only: every calculation keeps full precision.
+function growthMoney(value) {
+  const rounded = Math.round(Number(value));
+  return `${rounded < 0 ? '−' : ''}${moneyCore(formatNumber(Math.abs(rounded), { min: 0, max: 0 }))}`;
+}
+
+function signedGrowthMoney(value) {
+  const rounded = Math.round(Number(value));
+  const sign = rounded > 0 ? '+' : rounded < 0 ? '−' : '';
+  return `${sign}${moneyCore(formatNumber(Math.abs(rounded), { min: 0, max: 0 }))}`;
+}
+
 function price(value) {
-  return formatNumber(value, fractionDigits(value, Math.abs(Number(value)) >= 1 ? 2 : 4));
+  const n = Number(value);
+  if (!(Math.abs(n) < 1) || n === 0) return formatNumber(n, cents(n));
+  const sig = Number(n).toLocaleString(localeTag(), { maximumSignificantDigits: 4 });
+  const decimals = (sig.split(/[.,]/)[1] || '').length;
+  return decimals >= 2 ? sig : formatNumber(n, TWO);
+}
+
+// Count + unit with real plural forms (Intl.PluralRules). Arabic: سنة واحدة · سنتان · 3 سنوات · 11 سنة.
+const UNIT_FORMS = {
+  en: { years: { one: '{n} year', other: '{n} years' }, months: { one: '{n} month', other: '{n} months' } },
+  es: { years: { one: '{n} año', other: '{n} años' }, months: { one: '{n} mes', other: '{n} meses' } },
+  pt: { years: { one: '{n} ano', other: '{n} anos' }, months: { one: '{n} mês', other: '{n} meses' } },
+  ar: {
+    years: { one: 'سنة واحدة', two: 'سنتان', few: '{n} سنوات', many: '{n} سنة', other: '{n} سنة' },
+    months: { one: 'شهر واحد', two: 'شهران', few: '{n} أشهر', many: '{n} شهرا', other: '{n} شهر' },
+    shares: { one: 'سهم واحد', two: 'سهمان', few: '{n} أسهم', many: '{n} سهما', other: '{n} سهم' },
+  },
+};
+UNIT_FORMS.en.shares = { one: '{n} share', other: '{n} shares' };
+UNIT_FORMS.es.shares = { one: '{n} acción', other: '{n} acciones' };
+UNIT_FORMS.pt.shares = { one: '{n} ação', other: '{n} ações' };
+
+function countUnit(count, unit, wrap = (s) => s) {
+  const n = Number(count);
+  const table = UNIT_FORMS[state.lang] || UNIT_FORMS.en;
+  const forms = table[unit] || table.years;
+  let category = 'other';
+  try { category = new Intl.PluralRules(state.lang).select(n); } catch {}
+  const form = forms[category] || forms.other;
+  return form.replace('{n}', wrap(formatInputValue(String(count), state.lang)));
 }
 
 function moneyPrice(value) {
@@ -178,11 +223,11 @@ function qty(value) {
 
 function pct(value) {
   const sign = value > 0 ? '+' : value < 0 ? '−' : '';
-  return `${sign}${formatNumber(Math.abs(value), fractionDigits(value, 2))}%`;
+  return `${sign}${formatNumber(Math.abs(value), cents(value))}%`;
 }
 
 function plainPct(value) {
-  return `${formatNumber(value, fractionDigits(value, 2))}%`;
+  return `${formatNumber(value, cents(value))}%`;
 }
 
 function themeColor() {
@@ -217,7 +262,6 @@ function applyChrome() {
   $('#save-title').textContent = t('saveCalc');
   $('#save-close').setAttribute('aria-label', t('close'));
   $('#save-name-label').textContent = t('saveName');
-  $('#save-name').placeholder = t('saveNamePh');
   $('#save-name-hint').textContent = t('saveNameHint');
   $('#save-confirm').textContent = t('save');
   $('#library-title').textContent = t('savedCalcs');
@@ -225,7 +269,7 @@ function applyChrome() {
   $('#lang').value = state.lang;
   $('#currency').value = state.currency;
   const version = $('#version-label');
-  if (version) version.textContent = fill('versionName', { v: shortVersion(APP_VERSION) });
+  if (version) version.textContent = fill('versionName', { v: APP_VERSION });
   syncThemeButtons();
   renderNav();
   paintUpdateUI();
@@ -306,7 +350,7 @@ function viewAverage() {
             ${segment('avg.sellMode', [{ value: 'pct', label: t('sellByPct') }, { value: 'qty', label: t('sellByQty') }])}
             <div class="grid-2">
               <div id="sell-pct-wrap" ${byPct ? '' : 'hidden'}>${field('sell-pct', t('sellPct'), 'avg.sellPct', 'percent', state.avg.sellPct)}</div>
-              <div id="sell-qty-wrap" ${byPct ? 'hidden' : ''}>${field('sell-qty', t('shares'), 'avg.sellQty', '', state.avg.sellQty)}</div>
+              <div id="sell-qty-wrap" ${byPct ? 'hidden' : ''}>${field('sell-qty', t('shares'), 'avg.sellQty', '', state.avg.sellQty, '0')}</div>
               ${field('sell-price', t('sellPrice'), 'avg.sellPrice', 'currency', state.avg.sellPrice)}
             </div>
             <div id="sell-out"></div>
@@ -328,7 +372,7 @@ function viewPnl() {
         ${field('entry', t('entry'), 'pnl.entry', 'currency', state.pnl.entry)}
         ${field('exit', t('exit'), 'pnl.exit', 'currency', state.pnl.exit)}
       </div>
-      ${field('qty', t('qty'), 'pnl.qty', '', state.pnl.qty)}
+      ${field('qty', t('qty'), 'pnl.qty', '', state.pnl.qty, '0')}
       <p class="hint">${t('feesNote')}</p>
       <section class="answer" id="answer"></section>
       <div id="detail"></div>
@@ -439,7 +483,7 @@ function keepPreview(tab = state.saveTab || state.tab) {
     return summary.ok ? `${t('avgPrice')} · ${moneyPrice(summary.average)}` : t('needBuy');
   }
   const result = compoundGrowth(state.growth);
-  return result.ok ? `${t('finalBalance')} · ${money(result.finalBalance)}` : t('waiting');
+  return result.ok ? `${t('finalBalance')} · ${growthMoney(result.finalBalance)}` : t('waiting');
 }
 
 function buyRowHtml(row, index) {
@@ -452,7 +496,7 @@ function buyRowHtml(row, index) {
       </div>
       <div class="grid-2">
         ${field(`price-${index}`, t('price'), `avg.row.${index}.price`, 'currency', row.price)}
-        ${field(`qty-${index}`, t('shares'), `avg.row.${index}.qty`, '', row.qty)}
+        ${field(`qty-${index}`, t('shares'), `avg.row.${index}.qty`, '', row.qty, '0')}
       </div>
     </div>`;
 }
@@ -546,9 +590,15 @@ function paint() {
 function paintAverage(answerHost, snapshot) {
   const summary = stockAverage(state.avg.rows);
   const plan = $('#plan');
+  // Placeholders for the buy/sell price fields follow the current price when there is one.
+  const currentShown = Number(state.avg.current) > 0 ? shown(state.avg.current) : '0.00';
+  ['#buy-price', '#sell-price'].forEach((sel) => { const el = $(sel); if (el) el.placeholder = currentShown; });
   if (!summary.ok) {
-    answer(answerHost, { ready: false, prompt: t('needBuy') });
-    snapshot.innerHTML = '';
+    // Same shape as a real result ("—" placeholders) so the buy rows do not jump when the first result appears.
+    answer(answerHost, { ready: true, kicker: t('avgPrice'), value: '—' });
+    answerHost.classList.add('pending');
+    snapshot.innerHTML = `<div class="totals num">${[t('shares'), t('shareCostLabel'), t('buys')].map((label) => `
+    <div><span>${label}</span><b>—</b></div>`).join('')}</div>`;
     if (plan) plan.hidden = true;
     return;
   }
@@ -605,11 +655,12 @@ function paintLower(summary) {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       <span class="to num">${esc(moneyPrice(target.newAvg))}</span>
     </div>
-    <p>${fill('buySharesAt', { q: `<strong class="num">${qty(target.needed)}</strong>`, price: `<span class="num">${moneyPrice(Number(buyPrice))}</span>` })}</p>
+    <p>${fill('buySharesAt', { q: countUnit(target.needed, 'shares', (n) => `<strong class="num">${n}</strong>`), price: `<span class="num">${moneyPrice(Number(buyPrice))}</span>` })}</p>
     <div class="facts num">
       <div><span>${t('neededCost')}</span><b>${esc(money(target.neededCost))}</b></div>
       <div><span>${t('sharesAfter')}</span><b>${esc(qty(target.newQty))}</b></div>
     </div>
+    ${target.belowTarget ? `<p class="plan-note">${t('wholeSharesBelow')}</p>` : ''}
     <button type="button" class="ghost" data-act="add-as-buy" data-price="${esc(buyPrice)}" data-qty="${esc(String(target.needed))}">${t('addAsBuy')}</button>
   </div>`;
 }
@@ -634,7 +685,8 @@ function paintSell(summary) {
     const tone = sold.realized >= 0 ? 'gain' : 'loss';
     const sellPx = Number(state.avg.sellPrice) > 0 ? Number(state.avg.sellPrice) : Number(state.avg.current);
     host.innerHTML = `<div class="result-card">
-      <p>${fill('sellResult', { q: `<span class="num">${qty(sold.sold)}</span>`, price: `<span class="num">${moneyPrice(sellPx)}</span>`, pnl: `<strong class="num ${tone}">${signedMoney(sold.realized)}</strong>` })}</p>
+      <p>${fill('sellResult', { q: countUnit(sold.sold, 'shares', numSpan), price: `<span class="num">${moneyPrice(sellPx)}</span>`, pnl: `<strong class="num ${tone}">${signedMoney(sold.realized)}</strong>` })}</p>
+      ${sold.capped ? `<p class="plan-note">${fill('sellQtyCap', { shares: countUnit(summary.totalShares, 'shares', numSpan) })}</p>` : ''}
       <div class="facts num">
         <div><span>${t('youReceive')}</span><b>${esc(money(sold.received))}</b></div>
         <div><span>${t('remaining')}</span><b>${esc(qty(sold.remaining))}</b></div>
@@ -728,7 +780,7 @@ function paintPosition(answerHost, detail) {
   const blocks = [];
   if (result.riskPct > 10) blocks.push(`<p class="note warn">${t('highRisk')}</p>`);
   if (result.capped) blocks.push(`<p class="note warn">${fill('capped', { risk: money(result.actualRisk), asked: money(result.requestedRisk) })}</p>`);
-  if (result.needsLeverage) blocks.push(`<p class="note info">${fill('marginNote', { lev: `${formatNumber(result.leverage, fractionDigits(result.leverage, 2))}x` })}</p>`);
+  if (result.needsLeverage) blocks.push(`<p class="note info">${fill('marginNote', { lev: `${formatNumber(result.leverage, cents(result.leverage))}x` })}</p>`);
   const primary = shareMode
     ? [
       { label: t('positionValue'), value: money(result.position) },
@@ -741,7 +793,7 @@ function paintPosition(answerHost, detail) {
       { label: t('pctOfBalance'), value: plainPct(result.pctOfBalance) },
       { label: t('totalRisk'), value: money(result.actualRisk), tone: 'loss' },
     ];
-  if (result.margin) primary.push({ label: t('leverage'), value: `${formatNumber(result.leverage, fractionDigits(result.leverage, 2))}x` });
+  if (result.margin) primary.push({ label: t('leverage'), value: `${formatNumber(result.leverage, cents(result.leverage))}x` });
   blocks.push(stats(primary));
   if (shareMode) {
     blocks.push(`<p class="note">${fill('stopNote', { money: `<span class="num">${money(result.riskPerShare)}</span>`, pct: `<span class="num">${plainPct(result.stopPct)}</span>` })}</p>`);
@@ -750,7 +802,7 @@ function paintPosition(answerHost, detail) {
     blocks.push(stats([
       ...(shareMode ? [{ label: t('targetGap'), value: money(result.rewardPerShare) }] : []),
       { label: t('totalReward'), value: money(result.reward), tone: 'gain' },
-      { label: t('riskReward'), value: `1 : ${formatNumber(result.rr, fractionDigits(result.rr, 2))}` },
+      { label: t('riskReward'), value: `1 : ${formatNumber(result.rr, cents(result.rr))}` },
     ]));
     const win = result.balance + result.reward;
     const lose = result.balance - result.actualRisk;
@@ -805,7 +857,7 @@ function growthChart(capital, months) {
     <path class="area" d="${area}"></path>
     <path class="line" d="${line}"></path>
   </svg>
-  <div class="chart-scale"><span class="num">${money(capital)}</span><span class="num">${money(values.at(-1))}</span></div>`;
+  <div class="chart-scale"><span class="num">${growthMoney(capital)}</span><span class="num">${growthMoney(values.at(-1))}</span></div>`;
 }
 
 function compositionDonut(result) {
@@ -835,7 +887,7 @@ function compositionDonut(result) {
     <div class="donut-row">
       <svg class="donut" viewBox="0 0 100 100" role="img" aria-label="${t('donutTitle')}">${rings}</svg>
       <ul class="legend">
-        ${parts.map((part) => `<li><span class="name"><i class="swatch ${part.swatch}"></i>${part.label}</span><b class="num">${money(part.value)}</b></li>`).join('')}
+        ${parts.map((part) => `<li><span class="name"><i class="swatch ${part.swatch}"></i>${part.label}</span><b class="num">${growthMoney(part.value)}</b></li>`).join('')}
       </ul>
     </div>
   </div>`;
@@ -848,14 +900,14 @@ function paintGrowth(answerHost, detail) {
     detail.innerHTML = '';
     return;
   }
-  answer(answerHost, { ready: true, kicker: t('finalBalance'), value: money(result.finalBalance) });
+  answer(answerHost, { ready: true, kicker: t('finalBalance'), value: growthMoney(result.finalBalance) });
   const rows = scheduleRows(result.months);
   detail.innerHTML = `
     ${stats([
-      { label: t('totalInvested'), value: money(result.totalInvested) },
-      { label: t('interest'), value: signedMoney(result.totalGrowth), tone: result.totalGrowth >= 0 ? 'gain' : 'loss' },
+      { label: t('totalInvested'), value: growthMoney(result.totalInvested) },
+      { label: t('interest'), value: signedGrowthMoney(result.totalGrowth), tone: result.totalGrowth >= 0 ? 'gain' : 'loss' },
       { label: t('roi'), value: pct(result.roi), tone: result.roi >= 0 ? 'gain' : 'loss' },
-      ...(result.totalDeposited > 0 ? [{ label: t('totalDeposited'), value: money(result.totalDeposited) }] : []),
+      ...(result.totalDeposited > 0 ? [{ label: t('totalDeposited'), value: growthMoney(result.totalDeposited) }] : []),
     ])}
     <div class="viz">
       <div class="viz-card">
@@ -869,8 +921,8 @@ function paintGrowth(answerHost, detail) {
       ${rows.map((row) => `
         <div class="row">
           <span>${row.label}</span>
-          <span class="sub num">${signedMoney(row.interest)}</span>
-          <b class="num">${money(row.balance)}</b>
+          <span class="sub num">${signedGrowthMoney(row.interest)}</span>
+          <b class="num">${growthMoney(row.balance)}</b>
         </div>`).join('')}
     </div>`;
 }
@@ -997,6 +1049,7 @@ function onClick(event) {
   if (act.dataset.act === 'load-save') loadNamed(act.dataset.id);
   if (act.dataset.act === 'pending-delete') {
     pendingDeleteId = act.dataset.id;
+    pendingDeleteAt = performance.now();
     paintLibrary();
     requestAnimationFrame(() => document.querySelector('.keep-card.pending .no')?.focus());
   }
@@ -1004,7 +1057,8 @@ function onClick(event) {
     pendingDeleteId = null;
     paintLibrary();
   }
-  if (act.dataset.act === 'confirm-delete') deleteNamed(act.dataset.id);
+  // Ignore a Delete tap in the first 400 ms: it is the second half of a double tap on the trash icon.
+  if (act.dataset.act === 'confirm-delete' && performance.now() - pendingDeleteAt >= 400) deleteNamed(act.dataset.id);
   if (act.dataset.act === 'lib-tab') {
     state.saveTab = act.dataset.lib === 'growth' ? 'growth' : 'avg';
     pendingDeleteId = null;
@@ -1090,16 +1144,24 @@ function applySnapshot(tab, data) {
   }
 }
 
+// Default names: compound → its duration ("5 سنوات"); avg cost → "{tool} · {short date}", never "Buy 2".
 function suggestedSaveName() {
-  if (state.tab === 'growth') {
-    const duration = (state.growth.duration || '').trim();
-    if (duration) return `${duration} ${t(state.growth.durationUnit === 'months' ? 'months' : 'years')}`;
+  const duration = String(state.growth.duration || '').trim();
+  if (state.tab === 'growth' && duration) return countUnit(duration, state.growth.durationUnit);
+  const tool = state.tab === 'growth' ? t('growthTitle') : t('avgTitle');
+  return `${tool} · ${shortDate(Date.now())}`;
+}
+
+function dateLocale() {
+  return state.lang === 'ar' ? 'ar-u-nu-latn' : localeTag();
+}
+
+function shortDate(ts) {
+  try {
+    return new Intl.DateTimeFormat(dateLocale(), { day: 'numeric', month: 'short' }).format(new Date(ts));
+  } catch {
+    return '';
   }
-  if (state.tab === 'avg') {
-    const filled = state.avg.rows.filter((row) => String(row.price || '').trim() && String(row.qty || '').trim());
-    if (filled.length) return fill('buyN', { n: filled.length });
-  }
-  return '';
 }
 
 function openSheet(id, open) {
@@ -1116,7 +1178,9 @@ function closeSheets() {
 function openSaveSheet() {
   if (state.tab !== 'avg' && state.tab !== 'growth') return;
   state.saveTab = state.tab;
-  $('#save-name').value = suggestedSaveName();
+  saveSuggestion = suggestedSaveName();
+  $('#save-name').value = saveSuggestion;
+  $('#save-name').placeholder = t(state.tab === 'growth' ? 'saveNamePhGrowth' : 'saveNamePhAvg');
   $('#save-preview').textContent = keepPreview(state.tab);
   closeSheets();
   openSheet('#save-sheet', true);
@@ -1136,6 +1200,8 @@ function saveNamed() {
   const entry = {
     id: existing?.id || String(Date.now()),
     name,
+    // An untouched suggested name is generic: the share title then shows only the tool name.
+    auto: name === saveSuggestion,
     savedAt: Date.now(),
     data: snapshotOf(tab),
   };
@@ -1159,9 +1225,15 @@ function openLibrarySheet() {
   openSheet('#library-sheet', true);
 }
 
+// One date format for every saved card: "Today, 12:44 AM" when saved today, otherwise the date only.
 function savedWhen(ts) {
   try {
-    return new Date(ts).toLocaleString(state.lang === 'ar' ? 'ar' : state.lang, { dateStyle: 'medium', timeStyle: 'short' });
+    const when = new Date(ts);
+    if (when.toDateString() === new Date().toDateString()) {
+      const time = new Intl.DateTimeFormat(dateLocale(), { hour: 'numeric', minute: '2-digit' }).format(when);
+      return fill('savedToday', { time });
+    }
+    return new Intl.DateTimeFormat(dateLocale(), { day: 'numeric', month: 'short', year: 'numeric' }).format(when);
   } catch {
     return '';
   }
@@ -1188,13 +1260,12 @@ function libraryBits(tab, item) {
   const result = compoundGrowth(item.data || {});
   if (!result.ok) return { value: '—', sum: '' };
   const data = item.data || {};
-  const unit = data.durationUnit === 'months' ? t('monthUnit') : t('yearUnit');
   const deposit = Number(data.deposit) > 0
-    ? ` · ${fill('libDepositSum', { amount: numSpan(money(Number(data.deposit))) })}`
+    ? ` · ${fill('libDepositSum', { amount: numSpan(growthMoney(Number(data.deposit))) })}`
     : '';
   return {
-    value: money(result.finalBalance),
-    sum: fill('libGrowthSum', { duration: numSpan(shown(data.duration)), unit, rate: numSpan(annualRateOf(data)) }) + deposit,
+    value: growthMoney(result.finalBalance),
+    sum: fill('libGrowthSum', { duration: countUnit(data.duration, data.durationUnit, numSpan), rate: numSpan(annualRateOf(data)) }) + deposit,
   };
 }
 
@@ -1219,9 +1290,9 @@ function paintLibrary() {
       <div class="sum">${bits.sum}</div>
       ${pending
         ? `<div class="confirm" role="alertdialog" aria-label="${esc(t('deleteSave'))}">
+            <button type="button" class="yes" data-act="confirm-delete" data-id="${esc(item.id)}">${t('deleteSave')}</button>
             <span>${esc(fill('deleteNamed', { name: item.name }))}</span>
             <button type="button" class="no" data-act="cancel-delete">${t('cancel')}</button>
-            <button type="button" class="yes" data-act="confirm-delete" data-id="${esc(item.id)}">${t('deleteSave')}</button>
           </div>`
         : `<div class="acts">
             <button type="button" class="load" data-act="load-save" data-id="${esc(item.id)}">${t('loadSave')}</button>
@@ -1306,10 +1377,14 @@ function factLine(label, value) {
   return `${label}: ${wrapVal(value)}`;
 }
 
-function shareHeading(name, toolKey) {
+// Title is "{name} · {tool}", or just the tool when the name is a default (untouched suggestion,
+// a tool name, or an old "Buy 2" style name) so the title never repeats the duration or a row count.
+function shareHeading(item, toolKey) {
   const tool = t(toolKey);
-  const trimmed = String(name || '').trim();
-  const generic = !trimmed || trimmed === tool || trimmed === t('avgTitle') || trimmed === t('growthTitle');
+  const trimmed = String(item?.name || '').trim();
+  const oldBuyName = new RegExp(`^${t('buyN').replace('{n}', '\\d+')}$`);
+  const generic = !trimmed || item?.auto || trimmed.startsWith(`${tool} · `)
+    || trimmed === tool || trimmed === t('avgTitle') || trimmed === t('growthTitle') || oldBuyName.test(trimmed);
   return generic ? `*${tool}*` : `*${trimmed} · ${tool}*`;
 }
 
@@ -1317,8 +1392,8 @@ function shareAvgText(item) {
   const summary = stockAverage(item.data?.rows || []);
   if (!summary.ok) return '';
   const lines = [
-    shareHeading(item.name, 'shareAvgTitle'),
-    factLine(t('shareAverage'), moneyPrice(summary.average)),
+    shareHeading(item, 'avgTitle'),
+    factLine(t('avgPrice'), moneyPrice(summary.average)),
     factLine(t('shares'), qty(summary.totalShares)),
     factLine(t('shareCostLabel'), money(summary.totalCost)),
   ];
@@ -1343,17 +1418,16 @@ function shareGrowthText(item) {
   const data = item.data || {};
   const result = compoundGrowth(data);
   if (!result.ok) return '';
-  const unit = data.durationUnit === 'months' ? t('monthUnit') : t('yearUnit');
   const lines = [
-    shareHeading(item.name, 'shareGrowthTitle'),
-    factLine(t('finalBalance'), money(result.finalBalance)),
-    factLine(t('capital'), money(result.capital)),
+    shareHeading(item, 'growthTitle'),
+    factLine(t('finalBalance'), growthMoney(result.finalBalance)),
+    factLine(t('capital'), growthMoney(result.capital)),
   ];
   if (result.totalDeposited > 0 && Number(data.deposit) > 0) {
-    lines.push(factLine(t('deposit'), money(Number(data.deposit))));
+    lines.push(factLine(t('deposit'), growthMoney(Number(data.deposit))));
   }
   lines.push(factLine(t('shareAnnual'), annualRateOf(data)));
-  lines.push(`${t('duration')}: ${wrapVal(shown(data.duration))} ${unit}`);
+  lines.push(`${t('duration')}: ${countUnit(data.duration, data.durationUnit, wrapVal)}`);
   lines.push('', WEB_URL);
   return lines.join('\n');
 }
@@ -1453,16 +1527,9 @@ function changelogText(cl) {
   return cl[state.lang] || cl.en || cl.ar || t('updateGeneric');
 }
 
-// Users see major.minor only (1.3.3 → 1.3); the full number stays internal so the SW still updates.
-function shortVersion(version) {
-  return String(version || '').split('.').slice(0, 2).join('.');
-}
-
-function versionLabel(fullVersion) {
-  if (!fullVersion) return '';
-  const version = shortVersion(fullVersion);
-  // A patch update keeps the visible number, so "update · version 1.3" on 1.3 would only confuse.
-  if (version === shortVersion(APP_VERSION)) return '';
+// Full version everywhere (settings + update banner), so a user report names the exact build.
+function versionLabel(version) {
+  if (!version) return '';
   if (state.lang === 'ar') return ` · الإصدار ${version}`;
   if (state.lang === 'es') return ` · versión ${version}`;
   if (state.lang === 'pt') return ` · versão ${version}`;

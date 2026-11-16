@@ -208,3 +208,30 @@ test('compound growth rejects a span longer than 50 years', () => {
   assert.equal(result.ok, false);
   assert.equal(result.reason, 'range');
 });
+
+test('typing strips leading zeros but keeps a single zero before the decimal', () => {
+  assert.equal(liveFormat('00012', 'en').display, '12');
+  assert.equal(liveFormat('00012', 'en').canonical, '12');
+  assert.equal(liveFormat('0.', 'en').display, '0.');
+  assert.equal(liveFormat('0,', 'es').display, '0,');
+  assert.equal(liveFormat('0', 'en').display, '0');
+});
+
+test('selling more shares than owned sells all of them and flags it', () => {
+  const sold = whatIfSell({ qty: 50, avg: 79.6, price: 105, sellPct: '', sellQty: '80', sellPrice: '110', whole: true });
+  assert.equal(sold.ok, true);
+  assert.equal(sold.sold, 50);
+  assert.equal(sold.capped, true);
+  const fine = whatIfSell({ qty: 50, avg: 79.6, price: 105, sellPct: '', sellQty: '20', sellPrice: '110', whole: true });
+  assert.equal(fine.capped, false);
+});
+
+test('lower-the-average snaps float noise and flags a result under the target', () => {
+  // 3000 shares at 30 → target 25 buying at 20 needs exactly 3000 more; float noise must not add one.
+  const exact = targetAverage({ qty: 3000, avg: 30, price: '', buyPrice: '20', target: '25', whole: true });
+  assert.equal(exact.needed, 3000);
+  assert.equal(exact.belowTarget, false);
+  const under = targetAverage({ qty: 216, avg: 6470 / 216, price: '', buyPrice: '12', target: '25', whole: true });
+  assert.equal(under.needed, 83);
+  assert.equal(under.belowTarget, true);
+});

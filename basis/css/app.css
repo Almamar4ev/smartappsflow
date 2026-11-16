@@ -226,6 +226,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .answer.gain .value { color: var(--gain); }
 .answer.loss .value { color: var(--loss); }
 .answer.warn .value { color: var(--warn); }
+.answer.pending .value { color: var(--faint, var(--muted)); }
 .answer .prompt { color: var(--muted); font-size: 0.95rem; font-weight: 500; }
 
 .stack { display: flex; flex-direction: column; gap: 14px; }
@@ -683,16 +684,19 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
 }
 .keep-card .act.del { color: var(--loss); }
 .keep-card .act svg { width: 19px; height: 19px; }
+/* One row, same place as the action row: Delete at the start (where Load was), the question in the
+   middle, Cancel at the end (where the trash icon was) — a double tap on the trash icon lands on Cancel.
+   Buttons stay at the top of the row even when a long name wraps the question. */
 .keep-card .confirm {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
-  flex-wrap: wrap;
   margin-top: 6px;
   border-top: 1px solid var(--line);
-  padding-top: 10px;
+  padding-top: 8px;
 }
-.keep-card .confirm span { flex: 1 1 140px; font-size: 0.88rem; }
+.keep-card .confirm span { flex: 1 1 auto; min-width: 0; align-self: center; text-align: center; font-size: 0.84rem; overflow-wrap: anywhere; }
+.keep-card .confirm button { flex: none; }
 .keep-card .no {
   border: 1px solid var(--line);
   background: none;

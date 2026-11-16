@@ -1,1 +1,1 @@
-var BASIS_VERSION = '1.3.4';
+var BASIS_VERSION = '1.0';

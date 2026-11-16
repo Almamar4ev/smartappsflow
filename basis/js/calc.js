@@ -55,7 +55,8 @@ export function liveFormat(display, lang = 'en') {
   text = text.replaceAll('٬', '').replaceAll(group, '');
   text = text.replaceAll('٫', decimal);
   const pieces = text.split(decimal);
-  const intRaw = (pieces[0] || '').replace(/\D/g, '');
+  // Leading zeros go ("00012" → "12"), but one zero stays so "0." and "0," still type naturally.
+  const intRaw = (pieces[0] || '').replace(/\D/g, '').replace(/^0+(?=\d)/, '');
   const typedDecimal = pieces.length > 1;
   const frac = typedDecimal ? pieces.slice(1).join('').replace(/\D/g, '') : '';
   if (!intRaw && !typedDecimal && !neg) return { canonical: '', display: '' };
@@ -317,12 +318,18 @@ export function targetAverage({ qty, avg, price, buyPrice, target, whole }) {
   if (T >= A) return { ok: false, reason: 'already' };
   if (T <= Pb) return { ok: false, reason: 'impossible' };
   let needed = Q * (A - T) / (T - Pb);
-  if (whole) needed = Math.ceil(needed - 1e-12);
+  if (whole) {
+    // Snap float noise first (e.g. 1200.0000000002 → 1200) so large positions are not one share over.
+    const snapped = Math.abs(needed - Math.round(needed)) < 1e-6 ? Math.round(needed) : needed;
+    needed = Math.ceil(snapped);
+  }
   if (!(needed > 0) || !Number.isFinite(needed)) return { ok: false, reason: 'empty' };
   const neededCost = needed * Pb;
   const newQty = Q + needed;
   const newAvg = (Q * A + neededCost) / newQty;
-  return { ok: true, needed, neededCost, newQty, newAvg };
+  // Whole-share rounding can land the average a little under the target; the UI explains it.
+  const belowTarget = newAvg < T - 0.005;
+  return { ok: true, needed, neededCost, newQty, newAvg, belowTarget };
 }
 
 export function whatIfSell({ qty, avg, price, sellPct, sellQty, sellPrice, whole }) {
@@ -346,6 +353,8 @@ export function whatIfSell({ qty, avg, price, sellPct, sellQty, sellPrice, whole
   const remaining = Q - sold;
   return {
     ok: true,
+    // Asked to sell more than owned: we sell everything, and the UI says how many there are.
+    capped: named > 0 && named > (whole ? Math.floor(Q) : Q),
     sold,
     received: sold * Ps,
     realized: (Ps - A) * sold,

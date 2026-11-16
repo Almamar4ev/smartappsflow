@@ -8,24 +8,24 @@ const CACHE = `basis-${VERSION}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'الأرقام الصحيحة تظهر بدون كسور، مثل 70 بدل 70.00.\u200F',
-    'الأرقام التي فيها كسر تبقى بخانتين، مثل 79.60.\u200F',
-    'التحديثات صارت تُحمَّل كاملة فور الضغط على تحديث.\u200F',
+    'تأكيد الحذف أوضح: زر الإلغاء في مكان أيقونة الحذف.\u200F',
+    'الأرقام الصحيحة بدون كسور، مثل 77 بدل 77.00.\u200F',
+    'صيغ الجمع والتواريخ وأسماء الحاسبات موحدة في كل مكان.\u200F',
   ]),
   en: updateNote([
-    'Whole numbers show without decimals, like 70 instead of 70.00.',
-    'Numbers with a fraction keep two decimals, like 79.60.',
-    'Updates now load in full as soon as you tap Update.',
+    'Safer delete: Cancel now sits where the trash icon was.',
+    'Whole numbers show without decimals, like 77 instead of 77.00.',
+    'Plurals, dates and calculator names are the same everywhere.',
   ]),
   es: updateNote([
-    'Los números enteros se muestran sin decimales, como 70 en lugar de 70,00.',
-    'Los números con fracción mantienen dos decimales, como 79,60.',
-    'Las actualizaciones ahora se cargan completas al tocar Actualizar.',
+    'Borrado más seguro: Cancelar queda donde estaba la papelera.',
+    'Los números enteros se muestran sin decimales, como 77 en lugar de 77,00.',
+    'Plurales, fechas y nombres de las calculadoras son iguales en todas partes.',
   ]),
   pt: updateNote([
-    'Números inteiros aparecem sem casas decimais, como 70 em vez de 70,00.',
-    'Números com fração mantêm duas casas, como 79,60.',
-    'As atualizações agora carregam por completo ao tocar em Atualizar.',
+    'Exclusão mais segura: Cancelar fica onde estava a lixeira.',
+    'Números inteiros aparecem sem casas decimais, como 77 em vez de 77,00.',
+    'Plurais, datas e nomes das calculadoras são iguais em todo lugar.',
   ]),
 };
 
@@ -87,7 +87,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       }).catch(() => {
         if (request.mode === 'navigate') return caches.match('./index.html');
-        return undefined;
+        return Response.error();
       });
     })
   );
