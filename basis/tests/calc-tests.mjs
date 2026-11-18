@@ -240,3 +240,109 @@ test('lower-the-average snaps float noise and flags a result under the target', 
   assert.equal(under.needed, 83);
   assert.equal(under.belowTarget, true);
 });
+
+// Reviewer test cases for Basis 1.0 trade size (balance 10,000, risk 1% = $100).
+const base = { balance: '10000', riskMode: 'percent', riskValue: '1' };
+
+test('a) percent, stop 0.5%, max 1x → capped at the balance', () => {
+  const r = positionByPercent({ ...base, stopPct: '0.5', targetPct: '1', maxLeverage: '1' });
+  assert.equal(r.position, 10000);
+  close(r.actualRisk, 50);
+  assert.equal(r.capped, true);
+  assert.equal(r.marginRequired, null);
+});
+
+test('b) percent, max 4x → full size, margin required, R:R 1:2', () => {
+  const r = positionByPercent({ ...base, stopPct: '0.5', targetPct: '1', maxLeverage: '4' });
+  close(r.position, 20000);
+  close(r.leverage, 2);
+  close(r.marginRequired, 5000);
+  close(r.actualRisk, 100);
+  close(r.reward, 200);
+  close(r.rr, 2);
+  assert.equal(r.capped, false);
+});
+
+test('c) percent, custom 1.5x → capped at buying power', () => {
+  const r = positionByPercent({ ...base, stopPct: '0.5', targetPct: '1', maxLeverage: '1.5' });
+  close(r.position, 15000);
+  close(r.actualRisk, 75);
+  assert.equal(r.capped, true);
+});
+
+test('d) price mode respects the account: 100 shares at 1x, capped', () => {
+  const r = positionByPrice({ ...base, entry: '100', stop: '99.5', target: '', maxLeverage: '1' });
+  assert.equal(r.quantity, 100);
+  close(r.position, 10000);
+  assert.equal(r.capped, true);
+});
+
+test('e) long with a target below entry → no reward, wrong-side flag', () => {
+  const r = positionByPrice({ ...base, entry: '100', stop: '95', target: '90', maxLeverage: '1' });
+  assert.equal(r.direction, 'long');
+  assert.equal(r.wrongTarget, true);
+  assert.equal(r.reward, null);
+  assert.equal(r.rr, null);
+});
+
+test('f) short: stop above entry, target below', () => {
+  const r = positionByPrice({ ...base, entry: '100', stop: '105', target: '90', maxLeverage: '1' });
+  assert.equal(r.direction, 'short');
+  assert.equal(r.quantity, 20);
+  close(r.actualRisk, 100);
+  close(r.reward, 200);
+  close(r.rr, 2);
+});
+
+test('g) the wipeout move follows the leverage used, not the broker maximum', () => {
+  // $40 at risk with a 6% stop is a $666.67 position: smaller than the balance, so no wipeout line even at 20x.
+  const small = positionByPercent({ balance: '2000', riskMode: 'percent', riskValue: '2', stopPct: '6', targetPct: '12', maxLeverage: '20' });
+  assert.equal(small.wipeoutPct, null);
+  assert.equal(small.wipeoutNear, false);
+  // Owner's case: $200 balance, $100 at risk, 10% stop, 100x max, 0.1% fees: $981.35 position, 4.91x used.
+  const owner = positionByPercent({ balance: '200', riskMode: 'amount', riskValue: '100', stopPct: '10', targetPct: '20', maxLeverage: '100', fee: '0.1' });
+  close(owner.wipeoutPct, 20.38);
+  assert.equal(owner.wipeoutNear, false);
+  // Forex-style: 1% risk with a 0.05% stop needs 20x; the account is gone after a 5% move.
+  const fx = positionByPercent({ balance: '1000', riskMode: 'percent', riskValue: '1', stopPct: '0.05', targetPct: '', maxLeverage: '30' });
+  close(fx.leverage, 20);
+  close(fx.wipeoutPct, 5);
+  assert.equal(fx.wipeoutNear, true);
+});
+
+test('h) fees shrink the position so the loss at the stop stays $100', () => {
+  const r = positionByPercent({ ...base, stopPct: '0.5', targetPct: '1', maxLeverage: '2', fee: '0.1' });
+  close(r.position, 14295.93, 0.05);
+  close(r.actualRisk, 100);
+  close(r.fees, 28.52);
+  close(r.reward, 114.22, 0.02);
+  close(r.rr, 1.142, 0.001);
+});
+
+test('i) price mode with fees counts fees on both sides', () => {
+  const r = positionByPrice({ ...base, entry: '100', stop: '95', target: '110', maxLeverage: '1', fee: '0.1' });
+  close(r.lossPerShare, 5.195, 1e-9);
+  assert.equal(r.quantity, 19);
+  close(r.actualRisk, 98.705);
+  close(r.rewardPerShare, 9.79, 1e-9);
+  close(r.reward, 186.01);
+});
+
+test('empty fee field changes nothing', () => {
+  const a = positionByPercent({ ...base, stopPct: '0.5', targetPct: '1', maxLeverage: '4', fee: '' });
+  const b = positionByPercent({ ...base, stopPct: '0.5', targetPct: '1', maxLeverage: '4' });
+  assert.equal(a.position, b.position);
+  assert.equal(a.reward, b.reward);
+});
+
+test('no phrase key is defined twice in one language (a later duplicate silently wins)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const source = readFileSync(new URL('../js/i18n.js', import.meta.url), 'utf8');
+  for (const lang of ['en', 'ar', 'es', 'pt']) {
+    const start = source.indexOf(`\n  ${lang}: {`);
+    const end = source.indexOf('\n  },', start);
+    const keys = [...source.slice(start, end).matchAll(/\n {4}([A-Za-z0-9_]+):/g)].map((m) => m[1]);
+    const dupes = keys.filter((key, i) => keys.indexOf(key) !== i);
+    assert.deepEqual(dupes, [], `${lang}: ${dupes.join(', ')}`);
+  }
+});

@@ -138,26 +138,69 @@ export function profitLoss({ side, entry, exit, qty }) {
   };
 }
 
-export function positionByPercent({ balance, riskMode, riskValue, stopPct, targetPct, account }) {
+// Max leverage from the broker: 1 = cash. Older saves used account: 'cash' | 'margin' (margin = no cap).
+function leverageCap({ maxLeverage, account }) {
+  if (maxLeverage === Infinity) return Infinity;
+  const lev = num(maxLeverage);
+  if (lev >= 1) return lev;
+  return account === 'margin' ? Infinity : 1;
+}
+
+// Fee per side (entry and exit) as a fraction: "0.1" → 0.001. Empty or invalid → 0.
+function feeRate(fee) {
+  const f = num(fee);
+  return f > 0 ? f / 100 : 0;
+}
+
+// Leverage facts shared by both modes. The account-wipeout move comes from the leverage actually
+// used (position ÷ balance), not the broker's maximum: in a normal (cross) margin account the whole
+// balance backs the position, so it is gone after a move of 100% ÷ used leverage (before fees).
+// Only shown once the position is bigger than the balance; flagged when it is under 10%.
+function leverageFacts(position, bal, cap) {
+  const finite = Number.isFinite(cap);
+  const leverage = position / bal;
+  const wipeoutPct = leverage > 1 ? 100 / leverage : null;
+  return {
+    leverage,
+    maxLeverage: cap,
+    buyingPower: bal * cap,
+    marginRequired: finite && cap > 1 ? position / cap : null,
+    wipeoutPct,
+    wipeoutNear: wipeoutPct != null && wipeoutPct < 10,
+  };
+}
+
+/**
+ * Size from a stop distance in %. Fees (per side) shrink the position so the total loss at the stop —
+ * price move plus entry and exit fees — stays equal to the money the user chose to risk.
+ *   lossFraction = s + f × (2 − s)        position = risk / lossFraction, capped at balance × maxLeverage
+ *   gain         = position × t − position × f × (2 + t)
+ */
+export function positionByPercent({ balance, riskMode, riskValue, stopPct, targetPct, account, maxLeverage, fee }) {
   const bal = num(balance);
   const riskVal = num(riskValue);
   const stop = num(stopPct);
   const target = targetPct === '' || targetPct == null ? null : num(targetPct);
   if (!(bal > 0) || !(riskVal > 0)) return { ok: false, reason: 'balance' };
   if (!(stop > 0)) return { ok: false, reason: 'stop' };
+  const cap = leverageCap({ maxLeverage, account });
+  const f = feeRate(fee);
+  const s = stop / 100;
   const requestedRisk = riskAmount(bal, riskMode, riskVal);
-  const ideal = requestedRisk / (stop / 100);
-  const margin = account === 'margin';
-  const capped = !margin && ideal > bal;
-  const position = capped ? bal : ideal;
-  const actualRisk = position * (stop / 100);
-  const leverage = position / bal;
+  const lossFraction = s + f * (2 - s);
+  const ideal = requestedRisk / lossFraction;
+  const buyingPower = bal * cap;
+  const capped = ideal > buyingPower * (1 + 1e-12);
+  const position = capped ? buyingPower : ideal;
+  const actualRisk = position * lossFraction;
   let reward = null;
   let rr = null;
   if (target != null && target > 0) {
-    reward = position * target / 100;
-    rr = target / stop;
+    const t = target / 100;
+    reward = position * t - position * f * (2 + t);
+    rr = reward / actualRisk;
   }
+  const facts = leverageFacts(position, bal, cap);
   return {
     ok: true,
     position,
@@ -166,9 +209,11 @@ export function positionByPercent({ balance, riskMode, riskValue, stopPct, targe
     riskPct: (actualRisk / bal) * 100,
     capped,
     requestedRisk,
-    leverage,
-    needsLeverage: margin && leverage > 1.0001,
-    margin,
+    ...facts,
+    needsLeverage: facts.leverage > 1.0001,
+    margin: cap > 1,
+    fees: position * f * (2 - s),
+    feeRate: f,
     reward,
     rr,
     stopPct: stop,
@@ -177,7 +222,13 @@ export function positionByPercent({ balance, riskMode, riskValue, stopPct, targe
   };
 }
 
-export function positionByPrice({ balance, riskMode, riskValue, entry, stop, target, fractional }) {
+/**
+ * Size from entry and stop prices. Direction comes from the stop: below entry = long, above = short.
+ * The target must sit on the other side of entry, otherwise there is no reward (wrongTarget).
+ *   lossPerShare = |E − S| + f × (E + S)      quantity = floor(risk / lossPerShare), capped at buying power
+ *   gainPerShare = |T − E| − f × (E + T)
+ */
+export function positionByPrice({ balance, riskMode, riskValue, entry, stop, target, fractional, account, maxLeverage, fee }) {
   const bal = num(balance);
   const riskVal = num(riskValue);
   const entryPrice = num(entry);
@@ -187,32 +238,63 @@ export function positionByPrice({ balance, riskMode, riskValue, entry, stop, tar
   if (!(entryPrice > 0) || !(stopPrice > 0) || stopPrice === entryPrice) {
     return { ok: false, reason: 'prices' };
   }
+  const cap = leverageCap({ maxLeverage: maxLeverage ?? (account ? undefined : Infinity), account });
+  const f = feeRate(fee);
+  const direction = stopPrice < entryPrice ? 'long' : 'short';
   const requestedRisk = riskAmount(bal, riskMode, riskVal);
   const riskPerShare = Math.abs(entryPrice - stopPrice);
-  const rawQty = requestedRisk / riskPerShare;
-  const quantity = fractional ? rawQty : Math.floor(rawQty);
+  const lossPerShare = riskPerShare + f * (entryPrice + stopPrice);
+  const rawQty = requestedRisk / lossPerShare;
+  const buyingPower = bal * cap;
+  const rawMax = buyingPower / entryPrice;
+  const maxQty = fractional ? rawMax : Math.floor(rawMax + 1e-9);
+  let quantity = fractional ? rawQty : Math.floor(rawQty + 1e-9);
+  const capped = quantity > maxQty;
+  if (capped) quantity = maxQty;
   if (!(quantity > 0)) return { ok: false, reason: 'shares' };
   const position = quantity * entryPrice;
-  const actualRisk = quantity * riskPerShare;
-  const rewardPerShare = targetPrice != null && targetPrice > 0 ? Math.abs(targetPrice - entryPrice) : null;
-  const reward = rewardPerShare == null ? null : quantity * rewardPerShare;
-  const rr = rewardPerShare == null ? null : rewardPerShare / riskPerShare;
+  const actualRisk = quantity * lossPerShare;
+  const stopPct = (riskPerShare / entryPrice) * 100;
+  let rewardPerShare = null;
+  let reward = null;
+  let rr = null;
+  let wrongTarget = false;
+  if (targetPrice != null && targetPrice > 0) {
+    const rightSide = direction === 'long' ? targetPrice > entryPrice : targetPrice < entryPrice;
+    if (rightSide) {
+      rewardPerShare = Math.abs(targetPrice - entryPrice) - f * (entryPrice + targetPrice);
+      reward = quantity * rewardPerShare;
+      rr = reward / actualRisk;
+    } else {
+      wrongTarget = true;
+    }
+  }
+  const facts = leverageFacts(position, bal, cap);
   return {
     ok: true,
+    direction,
     quantity,
     position,
     pctOfBalance: (position / bal) * 100,
     riskPerShare,
-    stopPct: (riskPerShare / entryPrice) * 100,
+    lossPerShare,
+    stopPct,
     actualRisk,
     riskPct: (actualRisk / bal) * 100,
+    capped,
     requestedRisk,
+    ...facts,
+    needsLeverage: facts.leverage > 1.0001,
+    margin: cap > 1,
+    fees: quantity * f * (entryPrice + stopPrice),
+    feeRate: f,
     rewardPerShare,
-    targetPct: rewardPerShare == null ? null : (rewardPerShare / entryPrice) * 100,
+    targetPct: rewardPerShare == null ? null : (Math.abs(targetPrice - entryPrice) / entryPrice) * 100,
     reward,
     rr,
+    wrongTarget,
     balance: bal,
-    floored: !fractional && quantity !== rawQty,
+    floored: !fractional && !capped && quantity !== rawQty,
   };
 }
 

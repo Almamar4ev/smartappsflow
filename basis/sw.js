@@ -8,28 +8,24 @@ const CACHE = `basis-${VERSION}-b${self.BASIS_BUILD || 0}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'الكتابة في الحقول أدق: المؤشر يبقى في مكانه عند الحذف والكتابة.\u200F',
-    'زر المشاركة يفتح قائمة المشاركة في الجوال.\u200F',
-    'حجم الصفقة: بطاقة الربح مقابل بطاقة الخسارة.\u200F',
-    'الفائدة المركبة: المس الرسم لترى الرصيد والنمو في أي سنة.\u200F',
+    'حجم الصفقة: الرافعة القصوى عند وسيطك بدل نقدي وهامش، في وضع النسب والأسعار.\u200F',
+    'الهامش المطلوب، ومتى تخسر رصيدك كاملاً، ورسوم اختيارية تبقي الخسارة كما خططت.\u200F',
+    'وضع الأسعار يعرف الشراء والبيع على المكشوف، وينبهك إذا كان الهدف في الجهة الخطأ.\u200F',
   ]),
   en: updateNote([
-    'Smoother typing: the cursor stays in place when you delete and type.',
-    'Share opens your phone\'s share menu.',
-    'Trade size: the profit card now faces the loss card.',
-    'Compound growth: touch the chart to see the balance and growth for any year.',
+    'Trade size: max leverage at your broker replaces Cash / Margin, in both modes.',
+    'Margin required, the move that wipes out your balance, and optional fees that keep your planned loss.',
+    'Price mode knows long from short and flags a target on the wrong side.',
   ]),
   es: updateNote([
-    'Escritura más fluida: el cursor se queda en su sitio al borrar y escribir.',
-    'Compartir abre el menú de compartir del teléfono.',
-    'Tamaño de la operación: la tarjeta de ganancia queda frente a la de pérdida.',
-    'Interés compuesto: toca el gráfico para ver el saldo y el crecimiento de cualquier año.',
+    'Tamaño de la operación: el apalancamiento máximo de tu bróker sustituye a contado / margen, en ambos modos.',
+    'Margen requerido, el movimiento que borra tu saldo y comisiones opcionales que mantienen la pérdida prevista.',
+    'El modo por precios distingue compra de venta en corto y avisa si el objetivo está del lado equivocado.',
   ]),
   pt: updateNote([
-    'Digitação mais suave: o cursor fica no lugar ao apagar e digitar.',
-    'Compartilhar abre o menu de compartilhamento do celular.',
-    'Tamanho da operação: o cartão de lucro fica de frente para o de perda.',
-    'Juros compostos: toque no gráfico para ver o saldo e o crescimento de qualquer ano.',
+    'Tamanho da operação: a alavancagem máxima da corretora substitui à vista / margem, nos dois modos.',
+    'Margem necessária, o movimento que zera seu saldo e taxas opcionais que mantêm a perda planejada.',
+    'O modo por preços distingue compra de venda a descoberto e avisa se o alvo está do lado errado.',
   ]),
 };
 

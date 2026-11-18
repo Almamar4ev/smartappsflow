@@ -228,6 +228,21 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 .answer.warn .value { color: var(--warn); }
 .answer.pending .value { color: var(--faint, var(--muted)); }
 .answer .prompt { color: var(--muted); font-size: 0.95rem; font-weight: 500; }
+.answer { flex-wrap: wrap; row-gap: 4px; }
+/* Second line of the hero (Trade size, by price): direction + position value, readable at a glance. */
+.answer .sub {
+  flex-basis: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: -4px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.answer .sub b { font-weight: 750; }
+.answer .sub .tag { font-size: 0.84rem; }
 
 .stack { display: flex; flex-direction: column; gap: 14px; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -256,6 +271,39 @@ input, select {
   padding-right: 46px;
 }
 input::placeholder { color: var(--placeholder); opacity: 1; }
+/* Risk: the % / currency switch sits inside the field where the unit would be. */
+.control.has-switch input { padding-right: 96px; }
+.unit-switch {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  bottom: 6px;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  direction: ltr;
+}
+.unit-switch button {
+  min-width: 40px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+.unit-switch button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(28, 25, 21, 0.1);
+}
+.field .hint { margin: 0; font-size: 0.82rem; }
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-group > .hint { margin: 0; font-size: 0.82rem; }
 .unit {
   position: absolute;
   right: 12px;
@@ -354,6 +402,39 @@ select::-ms-expand { display: none; }
 }
 .hint { font-weight: 500; line-height: 1.4; }
 
+/* Trade size: max leverage chips, optional fees, and the results stack. */
+.lev-block { display: flex; flex-direction: column; gap: 8px; }
+.lev-label { font-size: 0.86rem; font-weight: 650; }
+.lev-block .segment { grid-auto-columns: minmax(0, 1fr); }
+.lev-block .segment button { font-size: 0.84rem; padding: 0 2px; font-variant-numeric: tabular-nums; }
+.lev-block .segment button small { display: block; font-size: 0.66rem; font-weight: 600; line-height: 1; margin-top: 1px; }
+.lev-block .segment button:has(small) { line-height: 1.1; }
+.lev-block .hint { margin: 0; color: var(--muted); font-size: 0.82rem; min-height: 1.4em; }
+.lev-notes { display: flex; flex-direction: column; gap: 8px; }
+.lev-notes[hidden] { display: none; }
+.fees summary {
+  cursor: pointer;
+  list-style: none;
+  color: var(--accent-ink);
+  font-weight: 650;
+  font-size: 0.88rem;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+.fees summary::-webkit-details-marker { display: none; }
+.fees[open] summary { margin-bottom: 6px; }
+/* One gap between every block of the results, the same as inside a grid (review 1.0, item 9). */
+.pos-results { display: flex; flex-direction: column; gap: 8px; }
+.pos-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 0.8rem; font-weight: 600; border-radius: 999px; padding: 3px 10px; background: var(--surface-2); color: var(--ink); }
+.tag b { font-weight: 700; }
+.tag.long { background: var(--accent-soft); color: var(--gain); }
+.tag.short { background: var(--warn-soft); color: var(--ink); }
+.stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.stats.three .stat { padding-inline: 10px; }
+.fine { margin: 0; color: var(--muted); font-size: 0.78rem; line-height: 1.45; }
+
 .stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -370,7 +451,7 @@ select::-ms-expand { display: none; }
   grid-column: 1 / -1;
   text-align: center;
 }
-.stat strong { font-size: 1.02rem; font-weight: 700; }
+.stat strong { display: block; white-space: nowrap; font-size: 1.02rem; font-weight: 700; }
 .stat strong.gain { color: var(--gain); }
 .stat strong.loss { color: var(--loss); }
 .stat strong.warn { color: var(--warn); }
@@ -381,6 +462,8 @@ select::-ms-expand { display: none; }
   color: var(--muted);
   font-size: 0.88rem;
 }
+/* A plain note is a sentence, not a box: a bordered box reads as an input field. */
+.note:not(.warn):not(.info) { background: none; border: 0; border-radius: 0; padding: 0 2px; margin: 0; line-height: 1.5; }
 .note.warn { background: var(--warn-soft); color: var(--ink); border-color: transparent; }
 .note.info { background: var(--accent-soft); color: var(--ink); border-color: transparent; }
 .outcome { padding: 4px 14px; }
@@ -962,7 +1045,7 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
   min-width: 0;
 }
 .totals span { font-size: 0.78rem; color: var(--muted); }
-.totals b { font-size: 0.98rem; font-weight: 700; overflow-wrap: anywhere; }
+.totals b { display: block; white-space: nowrap; font-size: 0.98rem; font-weight: 700; }
 .totals .gain { color: var(--gain); }
 .totals .loss { color: var(--loss); }
 
@@ -1026,6 +1109,9 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
   gap: 12px;
 }
 .result-card p { margin: 0; font-size: 0.98rem; line-height: 1.7; }
+/* The money in the sell sentence follows its sign: green for a gain, red for a loss. */
+.result-card p .gain { color: var(--gain); }
+.result-card p .loss { color: var(--loss); }
 .ba {
   display: flex;
   align-items: center;
@@ -1076,3 +1162,23 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
   * { transition: none !important; }
   .plan .chev { transition: none; }
 }
+
+/* Arabic: a number inside a result card starts on the right, under its label. `.num` keeps the
+   digits LTR, so `text-align: start` would mean left; align explicitly instead. */
+[dir="rtl"] .stat strong,
+[dir="rtl"] .totals b,
+[dir="rtl"] .facts b { text-align: right; }
+[dir="rtl"] .stat.wide strong { text-align: center; }
+
+/* Trade size: buying power + margin read as facts (ink); the wipeout line is a warning (red). */
+.lev-block #lev-hint { color: var(--ink); }
+.lev-notes .note.wipe { color: var(--loss); font-weight: 600; }
+.lev-notes .note.wipe.near { background: var(--loss-soft); border-radius: 14px; padding: 12px 14px; }
+
+/* Fees: a collapsed section — the chevron says it opens, and turns when it does. */
+.fees summary { gap: 6px; }
+.fees summary .chev { width: 18px; height: 18px; flex: none; transition: transform .2s; }
+.fees[open] summary .chev { transform: rotate(180deg); }
+
+/* A number never splits across lines: the minus sign and currency stay with the digits. */
+span.num, strong.num { white-space: nowrap; }

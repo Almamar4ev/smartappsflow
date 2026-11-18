@@ -19,6 +19,7 @@ const FEEDBACK_EMAIL = 'smartappsflow@gmail.com';
 const WEB_URL = 'https://smartappsflow.net/basis/';
 const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.smartapps.basis';
 const APP_VERSION = (typeof self !== 'undefined' && self.BASIS_VERSION) ? self.BASIS_VERSION : '1.0';
+const APP_BUILD = (typeof self !== 'undefined' && self.BASIS_BUILD) ? self.BASIS_BUILD : 0;
 const LTR = '\u2066';
 const PDF = '\u2069';
 let toastTimer = 0;
@@ -67,9 +68,10 @@ function defaults() {
     },
     pnl: { side: 'long', entry: '', exit: '', qty: '' },
     pos: {
-      mode: 'percent', account: 'cash', riskMode: 'percent', fractional: false,
+      mode: 'percent', riskMode: 'percent', fractional: false,
       balance: '', risk: '', stopPct: '', targetPct: '',
       entry: '', stopPrice: '', targetPrice: '',
+      maxLev: '1', customLev: '', fee: '',
     },
     growth: {
       capital: '', rate: '', ratePeriod: 'annual', duration: '',
@@ -97,7 +99,7 @@ function loadState() {
         compareOpen: Boolean(saved.avg?.compareOpen),
       },
       pnl: { ...base.pnl, ...saved.pnl },
-      pos: { ...base.pos, ...saved.pos, fractional: Boolean(saved.pos?.fractional) },
+      pos: migratePos({ ...base.pos, ...saved.pos, fractional: Boolean(saved.pos?.fractional) }),
       growth: { ...base.growth, ...saved.growth },
       library: {
         avg: Array.isArray(saved.library?.avg) ? saved.library.avg.slice(0, LIBRARY_CAP) : [],
@@ -111,6 +113,18 @@ function loadState() {
   } catch {
     return base;
   }
+}
+
+// Older saves had a Cash / Margin toggle; margin had no cap, the closest broker limit is 2x.
+function migratePos(pos) {
+  const next = { ...pos };
+  const valid = ['1', '2', '4', '10', '30', 'custom'].includes(String(next.maxLev));
+  // "account" only exists in saves from before max leverage; the default maxLev ('1') is already merged
+  // in by then, so the old choice decides. Once saved again, "account" is gone and maxLev is the user's.
+  if ('account' in next) next.maxLev = next.account === 'margin' ? '2' : '1';
+  else if (!valid) next.maxLev = '1';
+  delete next.account;
+  return next;
 }
 
 function save() {
@@ -269,7 +283,7 @@ function applyChrome() {
   $('#lang').value = state.lang;
   $('#currency').value = state.currency;
   const version = $('#version-label');
-  if (version) version.textContent = fill('versionName', { v: APP_VERSION });
+  if (version) version.textContent = fill('versionName', { v: APP_BUILD ? `${APP_VERSION} (${fill('buildN', { n: APP_BUILD })})` : APP_VERSION });
   syncThemeButtons();
   renderNav();
   paintUpdateUI();
@@ -293,7 +307,7 @@ function renderNav() {
     </button>`).join('');
 }
 
-function field(id, label, bind, unit, value, placeholder = '0.00') {
+function field(id, label, bind, unit, value, placeholder = '0') {
   return `<div class="field">
     <label for="${id}">${label}</label>
     <div class="control">
@@ -379,29 +393,70 @@ function viewPnl() {
     </div>`;
 }
 
+// Max leverage at the broker (replaces Cash / Margin, in both modes) + optional fees.
+const LEVERAGE_CHIPS = ['1', '2', '4', '10', '30', 'custom'];
+
+function leverageBlock() {
+  const custom = state.pos.maxLev === 'custom';
+  const feeOpen = Number(state.pos.fee) > 0;
+  return `<div class="lev-block">
+      <span class="lev-label">${t('maxLev')}</span>
+      ${segment('pos.maxLev', LEVERAGE_CHIPS.map((value) => ({
+        value,
+        label: value === 'custom' ? t('levCustom') : value === '1' ? `1x <small>${t('levCashChip')}</small>` : `${value}x`,
+      })))}
+      <div id="custom-lev-wrap" ${custom ? '' : 'hidden'}>${field('custom-lev', t('levCustom'), 'pos.customLev', 'lev', state.pos.customLev, '20')}</div>
+      <p class="hint" id="lev-hint"></p>
+      <div class="lev-notes" id="lev-notes" hidden></div>
+    </div>
+    <details class="fees" ${feeOpen ? 'open' : ''}>
+      <summary><span>${t('feesToggle')}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+      ${field('fee', t('feesLabel'), 'pos.fee', 'percent', state.pos.fee, '0.1')}
+    </details>`;
+}
+
+function maxLeverage() {
+  return state.pos.maxLev === 'custom' ? state.pos.customLev : state.pos.maxLev;
+}
+
+// Risk with its % / currency switch inside the field, so the choice costs no extra row.
+// The hint under it turns the value into the other unit ("= $30 of your balance").
+function riskField() {
+  const amount = state.pos.riskMode === 'amount';
+  const currency = CURRENCIES[state.currency];
+  const option = (value, label, on) => `<button type="button" data-press="pos.riskMode" data-value="${value}" aria-pressed="${on ? 'true' : 'false'}">${esc(label)}</button>`;
+  return `<div class="field">
+    <label for="risk">${t('risk')}</label>
+    <div class="control has-switch">
+      <input id="risk" data-bind="pos.risk" data-numeric="1" type="text" inputmode="decimal" autocomplete="off" placeholder="0" value="${esc(shown(state.pos.risk))}" data-shown="${esc(shown(state.pos.risk))}">
+      <div class="unit-switch" role="group">${option('percent', '%', !amount)}${option('amount', currency.symbol || currency.label, amount)}</div>
+    </div>
+    <p class="hint" id="risk-hint"></p>
+  </div>`;
+}
+
 function viewPosition() {
   const byPercent = state.pos.mode === 'percent';
   const fields = byPercent ? `
     ${field('balance', t('balance'), 'pos.balance', 'currency', state.pos.balance)}
-    ${field('risk', t('risk'), 'pos.risk', 'risk', state.pos.risk)}
-    ${segment('pos.riskMode', [{ value: 'percent', label: '%' }, { value: 'amount', label: CURRENCIES[state.currency].label }])}
-    <p class="hint" id="risk-hint"></p>
+    ${riskField()}
     ${field('stop', t('stopPct'), 'pos.stopPct', 'percent', state.pos.stopPct)}
     ${field('target', `${t('targetPct')} · ${t('optional')}`, 'pos.targetPct', 'percent', state.pos.targetPct)}
-    ${segment('pos.account', [{ value: 'cash', label: t('cash') }, { value: 'margin', label: t('margin') }])}
-    <p class="hint">${t('cashHint')}</p>` : `
+    ${leverageBlock()}` : `
     ${field('balance', t('balance'), 'pos.balance', 'currency', state.pos.balance)}
     ${field('entry', t('entry'), 'pos.entry', 'currency', state.pos.entry)}
-    ${field('risk', t('risk'), 'pos.risk', 'risk', state.pos.risk)}
-    ${segment('pos.riskMode', [{ value: 'percent', label: '%' }, { value: 'amount', label: CURRENCIES[state.currency].label }])}
-    <p class="hint" id="risk-hint"></p>
-    <div class="grid-2">
-      ${field('stop', t('stopPrice'), 'pos.stopPrice', 'currency', state.pos.stopPrice)}
-      ${field('target', `${t('targetPrice')} · ${t('optional')}`, 'pos.targetPrice', 'currency', state.pos.targetPrice)}
+    ${riskField()}
+    <div class="field-group">
+      <div class="grid-2">
+        ${field('stop', t('stopPrice'), 'pos.stopPrice', 'currency', state.pos.stopPrice)}
+        ${field('target', `${t('targetPrice')} · ${t('optional')}`, 'pos.targetPrice', 'currency', state.pos.targetPrice)}
+      </div>
+      <p class="hint" id="stop-hint" hidden></p>
     </div>
     <button type="button" class="toggle-row" data-act="toggle-fractional" aria-pressed="${state.pos.fractional ? 'true' : 'false'}">
       <span>${t('fractionalShares')}</span><i></i>
-    </button>`;
+    </button>
+    ${leverageBlock()}`;
   return `${screenHead(t('sizeTitle'), t('sizeLead'))}
     <div class="stack" id="fields">
       ${segment('pos.mode', [{ value: 'percent', label: t('byPercent') }, { value: 'price', label: t('byPrice') }])}
@@ -553,26 +608,58 @@ function syncUnits() {
     } else if (el.dataset.unit === 'percent') {
       el.textContent = '%';
       el.hidden = false;
+    } else if (el.dataset.unit === 'lev') {
+      el.textContent = 'x';
+      el.hidden = false;
     } else if (el.dataset.unit === 'risk') {
       const amount = state.pos.riskMode === 'amount';
       el.textContent = amount ? symbol : '%';
       el.hidden = amount && !symbol;
     }
   });
-  const hint = $('#risk-hint');
-  if (hint) hint.textContent = state.pos.riskMode === 'amount' ? t('riskHintAmount') : t('riskHintPercent');
+  paintRiskHint();
 }
 
-function answer(host, { ready, tone, kicker, value, prompt }) {
+function paintRiskHint() {
+  const hint = $('#risk-hint');
+  if (!hint) return;
+  const amount = state.pos.riskMode === 'amount';
+  const balance = Number(state.pos.balance);
+  const risk = Number(state.pos.risk);
+  if (balance > 0 && risk > 0) {
+    hint.innerHTML = amount
+      ? fill('riskIsPct', { pct: numSpan(plainPct((risk / balance) * 100)) })
+      : fill('riskIsAmount', { money: numSpan(money((balance * risk) / 100)) });
+  } else {
+    hint.textContent = amount ? t('riskHintAmount') : t('riskHintPercent');
+  }
+}
+
+// Switching % <-> currency keeps the same money at risk: 3% of $1,000 becomes $30, and back.
+function convertRisk(to) {
+  const balance = Number(state.pos.balance);
+  const risk = Number(state.pos.risk);
+  if (!(balance > 0 && risk > 0) || to === state.pos.riskMode) return;
+  const next = to === 'amount' ? (balance * risk) / 100 : (risk / balance) * 100;
+  state.pos.risk = String(Math.round(next * 100) / 100);
+  const input = $('#risk');
+  if (input) {
+    input.value = shown(state.pos.risk);
+    input.dataset.shown = input.value;
+  }
+}
+
+function answer(host, { ready, tone, kicker, value, prompt, sub }) {
   host.className = `answer${ready ? ` ready ${tone || ''}` : ''}`;
   host.innerHTML = ready
-    ? `<span class="result-label">${t('result')}</span><span class="kicker">${kicker}</span><span class="value num">${value}</span>`
+    ? `<span class="result-label">${t('result')}</span><span class="kicker">${kicker}</span><span class="value num">${value}</span>${sub ? `<span class="sub">${sub}</span>` : ''}`
     : `<span class="result-label">${t('result')}</span><span class="prompt">${prompt}</span>`;
 }
 
-function stats(items) {
-  return `<div class="stats">${items.map((item, index) => `
-    <div class="stat${items.length % 2 && index === items.length - 1 ? ' wide' : ''}"><span>${item.label}</span><strong class="num ${item.tone || ''}">${item.value}</strong></div>
+function stats(items, variant = '') {
+  const three = variant === 'three';
+  return `<div class="stats${variant ? ` ${variant}` : ''}">${items.map((item, index) => `
+    <div class="stat${!three && items.length % 2 && index === items.length - 1 ? ' wide' : ''}"><span>${item.label}</span><strong class="num ${item.tone || ''}">${item.value}</strong></div>
   `).join('')}</div>`;
 }
 
@@ -585,20 +672,21 @@ function paint() {
   else if (state.tab === 'pnl') paintPnl(answerHost, detail);
   else if (state.tab === 'pos') paintPosition(answerHost, detail);
   else paintGrowth(answerHost, detail);
+  fitNumbers($('#main'));
 }
 
 function paintAverage(answerHost, snapshot) {
   const summary = stockAverage(state.avg.rows);
   const plan = $('#plan');
   // Placeholders for the buy/sell price fields follow the current price when there is one.
-  const currentShown = Number(state.avg.current) > 0 ? shown(state.avg.current) : '0.00';
+  const currentShown = Number(state.avg.current) > 0 ? shown(state.avg.current) : '0';
   ['#buy-price', '#sell-price'].forEach((sel) => { const el = $(sel); if (el) el.placeholder = currentShown; });
   if (!summary.ok) {
     // Same shape as a real result ("—" placeholders) so the buy rows do not jump when the first result appears.
     answer(answerHost, { ready: true, kicker: t('avgPrice'), value: '—' });
     answerHost.classList.add('pending');
-    snapshot.innerHTML = `<div class="totals num">${[t('shares'), t('shareCostLabel'), t('buys')].map((label) => `
-    <div><span>${label}</span><b>—</b></div>`).join('')}</div>`;
+    snapshot.innerHTML = `<div class="totals">${[t('shares'), t('shareCostLabel'), t('buys')].map((label) => `
+    <div><span>${label}</span><b class="num">—</b></div>`).join('')}</div>`;
     if (plan) plan.hidden = true;
     return;
   }
@@ -612,8 +700,8 @@ function paintAverage(answerHost, snapshot) {
       ? { label: t('profitNow'), value: signedMoney(mark.unrealized), tone: mark.unrealized >= 0 ? 'gain' : 'loss' }
       : { label: t('buys'), value: String(summary.buys) },
   ];
-  snapshot.innerHTML = `<div class="totals num">${cells.map((cell) => `
-    <div><span>${cell.label}</span><b class="${cell.tone || ''}">${cell.value}</b></div>`).join('')}</div>`;
+  snapshot.innerHTML = `<div class="totals">${cells.map((cell) => `
+    <div><span>${cell.label}</span><b class="num ${cell.tone || ''}">${cell.value}</b></div>`).join('')}</div>`;
   paintLower(summary);
   paintSell(summary);
 }
@@ -636,12 +724,12 @@ function paintLower(summary) {
     whole: true,
   });
   if (target.reason === 'already') {
-    host.innerHTML = `<div class="note">${fill('pickLowerTarget', { avg: moneyPrice(summary.average) })}</div>`;
+    host.innerHTML = `<p class="note">${fill('pickLowerTarget', { avg: numSpan(moneyPrice(summary.average)) })}</p>`;
     return;
   }
   if (target.reason === 'impossible') {
     const shownTarget = moneyPrice(Number(state.avg.target));
-    host.innerHTML = `<div class="note">${fill('mustBuyBelow', { target: shownTarget })}</div>`;
+    host.innerHTML = `<p class="note">${fill('mustBuyBelow', { target: numSpan(shownTarget) })}</p>`;
     return;
   }
   if (!target.ok) {
@@ -656,9 +744,9 @@ function paintLower(summary) {
       <span class="to num">${esc(moneyPrice(target.newAvg))}</span>
     </div>
     <p>${fill('buySharesAt', { q: countUnit(target.needed, 'shares', (n) => `<strong class="num">${n}</strong>`), price: `<span class="num">${moneyPrice(Number(buyPrice))}</span>` })}</p>
-    <div class="facts num">
-      <div><span>${t('neededCost')}</span><b>${esc(money(target.neededCost))}</b></div>
-      <div><span>${t('sharesAfter')}</span><b>${esc(qty(target.newQty))}</b></div>
+    <div class="facts">
+      <div><span>${t('neededCost')}</span><b class="num">${esc(money(target.neededCost))}</b></div>
+      <div><span>${t('sharesAfter')}</span><b class="num">${esc(qty(target.newQty))}</b></div>
     </div>
     ${target.belowTarget ? `<p class="plan-note">${t('wholeSharesBelow')}</p>` : ''}
     <button type="button" class="ghost" data-act="add-as-buy" data-price="${esc(buyPrice)}" data-qty="${esc(String(target.needed))}">${t('addAsBuy')}</button>
@@ -687,10 +775,10 @@ function paintSell(summary) {
     host.innerHTML = `<div class="result-card">
       <p>${fill('sellResult', { q: countUnit(sold.sold, 'shares', numSpan), price: `<span class="num">${moneyPrice(sellPx)}</span>`, pnl: `<strong class="num ${tone}">${signedMoney(sold.realized)}</strong>` })}</p>
       ${sold.capped ? `<p class="plan-note">${fill('sellQtyCap', { shares: countUnit(summary.totalShares, 'shares', numSpan) })}</p>` : ''}
-      <div class="facts num">
-        <div><span>${t('youReceive')}</span><b>${esc(money(sold.received))}</b></div>
-        <div><span>${t('remaining')}</span><b>${esc(qty(sold.remaining))}</b></div>
-        <div><span>${t('returnPct')}</span><b class="${tone}">${esc(pct(sold.returnPct))}</b></div>
+      <div class="facts">
+        <div><span>${t('youReceive')}</span><b class="num">${esc(money(sold.received))}</b></div>
+        <div><span>${t('remaining')}</span><b class="num">${esc(qty(sold.remaining))}</b></div>
+        <div><span>${t('returnPct')}</span><b class="num ${tone}">${esc(pct(sold.returnPct))}</b></div>
       </div>
     </div>`;
   }
@@ -746,71 +834,111 @@ function paintPnl(answerHost, detail) {
 }
 
 function paintPosition(answerHost, detail) {
-  const result = state.pos.mode === 'percent'
-    ? positionByPercent({
-      balance: state.pos.balance,
-      riskMode: state.pos.riskMode,
-      riskValue: state.pos.risk,
-      stopPct: state.pos.stopPct,
-      targetPct: state.pos.targetPct,
-      account: state.pos.account,
-    })
-    : positionByPrice({
-      balance: state.pos.balance,
-      riskMode: state.pos.riskMode,
-      riskValue: state.pos.risk,
-      entry: state.pos.entry,
-      stop: state.pos.stopPrice,
-      target: state.pos.targetPrice,
-      fractional: state.pos.fractional,
-    });
+  const shareMode = state.pos.mode === 'price';
+  const common = {
+    balance: state.pos.balance,
+    riskMode: state.pos.riskMode,
+    riskValue: state.pos.risk,
+    maxLeverage: maxLeverage(),
+    fee: state.pos.fee,
+  };
+  const result = shareMode
+    ? positionByPrice({ ...common, entry: state.pos.entry, stop: state.pos.stopPrice, target: state.pos.targetPrice, fractional: state.pos.fractional })
+    : positionByPercent({ ...common, stopPct: state.pos.stopPct, targetPct: state.pos.targetPct });
+  paintLeverage(result);
+  const stopHint = $('#stop-hint');
+  if (stopHint) {
+    stopHint.hidden = !(shareMode && result.ok);
+    stopHint.innerHTML = stopHint.hidden ? '' : fill('stopNote', { money: numSpan(money(result.riskPerShare)), pct: numSpan(plainPct(result.stopPct)) });
+  }
   if (!result.ok) {
     const prompt = result.reason === 'stop' ? t('needStop') : result.reason === 'prices' ? t('needPrices') : result.reason === 'shares' ? t('needShares') : t('needBalance');
     answer(answerHost, { ready: false, prompt });
     detail.innerHTML = '';
     return;
   }
-  const shareMode = state.pos.mode === 'price';
+  // Price mode: the hero shows shares, with the direction and the position value right under them.
   answer(answerHost, {
     ready: true,
     tone: result.capped ? 'warn' : '',
     kicker: shareMode ? t('quantity') : t('positionValue'),
     value: shareMode ? qty(result.quantity) : money(result.position),
+    sub: shareMode
+      ? `<span class="tag ${result.direction}">${t(result.direction === 'long' ? 'dirLong' : 'dirShort')}</span><span>${t('positionValue')} <b class="num">${money(result.position)}</b></span>`
+      : '',
   });
+  const lev = (value) => `${formatNumber(value, cents(value))}x`;
   const blocks = [];
   if (result.riskPct > 10) blocks.push(`<p class="note warn">${t('highRisk')}</p>`);
-  if (result.capped) blocks.push(`<p class="note warn">${fill('capped', { risk: money(result.actualRisk), asked: money(result.requestedRisk) })}</p>`);
-  if (result.needsLeverage) blocks.push(`<p class="note info">${fill('marginNote', { lev: `${formatNumber(result.leverage, cents(result.leverage))}x` })}</p>`);
-  // With a target, gains face losses in the second grid (reward | risk, target gap | stop gap) and
-  // R:R moves up next to leverage; without a target the risk cards stay in the first grid.
-  const hasTarget = result.rr != null;
-  const stopGap = { label: t('stopGap'), value: money(result.riskPerShare) };
+  if (result.wrongTarget) blocks.push(`<p class="note info">${t(result.direction === 'long' ? 'wrongTargetLong' : 'wrongTargetShort')}</p>`);
+  // Top row: risk : reward next to the position's share of the account (or the leverage used once the
+  // position is bigger than the balance). Bottom row: gain faces loss. Margin lives under the chips.
+  const hasTarget = result.reward != null;
   const risk = { label: t('totalRisk'), value: money(result.actualRisk), tone: 'loss' };
-  const primary = [
-    { label: t('positionValue'), value: money(result.position) },
-    { label: t('pctOfBalance'), value: plainPct(result.pctOfBalance) },
-  ];
-  if (hasTarget) primary.push({ label: t('riskReward'), value: `1 : ${formatNumber(result.rr, cents(result.rr))}` });
-  else primary.push(...(shareMode ? [stopGap, risk] : [risk]));
-  if (result.margin) primary.push({ label: t('leverage'), value: `${formatNumber(result.leverage, cents(result.leverage))}x` });
-  blocks.push(stats(primary));
-  if (shareMode) {
-    blocks.push(`<p class="note">${fill('stopNote', { money: `<span class="num">${money(result.riskPerShare)}</span>`, pct: `<span class="num">${plainPct(result.stopPct)}</span>` })}</p>`);
-  }
-  if (hasTarget) {
-    blocks.push(stats([
-      ...(shareMode ? [{ label: t('targetGap'), value: money(result.rewardPerShare) }, stopGap] : []),
-      { label: t('totalReward'), value: money(result.reward), tone: 'gain' },
+  const share = result.leverage > 1
+    ? { label: t('levUsed'), value: lev(result.leverage) }
+    : { label: t('pctOfBalance'), value: plainPct(result.pctOfBalance) };
+  blocks.push(stats(hasTarget
+    ? [
+      { label: t('riskReward'), value: result.rr > 0 ? `1 : ${formatNumber(result.rr, cents(result.rr))}` : '—' },
+      share,
+      { label: t('totalReward'), value: money(result.reward), tone: result.reward >= 0 ? 'gain' : 'loss' },
       risk,
-    ]));
-    const win = result.balance + result.reward;
-    const lose = result.balance - result.actualRisk;
+    ]
+    : [share, risk]));
+  if (hasTarget) {
     blocks.push(`<div class="outcome">
-      <div><span>${t('ifWin')}</span><b class="num gain">${money(win)}</b></div>
-      <div><span>${t('ifLoss')}</span><b class="num loss">${money(lose)}</b></div>
+      <div><span>${t('ifWin')}</span><b class="num gain">${money(result.balance + result.reward)}</b></div>
+      <div><span>${t('ifLoss')}</span><b class="num loss">${money(result.balance - result.actualRisk)}</b></div>
     </div>`);
   }
-  detail.innerHTML = blocks.join('');
+  if (result.feeRate > 0) blocks.push(`<p class="fine">${fill('feesIncluded', { amount: numSpan(money(result.fees)) })}</p>`);
+  blocks.push(`<p class="fine">${t('slipNote')}</p>`);
+  detail.innerHTML = `<div class="pos-results">${blocks.join('')}</div>`;
+}
+
+// Everything leverage changes sits under the chips: buying power + margin in one line,
+// then the cap warning and the account-wipeout line. The fees toggle comes after them.
+function paintLeverage(result) {
+  const hint = $('#lev-hint');
+  if (!hint) return;
+  const cap = Number(maxLeverage());
+  const balance = Number(state.pos.balance);
+  const lev = (value) => `${formatNumber(value, cents(value))}x`;
+  if (!(cap > 1)) hint.textContent = t('levCashHint');
+  else if (result.ok && result.marginRequired != null) {
+    hint.innerHTML = fill('levPowerMargin', { power: numSpan(money(result.buyingPower)), margin: numSpan(money(result.marginRequired)) });
+  } else {
+    hint.innerHTML = balance > 0 ? fill('levPowerHint', { power: numSpan(money(balance * cap)), lev: numSpan(lev(cap)) }) : '';
+  }
+  const notes = $('#lev-notes');
+  if (!notes) return;
+  const list = [];
+  if (result.ok && result.capped) {
+    list.push(`<p class="note warn">${fill('capped', {
+      power: numSpan(money(result.buyingPower)), risk: numSpan(money(result.actualRisk)), asked: numSpan(money(result.requestedRisk)),
+    })}</p>`);
+  }
+  // Once the position is bigger than the balance: the move that wipes out the account.
+  // Red text; a red box when an everyday move (under 10%) is enough.
+  if (result.ok && result.wipeoutPct != null) {
+    list.push(`<p class="note wipe${result.wipeoutNear ? ' near' : ''}">${fill('wipeLine', { pct: numSpan(plainPct(result.wipeoutPct)) })}</p>`);
+  }
+  notes.innerHTML = list.join('');
+  notes.hidden = !list.length;
+}
+
+// Long numbers shrink to fit their card instead of breaking onto a second line.
+function fitNumbers(root = document) {
+  root.querySelectorAll('.totals b, .stat strong').forEach((el) => {
+    el.style.fontSize = '';
+    if (!el.clientWidth) return;
+    let size = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > el.clientWidth + 1 && size > 11) {
+      size -= 0.5;
+      el.style.fontSize = `${size}px`;
+    }
+  });
 }
 
 function scheduleRows(months) {
@@ -1126,6 +1254,7 @@ function onClick(event) {
   }
   const press = event.target.closest('[data-press]');
   if (press) {
+    if (press.dataset.press === 'pos.riskMode') convertRisk(press.dataset.value);
     readBind(press.dataset.press, press.dataset.value);
     save();
     if (press.dataset.press === 'pos.mode') renderMain();
@@ -1144,6 +1273,11 @@ function onClick(event) {
         const qtyWrap = $('#sell-qty-wrap');
         if (pctWrap) pctWrap.hidden = state.avg.sellMode === 'qty';
         if (qtyWrap) qtyWrap.hidden = state.avg.sellMode !== 'qty';
+      }
+      if (press.dataset.press === 'pos.maxLev') {
+        const wrap = $('#custom-lev-wrap');
+        if (wrap) wrap.hidden = state.pos.maxLev !== 'custom';
+        if (state.pos.maxLev === 'custom') $('#custom-lev')?.focus();
       }
       syncUnits();
       paint();
