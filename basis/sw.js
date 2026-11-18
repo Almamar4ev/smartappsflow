@@ -8,24 +8,20 @@ const CACHE = `basis-${VERSION}-b${self.BASIS_BUILD || 0}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'حجم الصفقة: الصفقة الأكبر من رصيدك تُكتب «16.67 ضعف رصيدك» بدل نسبة طويلة.\u200F',
-    'الرسم البياني: تمرير الصفحة فوقه لا يحرك المؤشر، والسحب الأفقي أو اللمس يحركه.\u200F',
-    'رسالة المشاركة: «متوسط الشراء لسهم AAPL».\u200F',
+    'متوسط الشراء: عمليات الشراء في بطاقات أنحف، وعناوين السعر والأسهم مرة واحدة فوقها.\u200F',
+    'الحذف بعلامة × صغيرة، وتبقى دائماً عمليتا شراء على الأقل.\u200F',
   ]),
   en: updateNote([
-    'Trade size: a position bigger than your balance reads "16.67 × your balance" instead of a long percent.',
-    'Chart: scrolling the page over it leaves the marker alone; a sideways drag or a tap moves it.',
-    'Share message: "Average cost for AAPL".',
+    'Average cost: slimmer buy cards, with the Price and Shares titles shown once above them.',
+    'Remove a buy with a small ×; there are always at least two buys.',
   ]),
   es: updateNote([
-    'Tamaño de la operación: una posición mayor que tu saldo se lee "16.67 × tu saldo" en lugar de un porcentaje largo.',
-    'Gráfico: desplazar la página sobre él no mueve el marcador; arrastrar de lado o tocar sí.',
-    'Mensaje para compartir: "Precio medio de AAPL".',
+    'Precio medio: tarjetas de compra más delgadas, con los títulos Precio y Acciones una sola vez encima.',
+    'Quita una compra con una × pequeña; siempre quedan al menos dos compras.',
   ]),
   pt: updateNote([
-    'Tamanho da operação: uma posição maior que o saldo aparece como "16.67 × seu saldo" em vez de um percentual longo.',
-    'Gráfico: rolar a página sobre ele não move o marcador; arrastar para o lado ou tocar move.',
-    'Mensagem de compartilhamento: "Preço médio de AAPL".',
+    'Preço médio: cartões de compra mais finos, com os títulos Preço e Ações uma vez acima deles.',
+    'Remova uma compra com um × pequeno; sempre ficam pelo menos duas compras.',
   ]),
 };
 

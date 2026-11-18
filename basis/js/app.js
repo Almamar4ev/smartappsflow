@@ -23,6 +23,9 @@ const APP_BUILD = (typeof self !== 'undefined' && self.BASIS_BUILD) ? self.BASIS
 const LTR = '\u2066';
 const PDF = '\u2069';
 let toastTimer = 0;
+// Average cost always shows at least two buys (owner): an average needs two, and the second line invites it.
+// Declared up here because loadState() runs while the module is still being evaluated.
+const MIN_ROWS = 2;
 let pendingDeleteId = null;
 let pendingDeleteAt = 0;
 let saveSuggestion = '';
@@ -81,6 +84,12 @@ function defaults() {
   };
 }
 
+function padRows(rows) {
+  const out = (Array.isArray(rows) ? rows : []).slice(0, 30);
+  while (out.length < MIN_ROWS) out.push({ price: '', qty: '' });
+  return out;
+}
+
 function loadState() {
   const base = defaults();
   try {
@@ -92,7 +101,7 @@ function loadState() {
       avg: {
         ...base.avg,
         ...saved.avg,
-        rows: Array.isArray(saved.avg?.rows) && saved.avg.rows.length ? saved.avg.rows.slice(0, 30) : base.avg.rows,
+        rows: padRows(saved.avg?.rows),
         whatIf: saved.avg?.whatIf === 'sell' ? 'sell' : 'lower',
         sellMode: saved.avg?.sellMode === 'qty' ? 'qty' : 'pct',
         planOpen: saved.avg?.planOpen !== false,
@@ -343,7 +352,10 @@ function viewAverage() {
     <div class="stack">
       <section class="answer" id="answer"></section>
       <div id="snapshot"></div>
-      <div id="rows"></div>
+      <div class="buys">
+        <div class="buys-head" aria-hidden="true"><span>${t('price')}</span><span>${t('shares')}</span></div>
+        <div id="rows"></div>
+      </div>
       <button type="button" class="add-btn" data-act="add-row">${t('addBuy')}</button>
       ${field('current', `${t('currentPrice')} · ${t('optional')}`, 'avg.current', 'currency', state.avg.current)}
       <section class="plan${planOpen ? ' open' : ''}" id="plan" hidden>
@@ -541,18 +553,28 @@ function keepPreview(tab = state.saveTab || state.tab) {
   return result.ok ? `${t('finalBalance')} · ${growthMoney(result.finalBalance)}` : t('waiting');
 }
 
+// One slim card per buy: "Buy 1" and × on one line, price and shares under it. The column titles sit
+// once above the list (.buys-head), so each buy no longer repeats its own labels (owner's pick, build 6).
+function buyInput(kind, index, value) {
+  const label = `${t(kind === 'price' ? 'price' : 'shares')} · ${fill('buyN', { n: index + 1 })}`;
+  return `<div class="control">
+      <input id="${kind}-${index}" data-bind="avg.row.${index}.${kind}" data-numeric="1" type="text" inputmode="decimal" autocomplete="off" aria-label="${esc(label)}" placeholder="0" value="${esc(shown(value))}" data-shown="${esc(shown(value))}">
+      ${kind === 'price' ? '<span class="unit" data-unit="currency"></span>' : ''}
+    </div>`;
+}
+
+function removeButton(index) {
+  return `<button type="button" class="buy-remove" data-act="remove-row" data-index="${index}" aria-label="${esc(`${t('remove')} · ${fill('buyN', { n: index + 1 })}`)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;
+}
+
 function buyRowHtml(row, index) {
-  const canRemove = state.avg.rows.length > 1;
+  const canRemove = state.avg.rows.length > MIN_ROWS;
   return `
     <div class="buy">
-      <div class="buy-head">
-        <span>${fill('buyN', { n: index + 1 })}</span>
-        ${canRemove ? `<button type="button" class="text-btn" data-act="remove-row" data-index="${index}">${t('remove')}</button>` : ''}
-      </div>
-      <div class="grid-2">
-        ${field(`price-${index}`, t('price'), `avg.row.${index}.price`, 'currency', row.price)}
-        ${field(`qty-${index}`, t('shares'), `avg.row.${index}.qty`, '', row.qty, '0')}
-      </div>
+      <span class="buy-n">${fill('buyN', { n: index + 1 })}</span>
+      ${buyInput('price', index, row.price)}
+      ${buyInput('qty', index, row.qty)}
+      <span class="buy-x">${canRemove ? removeButton(index) : ''}</span>
     </div>`;
 }
 
@@ -575,26 +597,17 @@ function appendBuyRow() {
 function reindexBuyRows() {
   const host = $('#rows');
   if (!host) return;
-  const canRemove = state.avg.rows.length > 1;
+  const canRemove = state.avg.rows.length > MIN_ROWS;
   [...host.children].forEach((buy, index) => {
-    const label = buy.querySelector('.buy-head span');
-    if (label) label.textContent = fill('buyN', { n: index + 1 });
-    let remove = buy.querySelector('[data-act="remove-row"]');
-    if (canRemove) {
-      if (!remove) {
-        buy.querySelector('.buy-head').insertAdjacentHTML('beforeend', `<button type="button" class="text-btn" data-act="remove-row" data-index="${index}">${t('remove')}</button>`);
-        remove = buy.querySelector('[data-act="remove-row"]');
-      }
-      remove.dataset.index = String(index);
-    } else if (remove) {
-      remove.remove();
-    }
+    const number = buy.querySelector('.buy-n');
+    if (number) number.textContent = fill('buyN', { n: index + 1 });
+    const slot = buy.querySelector('.buy-x');
+    if (slot) slot.innerHTML = canRemove ? removeButton(index) : '';
     buy.querySelectorAll('[data-bind]').forEach((input) => {
       const key = input.dataset.bind.split('.').pop();
       input.dataset.bind = `avg.row.${index}.${key}`;
       input.id = `${key}-${index}`;
-      const tag = input.closest('.field')?.querySelector('label');
-      if (tag) tag.setAttribute('for', input.id);
+      input.setAttribute('aria-label', `${t(key === 'price' ? 'price' : 'shares')} · ${fill('buyN', { n: index + 1 })}`);
     });
   });
 }
@@ -1357,11 +1370,12 @@ function onClick(event) {
   if (act.dataset.act === 'remove-row') {
     const index = Number(act.dataset.index);
     state.avg.rows.splice(index, 1);
-    if (!state.avg.rows.length) state.avg.rows.push({ price: '', qty: '' });
+    const padded = state.avg.rows.length < MIN_ROWS;
+    state.avg.rows = padRows(state.avg.rows);
     save();
     const host = $('#rows');
     host?.children[index]?.remove();
-    if (!host?.children.length) paintRows();
+    if (padded || !host?.children.length) paintRows();
     else reindexBuyRows();
     paint();
   }
@@ -1465,7 +1479,7 @@ function applySnapshot(tab, data) {
     state.avg = {
       ...base,
       ...data,
-      rows: Array.isArray(data?.rows) && data.rows.length ? data.rows.slice(0, 30) : base.rows,
+      rows: padRows(data?.rows),
     };
   } else if (tab === 'growth') {
     state.growth = { ...defaults().growth, ...data };
