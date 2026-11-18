@@ -346,3 +346,40 @@ test('no phrase key is defined twice in one language (a later duplicate silently
     assert.deepEqual(dupes, [], `${lang}: ${dupes.join(', ')}`);
   }
 });
+
+// Review of build 3: target smaller than the fees, and the three wipe-out states.
+test('build 3 review a) a target the fees eat: flag + break-even, no fake gain shown', () => {
+  const r = positionByPercent({ ...base, stopPct: '0.5', targetPct: '0.1', maxLeverage: '2', fee: '0.1' });
+  assert.equal(r.feeEatsTarget, true);
+  close(r.breakEvenPct, 0.2002, 0.0001);
+  const ok = positionByPercent({ ...base, stopPct: '0.5', targetPct: '1', maxLeverage: '2', fee: '0.1' });
+  assert.equal(ok.feeEatsTarget, false);
+  // Price mode: long 100 → break-even target ≈ 100.2002; short ≈ 99.8002.
+  const long = positionByPrice({ ...base, entry: '100', stop: '99', target: '100.1', maxLeverage: '4', fee: '0.1' });
+  assert.equal(long.feeEatsTarget, true);
+  close(long.breakEvenPrice, 100.2002, 0.0001);
+  const short = positionByPrice({ ...base, entry: '100', stop: '101', target: '99.9', maxLeverage: '4', fee: '0.1' });
+  assert.equal(short.feeEatsTarget, true);
+  close(short.breakEvenPrice, 99.8002, 0.0001);
+});
+
+test('build 3 review b) 2x used: wipe-out about 50%, informational only', () => {
+  const r = positionByPercent({ ...base, stopPct: '0.5', targetPct: '1', maxLeverage: '4' });
+  close(r.position, 20000);
+  close(r.pctOfBalance, 200);
+  close(r.wipeoutPct, 50);
+  assert.equal(r.wipeoutNear, false);
+});
+
+test('build 3 review c) 1,000 at 5% risk, 0.3% stop, 30x: wipe-out about 6%, a real warning', () => {
+  const r = positionByPercent({ balance: '1000', riskMode: 'percent', riskValue: '5', stopPct: '0.3', targetPct: '', maxLeverage: '30' });
+  close(r.position, 16666.67);
+  close(r.wipeoutPct, 6);
+  assert.equal(r.wipeoutNear, true);
+});
+
+test('build 3 review d) position below the balance: no wipe-out line', () => {
+  const r = positionByPercent({ ...base, stopPct: '2', targetPct: '', maxLeverage: '1' });
+  close(r.position, 5000);
+  assert.equal(r.wipeoutPct, null);
+});

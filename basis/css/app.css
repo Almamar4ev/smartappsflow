@@ -1172,8 +1172,11 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
 
 /* Trade size: buying power + margin read as facts (ink); the wipeout line is a warning (red). */
 .lev-block #lev-hint { color: var(--ink); }
-.lev-notes .note.wipe { color: var(--loss); font-weight: 600; }
-.lev-notes .note.wipe.near { background: var(--loss-soft); border-radius: 14px; padding: 12px 14px; }
+/* Wipe-out line (review of build 3): muted information by default; red in a light-red frame only
+   when under a 10% move wipes the balance, so the red stays rare. */
+.lev-notes .note.wipe { color: var(--muted); font-weight: 500; }
+.lev-notes .note.wipe.near { color: var(--loss); font-weight: 600; background: var(--loss-soft); border-radius: 14px; padding: 12px 14px; }
+.lev-notes .note.crypto { color: var(--muted); font-size: 0.8rem; }
 
 /* Fees: a collapsed section — the chevron says it opens, and turns when it does. */
 .fees summary { gap: 6px; }
@@ -1182,3 +1185,10 @@ html[lang="ar"] .nav button { font-size: 0.75rem; }
 
 /* A number never splits across lines: the minus sign and currency stay with the digits. */
 span.num, strong.num { white-space: nowrap; }
+
+/* Result grids keep equal columns however long a number gets, so fitNumbers() can shrink it
+   (a plain 1fr track grows to the number's width and pushes the page sideways). */
+.stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.totals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.stat { min-width: 0; }

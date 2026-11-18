@@ -201,8 +201,12 @@ export function positionByPercent({ balance, riskMode, riskValue, stopPct, targe
     rr = reward / actualRisk;
   }
   const facts = leverageFacts(position, bal, cap);
+  // Round-trip fees bigger than the target: gain = P·t − P·f(2 + t) <= 0  ⇔  t <= 2f / (1 − f).
+  const feeEatsTarget = f > 0 && reward != null && reward <= 0;
   return {
     ok: true,
+    feeEatsTarget,
+    breakEvenPct: f > 0 ? ((2 * f) / (1 - f)) * 100 : null,
     position,
     pctOfBalance: (position / bal) * 100,
     actualRisk,
@@ -270,8 +274,15 @@ export function positionByPrice({ balance, riskMode, riskValue, entry, stop, tar
     }
   }
   const facts = leverageFacts(position, bal, cap);
+  // Break-even target: long E + 2fE/(1 − f), short E − 2fE/(1 + f) (gain per share = 0 there).
+  const feeEatsTarget = f > 0 && reward != null && reward <= 0;
+  const breakEvenPrice = f > 0
+    ? (direction === 'long' ? entryPrice + (2 * f * entryPrice) / (1 - f) : entryPrice - (2 * f * entryPrice) / (1 + f))
+    : null;
   return {
     ok: true,
+    feeEatsTarget,
+    breakEvenPrice,
     direction,
     quantity,
     position,

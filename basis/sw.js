@@ -8,24 +8,24 @@ const CACHE = `basis-${VERSION}-b${self.BASIS_BUILD || 0}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'حجم الصفقة: الرافعة القصوى عند وسيطك بدل نقدي وهامش، في وضع النسب والأسعار.\u200F',
-    'الهامش المطلوب، ومتى تخسر رصيدك كاملاً، ورسوم اختيارية تبقي الخسارة كما خططت.\u200F',
-    'وضع الأسعار يعرف الشراء والبيع على المكشوف، وينبهك إذا كان الهدف في الجهة الخطأ.\u200F',
+    'حجم الصفقة: تنبيه واضح إذا كان الهدف لا يغطي الرسوم، مع الهدف الذي يحقق ربحاً.\u200F',
+    'سطر مسح الرصيد معلومة هادئة، ويصير تحذيراً أحمر فقط عند الخطر الحقيقي.\u200F',
+    'نسبة الصفقة من الحساب مع الرافعة، وقيمة الرسوم ظاهرة في عنوانها.\u200F',
   ]),
   en: updateNote([
-    'Trade size: max leverage at your broker replaces Cash / Margin, in both modes.',
-    'Margin required, the move that wipes out your balance, and optional fees that keep your planned loss.',
-    'Price mode knows long from short and flags a target on the wrong side.',
+    'Trade size: a clear note when the target does not cover the fees, with the target that does.',
+    'The wipe-out line is quiet information, and turns red only when the danger is real.',
+    'Share of account shows the leverage too, and the fees header shows its value.',
   ]),
   es: updateNote([
-    'Tamaño de la operación: el apalancamiento máximo de tu bróker sustituye a contado / margen, en ambos modos.',
-    'Margen requerido, el movimiento que borra tu saldo y comisiones opcionales que mantienen la pérdida prevista.',
-    'El modo por precios distingue compra de venta en corto y avisa si el objetivo está del lado equivocado.',
+    'Tamaño de la operación: aviso claro si el objetivo no cubre las comisiones, con el objetivo que sí las cubre.',
+    'La línea de saldo perdido es información discreta y solo se vuelve roja ante un riesgo real.',
+    'La parte de la cuenta muestra también el apalancamiento, y el título de comisiones muestra su valor.',
   ]),
   pt: updateNote([
-    'Tamanho da operação: a alavancagem máxima da corretora substitui à vista / margem, nos dois modos.',
-    'Margem necessária, o movimento que zera seu saldo e taxas opcionais que mantêm a perda planejada.',
-    'O modo por preços distingue compra de venda a descoberto e avisa se o alvo está do lado errado.',
+    'Tamanho da operação: aviso claro quando o alvo não cobre as taxas, com o alvo que cobre.',
+    'A linha de saldo zerado é informação discreta e só fica vermelha quando o risco é real.',
+    'A parte da conta mostra também a alavancagem, e o título das taxas mostra o valor.',
   ]),
 };
 

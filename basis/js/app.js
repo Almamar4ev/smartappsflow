@@ -410,7 +410,7 @@ function leverageBlock() {
       <div class="lev-notes" id="lev-notes" hidden></div>
     </div>
     <details class="fees" ${feeOpen ? 'open' : ''}>
-      <summary><span>${t('feesToggle')}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+      <summary><span id="fees-title">${t('feesToggle')}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
       ${field('fee', t('feesLabel'), 'pos.fee', 'percent', state.pos.fee, '0.1')}
     </details>`;
 }
@@ -871,24 +871,33 @@ function paintPosition(answerHost, detail) {
   const blocks = [];
   if (result.riskPct > 10) blocks.push(`<p class="note warn">${t('highRisk')}</p>`);
   if (result.wrongTarget) blocks.push(`<p class="note info">${t(result.direction === 'long' ? 'wrongTargetLong' : 'wrongTargetShort')}</p>`);
-  // Top row: risk : reward next to the position's share of the account (or the leverage used once the
-  // position is bigger than the balance). Bottom row: gain faces loss. Margin lives under the chips.
+  // A target the round-trip fees eat: say so and give the break-even target, never a negative "gain".
+  const feeEats = result.feeEatsTarget;
+  if (feeEats) {
+    const breakEven = shareMode ? moneyPrice(result.breakEvenPrice) : plainPct(result.breakEvenPct);
+    blocks.push(`<p class="note info">${fill('feeTarget', { be: numSpan(breakEven) })}</p>`);
+  }
+  // Top row: risk : reward next to the position's share of the account (one label at every value;
+  // above 100% it also shows the leverage used, "200% · 2x"). Bottom row: gain faces loss.
   const hasTarget = result.reward != null;
   const risk = { label: t('totalRisk'), value: money(result.actualRisk), tone: 'loss' };
-  const share = result.leverage > 1
-    ? { label: t('levUsed'), value: lev(result.leverage) }
-    : { label: t('pctOfBalance'), value: plainPct(result.pctOfBalance) };
+  const share = {
+    label: t('pctOfBalance'),
+    value: result.leverage > 1.0001 ? `${plainPct(result.pctOfBalance)} · ${lev(result.leverage)}` : plainPct(result.pctOfBalance),
+  };
   blocks.push(stats(hasTarget
     ? [
-      { label: t('riskReward'), value: result.rr > 0 ? `1 : ${formatNumber(result.rr, cents(result.rr))}` : '—' },
+      { label: t('riskReward'), value: !feeEats && result.rr > 0 ? `1 : ${formatNumber(result.rr, cents(result.rr))}` : '—' },
       share,
-      { label: t('totalReward'), value: money(result.reward), tone: result.reward >= 0 ? 'gain' : 'loss' },
+      feeEats
+        ? { label: t('totalReward'), value: '—' }
+        : { label: t('totalReward'), value: money(result.reward), tone: result.reward >= 0 ? 'gain' : 'loss' },
       risk,
     ]
     : [share, risk]));
   if (hasTarget) {
     blocks.push(`<div class="outcome">
-      <div><span>${t('ifWin')}</span><b class="num gain">${money(result.balance + result.reward)}</b></div>
+      ${feeEats ? '' : `<div><span>${t('ifWin')}</span><b class="num gain">${money(result.balance + result.reward)}</b></div>`}
       <div><span>${t('ifLoss')}</span><b class="num loss">${money(result.balance - result.actualRisk)}</b></div>
     </div>`);
   }
@@ -911,6 +920,12 @@ function paintLeverage(result) {
   } else {
     hint.innerHTML = balance > 0 ? fill('levPowerHint', { power: numSpan(money(balance * cap)), lev: numSpan(lev(cap)) }) : '';
   }
+  const feesTitle = $('#fees-title');
+  if (feesTitle) {
+    const fee = Number(state.pos.fee);
+    // Same digits as the field ("0.1%"), not padded to two decimals.
+    feesTitle.innerHTML = fee > 0 ? fill('feesSet', { pct: numSpan(`${shown(state.pos.fee)}%`) }) : t('feesToggle');
+  }
   const notes = $('#lev-notes');
   if (!notes) return;
   const list = [];
@@ -919,25 +934,42 @@ function paintLeverage(result) {
       power: numSpan(money(result.buyingPower)), risk: numSpan(money(result.actualRisk)), asked: numSpan(money(result.requestedRisk)),
     })}</p>`);
   }
-  // Once the position is bigger than the balance: the move that wipes out the account.
-  // Red text; a red box when an everyday move (under 10%) is enough.
+  // Once the position is bigger than the balance: the move that wipes out the account, "about" a whole
+  // percent. Muted information normally; red in a frame only when an everyday move (under 10%) is enough,
+  // so the red stays rare and means something. With 10x+ available, one line about isolated crypto margin.
   if (result.ok && result.wipeoutPct != null) {
-    list.push(`<p class="note wipe${result.wipeoutNear ? ' near' : ''}">${fill('wipeLine', { pct: numSpan(plainPct(result.wipeoutPct)) })}</p>`);
+    const x = result.wipeoutPct >= 1 ? Math.round(result.wipeoutPct) : Math.round(result.wipeoutPct * 10) / 10;
+    list.push(`<p class="note wipe${result.wipeoutNear ? ' near' : ''}">${fill('wipeLine', { pct: numSpan(plainPct(x)) })}</p>`);
+    if (Number.isFinite(cap) && cap >= 10) list.push(`<p class="note crypto">${t('cryptoIsolated')}</p>`);
   }
   notes.innerHTML = list.join('');
   notes.hidden = !list.length;
 }
 
-// Long numbers shrink to fit their card instead of breaking onto a second line.
+// Long numbers shrink to fit their card instead of breaking onto a second line. Cards on the same row
+// share one size (the smallest that fits all of them), never below 13px; past that the number may wrap.
 function fitNumbers(root = document) {
-  root.querySelectorAll('.totals b, .stat strong').forEach((el) => {
-    el.style.fontSize = '';
-    if (!el.clientWidth) return;
-    let size = parseFloat(getComputedStyle(el).fontSize);
-    while (el.scrollWidth > el.clientWidth + 1 && size > 11) {
-      size -= 0.5;
-      el.style.fontSize = `${size}px`;
+  const MIN = 13;
+  const rows = new Map();
+  root.querySelectorAll('.totals, .stats').forEach((box, index) => {
+    box.querySelectorAll(':scope > div > b, :scope > .stat > strong').forEach((el) => {
+      el.style.fontSize = '';
+      el.style.whiteSpace = '';
+      if (!el.clientWidth) return;
+      const key = `${index}:${Math.round(el.parentElement.getBoundingClientRect().top)}`;
+      if (!rows.has(key)) rows.set(key, []);
+      rows.get(key).push(el);
+    });
+  });
+  const fits = (el) => el.scrollWidth <= el.clientWidth + 1;
+  rows.forEach((els) => {
+    if (els.every(fits)) return;
+    let size = Math.min(...els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
+    while (size > MIN && !els.every(fits)) {
+      size = Math.max(MIN, size - 0.5);
+      els.forEach((el) => { el.style.fontSize = `${size}px`; });
     }
+    els.forEach((el) => { if (!fits(el)) el.style.whiteSpace = 'normal'; });
   });
 }
 
