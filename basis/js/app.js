@@ -659,7 +659,7 @@ function answer(host, { ready, tone, kicker, value, prompt, sub }) {
 function stats(items, variant = '') {
   const three = variant === 'three';
   return `<div class="stats${variant ? ` ${variant}` : ''}">${items.map((item, index) => `
-    <div class="stat${!three && items.length % 2 && index === items.length - 1 ? ' wide' : ''}"><span>${item.label}</span><strong class="num ${item.tone || ''}">${item.value}</strong></div>
+    <div class="stat${!three && items.length % 2 && index === items.length - 1 ? ' wide' : ''}"><span>${item.label}</span><strong class="${item.text ? 'text' : 'num'} ${item.tone || ''}">${item.value}</strong></div>
   `).join('')}</div>`;
 }
 
@@ -883,7 +883,11 @@ function paintPosition(answerHost, detail) {
   const risk = { label: t('totalRisk'), value: money(result.actualRisk), tone: 'loss' };
   const share = {
     label: t('pctOfBalance'),
-    value: result.leverage > 1.0001 ? `${plainPct(result.pctOfBalance)} · ${lev(result.leverage)}` : plainPct(result.pctOfBalance),
+    // Above 100% the percent stops being readable (1,666.67%), so say it in words: "16.67 × your balance".
+    value: result.leverage > 1.0001
+      ? fill('timesBalance', { n: numSpan(formatNumber(result.leverage, cents(result.leverage))) })
+      : plainPct(result.pctOfBalance),
+    text: result.leverage > 1.0001,
   };
   blocks.push(stats(hasTarget
     ? [
@@ -1100,13 +1104,35 @@ function chartIndexAt(wrap, clientX) {
   return best;
 }
 
+// Touch: a finger that starts on the chart and goes up or down is scrolling the page, so the marker
+// waits until the drag is clearly sideways (or the finger lifts after a tap) before it moves.
+let chartTouch = null;
+
 function onChartPointer(event) {
+  const touch = event.pointerType !== 'mouse';
+  if (touch && (event.type === 'pointercancel' || event.type === 'pointerup')) {
+    const pending = chartTouch;
+    chartTouch = null;
+    // A tap (no real movement) still shows the point under the finger.
+    if (event.type === 'pointercancel' || !pending || pending.active) return;
+    if (Math.hypot(event.clientX - pending.x, event.clientY - pending.y) > 10) return;
+  }
   const wrap = event.target.closest?.('.chart-wrap');
   if (!wrap) return;
   if (event.type === 'pointerdown') {
     try { wrap.setPointerCapture(event.pointerId); } catch {}
-  } else if (event.type === 'pointermove' && event.pointerType !== 'mouse' && !wrap.hasPointerCapture?.(event.pointerId)) {
-    return;
+    if (touch) {
+      chartTouch = { id: event.pointerId, x: event.clientX, y: event.clientY, active: false };
+      return;
+    }
+  } else if (event.type === 'pointermove' && touch) {
+    if (!chartTouch || chartTouch.id !== event.pointerId) return;
+    if (!chartTouch.active) {
+      const dx = Math.abs(event.clientX - chartTouch.x);
+      const dy = Math.abs(event.clientY - chartTouch.y);
+      if (dx < 6 || dx <= dy) return;
+      chartTouch.active = true;
+    }
   }
   const clientX = event.clientX;
   cancelAnimationFrame(chartFrame);
@@ -1693,7 +1719,9 @@ function shareHeading(item, toolKey) {
   const oldBuyName = new RegExp(`^${t('buyN').replace('{n}', '\\d+')}$`);
   const generic = !trimmed || item?.auto || trimmed.startsWith(`${tool} · `)
     || trimmed === tool || trimmed === t('avgTitle') || trimmed === t('growthTitle') || oldBuyName.test(trimmed);
-  return generic ? `*${tool}*` : `*${trimmed} · ${tool}*`;
+  if (generic) return `*${tool}*`;
+  // Average cost names are tickers, so the title reads as a sentence: "Average cost for AAPL".
+  return toolKey === 'avgTitle' ? `*${fill('avgShareTitle', { name: trimmed })}*` : `*${trimmed} · ${tool}*`;
 }
 
 function shareAvgText(item) {
@@ -1783,6 +1811,8 @@ function boot() {
   $('#app').addEventListener('input', onField);
   $('#app').addEventListener('pointerdown', onChartPointer);
   $('#app').addEventListener('pointermove', onChartPointer, { passive: true });
+  $('#app').addEventListener('pointerup', onChartPointer);
+  $('#app').addEventListener('pointercancel', onChartPointer);
   $('#app').addEventListener('keydown', onChartKey);
   $('#app').addEventListener('change', onField);
   $('#app').addEventListener('click', onClick);

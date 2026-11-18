@@ -8,24 +8,24 @@ const CACHE = `basis-${VERSION}-b${self.BASIS_BUILD || 0}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'حجم الصفقة: تنبيه واضح إذا كان الهدف لا يغطي الرسوم، مع الهدف الذي يحقق ربحاً.\u200F',
-    'سطر مسح الرصيد معلومة هادئة، ويصير تحذيراً أحمر فقط عند الخطر الحقيقي.\u200F',
-    'نسبة الصفقة من الحساب مع الرافعة، وقيمة الرسوم ظاهرة في عنوانها.\u200F',
+    'حجم الصفقة: الصفقة الأكبر من رصيدك تُكتب «16.67 ضعف رصيدك» بدل نسبة طويلة.\u200F',
+    'الرسم البياني: تمرير الصفحة فوقه لا يحرك المؤشر، والسحب الأفقي أو اللمس يحركه.\u200F',
+    'رسالة المشاركة: «متوسط الشراء لسهم AAPL».\u200F',
   ]),
   en: updateNote([
-    'Trade size: a clear note when the target does not cover the fees, with the target that does.',
-    'The wipe-out line is quiet information, and turns red only when the danger is real.',
-    'Share of account shows the leverage too, and the fees header shows its value.',
+    'Trade size: a position bigger than your balance reads "16.67 × your balance" instead of a long percent.',
+    'Chart: scrolling the page over it leaves the marker alone; a sideways drag or a tap moves it.',
+    'Share message: "Average cost for AAPL".',
   ]),
   es: updateNote([
-    'Tamaño de la operación: aviso claro si el objetivo no cubre las comisiones, con el objetivo que sí las cubre.',
-    'La línea de saldo perdido es información discreta y solo se vuelve roja ante un riesgo real.',
-    'La parte de la cuenta muestra también el apalancamiento, y el título de comisiones muestra su valor.',
+    'Tamaño de la operación: una posición mayor que tu saldo se lee "16.67 × tu saldo" en lugar de un porcentaje largo.',
+    'Gráfico: desplazar la página sobre él no mueve el marcador; arrastrar de lado o tocar sí.',
+    'Mensaje para compartir: "Precio medio de AAPL".',
   ]),
   pt: updateNote([
-    'Tamanho da operação: aviso claro quando o alvo não cobre as taxas, com o alvo que cobre.',
-    'A linha de saldo zerado é informação discreta e só fica vermelha quando o risco é real.',
-    'A parte da conta mostra também a alavancagem, e o título das taxas mostra o valor.',
+    'Tamanho da operação: uma posição maior que o saldo aparece como "16.67 × seu saldo" em vez de um percentual longo.',
+    'Gráfico: rolar a página sobre ele não move o marcador; arrastar para o lado ou tocar move.',
+    'Mensagem de compartilhamento: "Preço médio de AAPL".',
   ]),
 };
 
