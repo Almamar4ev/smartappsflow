@@ -27,6 +27,8 @@ let toastTimer = 0;
 // Declared up here because loadState() runs while the module is still being evaluated.
 const MIN_ROWS = 2;
 let pendingDeleteId = null;
+// Last buy removed with ×, kept for the 3-second Undo toast (review of build 6; owner chose 3 s).
+let removedBuy = null;
 let pendingDeleteAt = 0;
 let saveSuggestion = '';
 let pendingWorker = null;
@@ -1369,14 +1371,30 @@ function onClick(event) {
   }
   if (act.dataset.act === 'remove-row') {
     const index = Number(act.dataset.index);
-    state.avg.rows.splice(index, 1);
+    const [row] = state.avg.rows.splice(index, 1);
     const padded = state.avg.rows.length < MIN_ROWS;
+    removedBuy = { row: { ...row }, index, padded };
+    toast(fill('buyRemoved', { n: index + 1 }), 3000, { act: 'undo-remove', label: t('undo') });
     state.avg.rows = padRows(state.avg.rows);
     save();
     const host = $('#rows');
     host?.children[index]?.remove();
     if (padded || !host?.children.length) paintRows();
     else reindexBuyRows();
+    paint();
+  }
+  if (act.dataset.act === 'undo-remove' && removedBuy) {
+    // Back at the same place with its values; drop the empty line a "two buys minimum" refill added.
+    const { row, index, padded } = removedBuy;
+    removedBuy = null;
+    const rows = state.avg.rows;
+    const last = rows[rows.length - 1];
+    if (padded && last && !String(last.price || '').trim() && !String(last.qty || '').trim()) rows.pop();
+    rows.splice(Math.min(index, rows.length), 0, row);
+    state.avg.rows = rows.slice(0, 30);
+    save();
+    hideToast();
+    paintRows();
     paint();
   }
   if (act.dataset.act === 'toggle-fractional') {
@@ -1668,12 +1686,23 @@ function deleteNamed(id) {
   toast(t('toastDeleted'), 2500);
 }
 
-function toast(message, ms = 2200) {
+// A toast can carry one action button (e.g. Undo); taps on it reach onClick through [data-act].
+function toast(message, ms = 2200, action = null) {
   const el = $('#toast');
-  el.textContent = message;
+  el.classList.toggle('has-action', Boolean(action));
+  el.innerHTML = action
+    ? `<span>${esc(message)}</span><button type="button" class="toast-action" data-act="${esc(action.act)}">${esc(action.label)}</button>`
+    : esc(message);
   el.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.hidden = true; }, ms);
+  toastTimer = setTimeout(hideToast, ms);
+}
+
+function hideToast() {
+  clearTimeout(toastTimer);
+  const el = $('#toast');
+  if (el) el.hidden = true;
+  removedBuy = null;
 }
 
 function platformLabel() {

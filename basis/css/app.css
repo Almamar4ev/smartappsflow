@@ -1238,3 +1238,28 @@ span.num, strong.num { white-space: nowrap; }
 .buy-remove:active, .buy-remove:focus-visible { color: var(--loss); background: var(--loss-soft); }
 /* The "added from Lower my average" mark. */
 .buys .buy.just-added { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* Toast with one action (Undo after removing a buy). */
+.toast.has-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: start; padding: 6px 6px 6px 14px; }
+[dir="rtl"] .toast.has-action { padding: 6px 14px 6px 6px; }
+.toast-action {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 760;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* Arabic (review of build 6, owner confirmed for build 7): numbers inside fields start on the right, under
+   their titles. Digits still type LTR (direction stays ltr); the unit (% · $ · x) and the risk switch move
+   to the left end of the field. */
+[dir="rtl"] .control input { text-align: right; padding-right: 12px; padding-left: 46px; }
+[dir="rtl"] .control .unit { right: auto; left: 12px; }
+[dir="rtl"] .control.has-switch input { padding-right: 12px; padding-left: 96px; }
+[dir="rtl"] .unit-switch { right: auto; left: 6px; }

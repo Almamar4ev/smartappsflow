@@ -8,20 +8,20 @@ const CACHE = `basis-${VERSION}-b${self.BASIS_BUILD || 0}`;
 function updateNote(lines) { return lines.join('\n'); }
 const CHANGELOG = {
   ar: updateNote([
-    'متوسط الشراء: عمليات الشراء في بطاقات أنحف، وعناوين السعر والأسهم مرة واحدة فوقها.\u200F',
-    'الحذف بعلامة × صغيرة، وتبقى دائماً عمليتا شراء على الأقل.\u200F',
+    'متوسط الشراء: بعد حذف عملية شراء يظهر «تراجع» لثلاث ثوانٍ يعيدها كما كانت.\u200F',
+    'الأرقام داخل الحقول تبدأ من اليمين تحت عناوينها.\u200F',
   ]),
   en: updateNote([
-    'Average cost: slimmer buy cards, with the Price and Shares titles shown once above them.',
-    'Remove a buy with a small ×; there are always at least two buys.',
+    'Average cost: after removing a buy, Undo brings it back for three seconds.',
+    'Arabic: numbers inside fields now start on the right, under their titles.',
   ]),
   es: updateNote([
-    'Precio medio: tarjetas de compra más delgadas, con los títulos Precio y Acciones una sola vez encima.',
-    'Quita una compra con una × pequeña; siempre quedan al menos dos compras.',
+    'Precio medio: tras quitar una compra, Deshacer la recupera durante tres segundos.',
+    'Árabe: los números dentro de los campos empiezan a la derecha, bajo su título.',
   ]),
   pt: updateNote([
-    'Preço médio: cartões de compra mais finos, com os títulos Preço e Ações uma vez acima deles.',
-    'Remova uma compra com um × pequeno; sempre ficam pelo menos duas compras.',
+    'Preço médio: depois de remover uma compra, Desfazer a traz de volta por três segundos.',
+    'Árabe: os números dentro dos campos começam à direita, sob o título.',
   ]),
 };
 
