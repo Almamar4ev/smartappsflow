@@ -24,6 +24,8 @@
 | `basis/`، `carmaintenance/`، `compoundcalc/` | تطبيقات ويب PWA | ويب فقط | انظر §4 (تذكير الكاش) |
 | `index.html`، `CNAME` | الصفحة الرئيسية `smartappsflow.net` | — | لا تلمسها إلا بطلب |
 
+**ملاحظة مفتوحة لـ emiGo (26 نوفمبر 2026، طلب المالك):** رابط سياسة الخصوصية المسجّل في Play (`almamar4ev.github.io/smart-apps-legal/smart-loan-calculator/privacy-policy.html`) يُظهر اسم مستخدم GitHub. المالك يريد إصلاحه عند فتح emiGo: انقل الرابط إلى `smartappsflow.net/smartloan/privacy-policy.html` (الملف موجود هنا، طابق محتواه مع المسجّل أولًا)، ثم يحدّث المالك الرابط في Play Console. أبقِ الرابط القديم يعمل. Basis وEdgeory على smartappsflow.net أصلًا.
+
 المرجع العام للبنية والإصدارات: [`REPO_STRUCTURE.md`](REPO_STRUCTURE.md)، وخاصة §4 و§4a.
 
 ## 2) طريقة العمل الثابتة
